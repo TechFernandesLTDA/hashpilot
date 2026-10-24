@@ -1,2 +1,2 @@
 power.limit [W], power.draw [W], temperature.gpu, clocks.current.graphics [MHz], clocks.current.memory [MHz], fan.speed [%]
-240.00 W, 62.25 W, 50, 450 MHz, 810 MHz, 84 %
+240.00 W, 52.94 W, 51, 435 MHz, 810 MHz, 83 %

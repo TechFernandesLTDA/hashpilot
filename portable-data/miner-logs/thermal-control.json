@@ -1,0 +1,25 @@
+{
+  "enabled": true,
+  "mode": "hold",
+  "reason": "Resfriando: 38/60 s estáveis até 75 °C",
+  "current_clock_mhz": 1725,
+  "desired_clock_mhz": 1725,
+  "min_clock_mhz": 1500,
+  "max_clock_mhz": 1800,
+  "target_band_c": [
+    75,
+    78
+  ],
+  "emergency_pause_c": 84,
+  "sampled_at": 1792886346.5308387,
+  "error": null,
+  "controller_pid": 18964,
+  "miner_pid": 27740,
+  "dry_run": false,
+  "name": "NVIDIA GeForce RTX 3070",
+  "temperature_c": 73.0,
+  "power_w": 153.79,
+  "actual_clock_mhz": 1725.0,
+  "memory_clock_mhz": 5001.0,
+  "power_limit_w": 240.0
+}

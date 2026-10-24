@@ -38,7 +38,7 @@ def export_snapshot():
     logs.mkdir(exist_ok=True)
     if LOG_DIR.is_dir():
         for path in LOG_DIR.iterdir():
-            if path.is_file() and path.suffix.lower() in (".log", ".json", ".txt", ".csv"):
+            if path.is_file() and path.suffix.lower() in (".log", ".json", ".jsonl", ".txt", ".csv"):
                 raw = path.read_bytes()
                 encoding = "utf-16" if raw.startswith((b"\xff\xfe", b"\xfe\xff")) else "utf-8-sig"
                 text = raw.decode(encoding).replace("\r\n", "\n").rstrip("\r\n") + "\n"

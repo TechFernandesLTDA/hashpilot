@@ -1,12 +1,12 @@
 {
-  "collected_at": 1792885300.1623068,
+  "collected_at": 1792886345.7507718,
   "gpu": {
     "name": "NVIDIA GeForce RTX 3070",
     "driver_version": "617.14",
-    "temperature.gpu": 75.0,
-    "power.draw": 158.65,
+    "temperature.gpu": 74.0,
+    "power.draw": 153.78,
     "power.limit": 240.0,
-    "clocks.gr": 1740.0,
+    "clocks.gr": 1725.0,
     "clocks.mem": 5001.0,
     "utilization.gpu": 100.0,
     "utilization.memory": 3.0,
@@ -14,23 +14,51 @@
     "memory.total": 8192.0,
     "fan.speed": 100.0,
     "pstate": "P3",
-    "sampled_at": 1792885300.2174907
+    "sampled_at": 1792886345.8047607
   },
   "gpu_error": null,
   "miner_running": true,
   "process_error": null,
   "log_error": null,
-  "log_path": "C:\\Users\\renan\\AppData\\Local\\Mining\\Pearl\\logs\\mining-20261024-201647.log",
+  "log_path": "C:\\Users\\renan\\AppData\\Local\\Mining\\Pearl\\logs\\mining-20261024-205622.log",
+  "thermal_control": {
+    "enabled": true,
+    "mode": "hold",
+    "reason": "Resfriando: 36/60 s estáveis até 75 °C",
+    "current_clock_mhz": 1725,
+    "desired_clock_mhz": 1725,
+    "min_clock_mhz": 1500,
+    "max_clock_mhz": 1800,
+    "target_band_c": [
+      75,
+      78
+    ],
+    "emergency_pause_c": 84,
+    "sampled_at": 1792886344.536698,
+    "error": null,
+    "controller_pid": 18964,
+    "miner_pid": 27740,
+    "dry_run": false,
+    "name": "NVIDIA GeForce RTX 3070",
+    "temperature_c": 74.0,
+    "power_w": 153.43,
+    "actual_clock_mhz": 1725.0,
+    "memory_clock_mhz": 5001.0,
+    "power_limit_w": 240.0,
+    "age_seconds": 1.3463737964630127,
+    "stale": false,
+    "available": true
+  },
   "miner": {
-    "hashrate": 76.82,
-    "hashrate_at": 1792885279.0,
-    "accepted": 5,
+    "hashrate": 76.05,
+    "hashrate_at": 1792886335.0,
+    "accepted": 2,
     "rejected": 0,
     "hw_errors": 0,
-    "average_1m": 76.68,
-    "average_15m": 76.58,
-    "started_at": 1792883808.0,
-    "last_share_at": 1792885182.0,
+    "average_1m": 76.35,
+    "average_15m": 76.41,
+    "started_at": 1792886184.0,
+    "last_share_at": 1792886315.0,
     "connection": "Conectado à pool",
     "paused": false
   },
@@ -40,7 +68,7 @@
     "tray_registered": true,
     "tray_error": null,
     "panel_state": "withdrawn",
-    "pid": 3344,
+    "pid": 5584,
     "summary_open": true
   },
   "window": {
@@ -49,37 +77,37 @@
   },
   "history": {
     "database": "C:\\Users\\renan\\AppData\\Local\\PearlMonitor\\history.sqlite3",
-    "session": "094a62ab659f4c69beb0e859a0ed69a1",
+    "session": "2240ee1d4d8a4e39904bd9006e6fedb4",
     "counts": {
       "telemetry": [
-        485,
+        1022,
         1792882576.0,
-        1792885290.1181989
+        1792886341.7453003
       ],
       "events": [
-        489,
+        654,
         1792882545.0,
-        1792885279.0
+        1792886335.0
       ],
       "finance_snapshots": [
-        25,
+        42,
         1792883595.5142565,
-        1792885242.6050673
+        1792886279.5368617
       ],
       "finance_sources": [
-        95,
+        185,
         1792884222.299892,
-        1792885242.6047895
+        1792886294.5067308
       ]
     },
-    "last_commit": 1792885300.2961364,
+    "last_commit": 1792886345.90178,
     "pending_jobs": 0,
     "error": null,
     "restored_points": {
-      "hash": 10,
-      "temp": 360,
-      "power": 360,
-      "fan": 360
+      "hash": 11,
+      "temp": 459,
+      "power": 459,
+      "fan": 459
     },
     "retention": "permanent_no_automatic_deletion"
   }

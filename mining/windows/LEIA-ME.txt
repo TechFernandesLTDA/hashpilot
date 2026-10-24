@@ -13,7 +13,7 @@ Menu Iniciar:
 Ajustes: core fixo conforme logs\validated-profile.json, offset de core +150 MHz,
 memoria 5001 MHz, ventoinhas 100%, limite de potencia de fabrica 240 W.
 Sem sobretensao manual. Perfil inicial de contingencia:1650 MHz.
-Pausa termica do minerador:78 C. Mineracao por CPU e MSR tweaks desabilitados.
+Controle adaptativo: reduz clock a partir de 78 C; pausa de emergencia do minerador:84 C. Mineracao por CPU e MSR tweaks desabilitados.
 Logs e resultado da validacao em logs\.
 O desempenho foi medido por alguns minutos; o monitor permite acompanhar variacoes posteriores.
 
@@ -22,3 +22,6 @@ Nao foi configurado inicio automatico com o Windows.
 Nao foi desativado antivirus nem adicionada exclusao.
 Frase de recuperacao/senha nao fazem parte desta instalacao nem dos logs.
 Codigo do monitor: C:\Code\personal\TechFernandesLTDA\hashpilot
+
+
+Controle: thermal_controller.py / thermal.py; estado em logs\thermal-control.json. Faixa1500-1800MHz, alvo75-78C. Objetivo: manter a mineracao continua; pausa somente em emergencia.

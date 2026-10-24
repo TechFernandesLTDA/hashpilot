@@ -69,3 +69,5 @@ Ao abrir, o aplicativo restaura as séries dos gráficos, o histórico financeir
 A escrita usa SQLite em modo **WAL**, `synchronous=FULL` e transações curtas em uma thread separada. Se o banco estiver ocupado, a fila tenta novamente e mostra a falha; a interface continua respondendo. O fechamento normal espera os dados pendentes serem gravados. Ao encerrar o processo à força, todos os commits concluídos continuam no banco. Linhas de log são deduplicadas por hash, e as respostas financeiras são arquivadas no ciclo remoto de 60 segundos, sem copiar o log inteiro em cada amostra de sensores.
 
 `latest.json` expõe o caminho do banco, sessão, contagens por tabela, último commit, fila pendente e quantidade de pontos restaurados. Testes de durabilidade, recuperação, banco ocupado e isolamento por carteira: `python -m unittest -v test_history.py`.
+
+O supervisor Windows agora ajusta o clock gradualmente conforme temperatura, em vez de pausar normalmente a mineração. Veja [controle térmico adaptativo](CONTROLE-TERMICO.md).

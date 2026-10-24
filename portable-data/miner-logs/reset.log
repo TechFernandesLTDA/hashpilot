@@ -1,32 +1,32 @@
-[2026-10-24 20:16:37] Miner version: 3.8.0
-[2026-10-24 20:16:37] OS: windows
-[2026-10-24 20:16:37] Windows version: 10.0 build 26300
-[2026-10-24 20:16:37] Platform 0: NVIDIA Corporation
-[2026-10-24 20:16:37] Found 1 OpenCL platform/s
-[2026-10-24 20:16:37] Default OpenCL platform set to 0
-[2026-10-24 20:16:37] Found 1 GPU device/s on platform 0
-[2026-10-24 20:16:37] OpenCL backend inited
-[2026-10-24 20:16:37] Cuda backend inited
-[2026-10-24 20:16:38] A0 --busy-wait-recheck value is 0.05
-[2026-10-24 20:16:38] GPU0: nvidia_geforce_rtx_3070                                                [ampere        ][   8 GB][CU:      46][BUS: 06]
-[2026-10-24 20:16:38] GPU sensors: enabled
-[2026-10-24 20:16:38] Algorithm/s: pearlhash [2.00% fee]
-[2026-10-24 20:16:38] Gpu mining: enabled
-[2026-10-24 20:16:38] Cpu mining: disabled
-[2026-10-24 20:16:38] Watchdog: enabled
-[2026-10-24 20:16:38] Starting init of worker threads
-[2026-10-24 20:16:38] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] is SM_86
-[2026-10-24 20:16:38] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] driver version: 13.04
-[2026-10-24 20:16:38] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] reported total memory: 8191 MB
-[2026-10-24 20:16:38] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] memory bus width: 256 bit
-[2026-10-24 20:16:38] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] reported free memory: 6115 MB
-[2026-10-24 20:16:38] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] max buffer size: 7781 MB
-[2026-10-24 20:16:38] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] is CMP: FALSE
-[2026-10-24 20:16:38] GPU0 |A0|pearlhash           |
-[2026-10-24 20:16:38] NVIDIA NVML[13.617.14] initialised successfully! [1 devices]
-[2026-10-24 20:16:38] Finished init of worker threads
-[2026-10-24 20:16:38] HTTP API disabled
-[2026-10-24 20:16:38] GPU temperature protection monitor thread started
-[2026-10-24 20:16:38] GPU sensors thread started
-[2026-10-24 20:16:43] Couldn't connect to pool 127.0.0.1:1
-[2026-10-24 20:16:43] Reconnecting to 127.0.0.1:1 in 5 seconds [0]
+[2026-10-24 20:56:12] Miner version: 3.8.0
+[2026-10-24 20:56:12] OS: windows
+[2026-10-24 20:56:12] Windows version: 10.0 build 26300
+[2026-10-24 20:56:12] Platform 0: NVIDIA Corporation
+[2026-10-24 20:56:12] Found 1 OpenCL platform/s
+[2026-10-24 20:56:12] Default OpenCL platform set to 0
+[2026-10-24 20:56:12] Found 1 GPU device/s on platform 0
+[2026-10-24 20:56:12] OpenCL backend inited
+[2026-10-24 20:56:12] Cuda backend inited
+[2026-10-24 20:56:13] A0 --busy-wait-recheck value is 0.05
+[2026-10-24 20:56:13] GPU0: nvidia_geforce_rtx_3070                                                [ampere        ][   8 GB][CU:      46][BUS: 06]
+[2026-10-24 20:56:13] GPU sensors: enabled
+[2026-10-24 20:56:13] Algorithm/s: pearlhash [2.00% fee]
+[2026-10-24 20:56:13] Gpu mining: enabled
+[2026-10-24 20:56:13] Cpu mining: disabled
+[2026-10-24 20:56:13] Watchdog: enabled
+[2026-10-24 20:56:13] Starting init of worker threads
+[2026-10-24 20:56:13] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] is SM_86
+[2026-10-24 20:56:13] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] driver version: 13.04
+[2026-10-24 20:56:13] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] reported total memory: 8191 MB
+[2026-10-24 20:56:13] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] memory bus width: 256 bit
+[2026-10-24 20:56:13] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] reported free memory: 5953 MB
+[2026-10-24 20:56:13] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] max buffer size: 7781 MB
+[2026-10-24 20:56:13] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] is CMP: FALSE
+[2026-10-24 20:56:13] GPU0 |A0|pearlhash           |
+[2026-10-24 20:56:13] NVIDIA NVML[13.617.14] initialised successfully! [1 devices]
+[2026-10-24 20:56:13] Finished init of worker threads
+[2026-10-24 20:56:13] HTTP API disabled
+[2026-10-24 20:56:13] GPU temperature protection monitor thread started
+[2026-10-24 20:56:13] GPU sensors thread started
+[2026-10-24 20:56:18] Couldn't connect to pool 127.0.0.1:1
+[2026-10-24 20:56:18] Reconnecting to 127.0.0.1:1 in 5 seconds [0]

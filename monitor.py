@@ -18,6 +18,7 @@ import time
 import tkinter as tk
 import tkinter.font as tkfont
 import sys
+import math
 from tkinter import ttk
 from collections import deque
 from finance import FinanceCollector, financial_model
@@ -117,6 +118,49 @@ def parse_log(text: str, now: float | None = None) -> dict:
     return result
 
 
+def read_thermal_status(path=None, now=None):
+    path = Path(path) if path is not None else LOG_DIR / "thermal-control.json"
+    now = time.time() if now is None else now
+    try:
+        data = json.loads(path.read_text(encoding="utf-8-sig"))
+        if not isinstance(data, dict):
+            raise ValueError("Status térmico precisa ser um objeto JSON")
+        stamp = float(data["sampled_at"])
+        if not math.isfinite(stamp):
+            raise ValueError("Horário do supervisor inválido")
+        data["age_seconds"] = max(0, now-stamp)
+        data["stale"] = now-stamp > 12 or stamp-now > 5
+        data["available"] = True
+        return data
+    except FileNotFoundError:
+        return None
+    except (OSError, ValueError, KeyError, TypeError) as error:
+        return {"available": False, "error": str(error), "stale": True, "age_seconds": None}
+
+
+def thermal_description(control, compact=False):
+    if control is None:
+        return "Supervisor não iniciado"
+    if control.get("error"):
+        return "Erro: " + str(control["error"])[:(45 if compact else 140)]
+    if not control.get("enabled"):
+        return "Controle desativado"
+    modes = {"hold": "Mantendo", "cooling": "Resfriando", "anticipating": "Antecipando calor",
+             "recovering": "Recuperando", "emergency": "Emergência"}
+    mode = modes.get(control.get("mode"), str(control.get("mode", "Aguardando")))
+    clock = control.get("current_clock_mhz", "—")
+    desired = control.get("desired_clock_mhz")
+    clock_text = f"{clock} → {desired} MHz" if desired is not None and desired != clock else f"{clock} MHz"
+    age = control.get("age_seconds")
+    age_text = f"{age:.0f} s" if age is not None else "sem horário"
+    text = f"{mode} · {clock_text} · {age_text}"
+    if control.get("stale"):
+        text += " · desatualizado"
+    if not compact and control.get("reason"):
+        text += " — " + str(control["reason"])
+    return text
+
+
 class Collector:
     def __init__(self, history=None):
         self.samples: queue.Queue = queue.Queue(maxsize=2)
@@ -170,6 +214,7 @@ class Collector:
             result["log_error"] = str(error)
         result["miner"] = self.log_data.copy()
         result["log_path"] = str(self.log_path) if self.log_path else None
+        result["thermal_control"] = read_thermal_status()
         return result
 
     def work(self):
@@ -332,7 +377,7 @@ class Monitor(tk.Tk):
             ("clock", "Núcleo / memória / fan"), ("shares", "Aceitas / rejeitadas / erros"),
             ("today", "Hoje · observado parcial"), ("pool", "Acumulado na pool"),
             ("week", "Projeção · próximos 7 dias"), ("month", "Projeção · próximos 30 dias"),
-            ("price", "Cotação atual · 1 PRL"), ("history", "Histórico permanente")]):
+            ("price", "Cotação atual · 1 PRL"), ("thermal", "Controle térmico"), ("history", "Histórico permanente")]):
             self.label(grid, title, bg=PANEL, fg=MUTED, anchor="w", font=(BODY_FONT, 9)).grid(row=row, column=0, sticky="w", pady=9)
             value = self.label(grid, "—", bg=PANEL, fg=TEXT, font=(BODY_FONT, 10, "bold"), anchor="e")
             value.grid(row=row, column=1, sticky="e", padx=(12, 0), pady=9)
@@ -385,6 +430,7 @@ class Monitor(tk.Tk):
             "pool": money(model.get("accumulated_brl")),
             "week": money(forecast.get("brl_7days")), "month": money(forecast.get("brl_30days")),
             "price": money(model.get("price_brl")),
+            "thermal": thermal_description(data.get("thermal_control"), compact=True),
             "history": f"{self.history.info.get('telemetry', (0,))[0]} amostras · {'gravando' if not self.history.last_error else 'aguardando'}",
         }
         for key, value in values.items():
@@ -653,7 +699,8 @@ class Monitor(tk.Tk):
         self.card_values["shares"].configure(text=str(miner["accepted"]) if stamp else "—")
         self.card_notes["shares"].configure(text=f"Rej.: {miner['rejected']}  ·  HW: {miner['hw_errors']}" + ("" if fresh else " · último log"))
         efficiency = hashrate/gpu["power.draw"] if hashrate and gpu.get("power.draw") else None
-        self.details.configure(text=f"Núcleo  {fmt(gpu.get('clocks.gr'), ' MHz')}    •    Memória  {fmt(gpu.get('clocks.mem'), ' MHz')}    •    VRAM  {fmt(gpu.get('memory.used'))} / {fmt(gpu.get('memory.total'), ' MiB')}    •    Eficiência  {fmt(efficiency, ' TH/s/W', 3)}\nDriver  {gpu.get('driver_version', '—')}    •    Estado  {gpu.get('pstate', '—')}    •    Média 15 min  {fmt(miner.get('average_15m') if fresh else None, ' TH/s', 1)}")
+        thermal_text = thermal_description(data.get("thermal_control"))
+        self.details.configure(text=f"Núcleo  {fmt(gpu.get('clocks.gr'), ' MHz')}    •    Memória  {fmt(gpu.get('clocks.mem'), ' MHz')}    •    VRAM  {fmt(gpu.get('memory.used'))} / {fmt(gpu.get('memory.total'), ' MiB')}    •    Eficiência  {fmt(efficiency, ' TH/s/W', 3)}\nDriver  {gpu.get('driver_version', '—')}    •    Estado  {gpu.get('pstate', '—')}    •    Média 15 min  {fmt(miner.get('average_15m') if fresh else None, ' TH/s', 1)}\nControle térmico: {thermal_text}", wraplength=max(700, self.winfo_width()-60))
         self.subtitle.configure(text=f"{gpu.get('name', 'GPU indisponível')} · PRL / pearlhash · atualização a cada 2 s")
         for timestamp, rate in miner.get("rate_points", []):
             self.charts["hash"].add(timestamp, rate)
@@ -793,6 +840,7 @@ def console_text(snapshot, finance):
         f"Hashrate: {fmt(miner.get('hashrate'), ' TH/s', 2)}    Media 1 min: {fmt(miner.get('average_1m'), ' TH/s', 2)}",
         f"GPU: {fmt(gpu.get('temperature.gpu'), ' C')}  |  Potencia: {fmt(gpu.get('power.draw'), ' W', 1)}  |  Fan: {fmt(gpu.get('fan.speed'), '%')}",
         f"Core: {fmt(gpu.get('clocks.gr'), ' MHz')}  |  Memoria: {fmt(gpu.get('clocks.mem'), ' MHz')}",
+        "Termico: " + thermal_description(snapshot.get("thermal_control"), compact=True),
         f"Shares aceitas: {miner.get('accepted', 'N/D')}  |  Rejeitadas: {miner.get('rejected', 'N/D')}  |  HW: {miner.get('hw_errors', 'N/D')}",
         f"Hoje observado {'(parcial)' if today.get('partial') else ''}: {money(today.get('brl'))}  |  Acumulado pool: {money(finance.get('accumulated_brl'))}",
         f"Projecao 7 dias: {money(forecast.get('brl_7days'))}  |  Projecao 30 dias: {money(forecast.get('brl_30days'))}",
