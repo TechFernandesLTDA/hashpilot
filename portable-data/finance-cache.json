@@ -2,17 +2,17 @@
   "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
   "sources": {
     "price": {
-      "fetched_at": 1792884984.8053014,
+      "fetched_at": 1792885242.2518327,
       "data": {
         "pearl-2": {
           "brl": 9.52,
           "usd": 1.91,
-          "last_updated_at": 1792884979
+          "last_updated_at": 1792885235
         }
       }
     },
     "balance": {
-      "fetched_at": 1792884985.1534038,
+      "fetched_at": 1792885242.6047785,
       "data": {
         "total": 0.02779923681230703,
         "unconfirmed": 0.02779923681230703,
@@ -26,7 +26,7 @@
       }
     },
     "payouts": {
-      "fetched_at": 1792884985.1534102,
+      "fetched_at": 1792885242.6047857,
       "data": {
         "reward": {
           "week": null,
@@ -37,11 +37,11 @@
       }
     },
     "rewards": {
-      "fetched_at": 1792884985.1534135,
+      "fetched_at": 1792885242.6047883,
       "data": []
     },
     "network": {
-      "fetched_at": 1792884985.153416,
+      "fetched_at": 1792885242.6047895,
       "data": {
         "miners": 29178,
         "workers": 112413,
@@ -49,7 +49,7 @@
         "stale": 67331,
         "invalid": 9519,
         "hashrate": 3.6626602393912513e+19,
-        "net_hashrate": 86372389890957740000,
+        "net_hashrate": 84818240086708290000,
         "fee_type": "PPS+",
         "fee": 0.03,
         "minpay": 1.0,
@@ -254,8 +254,16 @@
     {
       "timestamp": 1792884985.1537573,
       "total_prl": 0.02779923681230703
+    },
+    {
+      "timestamp": 1792885076.1227133,
+      "total_prl": 0.02779923681230703
+    },
+    {
+      "timestamp": 1792885242.6050673,
+      "total_prl": 0.02779923681230703
     }
   ],
   "errors": {},
-  "attempted_at": 1792884985.15376
+  "attempted_at": 1792885242.6050708
 }

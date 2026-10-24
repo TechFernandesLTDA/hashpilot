@@ -4,7 +4,6 @@ from contextlib import closing
 import datetime as dt
 import json
 from pathlib import Path
-import shutil
 import sqlite3
 import sys
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))
@@ -40,7 +39,10 @@ def export_snapshot():
     if LOG_DIR.is_dir():
         for path in LOG_DIR.iterdir():
             if path.is_file() and path.suffix.lower() in (".log", ".json", ".txt", ".csv"):
-                shutil.copy2(path, logs / path.name)
+                raw = path.read_bytes()
+                encoding = "utf-16" if raw.startswith((b"\xff\xfe", b"\xfe\xff")) else "utf-8-sig"
+                text = raw.decode(encoding).replace("\r\n", "\n").rstrip("\r\n") + "\n"
+                (logs / path.name).write_text(text, encoding="utf-8")
     manifest = {"exported_at": dt.datetime.now(dt.timezone.utc).isoformat(), "wallet": WALLET,
                 "tables": counts, "integrity_check": "ok", "source": "SQLite online backup; monitor may remain active"}
     (DEST / "backup-manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
