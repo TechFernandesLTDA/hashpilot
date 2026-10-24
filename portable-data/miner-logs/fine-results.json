@@ -1,0 +1,23 @@
+[
+    {
+        "ClockMHz":  1710,
+        "HashrateTHs":  74.87,
+        "AverageWatts":  152.1,
+        "MaxTempC":  70,
+        "TooHot":  false
+    },
+    {
+        "ClockMHz":  1740,
+        "HashrateTHs":  0,
+        "AverageWatts":  157.1,
+        "MaxTempC":  73,
+        "TooHot":  false
+    },
+    {
+        "ClockMHz":  1770,
+        "HashrateTHs":  0,
+        "AverageWatts":  170.3,
+        "MaxTempC":  77,
+        "TooHot":  true
+    }
+]

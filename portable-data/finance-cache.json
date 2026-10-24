@@ -1,0 +1,261 @@
+{
+  "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+  "sources": {
+    "price": {
+      "fetched_at": 1792884984.8053014,
+      "data": {
+        "pearl-2": {
+          "brl": 9.52,
+          "usd": 1.91,
+          "last_updated_at": 1792884979
+        }
+      }
+    },
+    "balance": {
+      "fetched_at": 1792884985.1534038,
+      "data": {
+        "total": 0.02779923681230703,
+        "unconfirmed": 0.02779923681230703,
+        "confirmed": 0.0,
+        "threshold": 1.0,
+        "reached_pct": 0.0,
+        "last_active": 0,
+        "solo_effort": 0,
+        "maturation_time": 19400,
+        "banners": []
+      }
+    },
+    "payouts": {
+      "fetched_at": 1792884985.1534102,
+      "data": {
+        "reward": {
+          "week": null,
+          "month": null
+        },
+        "paid": 0.0,
+        "unpaid": 0.0
+      }
+    },
+    "rewards": {
+      "fetched_at": 1792884985.1534135,
+      "data": []
+    },
+    "network": {
+      "fetched_at": 1792884985.153416,
+      "data": {
+        "miners": 29178,
+        "workers": 112413,
+        "valid": 15336928,
+        "stale": 67331,
+        "invalid": 9519,
+        "hashrate": 3.6626602393912513e+19,
+        "net_hashrate": 86372389890957740000,
+        "fee_type": "PPS+",
+        "fee": 0.03,
+        "minpay": 1.0,
+        "defpay": 1.0,
+        "maxpay": 100000.0,
+        "height": 133150,
+        "blocks_for_maturation": 100,
+        "block_time": 194,
+        "ticker": "prl",
+        "commission": {
+          "PPS+": 0.03,
+          "SOLO": 0.01
+        },
+        "modes": [
+          "pps",
+          "solo"
+        ],
+        "nh_force_solo": false,
+        "block_reward": 2225.09260973,
+        "dualmining": "",
+        "mergemining": "",
+        "geomining": "Global, Europe, North America, South America, Singapore, Hong Kong, Russia, Middle East",
+        "servers": [
+          {
+            "geo": "Global",
+            "urls": [
+              "prl.kryptex.network:7048"
+            ],
+            "ssl_urls": [
+              "prl.kryptex.network:8048"
+            ]
+          },
+          {
+            "geo": "Europe",
+            "urls": [
+              "prl-eu.kryptex.network:7048"
+            ],
+            "ssl_urls": [
+              "prl-eu.kryptex.network:8048"
+            ]
+          },
+          {
+            "geo": "North America",
+            "urls": [
+              "prl-us.kryptex.network:7048"
+            ],
+            "ssl_urls": [
+              "prl-us.kryptex.network:8048"
+            ]
+          },
+          {
+            "geo": "South America",
+            "urls": [
+              "prl-br.kryptex.network:7048"
+            ],
+            "ssl_urls": [
+              "prl-br.kryptex.network:8048"
+            ]
+          },
+          {
+            "geo": "Singapore",
+            "urls": [
+              "prl-sg.kryptex.network:7048"
+            ],
+            "ssl_urls": [
+              "prl-sg.kryptex.network:8048"
+            ]
+          },
+          {
+            "geo": "Hong Kong",
+            "urls": [
+              "prl-hk.kryptex.network:7048"
+            ],
+            "ssl_urls": [
+              "prl-hk.kryptex.network:8048"
+            ]
+          },
+          {
+            "geo": "Russia",
+            "urls": [
+              "prl-ru.kryptex.network:7048"
+            ],
+            "ssl_urls": [
+              "prl-ru.kryptex.network:8048"
+            ]
+          },
+          {
+            "geo": "Middle East",
+            "urls": [
+              "prl-ae.kryptex.network:7048"
+            ],
+            "ssl_urls": [
+              "prl-ae.kryptex.network:8048"
+            ]
+          }
+        ],
+        "directMining": true,
+        "name": "Pearl",
+        "algo": "PearlHash",
+        "difficulty": {
+          "custom": true,
+          "vardiff": false,
+          "default": 2097152,
+          "min": 2097152,
+          "max": 4294967296,
+          "hashes_per_diff": 4294967296,
+          "round_to_pow2": false
+        },
+        "estimated_profit_day": 1.491145372941111e-14
+      }
+    }
+  },
+  "snapshots": [
+    {
+      "timestamp": 1792883595.5142565,
+      "total_prl": 0.016103481124163273
+    },
+    {
+      "timestamp": 1792883693.2793078,
+      "total_prl": 0.016103481124163273
+    },
+    {
+      "timestamp": 1792883753.9180853,
+      "total_prl": 0.016103481124163273
+    },
+    {
+      "timestamp": 1792883802.8394408,
+      "total_prl": 0.016103481124163273
+    },
+    {
+      "timestamp": 1792883857.4618566,
+      "total_prl": 0.016103481124163273
+    },
+    {
+      "timestamp": 1792883918.1181862,
+      "total_prl": 0.016103481124163273
+    },
+    {
+      "timestamp": 1792883979.1861324,
+      "total_prl": 0.016103481124163273
+    },
+    {
+      "timestamp": 1792884040.0775766,
+      "total_prl": 0.016103481124163273
+    },
+    {
+      "timestamp": 1792884101.3789175,
+      "total_prl": 0.019029472629292606
+    },
+    {
+      "timestamp": 1792884162.0200825,
+      "total_prl": 0.019029472629292606
+    },
+    {
+      "timestamp": 1792884222.670097,
+      "total_prl": 0.019029472629292606
+    },
+    {
+      "timestamp": 1792884273.7157097,
+      "total_prl": 0.019029472629292606
+    },
+    {
+      "timestamp": 1792884346.7434046,
+      "total_prl": 0.019029472629292606
+    },
+    {
+      "timestamp": 1792884407.4198196,
+      "total_prl": 0.019029472629292606
+    },
+    {
+      "timestamp": 1792884468.7676136,
+      "total_prl": 0.019029472629292606
+    },
+    {
+      "timestamp": 1792884530.1154687,
+      "total_prl": 0.019029472629292606
+    },
+    {
+      "timestamp": 1792884590.8126535,
+      "total_prl": 0.019029472629292606
+    },
+    {
+      "timestamp": 1792884652.1483266,
+      "total_prl": 0.019029472629292606
+    },
+    {
+      "timestamp": 1792884713.0213892,
+      "total_prl": 0.02779923681230703
+    },
+    {
+      "timestamp": 1792884802.9593718,
+      "total_prl": 0.02779923681230703
+    },
+    {
+      "timestamp": 1792884863.6054196,
+      "total_prl": 0.02779923681230703
+    },
+    {
+      "timestamp": 1792884924.510986,
+      "total_prl": 0.02779923681230703
+    },
+    {
+      "timestamp": 1792884985.1537573,
+      "total_prl": 0.02779923681230703
+    }
+  ],
+  "errors": {},
+  "attempted_at": 1792884985.15376
+}

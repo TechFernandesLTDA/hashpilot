@@ -1,0 +1,86 @@
+{
+  "collected_at": 1792885027.356554,
+  "gpu": {
+    "name": "NVIDIA GeForce RTX 3070",
+    "driver_version": "617.14",
+    "temperature.gpu": 74.0,
+    "power.draw": 158.48,
+    "power.limit": 240.0,
+    "clocks.gr": 1740.0,
+    "clocks.mem": 5001.0,
+    "utilization.gpu": 100.0,
+    "utilization.memory": 2.0,
+    "memory.used": 1904.0,
+    "memory.total": 8192.0,
+    "fan.speed": 100.0,
+    "pstate": "P3",
+    "sampled_at": 1792885027.4107752
+  },
+  "gpu_error": null,
+  "miner_running": true,
+  "process_error": null,
+  "log_error": null,
+  "log_path": "C:\\Users\\renan\\AppData\\Local\\Mining\\Pearl\\logs\\mining-20261024-201647.log",
+  "miner": {
+    "hashrate": 76.58,
+    "hashrate_at": 1792885009.0,
+    "accepted": 4,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": 76.49,
+    "average_15m": 76.41,
+    "started_at": 1792883808.0,
+    "last_share_at": 1792884751.0,
+    "connection": "Conectado à pool",
+    "paused": false
+  },
+  "monitor_status": "Minerando · dados atuais",
+  "app": {
+    "name": "HashPilot — Tech Fernandes",
+    "tray_registered": true,
+    "tray_error": null,
+    "panel_state": "normal",
+    "pid": 21804,
+    "summary_open": true
+  },
+  "window": {
+    "width": 1280,
+    "height": 930
+  },
+  "history": {
+    "database": "C:\\Users\\renan\\AppData\\Local\\PearlMonitor\\history.sqlite3",
+    "session": "9c4554c9390e4ce5aaedfeb15e56858b",
+    "counts": {
+      "telemetry": [
+        444,
+        1792882576.0,
+        1792885013.2829053
+      ],
+      "events": [
+        464,
+        1792882545.0,
+        1792885009.0
+      ],
+      "finance_snapshots": [
+        23,
+        1792883595.5142565,
+        1792884985.1537573
+      ],
+      "finance_sources": [
+        85,
+        1792884222.299892,
+        1792884985.153416
+      ]
+    },
+    "last_commit": 1792885027.5014582,
+    "pending_jobs": 0,
+    "error": null,
+    "restored_points": {
+      "hash": 16,
+      "temp": 276,
+      "power": 276,
+      "fan": 276
+    },
+    "retention": "permanent_no_automatic_deletion"
+  }
+}

@@ -1,0 +1,18 @@
+{
+    "CoreClock":  1740,
+    "CoreOffset":  150,
+    "MemoryClock":  5001,
+    "PowerLimit":  240,
+    "FanPercent":  100,
+    "ThermalPauseC":  78,
+    "ThermalFallback":  false,
+    "Started":  "2026-10-24T20:11:58.2898691-03:00",
+    "Finished":  "2026-10-24T20:15:01.0731546-03:00",
+    "AverageHashrateTHs":  76.09,
+    "AverageWatts":  157.5,
+    "MaxTempC":  74,
+    "AcceptedTotal":  8,
+    "RejectedTotal":  0,
+    "HardwareErrors":  0,
+    "ThermalPauses":  0
+}

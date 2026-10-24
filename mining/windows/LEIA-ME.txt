@@ -1,0 +1,24 @@
+Pearl - RTX 3070
+Minerador instalado: SRBMiner-Multi 3.8.0, repositorio oficial doktor83/SRBMiner-Multi.
+Carteira: Pearl Wallet 3.0.0, repositorio oficial pearl-research-labs/pearl.
+Ambos os downloads foram conferidos por SHA256 contra os assets das releases oficiais.
+Pool: Kryptex Pearl, prl.kryptex.network:7048, modo PPS+.
+Carteira publica: prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t
+
+Menu Iniciar:
+- Minerar Pearl: inicia a GPU usando o perfil validado. Solicitara elevacao do Windows.
+- Parar mineracao Pearl: encerra processos desta instalacao e restaura GPU.
+- Pearl Monitor: aplicativo local com sensores, graficos e informacoes da mineracao.
+
+Ajustes: core fixo conforme logs\validated-profile.json, offset de core +150 MHz,
+memoria 5001 MHz, ventoinhas 100%, limite de potencia de fabrica 240 W.
+Sem sobretensao manual. Perfil inicial de contingencia:1650 MHz.
+Pausa termica do minerador:78 C. Mineracao por CPU e MSR tweaks desabilitados.
+Logs e resultado da validacao em logs\.
+O desempenho foi medido por alguns minutos; o monitor permite acompanhar variacoes posteriores.
+
+Para parar, use o atalho Parar mineracao Pearl. Nao basta fechar o monitor.
+Nao foi configurado inicio automatico com o Windows.
+Nao foi desativado antivirus nem adicionada exclusao.
+Frase de recuperacao/senha nao fazem parte desta instalacao nem dos logs.
+Codigo do monitor: C:\Code\personal\TechFernandesLTDA\hashpilot

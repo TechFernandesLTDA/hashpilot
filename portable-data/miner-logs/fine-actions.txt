@@ -1,0 +1,8 @@
+GPU clocks set to "(gpuClkMin 1710, gpuClkMax 1710)" for GPU 00000000:06:00.0
+All done.
+GPU clocks set to "(gpuClkMin 1740, gpuClkMax 1740)" for GPU 00000000:06:00.0
+All done.
+GPU clocks set to "(gpuClkMin 1770, gpuClkMax 1770)" for GPU 00000000:06:00.0
+All done.
+GPU clocks set to "(gpuClkMin 1710, gpuClkMax 1710)" for GPU 00000000:06:00.0
+All done.

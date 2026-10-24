@@ -1,0 +1,44 @@
+{
+  "price_brl": 9.52,
+  "price_usd": 1.91,
+  "price_at": 1792884979,
+  "pool_at": 1792884985.1534038,
+  "errors": {},
+  "periods": {
+    "day": {
+      "prl": 0.011695755688143756,
+      "brl": 0.11134359415112856,
+      "partial": true,
+      "since": 1792883595.5142565
+    },
+    "week": {
+      "prl": 0.011695755688143756,
+      "brl": 0.11134359415112856,
+      "partial": true,
+      "since": 1792883595.5142565
+    },
+    "month": {
+      "prl": 0.011695755688143756,
+      "brl": 0.11134359415112856,
+      "partial": true,
+      "since": 1792883595.5142565
+    }
+  },
+  "forecast": {
+    "prl_day": 0.8342335240917156,
+    "brl_day": 7.941903149353132,
+    "brl_7days": 55.59332204547192,
+    "brl_30days": 238.25709448059393,
+    "hashrate_ths": 76.49,
+    "pool_fee": 0.03,
+    "dev_fee": 0.02,
+    "network_at": 1792884985.153416
+  },
+  "reward_history": [],
+  "snapshot_count": 23,
+  "unpaid_prl": 0.02779923681230703,
+  "unconfirmed_prl": 0.02779923681230703,
+  "paid_prl": 0.0,
+  "accumulated_prl": 0.02779923681230703,
+  "accumulated_brl": 0.2646487344531629
+}

@@ -1,0 +1,1 @@
+Mineracao parada. Clock automatico e potencia de fabrica restaurados.

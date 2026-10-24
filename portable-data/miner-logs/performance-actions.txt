@@ -1,0 +1,8 @@
+Power limit for GPU 00000000:06:00.0 was set to 240.00 W from 240.00 W.
+All done.
+GPU clocks set to "(gpuClkMin 1650, gpuClkMax 1650)" for GPU 00000000:06:00.0
+All done.
+GPU clocks set to "(gpuClkMin 1800, gpuClkMax 1800)" for GPU 00000000:06:00.0
+All done.
+GPU clocks set to "(gpuClkMin 1650, gpuClkMax 1650)" for GPU 00000000:06:00.0
+All done.

@@ -1,0 +1,13 @@
+{
+  "exported_at": "2026-10-24T23:37:53.987164+00:00",
+  "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+  "tables": {
+    "telemetry": 451,
+    "events": 464,
+    "finance_snapshots": 23,
+    "finance_sources": 85,
+    "preferences": 3
+  },
+  "integrity_check": "ok",
+  "source": "SQLite online backup; monitor may remain active"
+}

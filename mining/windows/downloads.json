@@ -1,0 +1,12 @@
+{
+    "pearl_wallet":  {
+                         "url":  "https://github.com/pearl-research-labs/pearl/releases/download/pearl-wallet-v3.0.0/Pearl-Wallet-Setup-3.0.0.exe",
+                         "version":  "3.0.0",
+                         "sha256":  "ae43ad5c711ea4f4a734b618685c1527c306ca69fdd4c6010d8693b875ac7ef7"
+                     },
+    "srbminer":  {
+                     "url":  "https://github.com/doktor83/SRBMiner-Multi/releases/download/3.8.0/SRBMiner-Multi-3-8-0-win64.zip",
+                     "version":  "3.8.0",
+                     "sha256":  "33eef5f8946259290013ce370a746a85f91c2bbcd81fcefa1aad904dd9a912f8"
+                 }
+}

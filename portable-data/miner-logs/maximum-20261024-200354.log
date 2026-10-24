@@ -1,0 +1,109 @@
+[2026-10-24 20:03:55] Miner version: 3.8.0
+[2026-10-24 20:03:55] OS: windows
+[2026-10-24 20:03:55] Windows version: 10.0 build 26300
+[2026-10-24 20:03:55] Platform 0: NVIDIA Corporation
+[2026-10-24 20:03:55] Found 1 OpenCL platform/s
+[2026-10-24 20:03:55] Default OpenCL platform set to 0
+[2026-10-24 20:03:55] Found 1 GPU device/s on platform 0
+[2026-10-24 20:03:55] OpenCL backend inited
+[2026-10-24 20:03:55] Cuda backend inited
+[2026-10-24 20:03:55] A0 --busy-wait-recheck value is 0.05
+[2026-10-24 20:03:55] GPU0: nvidia_geforce_rtx_3070                                                [ampere        ][   8 GB][CU:      46][BUS: 06]
+[2026-10-24 20:03:55] GPU sensors: enabled
+[2026-10-24 20:03:55] Algorithm/s: pearlhash [2.00% fee]
+[2026-10-24 20:03:55] Gpu mining: enabled
+[2026-10-24 20:03:55] Cpu mining: disabled
+[2026-10-24 20:03:55] Watchdog: enabled
+[2026-10-24 20:03:55] Starting init of worker threads
+[2026-10-24 20:03:55] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] is SM_86
+[2026-10-24 20:03:55] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] driver version: 13.04
+[2026-10-24 20:03:55] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] reported total memory: 8191 MB
+[2026-10-24 20:03:55] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] memory bus width: 256 bit
+[2026-10-24 20:03:55] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] reported free memory: 6146 MB
+[2026-10-24 20:03:55] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] max buffer size: 7781 MB
+[2026-10-24 20:03:55] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] is CMP: FALSE
+[2026-10-24 20:03:55] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] CC:1650 COFF:150 MC:5001 FAN:100
+[2026-10-24 20:03:55] GPU0 |A0|pearlhash           |
+[2026-10-24 20:03:55] NVIDIA NVML[13.617.14] initialised successfully! [1 devices]
+[2026-10-24 20:03:55] Finished init of worker threads
+[2026-10-24 20:03:55] HTTP API disabled
+[2026-10-24 20:03:55] GPU0 CC0: 1650MHZ
+[2026-10-24 20:03:55] GPU0 CO0: 150MHZ
+[2026-10-24 20:03:55] GPU0 MC0: 5001MHZ
+[2026-10-24 20:03:55] GPU0 FS0: 100%
+[2026-10-24 20:03:58] Connected to prl.kryptex.network:7048 [0]
+[2026-10-24 20:03:58] GPU temperature protection monitor thread started
+[2026-10-24 20:03:58] GPU sensors thread started
+[2026-10-24 20:04:16] GPU0[t0] share accepted [  422ms] [pearlhash][0]
+[2026-10-24 20:04:25] [A0][pearlhash]
+[2026-10-24 20:04:25] GPU0 RTX 3070: 69.55 TH/s [T:64C FAN:100% P:133.8W EFF:0.520 CC:1650 MC:5001 A:1 R:0 HW:0]
+[2026-10-24 20:04:25] Total: 69.55 TH/s [P:133.8W EFF:0.520 A:1 R:0 HW:0]
+[2026-10-24 20:04:25] Average hashrate: 1m 69.55 TH/s | 15m 69.55 TH/s | 1h 69.55 TH/s | 6h 69.55 TH/s
+[2026-10-24 20:04:55] [A0][pearlhash]
+[2026-10-24 20:04:55] GPU0 RTX 3070: 72.64 TH/s [T:64C FAN:100% P:134.8W EFF:0.539 CC:1650 MC:5001 A:1 R:0 HW:0]
+[2026-10-24 20:04:55] Total: 72.64 TH/s [P:134.8W EFF:0.539 A:1 R:0 HW:0]
+[2026-10-24 20:04:55] Average hashrate: 1m 71.15 TH/s | 15m 71.15 TH/s | 1h 71.15 TH/s | 6h 71.15 TH/s
+[2026-10-24 20:05:15] GPU0[t0] share accepted [  212ms] [pearlhash][0]
+[2026-10-24 20:05:25] [A0][pearlhash]
+[2026-10-24 20:05:25] GPU0 RTX 3070: 71.55 TH/s [T:64C FAN:100% P:134.5W EFF:0.532 CC:1650 MC:5001 A:2 R:0 HW:0]
+[2026-10-24 20:05:25] Total: 71.55 TH/s [P:134.5W EFF:0.532 A:2 R:0 HW:0]
+[2026-10-24 20:05:25] Average hashrate: 1m 72.10 TH/s | 15m 71.29 TH/s | 1h 71.29 TH/s | 6h 71.29 TH/s
+[2026-10-24 20:05:34] GPU0[t0] share accepted [  212ms] [pearlhash][0]
+[2026-10-24 20:05:55] [A0][pearlhash]
+[2026-10-24 20:05:55] GPU0 RTX 3070: 72.40 TH/s [T:73C FAN:100% P:148.1W EFF:0.489 CC:1800 MC:5001 A:3 R:0 HW:0]
+[2026-10-24 20:05:55] Total: 72.40 TH/s [P:148.1W EFF:0.489 A:3 R:0 HW:0]
+[2026-10-24 20:05:55] Average hashrate: 1m 71.98 TH/s | 15m 71.57 TH/s | 1h 71.57 TH/s | 6h 71.57 TH/s
+[2026-10-24 20:06:18] GPU0 turned off - waiting to cool down [temperature > 78]
+[2026-10-24 20:06:25] [A0][pearlhash]
+[2026-10-24 20:06:25] GPU0 RTX 3070: 0.00 H/s [T:46C FAN:100% P:136.0W EFF:- CC:1800 MC:5001 A:3 R:0 HW:0]
+[2026-10-24 20:06:25] Total: 0.00 H/s [P:136.0W EFF: A:3 R:0 HW:0]
+[2026-10-24 20:06:25] Average hashrate: 1m 66.15 TH/s | 15m 69.21 TH/s | 1h 69.21 TH/s | 6h 69.21 TH/s
+[2026-10-24 20:06:28] GPU0 turned on [temperature < 68]
+[2026-10-24 20:06:55] [A0][pearlhash]
+[2026-10-24 20:06:55] GPU0 RTX 3070: 70.90 TH/s [T:77C FAN:100% P:179.3W EFF:0.395 CC:1800 MC:5001 A:3 R:0 HW:0]
+[2026-10-24 20:06:55] Total: 70.90 TH/s [P:179.3W EFF:0.395 A:3 R:0 HW:0]
+[2026-10-24 20:06:55] Average hashrate: 1m 65.40 TH/s | 15m 69.49 TH/s | 1h 69.49 TH/s | 6h 69.49 TH/s
+[2026-10-24 20:07:25] [A0][pearlhash]
+[2026-10-24 20:07:25] GPU0 RTX 3070: 73.84 TH/s [T:66C FAN:100% P:136.4W EFF:0.541 CC:1650 MC:5001 A:3 R:0 HW:0]
+[2026-10-24 20:07:25] Total: 73.84 TH/s [P:136.4W EFF:0.541 A:3 R:0 HW:0]
+[2026-10-24 20:07:25] Average hashrate: 1m 72.37 TH/s | 15m 70.12 TH/s | 1h 70.12 TH/s | 6h 70.12 TH/s
+[2026-10-24 20:07:55] [A0][pearlhash]
+[2026-10-24 20:07:55] GPU0 RTX 3070: 72.56 TH/s [T:68C FAN:100% P:140.3W EFF:0.517 CC:1710 MC:5001 A:3 R:0 HW:0]
+[2026-10-24 20:07:55] Total: 72.56 TH/s [P:140.3W EFF:0.517 A:3 R:0 HW:0]
+[2026-10-24 20:07:55] Average hashrate: 1m 73.20 TH/s | 15m 70.43 TH/s | 1h 70.43 TH/s | 6h 70.43 TH/s
+[2026-10-24 20:07:58] GPU0[t0] share accepted [  212ms] [pearlhash][0]
+[2026-10-24 20:08:06] GPU0[t0] share accepted [  211ms] [pearlhash][0]
+[2026-10-24 20:08:25] [A0][pearlhash]
+[2026-10-24 20:08:25] GPU0 RTX 3070: 74.40 TH/s [T:70C FAN:100% P:151.9W EFF:0.490 CC:1710 MC:5001 A:5 R:0 HW:0]
+[2026-10-24 20:08:25] Total: 74.40 TH/s [P:151.9W EFF:0.490 A:5 R:0 HW:0]
+[2026-10-24 20:08:25] Average hashrate: 1m 73.48 TH/s | 15m 70.87 TH/s | 1h 70.87 TH/s | 6h 70.87 TH/s
+[2026-10-24 20:08:55] [A0][pearlhash]
+[2026-10-24 20:08:55] GPU0 RTX 3070: 75.33 TH/s [T:70C FAN:100% P:152.0W EFF:0.496 CC:1710 MC:5001 A:5 R:0 HW:0]
+[2026-10-24 20:08:55] Total: 75.33 TH/s [P:152.0W EFF:0.496 A:5 R:0 HW:0]
+[2026-10-24 20:08:55] Average hashrate: 1m 74.88 TH/s | 15m 71.32 TH/s | 1h 71.32 TH/s | 6h 71.32 TH/s
+[2026-10-24 20:09:19] GPU0[t0] share accepted [  212ms] [pearlhash][0]
+[2026-10-24 20:09:55] Uptime: 0d 00:05:57
+[2026-10-24 20:09:55] [A0][pearlhash]
+[2026-10-24 20:09:55] Pool: prl.kryptex.network:7048
+[2026-10-24 20:09:55] Connection: 0d 00:05:57
+[2026-10-24 20:09:55] Latency: ~212 ms
+[2026-10-24 20:09:55] Diff: 2097152
+[2026-10-24 20:09:55] Last job: 39 sec ago
+[2026-10-24 20:10:25] [A0][pearlhash]
+[2026-10-24 20:10:25] GPU0 RTX 3070: 76.83 TH/s [T:73C FAN:100% P:157.6W EFF:0.487 CC:1740 MC:5001 A:6 R:0 HW:0]
+[2026-10-24 20:10:25] Total: 76.83 TH/s [P:157.6W EFF:0.487 A:6 R:0 HW:0]
+[2026-10-24 20:10:25] Average hashrate: 1m 76.81 TH/s | 15m 72.49 TH/s | 1h 72.49 TH/s | 6h 72.49 TH/s
+[2026-10-24 20:11:55] [A0][pearlhash]
+[2026-10-24 20:11:55] GPU0 RTX 3070: 75.21 TH/s [T:71C FAN:100% P:153.2W EFF:0.491 CC:1710 MC:5001 A:6 R:0 HW:0]
+[2026-10-24 20:11:55] Total: 75.21 TH/s [P:153.2W EFF:0.491 A:6 R:0 HW:0]
+[2026-10-24 20:11:55] Average hashrate: 1m 75.72 TH/s | 15m 73.25 TH/s | 1h 73.25 TH/s | 6h 73.25 TH/s
+[2026-10-24 20:13:26] [A0][pearlhash]
+[2026-10-24 20:13:26] GPU0 RTX 3070: 76.10 TH/s [T:74C FAN:100% P:158.0W EFF:0.482 CC:1740 MC:5001 A:6 R:0 HW:0]
+[2026-10-24 20:13:26] Total: 76.10 TH/s [P:158.0W EFF:0.482 A:6 R:0 HW:0]
+[2026-10-24 20:13:26] Average hashrate: 1m 76.28 TH/s | 15m 73.74 TH/s | 1h 73.74 TH/s | 6h 73.74 TH/s
+[2026-10-24 20:14:07] GPU0[t0] share accepted [  214ms] [pearlhash][0]
+[2026-10-24 20:14:08] GPU0[t0] share accepted [  211ms] [pearlhash][0]
+[2026-10-24 20:14:56] [A0][pearlhash]
+[2026-10-24 20:14:56] GPU0 RTX 3070: 76.08 TH/s [T:74C FAN:100% P:157.0W EFF:0.485 CC:1740 MC:5001 A:8 R:0 HW:0]
+[2026-10-24 20:14:56] Total: 76.08 TH/s [P:157.0W EFF:0.485 A:8 R:0 HW:0]
+[2026-10-24 20:14:56] Average hashrate: 1m 76.22 TH/s | 15m 74.10 TH/s | 1h 74.10 TH/s | 6h 74.10 TH/s

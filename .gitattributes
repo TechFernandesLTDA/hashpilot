@@ -1,0 +1,13 @@
+* text=auto
+*.py text eol=lf
+*.command text eol=lf
+*.sh text eol=lf
+*.md text eol=lf
+*.toml text eol=lf
+*.json text eol=lf
+*.log text eol=lf
+*.ps1 text eol=crlf
+*.cmd text eol=crlf
+*.png -text
+*.ico -text
+*.sqlite3 -text
