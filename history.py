@@ -16,6 +16,10 @@ def encode(value):
     return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
 
 
+class HistorySchemaError(RuntimeError):
+    """The database layout cannot be safely written by this version."""
+
+
 class HistoryStore:
     def __init__(self, path: Path, wallet: str):
         self.path, self.wallet = Path(path), wallet
@@ -44,36 +48,51 @@ class HistoryStore:
 
     def schema(self, connection):
         connection.execute("PRAGMA journal_mode=WAL")
-        connection.executescript("""
-          CREATE TABLE IF NOT EXISTS telemetry (
+        connection.execute("BEGIN IMMEDIATE")
+        try:
+            version=connection.execute('PRAGMA user_version').fetchone()[0]
+            if version>3:raise HistorySchemaError('Versão futura do histórico não suportada')
+            statements=["""CREATE TABLE IF NOT EXISTS telemetry (
             wallet TEXT NOT NULL, timestamp REAL NOT NULL, session TEXT NOT NULL,
             source TEXT NOT NULL, gpu_json TEXT, miner_json TEXT NOT NULL,
             miner_running INTEGER, errors_json TEXT, log_path TEXT,
-            PRIMARY KEY(wallet,timestamp));
-          CREATE TABLE IF NOT EXISTS events (
+            PRIMARY KEY(wallet,timestamp))""", """CREATE TABLE IF NOT EXISTS events (
             wallet TEXT NOT NULL, event_key TEXT NOT NULL, timestamp REAL NOT NULL,
             session TEXT NOT NULL, kind TEXT NOT NULL, data_json TEXT NOT NULL,
-            PRIMARY KEY(wallet,event_key));
-          CREATE INDEX IF NOT EXISTS events_by_time ON events(wallet,timestamp);
-          CREATE TABLE IF NOT EXISTS finance_snapshots (
+            PRIMARY KEY(wallet,event_key))""", "CREATE INDEX IF NOT EXISTS events_by_time ON events(wallet,timestamp)", """CREATE TABLE IF NOT EXISTS finance_snapshots (
             wallet TEXT NOT NULL, timestamp REAL NOT NULL, total_prl REAL NOT NULL,
-            PRIMARY KEY(wallet,timestamp));
-          CREATE TABLE IF NOT EXISTS finance_sources (
+            PRIMARY KEY(wallet,timestamp))""", """CREATE TABLE IF NOT EXISTS finance_sources (
             wallet TEXT NOT NULL, source TEXT NOT NULL, fetched_at REAL NOT NULL,
-            data_json TEXT NOT NULL, PRIMARY KEY(wallet,source,fetched_at));
-          CREATE TABLE IF NOT EXISTS preferences (
+            data_json TEXT NOT NULL, PRIMARY KEY(wallet,source,fetched_at))""", """CREATE TABLE IF NOT EXISTS preferences (
             wallet TEXT NOT NULL, name TEXT NOT NULL, data_json TEXT NOT NULL,
-            PRIMARY KEY(wallet,name));
-          CREATE TABLE IF NOT EXISTS gpu_devices (
-            gpu_uuid TEXT PRIMARY KEY,first_seen REAL NOT NULL,last_seen REAL NOT NULL,identity_json TEXT NOT NULL);
-          CREATE TABLE IF NOT EXISTS gpu_telemetry (
+            PRIMARY KEY(wallet,name))""", """CREATE TABLE IF NOT EXISTS gpu_devices (
+            gpu_uuid TEXT PRIMARY KEY,first_seen REAL NOT NULL,last_seen REAL NOT NULL,identity_json TEXT NOT NULL)""", """CREATE TABLE IF NOT EXISTS gpu_telemetry (
             gpu_uuid TEXT NOT NULL,timestamp REAL NOT NULL,wallet TEXT NOT NULL,session TEXT NOT NULL,
             source TEXT NOT NULL,gpu_json TEXT,miner_json TEXT NOT NULL,miner_running INTEGER,
-            enabled INTEGER,errors_json TEXT,log_path TEXT,PRIMARY KEY(gpu_uuid,timestamp));
-          CREATE INDEX IF NOT EXISTS gpu_telemetry_wallet_time ON gpu_telemetry(wallet,timestamp);
-          PRAGMA user_version=2;
-        """)
-        connection.commit()
+            enabled INTEGER,errors_json TEXT,log_path TEXT,PRIMARY KEY(gpu_uuid,wallet,timestamp))"""]
+            for statement in statements:connection.execute(statement)
+            columns=connection.execute("PRAGMA table_info(gpu_telemetry)").fetchall()
+            primary=[row[1] for row in sorted(columns,key=lambda row:row[5]) if row[5]]
+            if primary==['gpu_uuid','timestamp']:
+                connection.execute("""CREATE TABLE gpu_telemetry_new (
+                    gpu_uuid TEXT NOT NULL,timestamp REAL NOT NULL,wallet TEXT NOT NULL,session TEXT NOT NULL,
+                    source TEXT NOT NULL,gpu_json TEXT,miner_json TEXT NOT NULL,miner_running INTEGER,
+                    enabled INTEGER,errors_json TEXT,log_path TEXT,PRIMARY KEY(gpu_uuid,wallet,timestamp))""")
+                fields='gpu_uuid,timestamp,wallet,session,source,gpu_json,miner_json,miner_running,enabled,errors_json,log_path'
+                connection.execute(f'INSERT INTO gpu_telemetry_new ({fields}) SELECT {fields} FROM gpu_telemetry')
+                old_count=connection.execute('SELECT COUNT(*) FROM gpu_telemetry').fetchone()[0]
+                new_count=connection.execute('SELECT COUNT(*) FROM gpu_telemetry_new').fetchone()[0]
+                if old_count!=new_count:raise HistorySchemaError('Migração de GPU perdeu linhas')
+                connection.execute('DROP TABLE gpu_telemetry')
+                connection.execute('ALTER TABLE gpu_telemetry_new RENAME TO gpu_telemetry')
+            elif primary!=['gpu_uuid','wallet','timestamp']:
+                raise HistorySchemaError('Esquema de GPU desconhecido')
+            connection.execute('CREATE INDEX IF NOT EXISTS gpu_telemetry_wallet_time ON gpu_telemetry(wallet,timestamp)')
+            if version<3:connection.execute('PRAGMA user_version=3')
+            connection.commit()
+        except BaseException:
+            connection.rollback()
+            raise
 
     def submit(self, kind, payload):
         snapshot=json.loads(encode(payload))
@@ -179,7 +198,7 @@ class HistoryStore:
                 connection.execute('INSERT INTO gpu_devices VALUES(?,?,?,?) ON CONFLICT(gpu_uuid) DO UPDATE SET last_seen=excluded.last_seen,identity_json=excluded.identity_json',
                     (identifier,stamp,stamp,encode(identity)))
                 errors={key:device.get(key) for key in ('gpu_error','log_error','process_error','configuration_error') if device.get(key)}
-                connection.execute('INSERT OR IGNORE INTO gpu_telemetry VALUES(?,?,?,?,?,?,?,?,?,?,?)',
+                connection.execute('INSERT OR IGNORE INTO gpu_telemetry (gpu_uuid,timestamp,wallet,session,source,gpu_json,miner_json,miner_running,enabled,errors_json,log_path) VALUES(?,?,?,?,?,?,?,?,?,?,?)',
                     (identifier,stamp,device.get('wallet') or self.wallet,self.session,'live',encode(device.get('gpu')),
                      encode(device.get('miner') or {}),device.get('miner_running'),device.get('enabled',True),encode(errors),device.get('log_path')))
         elif kind == "event":
@@ -207,6 +226,7 @@ class HistoryStore:
             if job is None:
                 self.jobs.task_done()
                 break
+            stop=False
             while True:
                 try:
                     if connection is None:
@@ -220,6 +240,17 @@ class HistoryStore:
                     if time.monotonic()-self.info_at > 15:
                         self.info = self.stats()
                         self.info_at = time.monotonic()
+                    break
+                except HistorySchemaError as error:
+                    self.last_error='Histórico indisponível: '+str(error)
+                    self.ready.set()
+                    with self.enqueue_lock:
+                        self.closed=True
+                        while True:
+                            try:self.jobs.get_nowait()
+                            except queue.Empty:break
+                            self.jobs.task_done()
+                    stop=True
                     break
                 except (sqlite3.IntegrityError,ValueError,TypeError,KeyError,AttributeError) as error:
                     # A malformed sample must not kill or permanently block the writer.
@@ -240,7 +271,17 @@ class HistoryStore:
                             pass
                         connection = None
                     time.sleep(.25)
+                    if self.closed:
+                        self.ready.set()
+                        with self.enqueue_lock:
+                            while True:
+                                try:self.jobs.get_nowait()
+                                except queue.Empty:break
+                                self.jobs.task_done()
+                        stop=True
+                        break
             self.jobs.task_done()
+            if stop:break
         if connection:
             connection.close()
 
@@ -284,14 +325,10 @@ class HistoryStore:
         except (sqlite3.Error, ValueError) as error:
             return {"points": {}, "preferences": {}, "count": 0, "error": str(error)}
 
-    def restore_gpu(self,gpu_uuid,since,wallet=None):
+    def restore_gpu(self,gpu_uuid,since,wallet):
         try:
-            query='SELECT timestamp,gpu_json,miner_json FROM gpu_telemetry WHERE gpu_uuid=? AND timestamp>=?'
-            parameters=[gpu_uuid,since]
-            if wallet is not None:
-                query+=' AND wallet=?'
-                parameters.append(wallet)
-            rows=self.read(query+' ORDER BY timestamp',parameters)
+            if not wallet:raise ValueError('Carteira da GPU obrigatória')
+            rows=self.read('SELECT timestamp,gpu_json,miner_json FROM gpu_telemetry WHERE gpu_uuid=? AND wallet=? AND timestamp>=? ORDER BY timestamp',(gpu_uuid,wallet,since))
             points={key:{} for key in ('hash','temp','power','fan')}
             for stamp,gpu_json,miner_json in rows:
                 gpu,miner=json.loads(gpu_json) or {},json.loads(miner_json)

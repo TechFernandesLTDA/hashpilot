@@ -22,7 +22,7 @@ class RigHistoryRules(unittest.TestCase):
             try:
                 self.assertTrue(store.flush())
                 for index in range(6):
-                    restored=store.restore_gpu(f'GPU-{index}',now-1)
+                    restored=store.restore_gpu(f'GPU-{index}',now-1,wallet='wallet-A')
                     self.assertEqual(restored['points']['hash'],[(now,50+index)])
                     self.assertEqual(restored['identity']['index'],index)
                 self.assertEqual(store.restore_gpu('GPU-1',now-1,wallet='wallet-B')['count'],0)

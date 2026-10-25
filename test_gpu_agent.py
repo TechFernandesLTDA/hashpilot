@@ -333,14 +333,14 @@ class OllamaAndActuatorTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             path=Path(temporary)/"gpu-agent-control.json"
             path.write_text(json.dumps({"enabled":True,"controller_pid":123456,"gpu_uuid":"GPU-test-0"}))
-            with patch("gpu_agent.process_alive",return_value=True):
+            with patch("gpu_agent.process_state",return_value="alive"):
                 self.assertFalse(external_supervisor_active(temporary,gpu_uuid="GPU-test-5",gpu_index=5))
                 self.assertTrue(external_supervisor_active(temporary,gpu_uuid="GPU-test-0",gpu_index=0))
 
     def test_legacy_thermal_supervisor_without_uuid_belongs_only_to_gpu_zero(self):
         with tempfile.TemporaryDirectory() as temporary:
             (Path(temporary)/"thermal-control.json").write_text(json.dumps({"enabled":True,"controller_pid":123456}))
-            with patch("gpu_agent.process_alive",return_value=True):
+            with patch("gpu_agent.process_state",return_value="alive"):
                 self.assertFalse(external_supervisor_active(temporary,gpu_uuid="GPU-test-5",gpu_index=5))
                 self.assertTrue(external_supervisor_active(temporary,gpu_uuid="GPU-test-0",gpu_index=0))
 

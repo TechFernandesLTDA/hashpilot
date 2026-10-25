@@ -583,31 +583,90 @@ class NvidiaActuator:
     """Explicit control owner. Existing thermal supervisor must remain the sole writer."""
     def __init__(self, state_dir, *, enabled=False, command=smi_command):
         self.path=Path(state_dir)/"gpu-control-owner.json"
+        self.lock_path=Path(state_dir)/"gpu-control-owner.lock"
         self.path.parent.mkdir(parents=True,exist_ok=True)
         self.enabled=enabled
         self.command=command
         self.token=uuid.uuid4().hex
         self.owns=False
+        self.handle=None
+
+    def _lock(self):
+        descriptor=os.open(self.lock_path,os.O_RDWR|os.O_CREAT,0o600)
+        handle=os.fdopen(descriptor,"r+b",buffering=0)
+        try:
+            if os.fstat(handle.fileno()).st_size==0:handle.write(b" ")
+            handle.seek(0)
+            if os.name=="nt":
+                import msvcrt
+                msvcrt.locking(handle.fileno(),msvcrt.LK_NBLCK,1)
+            else:
+                import fcntl
+                fcntl.flock(handle.fileno(),fcntl.LOCK_EX|fcntl.LOCK_NB)
+            self.handle=handle
+        except BaseException:
+            handle.close()
+            raise RuntimeError("Outra sessão detém o controle da GPU")
+
+    def _unlock(self):
+        handle,self.handle=self.handle,None
+        if handle is None:return
+        try:
+            handle.seek(0)
+            if os.name=="nt":
+                import msvcrt
+                msvcrt.locking(handle.fileno(),msvcrt.LK_UNLCK,1)
+            else:
+                import fcntl
+                fcntl.flock(handle.fileno(),fcntl.LOCK_UN)
+        finally:handle.close()
+
+    def assert_owner(self,gpu_uuid):
+        if not self.owns or self.handle is None:
+            raise RuntimeError("Posse da GPU inválida")
+        try:owner=json.loads(self.path.read_text(encoding="utf-8"))
+        except (OSError,ValueError) as error:raise RuntimeError("Posse da GPU inválida") from error
+        if not isinstance(owner,dict):raise RuntimeError("Posse da GPU inválida")
+        if owner.get("token")!=self.token or owner.get("gpu_uuid")!=gpu_uuid:
+            raise RuntimeError("Posse da GPU inválida")
 
     def acquire(self, gpu_uuid, *, external_controller_active=False):
+        if self.owns or self.handle is not None:
+            raise RuntimeError("Controle da GPU já adquirido")
         if not self.enabled:
             raise RuntimeError("Escritas de hardware não foram habilitadas")
         if external_controller_active:
             raise RuntimeError("Já existe um supervisor térmico ativo; controle concorrente bloqueado")
+        self._lock()
         try:
-            with self.path.open("x",encoding="utf-8") as handle:
-                json.dump({"pid":os.getpid(),"token":self.token,"gpu_uuid":gpu_uuid,"at":time.time()},handle)
-        except FileExistsError as error:
-            raise RuntimeError("Outra sessão detém o controle da GPU; não remover a trava enquanto estiver ativa") from error
-        self.owns=True
+            owner={"pid":os.getpid(),"token":self.token,"gpu_uuid":gpu_uuid,"at":time.time(),"lease_version":2}
+            if self.path.exists():
+                try:previous=json.loads(self.path.read_text(encoding="utf-8"))
+                except (OSError,ValueError) as error:
+                    raise RuntimeError("Trava legada ambígua; controle bloqueado") from error
+                if not isinstance(previous,dict):raise RuntimeError("Trava legada ambígua; controle bloqueado")
+                if previous.get("lease_version")!=2 and process_state(previous.get("pid"))!="dead":
+                    raise RuntimeError("Outra sessão pode deter o controle da GPU")
+                temporary=self.path.with_name(self.path.name+"."+self.token+".tmp")
+                try:
+                    temporary.write_text(json.dumps(owner),encoding="utf-8")
+                    os.replace(temporary,self.path)
+                finally:temporary.unlink(missing_ok=True)
+            else:
+                try:
+                    with self.path.open("x",encoding="utf-8") as output:json.dump(owner,output)
+                except FileExistsError as error:
+                    raise RuntimeError("Outra sessão detém o controle da GPU") from error
+            self.owns=True
+        except BaseException:
+            self._unlock()
+            raise
 
     def apply(self, gpu, sample, plan, *, external_controller_active=False):
         validate_device(gpu)
         if not self.enabled or not self.owns or external_controller_active:
             raise RuntimeError("Hardware somente leitura ou controle concorrente")
-        owner=json.loads(self.path.read_text(encoding="utf-8"))
-        if owner.get("token")!=self.token or owner.get("gpu_uuid")!=gpu["uuid"]:
-            raise RuntimeError("Posse da GPU inválida")
+        self.assert_owner(gpu["uuid"])
         stamp=time.time()
         normalized=normalize_sample(sample)
         if normalized["temperature_c"] is None or not 0<=normalized["temperature_c"]<=120 or not -2<=stamp-normalized["sampled_at"]<=10:
@@ -628,11 +687,14 @@ class NvidiaActuator:
         return checked
 
     def close(self):
-        if self.owns:
-            owner=json.loads(self.path.read_text(encoding="utf-8"))
-            if owner.get("token")==self.token:
-                self.path.unlink()
+        try:
+            if self.owns:
+                try:owner=json.loads(self.path.read_text(encoding="utf-8"))
+                except (OSError,ValueError):owner={}
+                if isinstance(owner,dict) and owner.get("token")==self.token:self.path.unlink()
+        finally:
             self.owns=False
+            self._unlock()
 
 
 def main():
@@ -707,6 +769,29 @@ def process_alive(pid):
         return False
 
 
+def process_state(pid):
+    """Conservative probe for legacy owners: access errors never prove death."""
+    if type(pid) is not int or not 0<pid<=0xffffffff:return "unknown"
+    if os.name=="nt":
+        import ctypes
+        from ctypes import wintypes
+        kernel=ctypes.WinDLL("kernel32",use_last_error=True)
+        kernel.OpenProcess.argtypes=[wintypes.DWORD,wintypes.BOOL,wintypes.DWORD]
+        kernel.OpenProcess.restype=wintypes.HANDLE
+        kernel.GetExitCodeProcess.argtypes=[wintypes.HANDLE,ctypes.POINTER(wintypes.DWORD)]
+        kernel.CloseHandle.argtypes=[wintypes.HANDLE]
+        handle=kernel.OpenProcess(0x1000,False,pid)
+        if not handle:return "dead" if ctypes.get_last_error()==87 else "unknown"
+        try:
+            code=wintypes.DWORD()
+            if not kernel.GetExitCodeProcess(handle,ctypes.byref(code)):return "unknown"
+            return "alive" if code.value==259 else "dead"
+        finally:kernel.CloseHandle(handle)
+    import errno
+    try:os.kill(pid,0);return "alive"
+    except OSError as error:return "dead" if error.errno==errno.ESRCH else "unknown"
+
+
 def external_supervisor_active(*directories,gpu_uuid=None,gpu_index=None):
     for directory in directories:
         for name in ("thermal-control.json","gpu-agent-control.json"):
@@ -719,7 +804,7 @@ def external_supervisor_active(*directories,gpu_uuid=None,gpu_index=None):
                         continue
                     if not reported and gpu_index is not None and int(status.get("gpu_index",0))!=int(gpu_index):
                         continue
-                if pid!=os.getpid() and status.get("enabled") and process_alive(pid):
+                if pid!=os.getpid() and status.get("enabled") and process_state(pid)!="dead":
                     return True
             except (OSError,ValueError,TypeError):
                 pass
@@ -997,13 +1082,16 @@ def control(args,state_dir,monitor_state_dir):
         # The CLI never kills an arbitrary PID supplied on its command line.
         if owns:
             try:
+                actuator.assert_owner(gpu["uuid"])
                 smi_command(["-i",gpu["uuid"],"-rgc"])
                 minimum,maximum=(numeric(gpu.get(key)) for key in ("power_min_w","power_max_w"))
                 if minimum is not None and maximum is not None and original_power is not None and minimum<=original_power<=maximum:
+                    actuator.assert_owner(gpu["uuid"])
                     smi_command(["-i",gpu["uuid"],"-pl",str(original_power)])
             except (OSError,RuntimeError,subprocess.SubprocessError) as error:
                 status["restore_error"]=str(error)
-            actuator.close()
+            finally:
+                actuator.close()
         status.update(enabled=False,sampled_at=time.time())
         write_status(status_path,status)
         agent.close()

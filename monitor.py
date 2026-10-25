@@ -30,6 +30,12 @@ from tray import WindowsTray
 from bootstrap import restore_bundled_data
 from rig_panel import RigCards, project_selected, totals, save_enabled, show_identity
 
+
+def selected_gpu_context(data, identifier, fallback_wallet):
+    devices=((data or {}).get('rig') or {}).get('devices') or []
+    device=next((item for item in devices if item.get('uuid')==identifier),None)
+    return (identifier,device.get('wallet') or fallback_wallet) if device else None
+
 APP_NAME = "HashPilot — Tech Fernandes"
 DPI_MODE = {"requested":"PerMonitorV2","enabled":False,"fallback":True}
 ASSET_DIR = Path(__file__).resolve().parent / "assets/brand"
@@ -1193,11 +1199,12 @@ class Monitor(tk.Tk):
             self.gpu_ids=[d['uuid'] for d in devices]
             self.gpu_selection.configure(values=[f"GPU {d['index']} · {d['name']} · {d['uuid'][-8:]} · {'ativa' if d['enabled'] else 'desativada'}" for d in devices])
             self.gpu_selection.current(self.gpu_ids.index(selected))
-            if getattr(self,'_chart_gpu_uuid',None)!=selected:
-                self._chart_gpu_uuid=selected
+            chart_context=selected_gpu_context(data,selected,self.history.wallet)
+            if getattr(self,'_chart_context',None)!=chart_context:
+                self._chart_context=chart_context
                 for chart in self.charts.values():chart.points.clear()
                 if hasattr(self.history,'restore_gpu'):
-                    restored=self.history.restore_gpu(selected,time.time()-900)
+                    restored=self.history.restore_gpu(selected,time.time()-900,chart_context[1])
                     for key,points in restored.get('points',{}).items():
                         if key in self.charts:
                             for stamp,value in points:self.charts[key].add(stamp,value)
@@ -1354,10 +1361,17 @@ class Monitor(tk.Tk):
             pass
         try:
             restored = self.history_restore.get_nowait()
+            if self.last_data is None:
+                self.history_restore.put(restored)
+                raise queue.Empty
+            devices=((self.last_data or {}).get('rig') or {}).get('devices') or []
             selected=getattr(self,'selected_gpu_uuid',None)
-            if selected and hasattr(self.history,'restore_gpu'):
-                restored_points=self.history.restore_gpu(selected,time.time()-900)
-                restored['points']=restored_points.get('points',{})
+            context=selected_gpu_context(self.last_data,selected,self.history.wallet)
+            if devices:
+                if context is not None and context==getattr(self,'_chart_context',None) and hasattr(self.history,'restore_gpu'):
+                    restored_points=self.history.restore_gpu(selected,time.time()-900,context[1])
+                    restored['points']=restored_points.get('points',{})
+                else:restored['points']={}
             for key, points in restored.get("points", {}).items():
                 self.restored_points[key] = len(points)
                 combined = dict(points)

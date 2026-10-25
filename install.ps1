@@ -1,11 +1,11 @@
 # HashPilot Windows bootstrap. Inspect this file before running remote code.
-# Public entrypoint: irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/install.ps1 | iex
+# Public entrypoint: irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.3.3/install.ps1 | iex
 [CmdletBinding()]
 param(
     [string]$InstallRoot = (Join-Path $env:LOCALAPPDATA 'Programs\HashPilot'),
     [string]$SourcePath,
     [ValidatePattern('^v[0-9]+\.[0-9]+\.[0-9]+$')]
-    [string]$Release = 'v0.3.2',
+    [string]$Release = 'v0.3.3',
     [switch]$NoLaunch,
     [switch]$NoShortcuts
 )
@@ -104,18 +104,75 @@ if ($SourcePath) {
     $revision = [string]$verifiedManifest.commit
 }
 foreach ($required in @('monitor.py','onboarding.py','config.py','contribution.py','rig.py','rig_config.py','rig_controller.py','gpu_telemetry.py','ai_advisor.py','ai_setup.py','rig_panel.py','assets\brand\hashpilot.ico','mining\windows\downloads.json')) {
-    if (-not (Test-Path -LiteralPath (Join-Path $source $required))) { throw ('Incomplete package: ' + $required) }
+    if (-not (Test-Path -LiteralPath (Join-Path $source $required) -PathType Leaf)) { throw ('Incomplete package: ' + $required) }
+}
+function Get-ApplicationFiles {
+    param([string]$Root)
+    $excluded=@('.git','__pycache__','.venv','.env','settings.json')
+    foreach($entry in (Get-ChildItem -LiteralPath $Root -Force | Where-Object { $_.Name -notin $excluded })) {
+        if($entry.PSIsContainer) { Get-ChildItem -LiteralPath $entry.FullName -Recurse -File -Force }
+        else { $entry }
+    }
+}
+function Test-ApplicationCopy {
+    param([string]$Source,[string]$Destination,[array]$Files)
+    if(-not (Test-Path -LiteralPath $Destination -PathType Container)){return $false}
+    $prefix=$Source.TrimEnd('\','/')+'\'
+    $expected=@{}
+    foreach($file in $Files){
+        $relative=$file.FullName.Substring($prefix.Length)
+        $expected[$relative]=$true
+        $target=Join-Path $Destination $relative
+        if(-not (Test-Path -LiteralPath $target -PathType Leaf)){return $false}
+        if((Get-Item -LiteralPath $target).Length -ne $file.Length){return $false}
+        if((Get-FileHash -LiteralPath $target -Algorithm SHA256).Hash -ne (Get-FileHash -LiteralPath $file.FullName -Algorithm SHA256).Hash){return $false}
+    }
+    $destinationPrefix=$Destination.TrimEnd('\','/')+'\'
+    foreach($installedFile in (Get-ChildItem -LiteralPath $Destination -Recurse -File -Force)){
+        $relative=$installedFile.FullName.Substring($destinationPrefix.Length)
+        if(($relative.StartsWith('__pycache__\') -or $relative.Contains('\__pycache__\')) -and $relative.EndsWith('.pyc')){continue}
+        if(-not $expected.ContainsKey($relative)){return $false}
+    }
+    return $true
 }
 Write-Host '[3/5] Installing application (history and settings are preserved)...'
 $versions = Join-Path $InstallRoot 'versions'
 New-Item -ItemType Directory -Path $versions -Force | Out-Null
 $application = Join-Path $versions $revision
-if (-not (Test-Path -LiteralPath $application)) {
-    New-Item -ItemType Directory -Path $application | Out-Null
-    Get-ChildItem -LiteralPath $source -Force | Where-Object { $_.Name -notin @('.git','__pycache__','.venv','.env','settings.json') } | Copy-Item -Destination $application -Recurse -Force
+$files=@(Get-ApplicationFiles -Root $source)
+if (-not (Test-ApplicationCopy -Source $source -Destination $application -Files $files)) {
+    $staged=Join-Path $versions ('stage-' + [Guid]::NewGuid().ToString('N'))
+    New-Item -ItemType Directory -Path $staged | Out-Null
+    try {
+        Get-ChildItem -LiteralPath $source -Force | Where-Object { $_.Name -notin @('.git','__pycache__','.venv','.env','settings.json') } | Copy-Item -Destination $staged -Recurse -Force
+        if(-not (Test-ApplicationCopy -Source $source -Destination $staged -Files $files)){throw 'Staged application failed verification.'}
+        if(Test-Path -LiteralPath $application){
+            do {$application=Join-Path $versions ($revision+'-repair-'+[Guid]::NewGuid().ToString('N'))} while(Test-Path -LiteralPath $application)
+        }
+        Move-Item -LiteralPath $staged -Destination $application
+        if(-not (Test-ApplicationCopy -Source $source -Destination $application -Files $files)){throw 'Installed application failed verification.'}
+    } finally {
+        if(Test-Path -LiteralPath $staged){
+            $resolvedStage=[IO.Path]::GetFullPath($staged)
+            $resolvedVersions=[IO.Path]::GetFullPath($versions).TrimEnd('\','/')+'\'
+            if(-not $resolvedStage.StartsWith($resolvedVersions,[StringComparison]::OrdinalIgnoreCase)){throw 'Unsafe staging cleanup path.'}
+            if((Get-Item -LiteralPath $staged).Attributes -band [IO.FileAttributes]::ReparsePoint){throw 'Unsafe staging link.'}
+            Remove-Item -LiteralPath $staged -Recurse -Force
+        }
+    }
 }
 $metadata = @{ revision=$revision; release=$(if($SourcePath){'local'}else{$Release}); app=$application; python=$python; installed_at=[DateTime]::UtcNow.ToString('o') }
-$metadata | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $InstallRoot 'installation.json') -Encoding UTF8
+$metadataPath=Join-Path $InstallRoot 'installation.json'
+$metadataTemp=Join-Path $InstallRoot ('installation-'+[Guid]::NewGuid().ToString('N')+'.tmp')
+$metadataBackup=Join-Path $InstallRoot ('installation-'+[Guid]::NewGuid().ToString('N')+'.bak')
+try {
+    [IO.File]::WriteAllText($metadataTemp,($metadata | ConvertTo-Json),[Text.UTF8Encoding]::new($false))
+    if(Test-Path -LiteralPath $metadataPath){[IO.File]::Replace($metadataTemp,$metadataPath,$metadataBackup)}
+    else {[IO.File]::Move($metadataTemp,$metadataPath)}
+} finally {
+    if(Test-Path -LiteralPath $metadataTemp){Remove-Item -LiteralPath $metadataTemp -Force}
+}
+if(Test-Path -LiteralPath $metadataBackup){Remove-Item -LiteralPath $metadataBackup -Force}
 Write-Host '[4/5] Creating shortcuts...'
 if (-not $NoShortcuts) {
     $shell = New-Object -ComObject WScript.Shell
