@@ -112,6 +112,29 @@ class HistoryStore:
                 self.event(stamp, "miner_log", {"line": line, "path": str(path)}, key)
             self.log_offsets[str(path)] = handle.tell()
 
+    def archive_thermal(self, path: Path):
+        """Arquiva ajustes do supervisor, inclusive períodos com o painel fechado."""
+        path = Path(path)
+        if not path.is_file():
+            return
+        offset = self.log_offsets.get(str(path), 0)
+        if offset > path.stat().st_size:
+            offset = 0
+        with path.open("rb") as handle:
+            handle.seek(offset)
+            while raw := handle.readline():
+                if not raw.endswith(b"\n"):
+                    handle.seek(-len(raw), 1)
+                    break
+                key = "thermal:" + hashlib.sha256((str(path)+"\n").encode()+raw).hexdigest()
+                try:
+                    payload = json.loads(raw.decode("utf-8-sig"))
+                    stamp = float(payload["sampled_at"])
+                    self.event(stamp, "thermal_control", payload, key)
+                except (ValueError, KeyError, TypeError) as error:
+                    self.event(time.time(), "thermal_import_error", {"path": str(path), "error": str(error)}, key)
+            self.log_offsets[str(path)] = handle.tell()
+
     def write(self, connection, kind, payload):
         if kind == "telemetry":
             data, source = payload["data"], payload["source"]

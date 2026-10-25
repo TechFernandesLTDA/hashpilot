@@ -55,6 +55,25 @@ class HistoryRules(unittest.TestCase):
         self.assertEqual(len(self.store.finance_state(0)["snapshots"]), 1)
         self.assertEqual(self.store.stats()["finance_sources"][0], 1)
 
+    def test_thermal_events_survive_restart_and_incomplete_line_is_retried(self):
+        events = self.path.parent / "thermal-control-events.jsonl"
+        first = {"sampled_at": time.time()-5, "mode": "anticipating", "desired_clock_mhz": 1725}
+        second = {"sampled_at": time.time(), "mode": "hold", "desired_clock_mhz": 1725}
+        encoded = json.dumps(second)
+        events.write_text(json.dumps(first)+"\n"+encoded[:10], encoding="utf-8")
+        self.store.archive_thermal(events)
+        self.assertTrue(self.store.flush())
+        self.assertEqual(self.store.read("SELECT COUNT(*) FROM events WHERE kind='thermal_control'", ())[0][0], 1)
+        with events.open("a", encoding="utf-8") as handle:
+            handle.write(encoded[10:]+"\n")
+        self.store.archive_thermal(events)
+        self.assertTrue(self.store.flush())
+        self.store.close()
+        self.store = HistoryStore(self.path, "test-wallet")
+        self.store.archive_thermal(events)
+        self.assertTrue(self.store.flush())
+        self.assertEqual(self.store.read("SELECT COUNT(*) FROM events WHERE kind='thermal_control'", ())[0][0], 2)
+
     def test_busy_writer_keeps_queue_and_does_not_block_submission(self):
         blocker = sqlite3.connect(self.path)
         blocker.execute("BEGIN IMMEDIATE")

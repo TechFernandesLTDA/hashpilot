@@ -1,11 +1,11 @@
 {
-  "exported_at": "2026-10-24T23:59:07.769474+00:00",
+  "exported_at": "2026-10-25T00:02:01.716047+00:00",
   "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
   "tables": {
-    "telemetry": 1024,
-    "events": 654,
-    "finance_snapshots": 42,
-    "finance_sources": 185,
+    "telemetry": 1118,
+    "events": 686,
+    "finance_snapshots": 45,
+    "finance_sources": 205,
     "preferences": 3
   },
   "integrity_check": "ok",

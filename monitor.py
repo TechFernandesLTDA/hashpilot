@@ -223,6 +223,10 @@ class Collector:
             data = self.sample()
             if self.history:
                 self.history.telemetry(data)
+                try:
+                    self.history.archive_thermal(LOG_DIR / "thermal-control-events.jsonl")
+                except OSError as error:
+                    self.history.event(time.time(), "thermal_import_error", {"error": str(error)})
             try:
                 self.samples.put_nowait(data)
             except queue.Full:

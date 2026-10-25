@@ -2,20 +2,20 @@
   "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
   "sources": {
     "price": {
-      "fetched_at": 1792886293.7338612,
+      "fetched_at": 1792886518.707113,
       "data": {
         "pearl-2": {
-          "brl": 9.5,
-          "usd": 1.91,
-          "last_updated_at": 1792886271
+          "brl": 9.55,
+          "usd": 1.92,
+          "last_updated_at": 1792886475
         }
       }
     },
     "balance": {
-      "fetched_at": 1792886294.5067213,
+      "fetched_at": 1792886519.2060328,
       "data": {
-        "total": 0.051185038732941675,
-        "unconfirmed": 0.051185038732941675,
+        "total": 0.06872431807092272,
+        "unconfirmed": 0.06872431807092272,
         "confirmed": 0.0,
         "threshold": 1.0,
         "reached_pct": 0.0,
@@ -26,7 +26,7 @@
       }
     },
     "payouts": {
-      "fetched_at": 1792886294.506727,
+      "fetched_at": 1792886519.4554706,
       "data": {
         "reward": {
           "week": null,
@@ -37,11 +37,11 @@
       }
     },
     "rewards": {
-      "fetched_at": 1792886294.5067294,
+      "fetched_at": 1792886519.9155507,
       "data": []
     },
     "network": {
-      "fetched_at": 1792886294.5067308,
+      "fetched_at": 1792886519.9155574,
       "data": {
         "miners": 29218,
         "workers": 111458,
@@ -49,13 +49,13 @@
         "stale": 77114,
         "invalid": 9512,
         "hashrate": 3.6523102695692874e+19,
-        "net_hashrate": 84818240086708290000,
+        "net_hashrate": 81125071225381780000,
         "fee_type": "PPS+",
         "fee": 0.03,
         "minpay": 1.0,
         "defpay": 1.0,
         "maxpay": 100000.0,
-        "height": 133156,
+        "height": 133157,
         "blocks_for_maturation": 100,
         "block_time": 194,
         "ticker": "prl",
@@ -158,7 +158,7 @@
           "hashes_per_diff": 4294967296,
           "round_to_pow2": false
         },
-        "estimated_profit_day": 1.4913062135424185e-14
+        "estimated_profit_day": 1.491127217026933e-14
       }
     }
   },
@@ -330,8 +330,20 @@
     {
       "timestamp": 1792886279.5368617,
       "total_prl": 0.051185038732941675
+    },
+    {
+      "timestamp": 1792886355.1521964,
+      "total_prl": 0.051185038732941675
+    },
+    {
+      "timestamp": 1792886416.0292294,
+      "total_prl": 0.051185038732941675
+    },
+    {
+      "timestamp": 1792886476.932914,
+      "total_prl": 0.051185038732941675
     }
   ],
   "errors": {},
-  "attempted_at": 1792886294.5070925
+  "attempted_at": 1792886519.9158988
 }
