@@ -2,6 +2,8 @@
 
 [Português](README.md) · [Documentation](docs/index.md) · [Windows installation](docs/installation.md) · [LLM entry point](llms.txt)
 
+**[Download v0.3.2 — prerelease](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.3.2)** · [All releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verify SHA-256 and evidence](docs/verification.md)
+
 [▶ Watch the 44-second demo (MP4, English captions)](media/hashpilot-demo.mp4) · [Measured RTX 3070 results](docs/performance/rtx3070.md)
 
 ![HashPilot overview: NVIDIA telemetry, wallet and payout estimate](media/screenshots/overview.png)

@@ -2,6 +2,8 @@
 
 [English](README.en.md) · [Documentação](docs/index.md) · [Instalação](docs/installation.md) · [Para LLMs](llms.txt)
 
+**[Baixar v0.3.2 — pré-lançamento](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.3.2)** · [Todas as releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verificar SHA-256 e evidências](docs/verification.md)
+
 ![Tech Fernandes](assets/brand/tech-fernandes_github_banner-readme_escuro_1280x400.png)
 
 Monitor local de mineração Pearl (PRL) para **até seis GPUs NVIDIA**, iguais ou diferentes: telemetria e benchmark por placa, ajuste dinâmico, histórico permanente e rendimentos equivalentes em **PRL, BRL, USD e BTC**. Interface desktop Python/Tkinter para Windows, sem servidor web ou dependências Python adicionais para o monitor.
