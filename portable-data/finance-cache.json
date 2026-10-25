@@ -2,20 +2,20 @@
   "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
   "sources": {
     "price": {
-      "fetched_at": 1792886518.707113,
+      "fetched_at": 1792889638.4360118,
       "data": {
         "pearl-2": {
-          "brl": 9.55,
-          "usd": 1.92,
-          "last_updated_at": 1792886475
+          "brl": 9.27,
+          "usd": 1.86,
+          "last_updated_at": 1792889623
         }
       }
     },
     "balance": {
-      "fetched_at": 1792886519.2060328,
+      "fetched_at": 1792889639.2180326,
       "data": {
-        "total": 0.06872431807092272,
-        "unconfirmed": 0.06872431807092272,
+        "total": 0.11976339932197612,
+        "unconfirmed": 0.11976339932197612,
         "confirmed": 0.0,
         "threshold": 1.0,
         "reached_pct": 0.0,
@@ -26,7 +26,7 @@
       }
     },
     "payouts": {
-      "fetched_at": 1792886519.4554706,
+      "fetched_at": 1792889639.2180393,
       "data": {
         "reward": {
           "week": null,
@@ -37,25 +37,25 @@
       }
     },
     "rewards": {
-      "fetched_at": 1792886519.9155507,
+      "fetched_at": 1792889639.2180417,
       "data": []
     },
     "network": {
-      "fetched_at": 1792886519.9155574,
+      "fetched_at": 1792889639.2180426,
       "data": {
-        "miners": 29218,
-        "workers": 111458,
-        "valid": 15271302,
-        "stale": 77114,
-        "invalid": 9512,
-        "hashrate": 3.6523102695692874e+19,
-        "net_hashrate": 81125071225381780000,
+        "miners": 29272,
+        "workers": 106316,
+        "valid": 15066245,
+        "stale": 89908,
+        "invalid": 8816,
+        "hashrate": 3.614767820299255e+19,
+        "net_hashrate": 94483906160082190000,
         "fee_type": "PPS+",
         "fee": 0.03,
         "minpay": 1.0,
         "defpay": 1.0,
         "maxpay": 100000.0,
-        "height": 133157,
+        "height": 133183,
         "blocks_for_maturation": 100,
         "block_time": 194,
         "ticker": "prl",
@@ -68,7 +68,7 @@
           "solo"
         ],
         "nh_force_solo": false,
-        "block_reward": 2225.08540352,
+        "block_reward": 2224.90515482,
         "dualmining": "",
         "mergemining": "",
         "geomining": "Global, Europe, North America, South America, Singapore, Hong Kong, Russia, Middle East",
@@ -158,7 +158,7 @@
           "hashes_per_diff": 4294967296,
           "round_to_pow2": false
         },
-        "estimated_profit_day": 1.491127217026933e-14
+        "estimated_profit_day": 1.4868606185876208e-14
       }
     }
   },
@@ -342,8 +342,212 @@
     {
       "timestamp": 1792886476.932914,
       "total_prl": 0.051185038732941675
+    },
+    {
+      "timestamp": 1792886580.5893402,
+      "total_prl": 0.06872431807092272
+    },
+    {
+      "timestamp": 1792886641.942021,
+      "total_prl": 0.06872431807092272
+    },
+    {
+      "timestamp": 1792886702.8437638,
+      "total_prl": 0.06872431807092272
+    },
+    {
+      "timestamp": 1792886764.1924942,
+      "total_prl": 0.06872431807092272
+    },
+    {
+      "timestamp": 1792886825.5412512,
+      "total_prl": 0.06872431807092272
+    },
+    {
+      "timestamp": 1792886886.1990638,
+      "total_prl": 0.06872431807092272
+    },
+    {
+      "timestamp": 1792886947.1002455,
+      "total_prl": 0.06872431807092272
+    },
+    {
+      "timestamp": 1792887007.772504,
+      "total_prl": 0.06872431807092272
+    },
+    {
+      "timestamp": 1792887068.648634,
+      "total_prl": 0.06872431807092272
+    },
+    {
+      "timestamp": 1792887129.9615571,
+      "total_prl": 0.0760271289369585
+    },
+    {
+      "timestamp": 1792887190.5996132,
+      "total_prl": 0.0760271289369585
+    },
+    {
+      "timestamp": 1792887251.5032883,
+      "total_prl": 0.0760271289369585
+    },
+    {
+      "timestamp": 1792887312.193156,
+      "total_prl": 0.0760271289369585
+    },
+    {
+      "timestamp": 1792887373.0559702,
+      "total_prl": 0.0760271289369585
+    },
+    {
+      "timestamp": 1792887433.9290395,
+      "total_prl": 0.0760271289369585
+    },
+    {
+      "timestamp": 1792887494.5842252,
+      "total_prl": 0.0760271289369585
+    },
+    {
+      "timestamp": 1792887555.928736,
+      "total_prl": 0.0760271289369585
+    },
+    {
+      "timestamp": 1792887617.2683456,
+      "total_prl": 0.0760271289369585
+    },
+    {
+      "timestamp": 1792887677.9161222,
+      "total_prl": 0.0760271289369585
+    },
+    {
+      "timestamp": 1792887738.7947118,
+      "total_prl": 0.08478340609546892
+    },
+    {
+      "timestamp": 1792887799.4611585,
+      "total_prl": 0.08478340609546892
+    },
+    {
+      "timestamp": 1792887860.3583326,
+      "total_prl": 0.08478340609546892
+    },
+    {
+      "timestamp": 1792887921.2686555,
+      "total_prl": 0.08478340609546892
+    },
+    {
+      "timestamp": 1792887981.9314256,
+      "total_prl": 0.08478340609546892
+    },
+    {
+      "timestamp": 1792888043.282498,
+      "total_prl": 0.08478340609546892
+    },
+    {
+      "timestamp": 1792888104.1543334,
+      "total_prl": 0.08478340609546892
+    },
+    {
+      "timestamp": 1792888164.7834706,
+      "total_prl": 0.08478340609546892
+    },
+    {
+      "timestamp": 1792888225.677733,
+      "total_prl": 0.08478340609546892
+    },
+    {
+      "timestamp": 1792888287.2473745,
+      "total_prl": 0.09644981111996553
+    },
+    {
+      "timestamp": 1792888348.14412,
+      "total_prl": 0.09644981111996553
+    },
+    {
+      "timestamp": 1792888409.048196,
+      "total_prl": 0.09644981111996553
+    },
+    {
+      "timestamp": 1792888469.9359715,
+      "total_prl": 0.09644981111996553
+    },
+    {
+      "timestamp": 1792888530.8250043,
+      "total_prl": 0.09644981111996553
+    },
+    {
+      "timestamp": 1792888591.463943,
+      "total_prl": 0.09644981111996553
+    },
+    {
+      "timestamp": 1792888652.8039677,
+      "total_prl": 0.09644981111996553
+    },
+    {
+      "timestamp": 1792888714.1443594,
+      "total_prl": 0.09644981111996553
+    },
+    {
+      "timestamp": 1792888775.0771036,
+      "total_prl": 0.09644981111996553
+    },
+    {
+      "timestamp": 1792888836.435074,
+      "total_prl": 0.09644981111996553
+    },
+    {
+      "timestamp": 1792888897.3222895,
+      "total_prl": 0.10956326058995626
+    },
+    {
+      "timestamp": 1792888958.1750007,
+      "total_prl": 0.10956326058995626
+    },
+    {
+      "timestamp": 1792889019.4952364,
+      "total_prl": 0.10956326058995626
+    },
+    {
+      "timestamp": 1792889080.1554017,
+      "total_prl": 0.10956326058995626
+    },
+    {
+      "timestamp": 1792889141.4848979,
+      "total_prl": 0.10956326058995626
+    },
+    {
+      "timestamp": 1792889202.1207342,
+      "total_prl": 0.10956326058995626
+    },
+    {
+      "timestamp": 1792889262.777013,
+      "total_prl": 0.10956326058995626
+    },
+    {
+      "timestamp": 1792889323.677581,
+      "total_prl": 0.10956326058995626
+    },
+    {
+      "timestamp": 1792889384.5697536,
+      "total_prl": 0.10956326058995626
+    },
+    {
+      "timestamp": 1792889445.4439917,
+      "total_prl": 0.10956326058995626
+    },
+    {
+      "timestamp": 1792889506.788953,
+      "total_prl": 0.11976339932197612
+    },
+    {
+      "timestamp": 1792889568.2073653,
+      "total_prl": 0.11976339932197612
+    },
+    {
+      "timestamp": 1792889628.8381162,
+      "total_prl": 0.11976339932197612
     }
   ],
   "errors": {},
-  "attempted_at": 1792886519.9158988
+  "attempted_at": 1792889639.2183552
 }

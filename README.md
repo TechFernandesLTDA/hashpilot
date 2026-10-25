@@ -30,7 +30,7 @@ A bandeja nativa é exclusiva do Windows. No macOS, recolher mantém a janela mi
 
 - Sensores NVIDIA a cada 2 segundos: temperatura, potência, limite, clocks, utilização, VRAM e ventoinhas.
 - Hashrate, médias, shares, rejeições e erros do log mais recente do SRBMiner.
-- Quatro gráficos com até 15 minutos de histórico. Hashrate usa o intervalo real do minerador (aproximadamente 30 segundos).
+- Quatro gráficos com até 15 minutos de histórico. Hashrate usa o intervalo real do minerador (normalmente 30–90 segundos), aceita medições atrasadas e mostra a idade da última amostra no gráfico.
 - Indica ausência do processo, reconexão e hashrate com mais de 180 segundos sem atualização; a idade da taxa continua visível.
 - Somente leitura: fechar o aplicativo não encerra a mineração nem modifica clocks.
 

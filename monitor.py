@@ -243,17 +243,53 @@ def fmt(value, suffix="", precision=0):
 
 
 class Chart(tk.Canvas):
-    def __init__(self, master, title, color, unit, fixed=None, window=900):
+    def __init__(self, master, title, color, unit, fixed=None, window=900, max_gap=80, show_age=False):
         super().__init__(master, bg=PANEL, highlightthickness=1, highlightbackground=BORDER, height=185)
         self.title, self.color, self.unit, self.fixed = title, color, unit, fixed
         self.window = window
+        self.max_gap, self.show_age = max_gap, show_age
         self.points = deque(maxlen=50000 if window > 900 else 900)
         self.bind("<Configure>", lambda _: self.draw())
 
     def add(self, timestamp, value):
-        if self.points and timestamp <= self.points[-1][0]:
+        timestamp = float(timestamp)
+        value = float(value) if value is not None else None
+        if not math.isfinite(timestamp) or (value is not None and not math.isfinite(value)):
             return
-        self.points.append((timestamp, value))
+        if not self.points or timestamp > self.points[-1][0]:
+            self.points.append((timestamp, value))
+            return
+        # Logs podem ser descarregados depois de uma amostra de indisponibilidade.
+        # O horário real da medição prevalece sobre a ordem de chegada ao painel.
+        points = dict(self.points)
+        if timestamp in points and points[timestamp] is not None and value is None:
+            return
+        points[timestamp] = value
+        self.points.clear()
+        self.points.extend(sorted(points.items()))
+
+    def segments(self):
+        groups, group, previous = [], [], None
+        for timestamp, value in self.points:
+            if value is None:
+                if group:
+                    groups.append(group)
+                group, previous = [], None
+                continue
+            if previous is not None and timestamp-previous > self.max_gap:
+                if group:
+                    groups.append(group)
+                group = []
+            group.append((timestamp, value))
+            previous = timestamp
+        if group:
+            groups.append(group)
+        return groups
+
+    def sample_info(self):
+        measured = [(stamp, value) for stamp, value in self.points if value is not None]
+        return {"point_count": len(self.points), "latest_sample_at": measured[-1][0] if measured else None,
+                "latest_value": measured[-1][1] if measured else None, "gap_limit_seconds": self.max_gap}
 
     def draw(self):
         self.delete("all")
@@ -280,23 +316,21 @@ class Chart(tk.Canvas):
         now = time.time()
         start = max(cutoff, min(p[0] for p in self.points))
         span = max(60, now-start)
-        segment = []
-        previous = None
-        for timestamp, value in self.points:
-            if value is None or (previous and timestamp - previous > 80):
-                if len(segment) >= 4:
-                    self.create_line(*segment, fill=self.color, width=2)
-                segment = []
-            if value is not None:
+        for group in self.segments():
+            coordinates = []
+            for timestamp, value in group:
                 x = left + (timestamp-start)/span*(right-left)
                 y = bottom - (value-ymin)/(ymax-ymin)*(bottom-top)
-                segment.extend([x, y])
-            previous = timestamp
-        if len(segment) >= 4:
-            self.create_line(*segment, fill=self.color, width=2)
-        if segment:
-            x, y = segment[-2:]
-            self.create_oval(x-3, y-3, x+3, y+3, fill=self.color, outline="")
+                coordinates.extend([x, y])
+            if len(coordinates) >= 4:
+                self.create_line(*coordinates, fill=self.color, width=2, tags="series")
+            x, y = coordinates[-2:]
+            self.create_oval(x-3, y-3, x+3, y+3, fill=self.color, outline="", tags="series-point")
+        if self.show_age:
+            latest = self.sample_info()["latest_sample_at"]
+            age = max(0, int(now-latest))
+            self.create_text(right, 18, anchor="e", text=f"última amostra há {age} s", fill=MUTED,
+                             font=(BODY_FONT, 8), tags="sample-age")
         self.create_text(left, h-12, text=dt.datetime.fromtimestamp(start).strftime("%H:%M:%S"), anchor="w", fill=MUTED, font=(BODY_FONT, 8))
         self.create_text(right, h-12, text="agora · " + self.unit, anchor="e", fill=MUTED, font=(BODY_FONT, 8))
 
@@ -559,7 +593,7 @@ class Monitor(tk.Tk):
             ("temp", "Temperatura da GPU", ORANGE, "°C", (25, 85)),
             ("power", "Potência da placa", BLUE, "W", None),
             ("fan", "Velocidade das ventoinhas", PINK, "%", (0, 100))]):
-            chart = Chart(chart_grid, title, color, unit, fixed)
+            chart = Chart(chart_grid, title, color, unit, fixed, max_gap=180 if key == "hash" else 80, show_age=key == "hash")
             chart.grid(row=index//2, column=index%2, sticky="nsew", padx=4, pady=4)
             self.charts[key] = chart
         self.info = self.label(self.live_tab, "", fg=MUTED, justify="left", anchor="w", font=(BODY_FONT, 9))
@@ -676,7 +710,7 @@ class Monitor(tk.Tk):
         gpu, miner = data.get("gpu") or {}, data["miner"]
         stamp = miner.get("hashrate_at")
         age = now-stamp if stamp else None
-        fresh = age is not None and -5 <= age <= 180 and data["miner_running"] is True
+        fresh = age is not None and -5 <= age <= 180 and data["miner_running"] is True and not miner.get("paused")
         status, color = "Aguardando mineração", MUTED
         if data["miner_running"] is False:
             status, color = "Minerador parado", ORANGE
@@ -735,6 +769,7 @@ class Monitor(tk.Tk):
         STATE_DIR.mkdir(parents=True, exist_ok=True)
         snapshot = {k: v for k, v in data.items() if k != "miner"}
         snapshot["miner"] = {k: v for k, v in miner.items() if k not in ("recent_logs", "rate_points")}
+        snapshot["charts"] = {key: chart.sample_info() for key, chart in self.charts.items()}
         snapshot["monitor_status"] = status
         snapshot["app"] = {"name": APP_NAME, "tray_registered": self.tray.registered_ok,
             "tray_error": self.tray.error, "panel_state": self.state(),

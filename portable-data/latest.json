@@ -1,20 +1,20 @@
 {
-  "collected_at": 1792886520.5359213,
+  "collected_at": 1792889684.4469953,
   "gpu": {
     "name": "NVIDIA GeForce RTX 3070",
     "driver_version": "617.14",
-    "temperature.gpu": 72.0,
-    "power.draw": 146.7,
+    "temperature.gpu": 76.0,
+    "power.draw": 163.75,
     "power.limit": 240.0,
-    "clocks.gr": 1725.0,
+    "clocks.gr": 1755.0,
     "clocks.mem": 5001.0,
-    "utilization.gpu": 100.0,
-    "utilization.memory": 5.0,
-    "memory.used": 1899.0,
+    "utilization.gpu": 98.0,
+    "utilization.memory": 3.0,
+    "memory.used": 1932.0,
     "memory.total": 8192.0,
     "fan.speed": 100.0,
     "pstate": "P3",
-    "sampled_at": 1792886520.589992
+    "sampled_at": 1792889684.5213132
   },
   "gpu_error": null,
   "miner_running": true,
@@ -24,9 +24,9 @@
   "thermal_control": {
     "enabled": true,
     "mode": "hold",
-    "reason": "Resfriando: 38/60 s estáveis até 75 °C",
-    "current_clock_mhz": 1725,
-    "desired_clock_mhz": 1725,
+    "reason": "Temperatura na banda estável; mantendo clock",
+    "current_clock_mhz": 1755,
+    "desired_clock_mhz": 1755,
     "min_clock_mhz": 1500,
     "max_clock_mhz": 1800,
     "target_band_c": [
@@ -34,42 +34,68 @@
       78
     ],
     "emergency_pause_c": 84,
-    "sampled_at": 1792886520.5581608,
+    "sampled_at": 1792889683.0912566,
     "error": null,
     "controller_pid": 18964,
     "miner_pid": 27740,
     "dry_run": false,
     "name": "NVIDIA GeForce RTX 3070",
-    "temperature_c": 72.0,
-    "power_w": 146.7,
-    "actual_clock_mhz": 1725.0,
+    "temperature_c": 76.0,
+    "power_w": 164.62,
+    "actual_clock_mhz": 1755.0,
     "memory_clock_mhz": 5001.0,
     "power_limit_w": 240.0,
-    "age_seconds": 0.1111907958984375,
+    "age_seconds": 1.5387732982635498,
     "stale": false,
     "available": true
   },
   "miner": {
-    "hashrate": 77.07,
-    "hashrate_at": 1792886485.0,
-    "accepted": 2,
+    "hashrate": 76.49,
+    "hashrate_at": 1792889637.0,
+    "accepted": 37,
     "rejected": 0,
     "hw_errors": 0,
-    "average_1m": 76.92,
-    "average_15m": 76.39,
+    "average_1m": 76.23,
+    "average_15m": 79.03,
     "started_at": 1792886184.0,
-    "last_share_at": 1792886315.0,
+    "last_share_at": 1792889647.0,
     "connection": "Conectado à pool",
     "paused": false
+  },
+  "charts": {
+    "hash": {
+      "point_count": 10,
+      "latest_sample_at": 1792889637.0,
+      "latest_value": 76.49,
+      "gap_limit_seconds": 180
+    },
+    "temp": {
+      "point_count": 459,
+      "latest_sample_at": 1792889684.6794486,
+      "latest_value": 76.0,
+      "gap_limit_seconds": 80
+    },
+    "power": {
+      "point_count": 459,
+      "latest_sample_at": 1792889684.6794486,
+      "latest_value": 163.75,
+      "gap_limit_seconds": 80
+    },
+    "fan": {
+      "point_count": 459,
+      "latest_sample_at": 1792889684.6794486,
+      "latest_value": 100.0,
+      "gap_limit_seconds": 80
+    }
   },
   "monitor_status": "Minerando · dados atuais",
   "app": {
     "name": "HashPilot — Tech Fernandes",
     "tray_registered": true,
     "tray_error": null,
-    "panel_state": "withdrawn",
-    "pid": 17112,
-    "summary_open": true
+    "panel_state": "normal",
+    "pid": 27208,
+    "summary_open": false
   },
   "window": {
     "width": 1280,
@@ -77,37 +103,37 @@
   },
   "history": {
     "database": "C:\\Users\\renan\\AppData\\Local\\PearlMonitor\\history.sqlite3",
-    "session": "d7cf27e0602c44cfb028737023e68608",
+    "session": "1bd6a371254e4be7874f5fe94b1a05e2",
     "counts": {
       "telemetry": [
-        1109,
+        2722,
         1792882576.0,
-        1792886516.4172447
+        1792889670.389558
       ],
       "events": [
-        675,
+        946,
         1792882545.0,
-        1792886518.5141337
+        1792889647.0
       ],
       "finance_snapshots": [
-        45,
+        96,
         1792883595.5142565,
-        1792886476.932914
+        1792889628.8381162
       ],
       "finance_sources": [
-        200,
+        465,
         1792884222.299892,
-        1792886476.9325962
+        1792889639.2180426
       ]
     },
-    "last_commit": 1792886520.6882322,
+    "last_commit": 1792889684.6495798,
     "pending_jobs": 0,
     "error": null,
     "restored_points": {
-      "hash": 16,
-      "temp": 464,
-      "power": 464,
-      "fan": 464
+      "hash": 10,
+      "temp": 458,
+      "power": 458,
+      "fan": 458
     },
     "retention": "permanent_no_automatic_deletion"
   }
