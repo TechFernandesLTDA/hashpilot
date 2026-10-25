@@ -116,8 +116,8 @@ def run_gpu_setup(parent=None,selected_uuid=None,devices=None,path=SETTINGS_PATH
     if not resolved:
         tk.Label(holder,text='Nenhuma GPU NVIDIA detectada. Confira o driver e nvidia-smi.',bg=BG,fg=MUTED,font=('Segoe UI',-16)).pack(pady=30)
     support=tk.BooleanVar(value=settings.get('support_enabled') is True)
-    tk.Checkbutton(window,text='Ajuda opcional pela ferramenta: 5% do tempo para a carteira do autor',variable=support,bg=BG,fg=TEXT,selectcolor=PANEL,activebackground=BG,activeforeground=TEXT,font=('Segoe UI',-13),anchor='w').grid(row=3,column=0,sticky='ew',padx=20,pady=(7,3))
-    tk.Label(window,text='Aplica-se somente a carteiras diferentes da do autor. Pode ser desativada. O serviço reinicia apenas GPUs cuja carteira mudou; um rig parado só inicia pelo botão de mineração.',bg=BG,fg=MUTED,font=('Segoe UI',-12),wraplength=width-40,justify='left',anchor='w').grid(row=4,column=0,sticky='ew',padx=20,pady=3)
+    tk.Checkbutton(window,text='Ajuda opcional: até 5% do tempo conectado para a carteira do autor',variable=support,bg=BG,fg=TEXT,selectcolor=PANEL,activebackground=BG,activeforeground=TEXT,font=('Segoe UI',-13),anchor='w').grid(row=3,column=0,sticky='ew',padx=20,pady=(7,3))
+    tk.Label(window,text='Somente para carteiras diferentes da do autor. Pode ser desativada. Divide tempo conectado, sem garantir 5% das moedas nem retirar saldo. O serviço reinicia GPUs cuja carteira mudou; um rig parado só inicia pelo botão de mineração.',bg=BG,fg=MUTED,font=('Segoe UI',-12),wraplength=width-40,justify='left',anchor='w').grid(row=4,column=0,sticky='ew',padx=20,pady=3)
     saved=False
     def finish():
         nonlocal saved
@@ -180,8 +180,8 @@ def run_setup(parent=None,selected_uuid=None) -> bool:
     label('O endereço preenchido por padrão pertence ao autor. Mantê-lo direciona a mineração iniciada por este assistente para o autor. Você pode substituí-lo pelo seu endereço público. Nunca informe seed ou chave privada.',4,MUTED,10)
     support_frame=tk.Frame(window,bg=PANEL,padx=8,pady=5)
     support_frame.grid(row=5,column=0,sticky='ew',padx=24,pady=4)
-    tk.Checkbutton(support_frame,text='Contribuir com 5% da mineração para ajudar pela ferramenta',variable=support,bg=PANEL,fg=TEXT,selectcolor=BG,activebackground=PANEL,activeforeground=TEXT,anchor='w',font=('Segoe UI',-14)).pack(anchor='w')
-    tk.Label(support_frame,text='Ajuda opcional ao autor: 57 min para sua carteira e 3 min para a carteira padrão por hora de mineração. Desmarque para desativar. Não é uma cobrança em dinheiro.',bg=PANEL,fg=MUTED,justify='left',anchor='w',wraplength=width-72,font=('Segoe UI',-13)).pack(fill='x')
+    tk.Checkbutton(support_frame,text='Contribuir até 5% do tempo conectado para ajudar pela ferramenta',variable=support,bg=PANEL,fg=TEXT,selectcolor=BG,activebackground=PANEL,activeforeground=TEXT,anchor='w',font=('Segoe UI',-14)).pack(anchor='w')
+    tk.Label(support_frame,text='Após 57 min autorizados para sua carteira, até 3 min para o autor. Não retira saldo e não garante 5% das moedas; pausas e shares rejeitadas alteram os créditos. Desmarque para desativar.',bg=PANEL,fg=MUTED,justify='left',anchor='w',wraplength=width-72,font=('Segoe UI',-13)).pack(fill='x')
     target=tk.Entry(support_frame,textvariable=tk.StringVar(value=DEFAULT_WALLET),state='readonly',readonlybackground=PANEL,fg=MUTED,relief='flat',font=('Consolas',-11))
     target.pack(fill='x',pady=(2,0))
     def show_support(*_):

@@ -2,7 +2,7 @@
 
 [Português](README.md) · [Documentation](docs/index.md) · [Windows installation](docs/installation.md) · [LLM entry point](llms.txt)
 
-**[Download v0.3.3 — prerelease](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.3.3)** · [All releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verify SHA-256 and evidence](docs/verification.md)
+**[Download v0.3.4 — prerelease](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.3.4)** · [All releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verify SHA-256 and evidence](docs/verification.md)
 
 [▶ Watch the 44-second demo (MP4, English captions)](media/hashpilot-demo.mp4) · [Measured RTX 3070 results](docs/performance/rtx3070.md)
 
@@ -25,7 +25,7 @@ A Windows desktop monitor for Pearl (PRL) mining with **up to six NVIDIA GPUs**,
 Run in PowerShell on **Windows 10/11 x64**, with `winget` available:
 
 ```powershell
-irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.3.3/install.ps1 | iex
+irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.3.4/install.ps1 | iex
 ```
 
 The installer prepares mise/Python, installs into `%LOCALAPPDATA%\Programs\HashPilot`, creates shortcuts, and opens setup. Existing local settings and history are preserved. See the [installation guide](docs/installation.md) for requirements and troubleshooting.
@@ -58,7 +58,7 @@ The product supports **Windows 10/11 x64 only**. See [backup and transfer betwee
 
 ## Optional contribution
 
-For an address other than the author's, an optional, disableable contribution reserves **5% of mining time**: 57 minutes for you and 3 for the author. Setup displays the option. A TCP proxy switches the destination without restarting the GPU or miner. The author's default address receives no additional split. This is separate from SRBMiner's 2% developer fee. Forecasts deduct the expected contribution when enabled; actual observed credits are never deducted twice. [Details](docs/contribution.md).
+For an address other than the author's, an optional, disableable contribution reserves **up to 5% of connected time**: after 57 authorized minutes for you, up to 3 for the author. Setup displays the option. A TCP proxy switches the destination without restarting the GPU or miner. The author's default address receives no additional split. This is separate from SRBMiner's 2% developer fee. Forecasts deduct the expected contribution when enabled; actual observed credits are never deducted twice. **It does not withdraw existing balances or guarantee exactly 5% of coins. Real credit and payout validation remains pending.** [Details](docs/contribution.md) · [v0.3.4 assessment](docs/qa/2026-10-25-contribuicao.md).
 
 ## From source
 
@@ -80,4 +80,4 @@ AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e O
 
 ## Verification and evidence
 
-[Release verification, deterministic source packaging, diagnostic export and 24/72-hour observation protocol](docs/verification.md). Physical evidence still covers one RTX 3070; multi-GPU tests are simulated. Checksums are not publisher signatures or an independent security audit. [v0.3.3 notes](docs/releases/v0.3.3.md).
+[Release verification, deterministic source packaging, diagnostic export and 24/72-hour observation protocol](docs/verification.md). Physical evidence still covers one RTX 3070; multi-GPU tests are simulated. Checksums are not publisher signatures or an independent security audit. [v0.3.4 notes](docs/releases/v0.3.4.md).

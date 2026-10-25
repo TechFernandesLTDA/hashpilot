@@ -2,7 +2,7 @@
 
 [English](README.en.md) · [Documentação](docs/index.md) · [Instalação](docs/installation.md) · [Para LLMs](llms.txt)
 
-**[Baixar v0.3.3 — pré-lançamento](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.3.3)** · [Todas as releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verificar SHA-256 e evidências](docs/verification.md)
+**[Baixar v0.3.4 — pré-lançamento](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.3.4)** · [Todas as releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verificar SHA-256 e evidências](docs/verification.md)
 
 ![Tech Fernandes](assets/brand/tech-fernandes_github_banner-readme_escuro_1280x400.png)
 
@@ -29,7 +29,7 @@ O vídeo e estas capturas documentam a **versão v0.1.0, com uma GPU**, em uma j
 No PowerShell do **Windows 10/11 x64**, com `winget` disponível:
 
 ```powershell
-irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.3.3/install.ps1 | iex
+irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.3.4/install.ps1 | iex
 ```
 
 O instalador prepara o mise/Python, instala o aplicativo em `%LOCALAPPDATA%\Programs\HashPilot`, cria atalhos e abre o assistente de configuração. Configurações e histórico existentes são preservados. [Passos, requisitos e solução de problemas](docs/installation.md).
@@ -65,11 +65,11 @@ O produto é exclusivo para **Windows 10/11 x64**. Veja [backup e transferência
 
 ## Contribuição opcional
 
-Com uma carteira diferente da do autor, a contribuição opcional e desativável reserva **5% do tempo de mineração**: 57 minutos para você e 3 para o autor. Ela fica visível no assistente e usa proxy TCP, sem reiniciar a GPU ou o minerador. A carteira padrão do autor não recebe uma divisão adicional. Isso é separado da devfee de 2% do SRBMiner. As projeções descontam a contribuição esperada quando ativa; créditos reais observados não são descontados novamente. [Como funciona](docs/contribution.md).
+Com uma carteira diferente da do autor, a contribuição opcional e desativável reserva **até 5% do tempo conectado**: após 57 minutos autorizados para você, até 3 para o autor. Ela fica visível no assistente e usa proxy TCP, sem reiniciar a GPU ou o minerador. A carteira padrão do autor não recebe uma divisão adicional. Isso é separado da devfee de 2% do SRBMiner. As projeções descontam a contribuição esperada quando ativa; créditos reais observados não são descontados novamente. **Não retira saldo existente nem garante exatamente 5% das moedas. A validação de crédito e pagamento reais ainda está pendente.** [Como funciona](docs/contribution.md) · [Avaliação da v0.3.4](docs/qa/2026-10-25-contribuicao.md).
 
 ## Verificação e evidências
 
-[Verificar a release e reproduzir o pacote](docs/verification.md) · [Protocolo de estabilidade de 24/72 horas](docs/verification.md#protocolo-de-estabilidade-de-24-e-72-horas) · [Notas da v0.3.3](docs/releases/v0.3.3.md). Hashes não substituem assinatura de publicador ou revisão independente.
+[Verificar a release e reproduzir o pacote](docs/verification.md) · [Protocolo de estabilidade de 24/72 horas](docs/verification.md#protocolo-de-estabilidade-de-24-e-72-horas) · [Notas da v0.3.4](docs/releases/v0.3.4.md). Hashes não substituem assinatura de publicador ou revisão independente.
 
 ## Código e dados
 

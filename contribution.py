@@ -21,9 +21,15 @@ POOL_HOST,POOL_PORT="prl.kryptex.network",7048
 PERCENT=5
 CYCLE_SECONDS=3600
 PRIMARY_SECONDS=3420
+SUPPORT_SECONDS=CYCLE_SECONDS-PRIMARY_SECONDS
 MAX_LINE=4*1024*1024
+MAX_ACCOUNT_INTERVAL=5.0
 AUTH_METHODS={"mining.authorize","eth_submitLogin","login","mining.login"}
 PREAUTH_METHODS={"mining.subscribe","mining.configure","mining.extranonce.subscribe","client.get_version"}
+
+
+class ContributionWindowEnded(Exception):
+    """A normal quota boundary, including one reached during a partial send."""
 
 
 def valid_wallet(wallet):
@@ -52,11 +58,15 @@ def read_settings(path):
         return None
 
 
-def atomic_json(path,payload):
+def atomic_json(path,payload,*,durable=False):
     path=Path(path)
     path.parent.mkdir(parents=True,exist_ok=True)
     temporary=path.with_name(path.name+f".{os.getpid()}.tmp")
-    temporary.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
+    with temporary.open('w',encoding='utf-8') as handle:
+        json.dump(payload,handle,ensure_ascii=False,indent=2)
+        if durable:
+            handle.flush()
+            os.fsync(handle.fileno())
     # Windows readers/antivirus may briefly deny replacement of an open file.
     # Retry only the atomic replacement: readers keep the previous complete JSON.
     for attempt in range(21):
@@ -70,18 +80,27 @@ def atomic_json(path,payload):
 
 
 class ContributionLedger:
-    """Only advance() counts time. Loading never adds elapsed/offline wall time."""
+    """Loading never credits downtime; runtime earns quota only via record_route."""
     def __init__(self,path,wallet):
         if not valid_wallet(wallet):
             raise ValueError("Endereço público Pearl inválido")
         self.path,self.wallet=Path(path),wallet
-        self.data={"schema_version":1,"wallets":{}}
+        self.data={"schema_version":2,"wallets":{}}
         self.healthy=True
         self.error=None
         try:
             data=json.loads(self.path.read_text(encoding="utf-8-sig"))
-            if not isinstance(data,dict) or data.get("schema_version")!=1 or not isinstance(data.get("wallets"),dict):
+            if not isinstance(data,dict) or data.get("schema_version") not in (1,2) or not isinstance(data.get("wallets"),dict):
                 raise ValueError("Formato do ledger inválido")
+            if data['schema_version']==1:
+                # Old connected time was not confirmed by pool authorization.
+                # Preserve history, but never turn it into newly verified quota.
+                for entry in data['wallets'].values():
+                    if isinstance(entry,dict):
+                        for key in ('verified_primary_seconds','reserved_support_seconds','verified_support_seconds',
+                                    'accepted_primary_shares','accepted_support_shares','rejected_primary_shares','rejected_support_shares'):
+                            entry[key]=0
+                data['schema_version']=2
             for identifier,entry in data["wallets"].items():
                 value=entry.get("eligible_connected_seconds") if isinstance(entry,dict) else None
                 if not valid_wallet(identifier) or isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value) or not 0<=value<=1e12:
@@ -90,6 +109,19 @@ class ContributionLedger:
                     counter=entry.get(key,0)
                     if isinstance(counter,bool) or not isinstance(counter,(int,float)) or not math.isfinite(counter) or not 0<=counter<=1e12:
                         raise ValueError("Contador de roteamento do ledger inválido")
+                for key in ('verified_primary_seconds','reserved_support_seconds','verified_support_seconds',
+                            'accepted_primary_shares','accepted_support_shares','rejected_primary_shares','rejected_support_shares'):
+                    counter=entry.get(key,0)
+                    if isinstance(counter,bool) or not isinstance(counter,(int,float)) or not math.isfinite(counter) or not 0<=counter<=1e12:
+                        raise ValueError('Contador de proteção da contribuição inválido')
+                verified=entry.get('verified_primary_seconds',0)
+                reserved=entry.get('reserved_support_seconds',0)
+                if reserved>math.floor(verified/PRIMARY_SECONDS)*SUPPORT_SECONDS+1e-6 or entry.get('verified_support_seconds',0)>reserved+1e-6:
+                    raise ValueError('Reserva da contribuição excede o tempo verificado do usuário')
+                if math.floor(verified/PRIMARY_SECONDS)*SUPPORT_SECONDS-reserved>SUPPORT_SECONDS+1e-6:
+                    raise ValueError('Acúmulo de janelas de contribuição inválido')
+                if verified>entry.get('primary_connected_seconds',0)+1e-6:
+                    raise ValueError('Tempo verificado excede roteamento principal')
             self.data=data
         except FileNotFoundError:
             pass
@@ -130,7 +162,45 @@ class ContributionLedger:
 
     def save(self):
         if self.healthy:
-            atomic_json(self.path,self.data)
+            atomic_json(self.path,self.data,durable=True)
+
+    def available_support(self):
+        if not self.healthy:return 0.0
+        entry=self.data['wallets'][self.wallet]
+        return max(0.0,min(float(SUPPORT_SECONDS),math.floor(entry.get('verified_primary_seconds',0)/PRIMARY_SECONDS)*SUPPORT_SECONDS-entry.get('reserved_support_seconds',0)))
+
+    def reserve_support(self):
+        """Prepay the entire author allowance before any author auth is forwarded.
+
+        A crash may waste this allowance, but cannot reuse it after restart.
+        Legacy elapsed time never earns this new verified quota retroactively.
+        """
+        amount=self.available_support()
+        entry=self.data['wallets'][self.wallet]
+        entry['reserved_support_seconds']=entry.get('reserved_support_seconds',0)+amount
+        self.save()
+        return amount
+
+    def record_route(self,seconds,role):
+        if not self.healthy:return
+        if not isinstance(seconds,(int,float)) or isinstance(seconds,bool) or not math.isfinite(seconds) or not 0<=seconds<=MAX_ACCOUNT_INTERVAL:
+            raise ValueError('Intervalo de roteamento inválido')
+        entry=self.data['wallets'][self.wallet]
+        if role=='support':
+            remaining=max(0,entry.get('reserved_support_seconds',0)-entry.get('verified_support_seconds',0))
+            seconds=min(seconds,remaining)
+        elif role!='primary':raise ValueError('Papel de roteamento inválido')
+        entry['eligible_connected_seconds']+=seconds
+        counter=role+'_connected_seconds'
+        entry[counter]=entry.get(counter,0)+seconds
+        verified='verified_'+role+'_seconds'
+        entry[verified]=entry.get(verified,0)+seconds
+
+    def record_share(self,role,accepted):
+        if not self.healthy:return
+        entry=self.data['wallets'][self.wallet]
+        key=('accepted_' if accepted else 'rejected_')+role+'_shares'
+        entry[key]=entry.get(key,0)+1
 
 
 class ProxyLease:
@@ -190,6 +260,8 @@ def rewrite_message(message,primary,active,*,authenticated=False):
     if not isinstance(message,dict) or not isinstance(message.get("method"),str):
         raise ValueError("Mensagem Stratum não reconhecida")
     method=message["method"]
+    if method not in AUTH_METHODS|PREAUTH_METHODS|{'mining.submit'}:
+        raise ValueError('Mensagem Stratum desconhecida; método fora do protocolo de mineração permitido')
     # Round-trip makes a copy, so callers cannot accidentally mutate their input.
     result=json.loads(json.dumps(message))
     params=result.get("params")
@@ -249,7 +321,9 @@ class LocalStratumProxy:
         self.clock=clock
         self.stop=threading.Event()
         self.listener=None
-        self.status={"pid":os.getpid(),"ready":False,"connected":False,"port":None,"enabled":False,
+        self.safety_disabled=False
+        self.support_deadline=None
+        self.status={"pid":os.getpid(),"ready":False,"connected":False,"pool_authorized":False,"port":None,"enabled":False,
             "primary_wallet":wallet,"support_wallet":AUTHOR_WALLET,"active_wallet":wallet,"active_role":"primary",
             "percent":PERCENT,"method":"mining_time","upstream":f"{POOL_HOST}:{POOL_PORT}","error":None}
 
@@ -257,15 +331,24 @@ class LocalStratumProxy:
         result=support_configuration(read_settings(self.settings_path),self.wallet)
         if not self.ledger.healthy:
             result.update(enabled=False,reason="Ledger inválido; contribuição desligada",configuration_valid=False)
+        if self.safety_disabled:
+            result.update(enabled=False,reason='Contribuição desativada por falha de segurança/protocolo; usando carteira principal')
         return result
 
     def publish(self,configuration=None):
         configuration=configuration or self.configuration()
         self.status.update(enabled=configuration["enabled"],configuration_valid=configuration["configuration_valid"],
             reason=configuration["reason"],eligible_connected_seconds=self.ledger.seconds,
-            seconds_until_switch=self.ledger.until_switch(configuration["enabled"]),ledger_error=self.ledger.error,
-            sampled_at=time.time(),routing_active=bool(self.status["ready"] and self.status["connected"]),
-            scheduled_role=self.ledger.role(configuration["enabled"]))
+            seconds_until_switch=(max(0,self.support_deadline-self.clock()) if self.support_deadline is not None else
+                max(0,PRIMARY_SECONDS-self.ledger.data['wallets'][self.wallet].get('verified_primary_seconds',0)%PRIMARY_SECONDS) if configuration['enabled'] else None),ledger_error=self.ledger.error,
+            sampled_at=time.time(),routing_active=bool(self.status["ready"] and self.status["connected"] and self.status['pool_authorized']),
+            scheduled_role=('support' if configuration['enabled'] and self.ledger.available_support()>0 else 'primary'),
+            quota_accounting='verified_primary_prepaid_support_v2',
+            verified_primary_seconds=self.ledger.data['wallets'][self.wallet].get('verified_primary_seconds',0),
+            reserved_support_seconds=self.ledger.data['wallets'][self.wallet].get('reserved_support_seconds',0),
+            verified_support_seconds=self.ledger.data['wallets'][self.wallet].get('verified_support_seconds',0),
+            share_responses={key:self.ledger.data['wallets'][self.wallet].get(key,0) for key in
+                ('accepted_primary_shares','accepted_support_shares','rejected_primary_shares','rejected_support_shares')})
         atomic_json(self.state_dir/"support-mining.json",self.status)
 
     def close(self):
@@ -278,25 +361,38 @@ class LocalStratumProxy:
 
     def serve_connection(self,client,upstream):
         configuration=self.configuration()
-        role=self.ledger.role(configuration["enabled"])
+        role='support' if configuration['enabled'] and self.ledger.available_support()>0 else 'primary'
+        allowance=self.ledger.reserve_support() if role=='support' else 0
+        self.support_deadline=self.clock()+allowance if role=='support' else None
         active=AUTHOR_WALLET if role=="support" else self.wallet
         self.status.update(connected=True,active_role=role,active_wallet=active,error=None)
         self.publish(configuration)
         client.setblocking(False)
         upstream.setblocking(False)
         client_buffer=bytearray()
+        upstream_buffer=bytearray()
         authenticated=False
+        pool_authorized=False
+        auth_id=None
+        shares={}
+        pending_ids=set()
         previous=self.clock()
         last_publish=previous
+        def account(now):
+            nonlocal previous
+            delta=max(0,now-previous)
+            if pool_authorized and configuration['enabled'] and delta<=MAX_ACCOUNT_INTERVAL:
+                if role=='support':delta=min(delta,max(0,self.support_deadline-previous))
+                self.ledger.record_route(delta,role)
+            previous=now
         try:
             while not self.stop.is_set():
                 now=self.clock()
-                # Count only the time this connected routing was eligible, never downtime.
-                self.ledger.advance(max(0,now-previous),configuration["enabled"])
-                previous=now
+                account(now)
                 new_configuration=self.configuration()
-                desired_role=self.ledger.role(new_configuration["enabled"])
-                if desired_role!=role:
+                switch=(role=='support' and (not new_configuration['enabled'] or now>=self.support_deadline)) or (
+                    role=='primary' and new_configuration['enabled'] and self.ledger.available_support()>0)
+                if switch:
                     self.ledger.save()
                     self.status["reason"]="Alternando carteira por reconexão Stratum; o minerador continua executando"
                     return
@@ -311,6 +407,25 @@ class LocalStratumProxy:
                     if not data:
                         return
                     if source is upstream:
+                        upstream_buffer.extend(data)
+                        while b'\n' in upstream_buffer:
+                            line,_,rest=upstream_buffer.partition(b'\n');upstream_buffer=bytearray(rest)
+                            if len(line)>MAX_LINE:raise ValueError('Resposta Stratum excede limite')
+                            response=json.loads(line) if line.strip() else {}
+                            if not isinstance(response,dict):raise ValueError('Resposta Stratum inválida')
+                            identifier=response.get('id')
+                            if isinstance(identifier,(str,int)) and not isinstance(identifier,bool):pending_ids.discard(identifier)
+                            if auth_id is not None and identifier==auth_id:
+                                account(self.clock())
+                                pool_authorized=response.get('result') is True and response.get('error') in (None,False)
+                                self.status['pool_authorized']=pool_authorized
+                                auth_id=None
+                                if not pool_authorized:
+                                    if role=='support':self.safety_disabled=True
+                                    return
+                            elif isinstance(identifier,(str,int)) and not isinstance(identifier,bool) and identifier in shares:
+                                self.ledger.record_share(shares.pop(identifier),response.get('result') is True and response.get('error') in (None,False))
+                        if len(upstream_buffer)>MAX_LINE:raise ValueError('Resposta Stratum excede limite')
                         self._send(client,data)
                     else:
                         client_buffer.extend(data)
@@ -326,14 +441,33 @@ class LocalStratumProxy:
                             except (ValueError,UnicodeDecodeError) as error:
                                 raise ValueError("Protocolo Stratum não reconhecido; nenhum redirecionamento permitido") from error
                             rewritten,is_auth=rewrite_message(message,self.wallet,active,authenticated=authenticated)
+                            identifier=message.get('id')
+                            if isinstance(identifier,(str,int)) and not isinstance(identifier,bool):
+                                if identifier in pending_ids or len(pending_ids)>=256:raise ValueError('Identificador Stratum duplicado ou excesso de pedidos pendentes')
+                                pending_ids.add(identifier)
+                            if is_auth:
+                                if authenticated or isinstance(identifier,bool) or not isinstance(identifier,(str,int)):
+                                    raise ValueError('Autorização duplicada ou sem identificador verificável')
+                                auth_id=identifier
+                            if message['method']=='mining.submit':
+                                if role=='support' and not pool_authorized:raise ValueError('Contribuição sem autorização confirmada')
+                                if isinstance(identifier,bool) or not isinstance(identifier,(str,int)) or identifier==auth_id or identifier in shares or len(shares)>=256:
+                                    raise ValueError('Identificador de share inválido ou pendente')
+                                shares[identifier]=role
                             self._send(upstream,(json.dumps(rewritten,separators=(",",":"))+"\n").encode())
                             authenticated=authenticated or is_auth
                         if len(client_buffer)>=MAX_LINE:
                             raise ValueError("Mensagem Stratum excede o limite")
+        except ContributionWindowEnded:
+            return
+        except (OSError,ValueError,RuntimeError):
+            if role=='support':self.safety_disabled=True
+            raise
         finally:
-            # The last select interval counts only while both endpoints belonged to this session.
-            self.ledger.advance(max(0,self.clock()-previous),configuration["enabled"])
+            account(self.clock())
             self.ledger.save()
+            self.support_deadline=None
+            self.status['pool_authorized']=False
             self.status.update(connected=False,active_role="primary",active_wallet=self.wallet)
             self.publish(self.configuration())
 
@@ -342,10 +476,14 @@ class LocalStratumProxy:
         remaining=memoryview(data)
         deadline=self.clock()+1
         while remaining and not self.stop.is_set():
+            if self.support_deadline is not None and self.clock()>=self.support_deadline:
+                raise ContributionWindowEnded('Limite da janela de contribuição atingido')
             if self.clock()>deadline:
                 raise TimeoutError("Conexão Stratum sem resposta")
             _,writable,_=select.select([],[target],[],.1)
             if writable:
+                if self.support_deadline is not None and self.clock()>=self.support_deadline:
+                    raise ContributionWindowEnded('Limite da janela de contribuição atingido')
                 count=target.send(remaining)
                 if count<=0:
                     raise ConnectionError("Conexão Stratum encerrada")

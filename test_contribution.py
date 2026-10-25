@@ -113,7 +113,8 @@ class ContributionTests(unittest.TestCase):
 
 
 class FakePool:
-    def __init__(self):
+    def __init__(self,responder=None):
+        self.responder=responder or (lambda message:{'id':message.get('id'),'result':True})
         self.socket=socket.socket()
         self.socket.bind(("127.0.0.1",0))
         self.socket.listen(2)
@@ -140,8 +141,11 @@ class FakePool:
                     buffer+=data
                     while b"\n" in buffer:
                         line,buffer=buffer.split(b"\n",1)
-                        self.messages.put(json.loads(line))
-                        try: connection.sendall(b'{"id":1,"result":true}\n')
+                        message=json.loads(line)
+                        self.messages.put(message)
+                        response=self.responder(message)
+                        if response is None:continue
+                        try: connection.sendall((json.dumps(response)+'\n').encode())
                         except OSError: break
 
     def close(self):
@@ -159,6 +163,7 @@ class ProxyIntegrationTests(unittest.TestCase):
             pool=FakePool()
             proxy=LocalStratumProxy(USER,settings,root,connector=lambda:socket.create_connection(pool.address))
             proxy.ledger.advance(3420,True)
+            proxy.ledger.data['wallets'][USER]['verified_primary_seconds']=3420.0
             thread=threading.Thread(target=proxy.run,daemon=True)
             thread.start()
             client=None
@@ -194,6 +199,7 @@ class ProxyIntegrationTests(unittest.TestCase):
             pool=FakePool()
             proxy=LocalStratumProxy(USER,settings,root,connector=lambda:socket.create_connection(pool.address))
             proxy.ledger.advance(3420,True)
+            proxy.ledger.data['wallets'][USER]['verified_primary_seconds']=3420.0
             thread=threading.Thread(target=proxy.run,daemon=True)
             thread.start()
             client=None
@@ -219,6 +225,8 @@ class ProxyIntegrationTests(unittest.TestCase):
             fake_clock=[0.0]
             pool=FakePool()
             proxy=LocalStratumProxy(USER,settings,root,connector=lambda:socket.create_connection(pool.address),clock=lambda:fake_clock[0])
+            proxy.ledger.advance(3419,True)
+            proxy.ledger.data['wallets'][USER]['verified_primary_seconds']=3419.0
             thread=threading.Thread(target=proxy.run,daemon=True)
             thread.start()
             client=None
@@ -227,24 +235,24 @@ class ProxyIntegrationTests(unittest.TestCase):
                 port=proxy.status["port"]
                 self.assertEqual(proxy.listener.getsockname()[0],"127.0.0.1")
                 client=socket.create_connection(("127.0.0.1",port));client.settimeout(2)
-                client.sendall((json.dumps({"method":"mining.authorize","params":[USER+".worker","x"]})+"\n").encode())
+                client.sendall((json.dumps({"id":1,"method":"mining.authorize","params":[USER+".worker","x"]})+"\n").encode())
                 self.assertEqual(pool.messages.get(timeout=2)["params"][0],USER+".worker")
                 client.recv(4096)
-                fake_clock[0]=3421
+                fake_clock[0]=2
                 self.assertEqual(client.recv(4096),b"")
                 client.close()
                 client=socket.create_connection(("127.0.0.1",port));client.settimeout(2)
-                client.sendall((json.dumps({"method":"mining.authorize","params":[USER,"x"]})+"\n").encode())
+                client.sendall((json.dumps({"id":1,"method":"mining.authorize","params":[USER,"x"]})+"\n").encode())
                 self.assertEqual(pool.messages.get(timeout=2)["params"][0],AUTHOR_WALLET)
                 client.recv(4096)
-                client.sendall((json.dumps({"method":"mining.submit","params":[USER,"job","nonce"]})+"\n").encode())
+                client.sendall((json.dumps({"id":2,"method":"mining.submit","params":[USER,"job","nonce"]})+"\n").encode())
                 self.assertEqual(pool.messages.get(timeout=2)["params"],[AUTHOR_WALLET,"job","nonce"])
                 client.recv(4096)
                 settings.write_text(json.dumps({"wallet":USER,"support_enabled":False}))
                 self.assertEqual(client.recv(4096),b"")
                 client.close()
                 client=socket.create_connection(("127.0.0.1",port));client.settimeout(2)
-                client.sendall((json.dumps({"method":"login","params":{"login":USER,"pass":"x"}})+"\n").encode())
+                client.sendall((json.dumps({"id":1,"method":"login","params":{"login":USER,"pass":"x"}})+"\n").encode())
                 self.assertEqual(pool.messages.get(timeout=2)["params"]["login"],USER)
                 wait_for(lambda:proxy.status["connected"] and not proxy.status["enabled"])
                 self.assertEqual(proxy.status["active_role"],"primary")
@@ -265,6 +273,7 @@ class ProxyIntegrationTests(unittest.TestCase):
             settings.write_text('{broken')
             proxy=LocalStratumProxy(USER,settings,root)
             proxy.ledger.advance(3420,True)
+            proxy.ledger.data['wallets'][USER]['verified_primary_seconds']=3420.0
             self.assertFalse(proxy.configuration()["enabled"])
             self.assertFalse(proxy.configuration()["configuration_valid"])
 
