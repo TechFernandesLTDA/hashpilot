@@ -30,6 +30,7 @@ from tray import WindowsTray
 from bootstrap import restore_bundled_data
 
 APP_NAME = "HashPilot — Tech Fernandes"
+DPI_MODE = {"requested":"PerMonitorV2","enabled":False,"fallback":True}
 ASSET_DIR = Path(__file__).resolve().parent / "assets/brand"
 BODY_FONT, TITLE_FONT = "Segoe UI", "Segoe UI"
 BG, PANEL, BORDER, TEXT, MUTED = "#0A1628", "#10213B", "#23446D", "#FFFFFF", "#E8EDF5"
@@ -262,14 +263,59 @@ def format_brl(value):
     return "N/D" if value is None else "R$ " + f"{value:,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
 
 
-def work_area(root):
+def enable_native_dpi_awareness():
+    """Configura somente este processo, antes de criar qualquer janela Tk."""
+    global DPI_MODE
+    if os.name != "nt":
+        DPI_MODE = {"requested":"platform-native","enabled":True,"fallback":False}
+        return DPI_MODE
+    try:
+        import ctypes
+        from ctypes import wintypes
+        user=ctypes.WinDLL("user32",use_last_error=True)
+        user.SetProcessDpiAwarenessContext.argtypes=[wintypes.HANDLE]
+        user.SetProcessDpiAwarenessContext.restype=wintypes.BOOL
+        user.GetThreadDpiAwarenessContext.restype=wintypes.HANDLE
+        user.AreDpiAwarenessContextsEqual.argtypes=[wintypes.HANDLE,wintypes.HANDLE]
+        user.AreDpiAwarenessContextsEqual.restype=wintypes.BOOL
+        desired=ctypes.c_void_p(-4)
+        changed=bool(user.SetProcessDpiAwarenessContext(desired))
+        native=bool(user.AreDpiAwarenessContextsEqual(user.GetThreadDpiAwarenessContext(),desired))
+        DPI_MODE={"requested":"PerMonitorV2","enabled":native,"fallback":not native,"configured_now":changed,
+                  "error":None if native else ctypes.get_last_error()}
+    except (AttributeError,OSError) as error:
+        DPI_MODE={"requested":"PerMonitorV2","enabled":False,"fallback":True,"error":str(error)}
+    return DPI_MODE
+
+
+def work_area(root, geometry=None):
     if os.name == "nt":
         try:
             import ctypes
             from ctypes import wintypes
-            rectangle = wintypes.RECT()
-            if ctypes.windll.user32.SystemParametersInfoW(0x30, 0, ctypes.byref(rectangle), 0):
-                return rectangle.left, rectangle.top, rectangle.right, rectangle.bottom
+            user = ctypes.WinDLL("user32", use_last_error=True)
+            class MonitorInfo(ctypes.Structure):
+                _fields_ = [("cbSize",wintypes.DWORD),("rcMonitor",wintypes.RECT),("rcWork",wintypes.RECT),("dwFlags",wintypes.DWORD)]
+            user.GetAncestor.argtypes = [wintypes.HWND,wintypes.UINT]
+            user.GetAncestor.restype = wintypes.HWND
+            user.MonitorFromWindow.argtypes = [wintypes.HWND,wintypes.DWORD]
+            user.MonitorFromWindow.restype = wintypes.HANDLE
+            user.MonitorFromRect.argtypes = [ctypes.POINTER(wintypes.RECT),wintypes.DWORD]
+            user.MonitorFromRect.restype = wintypes.HANDLE
+            user.GetMonitorInfoW.argtypes = [wintypes.HANDLE,ctypes.POINTER(MonitorInfo)]
+            match = re.fullmatch(r"(\d+)x(\d+)([+-]\d+)([+-]\d+)",geometry or "")
+            if match:
+                width,height,x,y = map(int,match.groups())
+                position = wintypes.RECT(x,y,x+min(width,200),y+min(height,200))
+                handle = user.MonitorFromRect(ctypes.byref(position),2)
+            else:
+                window = user.GetAncestor(root.winfo_id(),2)
+                handle = user.MonitorFromWindow(window,2)
+            info = MonitorInfo()
+            info.cbSize = ctypes.sizeof(info)
+            if handle and user.GetMonitorInfoW(handle,ctypes.byref(info)):
+                area = info.rcWork
+                return area.left,area.top,area.right,area.bottom
         except (AttributeError, OSError):
             pass
     return 0, 0, root.winfo_screenwidth(), root.winfo_screenheight()-40
@@ -372,6 +418,7 @@ class Chart(tk.Canvas):
 
 class Monitor(tk.Tk):
     def __init__(self):
+        enable_native_dpi_awareness()
         restore_bundled_data()
         super().__init__()
         global BODY_FONT, TITLE_FONT
@@ -389,6 +436,8 @@ class Monitor(tk.Tk):
         self.restored_points = {}
         self.ui_restored = False
         self.preference_timer = None
+        self._panel_return_state = "normal"
+        self._normal_geometry = None
         self.collector = Collector(self.history)
         self.finance_collector = FinanceCollector(STATE_DIR, self.history)
         self.finance_state = {}
@@ -414,6 +463,7 @@ class Monitor(tk.Tk):
 
     def hide_to_tray(self):
         if self.tray.registered_ok:
+            self.remember_window_state()
             self.save_preferences()
             self.withdraw()
         else:
@@ -425,9 +475,41 @@ class Monitor(tk.Tk):
             self.after(80, self.hide_to_tray)
 
     def show_panel(self):
+        desired = "zoomed" if self.state()=="zoomed" else getattr(self,"_panel_return_state","normal")
         self.deiconify()
-        self.state("normal")
+        try:
+            self.state(desired)
+        except tk.TclError:
+            self.state("normal")
         self.lift()
+
+    def remember_window_state(self):
+        state = self.state()
+        if state in ("normal","zoomed"):
+            self._panel_return_state = state
+        if state == "normal" and self.winfo_width()>100:
+            self._normal_geometry = self.geometry()
+
+    def restore_normal_geometry(self, geometry):
+        match = re.fullmatch(r"(\d+)x(\d+)([+-]\d+)([+-]\d+)",geometry or "")
+        if not match:
+            return
+        width,height,x,y = map(int,match.groups())
+        left,top,right,bottom = work_area(self,geometry)
+        width,height = min(width,right-left-16),min(height,bottom-top-44)
+        x,y = max(left,min(x,right-width-16)),max(top,min(y,bottom-height-44))
+        self._normal_geometry = f"{width}x{height}{x:+d}{y:+d}"
+        self.geometry(self._normal_geometry)
+
+    def restore_window_preferences(self, preferences):
+        self.restore_normal_geometry(preferences.get("geometry"))
+        desired = preferences.get("window_state","normal")
+        self._panel_return_state = desired if desired in ("normal","zoomed") else "normal"
+        if self._panel_return_state == "zoomed":
+            try:
+                self.state("zoomed")
+            except tk.TclError:
+                self._panel_return_state = "normal"
 
     def show_summary(self):
         if self.summary_window and self.summary_window.winfo_exists():
@@ -589,7 +671,10 @@ class Monitor(tk.Tk):
 
     def save_preferences(self):
         self.preference_timer = None
-        self.history.preferences({"geometry": self.geometry(), "tab": self.tabs.index(self.tabs.select()), "tab_schema": "three-tabs-v1"})
+        self.remember_window_state()
+        self.history.preferences({"geometry": getattr(self,"_normal_geometry",None) or self.geometry(),
+            "window_state": getattr(self,"_panel_return_state","normal"),
+            "tab": self.tabs.index(self.tabs.select()), "tab_schema": "three-tabs-v1"})
 
     def label(self, master, text="", **kwargs):
         return tk.Label(master, text=text, bg=kwargs.pop("bg", BG), fg=kwargs.pop("fg", TEXT),
@@ -609,14 +694,17 @@ class Monitor(tk.Tk):
 
     def build(self):
         left,top,right,bottom = work_area(self)
-        self.maxsize(right-left-16,bottom-top-44)
         self.minsize(min(1120,right-left-16),min(620,bottom-top-44))
+        self.restore_normal_geometry(self.geometry())
         self.columnconfigure(0, weight=1)
         self.rowconfigure(1, weight=1)
         head = tk.Frame(self, bg=BG)
         head.grid(row=0, column=0, sticky="ew", padx=16, pady=(8, 6))
-        self.brand_logo = tk.PhotoImage(file=ASSET_DIR / "logo-header.png").subsample(2, 2)
-        tk.Label(head, image=self.brand_logo, bg=BG).pack(side="left", padx=(0, 14))
+        self.logo_images = {width:tk.PhotoImage(file=ASSET_DIR / f"logo-header-{width}.png") for width in (180,240,360)}
+        self.logo_native_width = 180
+        self.brand_logo = self.logo_images[180]
+        self.brand_logo_label = tk.Label(head,image=self.brand_logo,bg=BG)
+        self.brand_logo_label.pack(side="left",padx=(0,14))
         product = tk.Frame(head, bg=BG)
         product.pack(side="left")
         self.label(product, "HashPilot", font=(TITLE_FONT, 20, "bold")).pack(anchor="w")
@@ -784,6 +872,12 @@ class Monitor(tk.Tk):
         width, height = self.winfo_width(), self.winfo_height()
         if width < 500:
             return
+        self.remember_window_state()
+        logo_width = 360 if height>=1400 and width>=2800 else 240 if height>=740 and width>=1600 else 180
+        if logo_width != self.logo_native_width:
+            self.logo_native_width = logo_width
+            self.brand_logo = self.logo_images[logo_width]
+            self.brand_logo_label.configure(image=self.brand_logo)
         compact = height < 850 or width < 1450
         if height < 780:
             self.overview_activity.grid_remove()
@@ -990,7 +1084,10 @@ class Monitor(tk.Tk):
         snapshot["layout"] = {"tab_count": len(self.tabs.tabs()), "tab_names": [self.tabs.tab(index,"text") for index in range(len(self.tabs.tabs()))],
             "selected_tab": self.tabs.index(self.tabs.select()), "client_size": [self.winfo_width(),self.winfo_height()],
             "profile": getattr(self,"layout_profile",{}), "font_units": "pixels", "scrollbars": False,
-            "work_area": list(work_area(self))}
+            "work_area": list(work_area(self)), "window_state": self.state(),
+            "dpi_awareness": DPI_MODE,
+            "logo": {"variant_width": self.logo_native_width,"native_size": [self.brand_logo.width(),self.brand_logo.height()],
+                     "file": f"logo-header-{self.logo_native_width}.png"}}
         snapshot["history"] = {"database": str(self.history.path), "session": self.history.session,
             "counts": self.history.info, "last_commit": self.history.last_commit,
             "pending_jobs": self.history.jobs.qsize(), "error": self.history.last_error,
@@ -1034,14 +1131,7 @@ class Monitor(tk.Tk):
                     self.charts[key].add(stamp, value)
                 self.charts[key].draw()
             preferences = restored.get("preferences", {})
-            geometry = preferences.get("geometry")
-            if isinstance(geometry, str) and re.fullmatch(r"\d+x\d+(?:[+-]\d+){2}", geometry):
-                match = re.fullmatch(r"(\d+)x(\d+)([+-]\d+)([+-]\d+)", geometry)
-                width,height,x,y = map(int,match.groups())
-                left,top,right,bottom = work_area(self)
-                width,height = min(width,right-left-16),min(height,bottom-top-44)
-                x,y = max(left,min(x,right-width-16)),max(top,min(y,bottom-height-44))
-                self.geometry(f"{width}x{height}+{x}+{y}")
+            self.restore_window_preferences(preferences)
             if preferences.get("tab") in (0, 1, 2):
                 index = preferences["tab"]
                 if preferences.get("tab_schema") != "three-tabs-v1" and index in (0,1):

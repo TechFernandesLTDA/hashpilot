@@ -1,12 +1,12 @@
 {
-  "exported_at": "2026-10-25T01:29:52.599739+00:00",
+  "exported_at": "2026-10-25T01:44:44.523428+00:00",
   "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
   "tables": {
-    "telemetry": 3802,
-    "events": 1151,
-    "finance_snapshots": 131,
-    "finance_sources": 666,
-    "preferences": 4
+    "telemetry": 4256,
+    "events": 1228,
+    "finance_snapshots": 146,
+    "finance_sources": 762,
+    "preferences": 5
   },
   "integrity_check": "ok",
   "source": "SQLite online backup; monitor may remain active"

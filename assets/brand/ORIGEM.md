@@ -21,3 +21,7 @@ Tokens: marinho `#0A1628`, azul `#1C64C8`, turquesa `#12A98E`, neutro `#E8EDF5` 
 Tipografia: Sora 700 para títulos e Plus Jakarta Sans para texto quando instaladas; nesta máquina, fallback oficial Segoe UI. O aplicativo não instala fontes.
 
 Os ativos seguem as regras da Tech Fernandes, sem licença adicional por estarem neste projeto.
+
+Correção de nitidez do cabeçalho: 'logo-header-source.png' preserva o recorte oficial de 1120×332. As variantes 'logo-header-180.png', 'logo-header-240.png' e 'logo-header-360.png' são geradas diretamente desse recorte em seus tamanhos nativos, com antialias de alta qualidade e proporção preservada. A interface não reduz novamente o bitmap antigo nem amplia uma miniatura.
+
+A geração das novas variantes pode ser reproduzida no Windows com 'tools/build_brand_headers.ps1'. O aplicativo consome apenas os PNGs prontos; não depende desse script nem de bibliotecas de imagem adicionais para executar.

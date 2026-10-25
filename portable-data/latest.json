@@ -1,20 +1,20 @@
 {
-  "collected_at": 1792891791.171993,
+  "collected_at": 1792892682.8134034,
   "gpu": {
     "name": "NVIDIA GeForce RTX 3070",
     "driver_version": "617.14",
-    "temperature.gpu": 76.0,
-    "power.draw": 160.91,
+    "temperature.gpu": 74.0,
+    "power.draw": 154.11,
     "power.limit": 240.0,
-    "clocks.gr": 1740.0,
+    "clocks.gr": 1725.0,
     "clocks.mem": 5001.0,
     "utilization.gpu": 100.0,
     "utilization.memory": 3.0,
-    "memory.used": 1985.0,
+    "memory.used": 1935.0,
     "memory.total": 8192.0,
     "fan.speed": 100.0,
     "pstate": "P3",
-    "sampled_at": 1792891791.2267635
+    "sampled_at": 1792892682.870781
   },
   "gpu_error": null,
   "miner_running": true,
@@ -24,9 +24,9 @@
   "thermal_control": {
     "enabled": true,
     "mode": "hold",
-    "reason": "Temperatura na banda estável; mantendo clock",
-    "current_clock_mhz": 1740,
-    "desired_clock_mhz": 1740,
+    "reason": "Resfriando: 10/60 s estáveis até 75 °C",
+    "current_clock_mhz": 1725,
+    "desired_clock_mhz": 1725,
     "min_clock_mhz": 1500,
     "max_clock_mhz": 1800,
     "target_band_c": [
@@ -34,56 +34,56 @@
       78
     ],
     "emergency_pause_c": 84,
-    "sampled_at": 1792891789.4238245,
+    "sampled_at": 1792892681.5728624,
     "error": null,
     "controller_pid": 18964,
     "miner_pid": 27740,
     "dry_run": false,
     "name": "NVIDIA GeForce RTX 3070",
-    "temperature_c": 76.0,
-    "power_w": 161.25,
-    "actual_clock_mhz": 1740.0,
+    "temperature_c": 72.0,
+    "power_w": 145.72,
+    "actual_clock_mhz": 1725.0,
     "memory_clock_mhz": 5001.0,
     "power_limit_w": 240.0,
-    "age_seconds": 1.8797698020935059,
+    "age_seconds": 1.3744292259216309,
     "stale": false,
     "available": true
   },
   "miner": {
-    "hashrate": 76.06,
-    "hashrate_at": 1792891710.0,
-    "accepted": 52,
+    "hashrate": 76.23,
+    "hashrate_at": 1792892611.0,
+    "accepted": 57,
     "rejected": 0,
     "hw_errors": 0,
-    "average_1m": 76.39,
-    "average_15m": 76.47,
+    "average_1m": 76.22,
+    "average_15m": 77.83,
     "started_at": 1792886184.0,
-    "last_share_at": 1792891663.0,
+    "last_share_at": 1792892556.0,
     "connection": "Conectado à pool",
     "paused": false
   },
   "charts": {
     "hash": {
       "point_count": 10,
-      "latest_sample_at": 1792891710.0,
-      "latest_value": 76.06,
+      "latest_sample_at": 1792892611.0,
+      "latest_value": 76.23,
       "gap_limit_seconds": 180
     },
     "temp": {
-      "point_count": 477,
-      "latest_sample_at": 1792891791.4829323,
-      "latest_value": 76.0,
+      "point_count": 459,
+      "latest_sample_at": 1792892683.0808427,
+      "latest_value": 74.0,
       "gap_limit_seconds": 80
     },
     "power": {
-      "point_count": 477,
-      "latest_sample_at": 1792891791.4829323,
-      "latest_value": 160.91,
+      "point_count": 459,
+      "latest_sample_at": 1792892683.0808427,
+      "latest_value": 154.11,
       "gap_limit_seconds": 80
     },
     "fan": {
-      "point_count": 477,
-      "latest_sample_at": 1792891791.4829323,
+      "point_count": 459,
+      "latest_sample_at": 1792892683.0808427,
       "latest_value": 100.0,
       "gap_limit_seconds": 80
     }
@@ -93,13 +93,13 @@
     "name": "HashPilot — Tech Fernandes",
     "tray_registered": true,
     "tray_error": null,
-    "panel_state": "normal",
-    "pid": 2344,
+    "panel_state": "zoomed",
+    "pid": 2564,
     "summary_open": false
   },
   "window": {
-    "width": 2032,
-    "height": 1060
+    "width": 2560,
+    "height": 1351
   },
   "layout": {
     "tab_count": 3,
@@ -108,53 +108,69 @@
       "GPU e mineração",
       "Rendimentos"
     ],
-    "selected_tab": 0,
+    "selected_tab": 1,
     "client_size": [
-      2032,
-      1060
+      2560,
+      1351
     ],
     "profile": {
-      "width": 2032,
-      "height": 1060,
+      "width": 2560,
+      "height": 1351,
       "compact": false,
-      "body_font": 15,
-      "rowheight": 28
+      "body_font": 19,
+      "rowheight": 33
     },
     "font_units": "pixels",
     "scrollbars": false,
     "work_area": [
       0,
       0,
-      2048,
-      1104
-    ]
+      2560,
+      1380
+    ],
+    "window_state": "zoomed",
+    "dpi_awareness": {
+      "requested": "PerMonitorV2",
+      "enabled": true,
+      "fallback": false,
+      "configured_now": true,
+      "error": null
+    },
+    "logo": {
+      "variant_width": 240,
+      "native_size": [
+        240,
+        71
+      ],
+      "file": "logo-header-240.png"
+    }
   },
   "history": {
     "database": "C:\\Users\\renan\\AppData\\Local\\PearlMonitor\\history.sqlite3",
-    "session": "27d1c16375854686a0429e9760ebdc8b",
+    "session": "1c12707b35b544d1b7f7e72fcea7c4f1",
     "counts": {
       "telemetry": [
-        3800,
+        4244,
         1792882576.0,
-        1792891787.1565275
+        1792892678.1687715
       ],
       "events": [
-        1151,
+        1227,
         1792882545.0,
-        1792891755.0054054
+        1792892680.7758503
       ],
       "finance_snapshots": [
-        131,
+        146,
         1792883595.5142565,
-        1792891756.3943114
+        1792892670.4997916
       ],
       "finance_sources": [
-        666,
+        756,
         1792884222.299892,
-        1792891756.3939338
+        1792892670.499442
       ]
     },
-    "last_commit": 1792891791.3224478,
+    "last_commit": 1792892682.9611256,
     "pending_jobs": 0,
     "error": null,
     "restored_points": {

@@ -190,8 +190,12 @@ def run_report(sizes=None, virtual_4k=False, scaling=None, simulated_work_area=N
                 root.refresh_finance()
             for width, height in (sizes or [(1280, 720), (1366, 768), (1920, 1080), (3840, 2160)]):
                 if virtual_4k and width >= 3840:
-                    root.maxsize(9000, 9000)
-                root.geometry(f"{width}x{height}+0+0")
+                    # Only the isolated virtual-layout test removes Tk's default
+                    # desktop tracking limits. Production leaves WM limits native.
+                    root.maxsize(9000,9000)
+                    root.geometry(f"{width}x{height}+0+0")
+                else:
+                    root.restore_normal_geometry(f"{width}x{height}+0+0")
                 root.update()
                 root.update_idletasks()
                 actual = root.winfo_width(), root.winfo_height()
@@ -211,15 +215,19 @@ def run_report(sizes=None, virtual_4k=False, scaling=None, simulated_work_area=N
 if __name__ == "__main__":
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--run", action="store_true")
+    parser.add_argument("--native-dpi",action="store_true",help="Habilita PerMonitorV2 antes do primeiro Tk")
     parser.add_argument("--output", type=Path)
     parser.add_argument("--virtual-4k", action="store_true", help="Teste de geometria fora da tela, nao evidencia fisica 4K")
     parser.add_argument("--scaling", type=float)
-    parser.add_argument("--work-area", help="Simula WorkArea WIDTHxHEIGHT no maxsize do app")
+    parser.add_argument("--work-area", help="Simula WorkArea WIDTHxHEIGHT ao restaurar janela normal")
     arguments = parser.parse_args()
     if not arguments.run:
         parser.print_help()
         raise SystemExit(0)
     simulated = tuple(map(int, arguments.work_area.lower().split("x"))) if arguments.work_area else None
+    if arguments.native_dpi:
+        import monitor
+        monitor.enable_native_dpi_awareness()
     report = run_report(virtual_4k=arguments.virtual_4k, scaling=arguments.scaling, simulated_work_area=simulated)
     result = {"reports": report, "overflow_count": sum(len(row["errors"]) for row in report)}
     if arguments.output:

@@ -18,6 +18,8 @@ As abas não usam barras de rolagem; o layout foi preparado para HD a 4K, respei
 
 Veja [pagamentos, carteira e previsão de recebimento](PAGAMENTOS.md).
 
+No Windows, a maximização usa toda a área útil do monitor atual e preserva esse estado ao reiniciar ou retornar da bandeja. O processo usa PerMonitorV2 quando disponível para evitar ampliação borrada pelo Windows. A logo usa bitmaps nativos de 180, 240 ou 360 pixels, derivados diretamente do arquivo oficial; `tools/build_brand_headers.ps1` reproduz essas versões.
+
 ## Bandeja, resumo e console
 
 - Minimizar ou clicar no **X** recolhe o painel para a bandeja do Windows, mantendo coleta e histórico ativos.

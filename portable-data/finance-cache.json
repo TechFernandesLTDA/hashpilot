@@ -2,25 +2,25 @@
   "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
   "sources": {
     "price": {
-      "fetched_at": 1792891755.177674,
+      "fetched_at": 1792892680.9818053,
       "data": {
         "pearl-2": {
-          "brl": 9.24,
-          "usd": 1.86,
-          "last_updated_at": 1792891707
+          "brl": 9.23,
+          "usd": 1.85,
+          "last_updated_at": 1792892661
         },
         "bitcoin": {
-          "usd": 80727,
-          "brl": 401955,
-          "last_updated_at": 1792891716
+          "brl": 402116,
+          "usd": 80759,
+          "last_updated_at": 1792892661
         }
       }
     },
     "balance": {
-      "fetched_at": 1792891755.7020676,
+      "fetched_at": 1792892681.4960115,
       "data": {
-        "total": 0.13578324981787765,
-        "unconfirmed": 0.13578324981787765,
+        "total": 0.14598498174982216,
+        "unconfirmed": 0.14598498174982216,
         "confirmed": 0.0,
         "threshold": 1.0,
         "reached_pct": 0.0,
@@ -31,7 +31,7 @@
       }
     },
     "payouts": {
-      "fetched_at": 1792891755.7020743,
+      "fetched_at": 1792892681.7539113,
       "data": {
         "reward": {
           "week": null,
@@ -42,25 +42,25 @@
       }
     },
     "rewards": {
-      "fetched_at": 1792891755.7020772,
+      "fetched_at": 1792892681.7539172,
       "data": []
     },
     "network": {
-      "fetched_at": 1792891756.3939338,
+      "fetched_at": 1792892681.753924,
       "data": {
-        "miners": 29319,
-        "workers": 103790,
-        "valid": 15013586,
-        "stale": 64044,
-        "invalid": 7950,
-        "hashrate": 3.602258789621987e+19,
-        "net_hashrate": 89556184007389530000,
+        "miners": 29296,
+        "workers": 101742,
+        "valid": 14975362,
+        "stale": 52391,
+        "invalid": 8082,
+        "hashrate": 3.5951797955538452e+19,
+        "net_hashrate": 87924793361571140000,
         "fee_type": "PPS+",
         "fee": 0.03,
         "minpay": 1.0,
         "defpay": 1.0,
         "maxpay": 100000.0,
-        "height": 133192,
+        "height": 133195,
         "blocks_for_maturation": 100,
         "block_time": 194,
         "ticker": "prl",
@@ -73,7 +73,7 @@
           "solo"
         ],
         "nh_force_solo": false,
-        "block_reward": 2224.88038813,
+        "block_reward": 2224.92043215,
         "dualmining": "",
         "mergemining": "",
         "geomining": "Global, Europe, North America, South America, Singapore, Hong Kong, Russia, Middle East",
@@ -163,11 +163,11 @@
           "hashes_per_diff": 4294967296,
           "round_to_pow2": false
         },
-        "estimated_profit_day": 1.486987072456097e-14
+        "estimated_profit_day": 1.4875458427957984e-14
       }
     },
     "payout_history": {
-      "fetched_at": 1792891756.3939285,
+      "fetched_at": 1792892681.7539217,
       "data": {
         "count": 0,
         "next": null,
@@ -700,8 +700,68 @@
     {
       "timestamp": 1792891756.3943114,
       "total_prl": 0.13578324981787765
+    },
+    {
+      "timestamp": 1792891817.040232,
+      "total_prl": 0.13578324981787765
+    },
+    {
+      "timestamp": 1792891877.9336638,
+      "total_prl": 0.13578324981787765
+    },
+    {
+      "timestamp": 1792891938.8319826,
+      "total_prl": 0.14161182046571594
+    },
+    {
+      "timestamp": 1792892000.7342582,
+      "total_prl": 0.14161182046571594
+    },
+    {
+      "timestamp": 1792892061.6200674,
+      "total_prl": 0.14161182046571594
+    },
+    {
+      "timestamp": 1792892122.5290701,
+      "total_prl": 0.14161182046571594
+    },
+    {
+      "timestamp": 1792892183.8760378,
+      "total_prl": 0.14161182046571594
+    },
+    {
+      "timestamp": 1792892244.5278008,
+      "total_prl": 0.14161182046571594
+    },
+    {
+      "timestamp": 1792892305.4211156,
+      "total_prl": 0.14161182046571594
+    },
+    {
+      "timestamp": 1792892366.0782886,
+      "total_prl": 0.14161182046571594
+    },
+    {
+      "timestamp": 1792892426.9724953,
+      "total_prl": 0.14161182046571594
+    },
+    {
+      "timestamp": 1792892488.310372,
+      "total_prl": 0.14598498174982216
+    },
+    {
+      "timestamp": 1792892548.952084,
+      "total_prl": 0.14598498174982216
+    },
+    {
+      "timestamp": 1792892609.59886,
+      "total_prl": 0.14598498174982216
+    },
+    {
+      "timestamp": 1792892670.4997916,
+      "total_prl": 0.14598498174982216
     }
   ],
   "errors": {},
-  "attempted_at": 1792891756.3943145
+  "attempted_at": 1792892681.7542515
 }
