@@ -7,6 +7,8 @@
 1. [Instalar e configurar](installation.md): Windows, comando único, carteira e opção de mineração.
 2. [Entender pagamentos](../PAGAMENTOS.md): mínimo, confirmação, saldo pendente e estimativa de envio.
 3. [Perguntas frequentes](faq.md): carteira do autor, dados, hardware e diagnóstico.
+4. [Vídeo e capturas reais](../media/README.md): demonstração de 44 segundos e origem dos dados.
+5. [Resultado observado da RTX 3070](performance/rtx3070.md): metodologia, agregados e limitações.
 
 ## Entender e contribuir
 

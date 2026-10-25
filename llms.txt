@@ -6,6 +6,10 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 
 ## Read first
 
+- [Measured RTX 3070 observation](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/performance/rtx3070.md): 15-minute observation, independent hashrate updates, power, temperature and limitations; not a universal overclock or A/B comparison.
+- [Observation aggregates](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/performance/rtx3070-observation.json): machine-readable methodology and aggregate evidence.
+- [Demo provenance](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/media/README.md): real application UI captured in an isolated renderer using real local data.
+
 - [Portuguese README](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/README.md): product scope, Windows install command, default author wallet and hardware limits.
 - [English README](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/README.en.md): English introduction and the same important defaults.
 - [Documentation index](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/index.md): navigation.

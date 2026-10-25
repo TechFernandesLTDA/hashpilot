@@ -18,6 +18,8 @@ kryptex-openapi.yaml
 build/
 dist/
 *.spec
+media/segments/
+media/qa/
 
 !portable-data/history.sqlite3
 !portable-data/gpu-agent.sqlite3

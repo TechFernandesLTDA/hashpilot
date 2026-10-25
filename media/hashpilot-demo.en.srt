@@ -1,0 +1,43 @@
+1
+00:00:00,000 --> 00:00:04,000
+HashPilot | Tech Fernandes
+Windows NVIDIA mining dashboard | GPL-3.0
+
+PowerShell install:
+irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/install.ps1 | iex
+
+Author wallet is prefilled: replace it before mining.
+
+2
+00:00:04,000 --> 00:00:10,000
+Choose your public wallet
+Optional miner setup and local AI. Optional 5% mining-time support can be disabled.
+
+3
+00:00:10,000 --> 00:00:18,000
+Live NVIDIA telemetry and pool payout estimates
+Real local data from one RTX 3070. Earnings shown are observed, not guaranteed.
+
+4
+00:00:18,000 --> 00:00:26,000
+Hashrate, temperature, power and persistent charts
+Isolated UI capture; the active miner and GPU settings were not changed.
+
+5
+00:00:26,000 --> 00:00:34,000
+Observed credits and PRL / BRL / USD / BTC equivalents
+History survives restarts. USD/BTC are equivalents; pool payouts remain PRL.
+
+6
+00:00:34,000 --> 00:00:40,000
+Per-device measurement and optional local AI on CPU
+Generic tuning is experimental. The current interface monitors GPU 0.
+
+7
+00:00:40,000 --> 00:00:44,000
+RTX 3070 observation: 78.40 TH/s at 159.06 W mean
+15-minute observation from one device; not a universal preset or A/B comparison.
+
+github.com/TechFernandesLTDA/hashpilot
+
+Method and evidence: docs/performance/rtx3070.md

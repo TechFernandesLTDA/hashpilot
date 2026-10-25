@@ -1,0 +1,155 @@
+{
+  "schema_version": 1,
+  "generated_at": {
+    "unix": 1792895924.848959,
+    "utc": "2026-10-25T02:38:44.848959+00:00",
+    "local": "2026-10-24T23:38:44.848959-03:00"
+  },
+  "device": {
+    "index": 0,
+    "names": [
+      "NVIDIA GeForce RTX 3070"
+    ],
+    "driver_versions": [
+      "617.14"
+    ]
+  },
+  "source": {
+    "table": "telemetry",
+    "filter": "source=live, configured wallet, GPU0 parser",
+    "sql": "SELECT timestamp,gpu_json,miner_json,miner_running,log_path FROM telemetry WHERE wallet=? AND source='live' AND timestamp>=? AND timestamp<=? ORDER BY timestamp",
+    "evidence_projection_sha256": "b27746c811e6477eef0cbd6010e2a2fba747ee683ecb65a00a14728c34f2e9a6",
+    "digest_scope": "canonical filtered evidence projection; not full database hash"
+  },
+  "window": {
+    "requested_minutes": 15.0,
+    "requested_start": {
+      "unix": 1792895024.7967157,
+      "utc": "2026-10-25T02:23:44.796716+00:00",
+      "local": "2026-10-24T23:23:44.796716-03:00"
+    },
+    "requested_end": {
+      "unix": 1792895924.7967157,
+      "utc": "2026-10-25T02:38:44.796716+00:00",
+      "local": "2026-10-24T23:38:44.796716-03:00"
+    },
+    "observed_start": {
+      "unix": 1792895026.7837815,
+      "utc": "2026-10-25T02:23:46.783782+00:00",
+      "local": "2026-10-24T23:23:46.783782-03:00"
+    },
+    "observed_end": {
+      "unix": 1792895922.9490347,
+      "utc": "2026-10-25T02:38:42.949035+00:00",
+      "local": "2026-10-24T23:38:42.949035-03:00"
+    },
+    "observed_span_seconds": 896.165253162384,
+    "covered_interval_seconds": 896.165253162384,
+    "max_sensor_gap_seconds": 2.0160140991210938,
+    "gap_threshold_seconds": 10,
+    "complete": true,
+    "queried_rows": 448,
+    "included_sensor_rows": 448,
+    "excluded": {
+      "wrong_or_missing_gpu": 0,
+      "inactive_or_paused": 0,
+      "stale_gpu": 0
+    }
+  },
+  "sensors": {
+    "temperature_c": {
+      "count": 448,
+      "min": 72.0,
+      "max": 77.0,
+      "median": 75.0,
+      "mean": 75.08035714285714
+    },
+    "power_w": {
+      "count": 448,
+      "min": 143.22,
+      "max": 167.25,
+      "median": 159.6,
+      "mean": 159.06151785714286
+    },
+    "power_limit_w": {
+      "count": 448,
+      "min": 240.0,
+      "max": 240.0,
+      "median": 240.0,
+      "mean": 240.0
+    },
+    "core_clock_mhz": {
+      "count": 448,
+      "min": 1710.0,
+      "max": 1755.0,
+      "median": 1725.0,
+      "mean": 1729.2857142857142
+    },
+    "memory_clock_mhz": {
+      "count": 448,
+      "min": 5001.0,
+      "max": 5001.0,
+      "median": 5001.0,
+      "mean": 5001.0
+    },
+    "fan_percent": {
+      "count": 448,
+      "min": 100.0,
+      "max": 100.0,
+      "median": 100.0,
+      "mean": 100.0
+    },
+    "gpu_utilization_percent": {
+      "count": 448,
+      "min": 90.0,
+      "max": 100.0,
+      "median": 100.0,
+      "mean": 99.96205357142857
+    }
+  },
+  "hashrate_ths": {
+    "count": 10,
+    "min": 75.69,
+    "max": 80.27,
+    "median": 78.91999999999999,
+    "mean": 78.396
+  },
+  "hashrate_method": "unique hashrate_at, age 0..180s, timestamp inside requested window, active miner; unweighted independent log observations",
+  "shares": {
+    "stable_miner_start_and_log": true,
+    "deltas": {
+      "accepted": 5,
+      "rejected": 0,
+      "hw_errors": 0
+    },
+    "method": "last minus first only for monotonic counters with unchanged miner start and log; not lifetime totals"
+  },
+  "thermal_status_at_export": {
+    "enabled": true,
+    "mode": "hold",
+    "current_clock_mhz": 1755,
+    "desired_clock_mhz": 1755,
+    "min_clock_mhz": 1500,
+    "max_clock_mhz": 1800,
+    "target_band_c": [
+      75,
+      78
+    ],
+    "emergency_pause_c": 84,
+    "sampled_at": 1792895924.1337183,
+    "error": null,
+    "dry_run": false
+  },
+  "reference_configuration": {
+    "min_clock_mhz": 1500,
+    "max_clock_mhz": 1800,
+    "fan_percent": 100,
+    "board_power_limit_w": 240
+  },
+  "limitations": [
+    "One author-owned GPU0 RTX 3070 instance; not all boards or environments.",
+    "Observational telemetry, not comparative A/B or universal overclock validation.",
+    "Generic gpu_agent benchmark/control was not validated by this observation; legacy thermal supervisor may be active.",
+    "No revenue, profitability or guaranteed hashrate inference. Sensor means are sample-weighted; hashrate logs are independently deduplicated."
+  ]
+}

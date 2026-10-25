@@ -6,6 +6,18 @@
 
 Monitor local de mineração Pearl (PRL): telemetria NVIDIA, atividade do minerador, histórico permanente e rendimentos equivalentes em **PRL, BRL, USD e BTC**. Interface desktop Python/Tkinter, sem servidor web ou dependências Python adicionais para o monitor.
 
+## Veja o aplicativo
+
+[▶ Demonstração de 44 segundos — vídeo MP4 com legendas em inglês](media/hashpilot-demo.mp4) · [Resultado real da RTX 3070 e metodologia](docs/performance/rtx3070.md)
+
+![Visão geral do HashPilot: GPU, carteira e próximo pagamento](media/screenshots/overview.png)
+
+| GPU e mineração | Rendimentos |
+|---|---|
+| ![Telemetria e gráficos reais da RTX 3070](media/screenshots/gpu-mining.png) | ![Créditos observados e equivalentes PRL, BRL, USD e BTC](media/screenshots/earnings.png) |
+
+Capturas da interface real, em uma janela isolada alimentada por dados locais reais. O vídeo inclui configuração de carteira e benchmark; não simula uma instalação de terminal nem modifica a mineração. [Origem e reprodução da mídia](media/README.md).
+
 ## Instalar no Windows
 
 No PowerShell do **Windows 10/11 x64**, com `winget` disponível:
@@ -34,6 +46,8 @@ O instalador prepara o mise/Python, instala o aplicativo em `%LOCALAPPDATA%\Prog
 ## Hardware e Windows
 
 O monitor de hardware usa **NVIDIA `nvidia-smi`**. A **RTX 3070 no Windows** é o perfil de mineração validado de referência deste projeto. Os resultados dessa unidade não certificam outras placas ou ambientes.
+
+**Observação real de 15 minutos:** média de **78,40 TH/s**, **159,06 W** e **75,08 °C**, com ventoinhas em 100% e limite de potência configurado em 240 W. Foram 448 amostras de sensores e 10 atualizações independentes de hashrate. É uma observação desta unidade, sem comparação A/B ou promessa de lucro. [Relatório e evidências](docs/performance/rtx3070.md).
 
 O [catálogo NVIDIA](docs/gpu-catalog.md) reúne **158 modelos com fontes primárias**. Isso valida a origem dos dados, não o overclock de cada placa. O [agente local](docs/gpu-agent.md) identifica GPUs pelo driver/UUID, mede uma baseline de 300 s e permite benchmark manual e controle adaptativo explícito. Ollama na CPU é opcional, sem API paga.
 

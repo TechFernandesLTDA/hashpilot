@@ -1,0 +1,55 @@
+{
+  "captured_at": 1792896271.6158016,
+  "source": "actual HashPilot UI; live local snapshots; read-only SQLite history",
+  "renderer": "isolated, no collectors or hardware writers",
+  "screenshots": [
+    {
+      "file": "screenshots\\overview.png",
+      "at": 1792896272.8000083,
+      "title": "HashPilot - Tech Fernandes - Demo"
+    },
+    {
+      "file": "screenshots\\gpu-mining.png",
+      "at": 1792896281.8892226,
+      "title": "HashPilot - Tech Fernandes - Demo"
+    },
+    {
+      "file": "screenshots\\earnings.png",
+      "at": 1792896290.9415348,
+      "title": "HashPilot - Tech Fernandes - Demo"
+    },
+    {
+      "file": "screenshots\\benchmark.png",
+      "at": 1792896299.7863777,
+      "title": "HashPilot - Benchmark e IA - Demo"
+    },
+    {
+      "file": "screenshots\\onboarding.png",
+      "at": 1792896306.9596877,
+      "title": "HashPilot - Configurar carteira - Demo"
+    }
+  ],
+  "video_segments": [
+    {
+      "file": "segments\\overview.mp4",
+      "seconds": 8
+    },
+    {
+      "file": "segments\\gpu-mining.mp4",
+      "seconds": 8
+    },
+    {
+      "file": "segments\\earnings.mp4",
+      "seconds": 8
+    },
+    {
+      "file": "segments\\benchmark.mp4",
+      "seconds": 6
+    },
+    {
+      "file": "segments\\onboarding.mp4",
+      "seconds": 6
+    }
+  ],
+  "errors": []
+}

@@ -2,6 +2,18 @@
 
 [Português](README.md) · [Documentation](docs/index.md) · [Windows installation](docs/installation.md) · [LLM entry point](llms.txt)
 
+[▶ Watch the 44-second demo (MP4, English captions)](media/hashpilot-demo.mp4) · [Measured RTX 3070 results](docs/performance/rtx3070.md)
+
+![HashPilot overview: NVIDIA telemetry, wallet and payout estimate](media/screenshots/overview.png)
+
+| GPU and mining | Earnings |
+|---|---|
+| ![Actual RTX 3070 telemetry and charts](media/screenshots/gpu-mining.png) | ![Observed credits and PRL, BRL, USD and BTC equivalents](media/screenshots/earnings.png) |
+
+Actual application UI in an isolated renderer using real local data. The video includes setup and benchmarking screens; it does not simulate a terminal installation. [Capture provenance](media/README.md).
+
+**One RTX 3070, 15-minute observation:** 78.40 TH/s mean, 159.06 W mean, 75.08 °C mean, fan 100%, configured power limit 240 W. Based on 448 sensor samples and 10 independent hashrate updates. These are observed results from one device, not an A/B comparison, universal preset or profit guarantee. [Method and evidence](docs/performance/rtx3070.md).
+
 ![Tech Fernandes](assets/brand/tech-fernandes_github_banner-readme_escuro_1280x400.png)
 
 A local desktop monitor for Pearl (PRL) mining: NVIDIA telemetry, miner activity, persistent history, and earnings expressed in **PRL, BRL, USD and BTC**. The monitoring UI uses Python/Tkinter and the Python standard library.

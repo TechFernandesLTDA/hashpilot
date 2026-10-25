@@ -11,3 +11,5 @@
 *.png -text
 *.ico -text
 *.sqlite3 -text
+*.mp4 -text
+*.srt text eol=lf
