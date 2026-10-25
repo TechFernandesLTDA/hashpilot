@@ -28,6 +28,15 @@ def restore_bundled_data(state_dir: Path = STATE_DIR) -> list[str]:
         json.loads(source_cache.read_text(encoding="utf-8-sig"))
         shutil.copy2(source_cache, cache)
         restored.append(cache.name)
+    agent_database=state_dir / 'gpu-agent.sqlite3'
+    source_agent=BUNDLE / 'gpu-agent.sqlite3'
+    if not agent_database.exists() and source_agent.is_file():
+        with closing(sqlite3.connect(source_agent.as_uri()+'?mode=ro',uri=True)) as source:
+            if source.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
+                raise RuntimeError('Snapshot do benchmark inválido')
+            with closing(sqlite3.connect(agent_database)) as destination:
+                source.backup(destination)
+        restored.append(agent_database.name)
     return restored
 
 if __name__ == "__main__":

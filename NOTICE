@@ -1,0 +1,13 @@
+# Licença e atribuição
+
+Copyright (C) 2026 Tech Fernandes e contribuidores do HashPilot.
+
+O código do HashPilot é licenciado sob a **GNU General Public License, versão 3 apenas** (`GPL-3.0-only`). Consulte o texto completo em [LICENSE](LICENSE). Preserve os avisos e forneça o código-fonte correspondente quando distribuir versões sujeitas às condições da licença.
+
+Os nomes **Tech Fernandes**, **HashPilot**, logomarcas e demais elementos de identidade visual em `assets/brand/` são identificadores da marca. Não se concede licença de marca pela GPL do código. Sua presença documenta a autoria; não implica endosso de forks, serviços ou produtos de terceiros. Veja [origem dos ativos](assets/brand/ORIGEM.md).
+
+NVIDIA, GeForce, GTX e RTX pertencem aos respectivos titulares. O catálogo inclui fatos técnicos com atribuição e links às fontes oficiais; não implica parceria ou certificação da NVIDIA.
+
+SRBMiner, Pearl Wallet, mise, Python e Ollama são projetos independentes, sujeitos às próprias licenças e condições. Seus binários não fazem parte do código GPL do HashPilot. Os scripts baixam esses componentes de suas fontes indicadas.
+
+`portable-data/` contém uma fotografia datada do histórico e o endereço público do autor, publicados com sua autorização. Não contém seed ou chave privada e não representa ganhos de um novo usuário.

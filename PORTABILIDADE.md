@@ -1,6 +1,6 @@
 # Dados portáteis e fork para o MacBook
 
-Este repositório privado inclui o endereço **público** de recebimento em `config.py` e `settings.example.json`, o código completo, a identidade visual oficial, os scripts usados na RTX 3070 e um snapshot do histórico em `portable-data`.
+Este repositório público inclui o endereço **público do autor** em `config.py` e `settings.example.json`, o código, a identidade visual oficial, os scripts usados na RTX 3070 e um snapshot autorizado do histórico em `portable-data`. Manter a carteira padrão direciona os pagamentos ao autor; o assistente permite trocar o endereço de recebimento.
 
 O snapshot contém o banco SQLite íntegro, as amostras e eventos já coletados, os dados financeiros, as configurações públicas e os logs da mineração. É uma fotografia no instante registrado em `portable-data/backup-manifest.json`. Novas amostras continuam sendo salvas localmente; atualizar o GitHub exige uma nova exportação e um commit.
 
@@ -22,4 +22,6 @@ Com o monitor aberto ou fechado, execute na raiz do projeto:
 mise exec -- python tools/export_portable_snapshot.py
 ```
 
-O exportador usa a API online de backup SQLite para criar um banco consistente sem copiar arquivos WAL/SHM abertos. Antes do commit, confira as alterações de `portable-data`. Mantenha o repositório privado: ele contém histórico financeiro e o endereço público solicitado.
+O exportador usa a API online de backup SQLite para criar um banco consistente sem copiar arquivos WAL/SHM abertos. Antes do commit, confira as alterações de `portable-data`: uma nova exportação pode incluir endereços, histórico financeiro e caminhos locais de quem a gerou. O snapshot do autor foi autorizado para publicação; isso não autoriza publicar dados de outros usuários.
+
+Para instalar no Windows, siga o [guia de instalação](docs/installation.md). O [índice de documentação](docs/index.md) reúne arquitetura, pagamentos e contribuição.

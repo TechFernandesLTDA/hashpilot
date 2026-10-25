@@ -441,6 +441,8 @@ class Monitor(tk.Tk):
         self.collector = Collector(self.history)
         self.finance_collector = FinanceCollector(STATE_DIR, self.history)
         self.finance_state = {}
+        from gpu_runtime import GPURuntime
+        self.gpu_runtime = GPURuntime()
         self.last_data = None
         self.card_values = {}
         self.card_notes = {}
@@ -482,6 +484,16 @@ class Monitor(tk.Tk):
         except tk.TclError:
             self.state("normal")
         self.lift()
+
+    def configure_setup(self):
+        from onboarding import run_setup
+        if run_setup(self):
+            self.restart_requested = True
+            self.close()
+
+    def open_gpu_agent(self):
+        from gpu_runtime import show_gpu_panel
+        show_gpu_panel(self, self.gpu_runtime)
 
     def remember_window_state(self):
         state = self.state()
@@ -716,7 +728,7 @@ class Monitor(tk.Tk):
         self.status.pack(anchor="e", pady=(0, 4))
         buttons = tk.Frame(controls, bg=BG)
         buttons.pack(anchor="e")
-        for text, command in (("Resumo", self.show_summary), ("Console", self.open_console), ("Recolher", self.hide_to_tray), ("Sair", self.close)):
+        for text, command in (("Configurar", self.configure_setup), ("Benchmark / IA", self.open_gpu_agent), ("Resumo", self.show_summary), ("Console", self.open_console), ("Recolher", self.hide_to_tray), ("Sair", self.close)):
             tk.Button(buttons, text=text, command=command, bg=PANEL, fg=TEXT, activebackground=BLUE,
                       activeforeground=TEXT, relief="flat", padx=10, pady=4, font=(BODY_FONT, 9)).pack(side="left", padx=(5, 0))
         style = ttk.Style(self)
@@ -1088,6 +1100,8 @@ class Monitor(tk.Tk):
             "dpi_awareness": DPI_MODE,
             "logo": {"variant_width": self.logo_native_width,"native_size": [self.brand_logo.width(),self.brand_logo.height()],
                      "file": f"logo-header-{self.logo_native_width}.png"}}
+        if hasattr(self, "gpu_runtime"):
+            snapshot["gpu_agent"] = self.gpu_runtime.snapshot()
         snapshot["history"] = {"database": str(self.history.path), "session": self.history.session,
             "counts": self.history.info, "last_commit": self.history.last_commit,
             "pending_jobs": self.history.jobs.qsize(), "error": self.history.last_error,
@@ -1102,7 +1116,7 @@ class Monitor(tk.Tk):
         changed = False
         try:
             request = json.loads((STATE_DIR / "ui-request.json").read_text(encoding="utf-8"))
-            if request.get("at", 0) > self.last_ui_request and request.get("action") in ("open", "summary"):
+            if request.get("at", 0) > self.last_ui_request and request.get("action") in ("open", "summary", "setup", "exit"):
                 self.last_ui_request = request["at"]
                 self.tray_actions.put(request["action"])
         except (OSError, ValueError):
@@ -1112,6 +1126,9 @@ class Monitor(tk.Tk):
                 action = self.tray_actions.get_nowait()
                 if action == "open":
                     self.show_panel()
+                elif action == "setup":
+                    self.show_panel()
+                    self.configure_setup()
                 elif action == "summary":
                     self.show_summary()
                 elif action == "console":
@@ -1164,13 +1181,15 @@ class Monitor(tk.Tk):
         self.save_preferences()
         self.collector.stop.set()
         self.finance_collector.stop.set()
+        if hasattr(self, "gpu_runtime"):
+            self.gpu_runtime.stop.set()
         self.title("HashPilot · salvando histórico…")
         self.close_thread = threading.Thread(target=lambda: (self.tray.stop(), self.history.close()), daemon=True)
         self.close_thread.start()
         self.after(100, self.finish_close)
 
     def finish_close(self):
-        if self.history.worker.is_alive():
+        if self.history.worker.is_alive() or (hasattr(self,"gpu_runtime") and self.gpu_runtime.thread.is_alive()):
             self.after(100, self.finish_close)
         else:
             self.destroy()
@@ -1300,6 +1319,8 @@ def main():
     parser.add_argument("--console", action="store_true", help="Resumo em console do monitor ativo, sem novos coletores")
     parser.add_argument("--console-once", action="store_true", help="Imprime uma unica amostra do resumo")
     parser.add_argument("--summary", action="store_true", help="Abre o monitor com o resumo compacto")
+    parser.add_argument("--setup", action="store_true", help="Configura carteira e instalação opcional do minerador")
+    parser.add_argument("--restart", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
     if args.snapshot:
         print(json.dumps(Collector().sample(), ensure_ascii=False, indent=2))
@@ -1307,14 +1328,25 @@ def main():
     if args.console or args.console_once:
         run_console(once=args.console_once)
         return
-    if not args.smoke_test and handoff_to_running_monitor("summary" if args.summary else "open"):
+    if not args.smoke_test and not args.restart and handoff_to_running_monitor("setup" if args.setup else "summary" if args.summary else "open"):
         return
+    if not args.smoke_test:
+        from onboarding import run_setup, read_settings
+        if args.setup or not read_settings().get("onboarding_complete"):
+            enable_native_dpi_awareness()
+            if run_setup():
+                subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "--restart"], cwd=Path(__file__).resolve().parent)
+                return
+            if not read_settings().get("onboarding_complete"):
+                return
     app = Monitor()
     if args.summary:
         app.after(800, lambda: (app.show_summary(), app.hide_to_tray()))
     if args.smoke_test:
         app.after(7000, app.close)
     app.mainloop()
+    if getattr(app, "restart_requested", False):
+        subprocess.Popen([sys.executable, str(Path(__file__).resolve()), "--restart"], cwd=Path(__file__).resolve().parent)
 
 
 if __name__ == "__main__":

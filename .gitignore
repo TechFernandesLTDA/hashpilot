@@ -20,6 +20,7 @@ dist/
 *.spec
 
 !portable-data/history.sqlite3
+!portable-data/gpu-agent.sqlite3
 !portable-data/finance-cache.json
 !portable-data/settings-windows.json
 

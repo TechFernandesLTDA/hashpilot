@@ -1,4 +1,4 @@
-"""Exporta um snapshot consistente dos dados do HashPilot para este repositório privado."""
+"""Exporta um snapshot consistente dos dados públicos autorizados do HashPilot."""
 from __future__ import annotations
 from contextlib import closing
 import datetime as dt
@@ -26,6 +26,18 @@ def export_snapshot():
             counts = {name: target.execute(f'SELECT COUNT(*) FROM "{name}"').fetchone()[0]
                       for (name,) in target.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")}
     temporary.replace(DEST / "history.sqlite3")
+    agent_database=STATE_DIR / 'gpu-agent.sqlite3'
+    agent_counts={}
+    if agent_database.is_file():
+        agent_temporary=DEST / '.gpu-agent.sqlite3.tmp'
+        with closing(sqlite3.connect(agent_database.as_uri()+'?mode=ro',uri=True)) as source:
+            with closing(sqlite3.connect(agent_temporary)) as target:
+                source.backup(target)
+                if target.execute('PRAGMA integrity_check').fetchone()[0] != 'ok':
+                    raise RuntimeError('Snapshot do benchmark não passou na verificação de integridade')
+                agent_counts={name:target.execute(f'SELECT COUNT(*) FROM "{name}"').fetchone()[0]
+                    for (name,) in target.execute("SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%'")}
+        agent_temporary.replace(DEST / 'gpu-agent.sqlite3')
     for name in ("finance-cache.json", "finance-latest.json", "latest.json", "restart-evidence.json"):
         source_file = STATE_DIR / name
         if source_file.is_file():
@@ -44,7 +56,7 @@ def export_snapshot():
                 text = raw.decode(encoding).replace("\r\n", "\n").rstrip("\r\n") + "\n"
                 (logs / path.name).write_text(text, encoding="utf-8")
     manifest = {"exported_at": dt.datetime.now(dt.timezone.utc).isoformat(), "wallet": WALLET,
-                "tables": counts, "integrity_check": "ok", "source": "SQLite online backup; monitor may remain active"}
+                "tables": counts, "gpu_agent_tables":agent_counts, "integrity_check": "ok", "source": "SQLite online backup; monitor may remain active"}
     (DEST / "backup-manifest.json").write_text(json.dumps(manifest, ensure_ascii=False, indent=2), encoding="utf-8")
     print(json.dumps(manifest, ensure_ascii=False))
 

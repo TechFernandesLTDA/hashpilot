@@ -1,0 +1,23 @@
+name: Recurso / melhoria
+description: Propor uma melhoria de uso, dados ou suporte de hardware.
+title: "[Feature] "
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: Problema a resolver
+      description: Quem usa e qual situação precisa melhorar?
+    validations:
+      required: true
+  - type: textarea
+    id: result
+    attributes:
+      label: Resultado desejado
+      description: Comportamento concreto e critério para considerar resolvido.
+    validations:
+      required: true
+  - type: textarea
+    id: context
+    attributes:
+      label: Contexto e alternativas
+      description: Plataforma/GPU, fontes públicas, alternativas e limitações conhecidas. Catálogo não substitui validação em hardware.

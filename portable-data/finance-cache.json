@@ -2,25 +2,25 @@
   "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
   "sources": {
     "price": {
-      "fetched_at": 1792892680.9818053,
+      "fetched_at": 1792893917.9953194,
       "data": {
         "pearl-2": {
-          "brl": 9.23,
+          "brl": 9.21,
           "usd": 1.85,
-          "last_updated_at": 1792892661
+          "last_updated_at": 1792893910
         },
         "bitcoin": {
-          "brl": 402116,
-          "usd": 80759,
-          "last_updated_at": 1792892661
+          "usd": 80820,
+          "brl": 402421,
+          "last_updated_at": 1792893900
         }
       }
     },
     "balance": {
-      "fetched_at": 1792892681.4960115,
+      "fetched_at": 1792893918.6257758,
       "data": {
-        "total": 0.14598498174982216,
-        "unconfirmed": 0.14598498174982216,
+        "total": 0.16056088856933956,
+        "unconfirmed": 0.16056088856933956,
         "confirmed": 0.0,
         "threshold": 1.0,
         "reached_pct": 0.0,
@@ -31,7 +31,7 @@
       }
     },
     "payouts": {
-      "fetched_at": 1792892681.7539113,
+      "fetched_at": 1792893918.625781,
       "data": {
         "reward": {
           "week": null,
@@ -42,25 +42,25 @@
       }
     },
     "rewards": {
-      "fetched_at": 1792892681.7539172,
+      "fetched_at": 1792893918.625784,
       "data": []
     },
     "network": {
-      "fetched_at": 1792892681.753924,
+      "fetched_at": 1792893918.6257882,
       "data": {
-        "miners": 29296,
-        "workers": 101742,
-        "valid": 14975362,
-        "stale": 52391,
-        "invalid": 8082,
-        "hashrate": 3.5951797955538452e+19,
-        "net_hashrate": 87924793361571140000,
+        "miners": 29333,
+        "workers": 101028,
+        "valid": 14903243,
+        "stale": 56122,
+        "invalid": 7747,
+        "hashrate": 3.5821840784837902e+19,
+        "net_hashrate": 84074988975825160000,
         "fee_type": "PPS+",
         "fee": 0.03,
         "minpay": 1.0,
         "defpay": 1.0,
         "maxpay": 100000.0,
-        "height": 133195,
+        "height": 133203,
         "blocks_for_maturation": 100,
         "block_time": 194,
         "ticker": "prl",
@@ -73,7 +73,7 @@
           "solo"
         ],
         "nh_force_solo": false,
-        "block_reward": 2224.92043215,
+        "block_reward": 2224.85716334,
         "dualmining": "",
         "mergemining": "",
         "geomining": "Global, Europe, North America, South America, Singapore, Hong Kong, Russia, Middle East",
@@ -163,11 +163,11 @@
           "hashes_per_diff": 4294967296,
           "round_to_pow2": false
         },
-        "estimated_profit_day": 1.4875458427957984e-14
+        "estimated_profit_day": 1.487140136103803e-14
       }
     },
     "payout_history": {
-      "fetched_at": 1792892681.7539217,
+      "fetched_at": 1792893918.625786,
       "data": {
         "count": 0,
         "next": null,
@@ -760,8 +760,88 @@
     {
       "timestamp": 1792892670.4997916,
       "total_prl": 0.14598498174982216
+    },
+    {
+      "timestamp": 1792892743.0879006,
+      "total_prl": 0.14598498174982216
+    },
+    {
+      "timestamp": 1792892803.7484577,
+      "total_prl": 0.14598498174982216
+    },
+    {
+      "timestamp": 1792892865.1850588,
+      "total_prl": 0.14598498174982216
+    },
+    {
+      "timestamp": 1792892926.081794,
+      "total_prl": 0.14598498174982216
+    },
+    {
+      "timestamp": 1792892987.3934076,
+      "total_prl": 0.14598498174982216
+    },
+    {
+      "timestamp": 1792893048.302233,
+      "total_prl": 0.14598498174982216
+    },
+    {
+      "timestamp": 1792893109.6244595,
+      "total_prl": 0.1518156540090403
+    },
+    {
+      "timestamp": 1792893170.2690961,
+      "total_prl": 0.1518156540090403
+    },
+    {
+      "timestamp": 1792893231.1574776,
+      "total_prl": 0.1518156540090403
+    },
+    {
+      "timestamp": 1792893292.0497184,
+      "total_prl": 0.1518156540090403
+    },
+    {
+      "timestamp": 1792893352.9540126,
+      "total_prl": 0.1518156540090403
+    },
+    {
+      "timestamp": 1792893414.3007448,
+      "total_prl": 0.1518156540090403
+    },
+    {
+      "timestamp": 1792893474.9488528,
+      "total_prl": 0.1518156540090403
+    },
+    {
+      "timestamp": 1792893535.8579674,
+      "total_prl": 0.1518156540090403
+    },
+    {
+      "timestamp": 1792893596.5504777,
+      "total_prl": 0.1518156540090403
+    },
+    {
+      "timestamp": 1792893657.9025855,
+      "total_prl": 0.1518156540090403
+    },
+    {
+      "timestamp": 1792893735.483627,
+      "total_prl": 0.16056088856933956
+    },
+    {
+      "timestamp": 1792893796.816815,
+      "total_prl": 0.16056088856933956
+    },
+    {
+      "timestamp": 1792893857.7166553,
+      "total_prl": 0.16056088856933956
+    },
+    {
+      "timestamp": 1792893918.6261466,
+      "total_prl": 0.16056088856933956
     }
   ],
   "errors": {},
-  "attempted_at": 1792892681.7542515
+  "attempted_at": 1792893918.6261492
 }

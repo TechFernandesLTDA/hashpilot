@@ -1,12 +1,18 @@
 {
-  "exported_at": "2026-10-25T01:44:44.523428+00:00",
+  "exported_at": "2026-10-25T02:05:22.321085+00:00",
   "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
   "tables": {
-    "telemetry": 4256,
-    "events": 1228,
-    "finance_snapshots": 146,
-    "finance_sources": 762,
+    "telemetry": 4884,
+    "events": 1359,
+    "finance_snapshots": 166,
+    "finance_sources": 888,
     "preferences": 5
+  },
+  "gpu_agent_tables": {
+    "benchmarks": 1,
+    "observations": 120,
+    "decisions": 4,
+    "trials": 0
   },
   "integrity_check": "ok",
   "source": "SQLite online backup; monitor may remain active"

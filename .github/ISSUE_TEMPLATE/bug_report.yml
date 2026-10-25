@@ -1,0 +1,34 @@
+name: Bug / problema
+description: Relatar comportamento incorreto com passos reproduzíveis.
+title: "[Bug] "
+body:
+  - type: markdown
+    attributes:
+      value: "Para vulnerabilidades, use SECURITY.md. Não inclua seed, chave privada ou credenciais. Revise carteira, caminhos e valores antes de anexar diagnósticos."
+  - type: input
+    id: revision
+    attributes:
+      label: Versão ou revisão
+      placeholder: SHA/revisão instalada, se disponível
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Ambiente
+      description: Sistema, GPU, driver; para interface, resolução e DPI.
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Como reproduzir
+      description: Passos, comportamento observado e resultado esperado.
+    validations:
+      required: true
+  - type: textarea
+    id: evidence
+    attributes:
+      label: Evidência revisada
+      description: Trecho mínimo de log, idade da amostra, estado das fontes ou captura. Diferencie hardware real de simulação.
+      render: text
