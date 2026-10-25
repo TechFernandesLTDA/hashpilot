@@ -40,7 +40,8 @@ if(Test-Path -LiteralPath $registry){
  }
 }
 $arguments=@(('"'+$script+'"'),'--serve','--state-dir',('"'+$state+'"'),'--log-dir',('"'+$logs+'"'),'--settings',('"'+$settingsPath+'"'),'--miner-path',('"'+$miner+'"'),'--python',('"'+$Python+'"'),'--adopt-legacy')
-if($MigrarExistente){$arguments+=@('--migrate-legacy','--legacy-uuid',$LegacyUuid)}
+if($MigrarExistente){$arguments+='--migrate-legacy'}
+if($LegacyUuid){$arguments+=@('--legacy-uuid',$LegacyUuid)}
 if($ReferenciaRTX3070){$arguments+='--reference-rtx3070'}
 $stamp=Get-Date -Format 'yyyyMMdd-HHmmss'
 $process=Start-Process -FilePath $Python -ArgumentList $arguments -WorkingDirectory $project -WindowStyle Hidden -RedirectStandardOutput (Join-Path $state ('rig-service-'+$stamp+'.out.log')) -RedirectStandardError (Join-Path $state ('rig-service-'+$stamp+'.err.log')) -PassThru

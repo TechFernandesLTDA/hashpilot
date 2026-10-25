@@ -819,11 +819,8 @@ def read_miner_data(args,gpu,monitor_state_dir,device_count,now=None):
 
 
 def write_status(path,payload):
-    path=Path(path)
-    path.parent.mkdir(parents=True,exist_ok=True)
-    temporary=path.with_suffix(f".{os.getpid()}.tmp")
-    temporary.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
-    temporary.replace(path)
+    from contribution import atomic_json
+    atomic_json(path,payload)
 
 
 def control(args,state_dir,monitor_state_dir):

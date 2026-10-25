@@ -81,16 +81,8 @@ class NvidiaBackend:
 
 
 def atomic_json(path, payload):
-    temporary = path.with_name(path.name + f".{os.getpid()}.tmp")
-    for attempt in range(4):
-        try:
-            temporary.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
-            temporary.replace(path)
-            return
-        except PermissionError:
-            if attempt == 3:
-                raise
-            time.sleep(.025)
+    from contribution import atomic_json as persist_json
+    persist_json(path,payload)
 
 
 def control(args):

@@ -550,9 +550,14 @@ class RigManager:
                     archive.parent.mkdir(parents=True,exist_ok=True)
                     path.replace(archive)
 
-    def serve(self,adopt_legacy=False,*,migrate_legacy_uuid=None,reference_rtx3070=False):
+    def serve(self,adopt_legacy=False,*,migrate_legacy_uuid=None,reference_rtx3070=False,reference_uuid=None):
         lease=ProxyLease(self.state_dir/"rig-manager-owner.json")
         try:
+            if reference_rtx3070 and not migrate_legacy_uuid:
+                current=next((gpu for gpu in self.detector() if gpu.get("uuid")==reference_uuid),None)
+                if not current or not reference_device_confirmed(current):
+                    raise RuntimeError("UUID ou limites da GPU de refer?ncia n?o confirmados")
+                self.reference_uuid=reference_uuid
             if adopt_legacy: self.adopt_legacy()
             if migrate_legacy_uuid:
                 self.migrate_legacy(migrate_legacy_uuid,reference_rtx3070=reference_rtx3070)
@@ -612,7 +617,7 @@ def main():
     if os.name!="nt" or not ctypes.WinDLL("shell32").IsUserAnAdmin():
         parser.error("O serviço de mineração precisa ser iniciado como administrador no Windows")
     RigManager(args.state_dir,args.log_dir,args.settings,args.miner_path,args.python).serve(args.adopt_legacy,
-        migrate_legacy_uuid=args.legacy_uuid if args.migrate_legacy else None,reference_rtx3070=args.reference_rtx3070)
+        migrate_legacy_uuid=args.legacy_uuid if args.migrate_legacy else None,reference_rtx3070=args.reference_rtx3070,reference_uuid=args.legacy_uuid)
 
 
 if __name__=="__main__": main()

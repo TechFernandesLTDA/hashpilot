@@ -57,7 +57,16 @@ def atomic_json(path,payload):
     path.parent.mkdir(parents=True,exist_ok=True)
     temporary=path.with_name(path.name+f".{os.getpid()}.tmp")
     temporary.write_text(json.dumps(payload,ensure_ascii=False,indent=2),encoding="utf-8")
-    temporary.replace(path)
+    # Windows readers/antivirus may briefly deny replacement of an open file.
+    # Retry only the atomic replacement: readers keep the previous complete JSON.
+    for attempt in range(21):
+        try:
+            temporary.replace(path)
+            return
+        except PermissionError:
+            if attempt == 20:
+                raise
+            time.sleep(.05)
 
 
 class ContributionLedger:

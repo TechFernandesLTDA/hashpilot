@@ -41,7 +41,7 @@ class RigTelemetry:
             path=Path(managed['miner_log']) if managed.get('miner_log') else max(logs,key=lambda p:p.stat().st_mtime) if logs else None
             legacy=False
             if path is None and device['index']==0:
-                logs=list(LOG_DIR.glob('*.log'))
+                logs=list(LOG_DIR.glob('mining-*.log'))
                 path=max(logs,key=lambda p:p.stat().st_mtime) if logs else None
                 legacy=path is not None
             pid=managed.get('miner_pid')

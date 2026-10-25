@@ -75,3 +75,12 @@ O backup incluído pertence ao autor e foi autorizado para publicação. Um novo
 ## Qual é a licença?
 
 O código usa [GPL-3.0-only](../LICENSE). A marca e os logos Tech Fernandes não são licenciados sob GPL. Consulte [NOTICE](../NOTICE) e a [origem dos ativos](../assets/brand/ORIGEM.md).
+
+
+## O minerador parou; o computador hibernou?
+
+Uma parada de minera??o n?o prova suspens?o. Cruze o hor?rio dos logs com a continuidade de `history.sqlite3` e os eventos de energia do Windows. O desligamento da tela tamb?m n?o indica hiberna??o.
+
+Se o controlador registrar `WinError 5` ao substituir um JSON de status, existe uma falha de acesso ao arquivo. Um bloqueio tempor?rio de leitura ou de outro software pode impedir a substitui??o; o erro sozinho n?o identifica qual processo o causou. A grava??o at?mica tenta novamente por at? um segundo, mantendo o JSON anterior completo. Um bloqueio persistente continua sendo reportado como erro, sem desativar as prote??es do controlador.
+
+O painel ignora `reset.log` ao escolher o log legado de minera??o: esse arquivo pertence ? restaura??o da GPU e pode usar uma conex?o local propositalmente inv?lida. Sua mensagem de reconex?o n?o descreve a sa?de da conex?o real com a pool.

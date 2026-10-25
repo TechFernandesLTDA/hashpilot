@@ -375,6 +375,22 @@ class RigManagerTests(unittest.TestCase):
         self.assertEqual(self.manager.devices[gpu["uuid"]]["state"],"error")
         self.assertIn("não confirmados",self.manager.devices[gpu["uuid"]]["error"])
 
+    def test_stopped_reference_can_opt_in_without_legacy_processes(self):
+        gpu={**detected(1)[0],"uuid":REFERENCE_RTX3070_UUID,"power_default_w":240,
+             "supported_graphics_clocks_mhz":[1740]}
+        self.manager.detector=lambda:[gpu]
+        self.manager.shutting_down=True
+        self.manager.serve(reference_rtx3070=True,reference_uuid=gpu["uuid"])
+        self.assertEqual(self.manager.reference_uuid,gpu["uuid"])
+        self.assertEqual(self.backend.started,[])
+
+    def test_unknown_reference_start_fails_before_any_process(self):
+        self.manager.shutting_down=True
+        with self.assertRaisesRegex(RuntimeError,"n?o confirmados"):
+            self.manager.serve(reference_rtx3070=True,reference_uuid="GPU-test-0")
+        self.assertIsNone(self.manager.reference_uuid)
+        self.assertEqual(self.backend.started,[])
+
     def test_cli_request_needs_only_state_dir_and_does_not_start_processes(self):
         import rig
         with patch("sys.argv",["rig.py","--request","reconcile","--state-dir",str(self.manager.state_dir)]), \
