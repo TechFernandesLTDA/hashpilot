@@ -613,7 +613,7 @@ def main():
     if not args.serve: parser.error("Use --serve para iniciar o gerenciamento explícito de mineração")
     if None in (args.log_dir,args.settings,args.miner_path): parser.error("--serve exige --log-dir, --settings e --miner-path")
     if args.migrate_legacy and not args.legacy_uuid: parser.error("--migrate-legacy exige --legacy-uuid explícito")
-    if args.reference_rtx3070 and not args.migrate_legacy: parser.error("O perfil de referência só acompanha uma migração explícita")
+    if args.reference_rtx3070 and not args.legacy_uuid: parser.error("Reference profile requires explicit --legacy-uuid")
     if os.name!="nt" or not ctypes.WinDLL("shell32").IsUserAnAdmin():
         parser.error("O serviço de mineração precisa ser iniciado como administrador no Windows")
     RigManager(args.state_dir,args.log_dir,args.settings,args.miner_path,args.python).serve(args.adopt_legacy,

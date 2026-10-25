@@ -391,6 +391,17 @@ class RigManagerTests(unittest.TestCase):
         self.assertIsNone(self.manager.reference_uuid)
         self.assertEqual(self.backend.started,[])
 
+    def test_cli_accepts_reference_uuid_without_legacy_migration(self):
+        import rig
+        argv=["rig.py","--serve","--state-dir",str(self.manager.state_dir),
+              "--log-dir","logs","--settings","settings.json","--miner-path","miner.exe",
+              "--reference-rtx3070","--legacy-uuid",REFERENCE_RTX3070_UUID]
+        with patch("sys.argv",argv),patch("rig.ctypes.WinDLL",create=True) as dll,patch("rig.RigManager") as manager:
+            dll.return_value.IsUserAnAdmin.return_value=1
+            rig.main()
+        self.assertEqual(manager.return_value.serve.call_args.kwargs["reference_uuid"],REFERENCE_RTX3070_UUID)
+        self.assertIsNone(manager.return_value.serve.call_args.kwargs["migrate_legacy_uuid"])
+
     def test_cli_request_needs_only_state_dir_and_does_not_start_processes(self):
         import rig
         with patch("sys.argv",["rig.py","--request","reconcile","--state-dir",str(self.manager.state_dir)]), \
