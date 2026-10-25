@@ -101,6 +101,24 @@ def telemetry_context(context):
     return result
 
 
+def completion_text(body):
+    """A reasoning-only/truncated reply is not an actionable suggestion."""
+    choices=body.get('choices') if isinstance(body,dict) else None
+    if not isinstance(choices,list) or not choices or not isinstance(choices[0],dict):
+        raise ValueError('Provedor sem resposta final utilizável')
+    choice=choices[0]
+    if choice.get('finish_reason')=='length':
+        raise ValueError('Modelo atingiu o limite de geração; nenhuma sugestão aplicada')
+    message=choice.get('message')
+    content=message.get('content') if isinstance(message,dict) else None
+    if isinstance(content,list):
+        content=''.join(part['text'] for part in content if isinstance(part,dict) and part.get('type')=='text' and isinstance(part.get('text'),str))
+    if not isinstance(content,str) or not content.strip():raise ValueError('Modelo não devolveu uma resposta final JSON')
+    content=content.strip()
+    fence=re.fullmatch(r'```(?:json)?\s*\n(.*?)\n```',content,re.S|re.I)
+    return fence[1].strip() if fence else content
+
+
 def credential(provider, value=None):
     """Windows Credential Manager; key never enters settings/history/exports."""
     if provider not in PROVIDERS: raise ValueError('Provedor inválido')
@@ -195,9 +213,10 @@ class RoutedAdvisor:
         body=request_json('https://openrouter.ai/api/v1/chat/completions',{
             'model':config['model'],'messages':[{'role':'system','content':SYSTEM},
                 {'role':'user','content':json.dumps(safe)}],
-            'temperature':0,'max_tokens':200,'provider':{'max_price':{'prompt':0,'completion':0,'request':0}},
+            'temperature':0,'max_tokens':4096,'reasoning':{'effort':'low'},
+            'provider':{'max_price':{'prompt':0,'completion':0,'request':0}},
             'response_format':{'type':'json_object'}},key)
-        return OllamaAdvisor.parse(body['choices'][0]['message']['content'])
+        return OllamaAdvisor.parse(completion_text(body))
     def opencode(self,config,context):
         from gpu_agent import OllamaAdvisor
         executable=shutil.which('opencode.exe')

@@ -132,6 +132,21 @@ class MajorAuditTests(unittest.TestCase):
             finally:agent.close()
 
 
+    def test_B12_reasoning_budget_and_provider_envelope_preserve_valid_json_advice(self):
+        from ai_advisor import completion_text
+        with tempfile.TemporaryDirectory() as d:
+            settings={'ai_enabled':True,'ai':{'provider':'openrouter','model':'openrouter/free','cloud_consent':True}}
+            source=RoutedAdvisor(d,config_override=settings,key_override='fixture')
+            catalog={'data':[{'id':'openrouter/free','pricing':{'prompt':'0','completion':'0'}}]}
+            response={'choices':[{'finish_reason':'stop','message':{'content':'```json\n{"action":"hold","reason":"ok"}\n```'}}]}
+            with patch('ai_advisor.request_json',side_effect=[catalog,response]) as fetch:
+                self.assertEqual(source.advise({})['action'],'hold')
+            self.assertGreaterEqual(fetch.call_args.args[1]['max_tokens'],4096)
+            self.assertEqual(fetch.call_args.args[1]['provider']['max_price']['completion'],0)
+        with self.assertRaisesRegex(ValueError,'limite de geração'):
+            completion_text({'choices':[{'finish_reason':'length','message':{'content':None}}]})
+
+
 class MicroAuditTests(unittest.TestCase):
     def test_M01_invalid_settings_root_has_controlled_validation_error(self):
         with self.assertRaises(ValueError):configuration([])
