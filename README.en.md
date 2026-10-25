@@ -38,7 +38,11 @@ The [NVIDIA catalog](docs/gpu-catalog.md) contains **158 models with primary sou
 
 **The dashboard and default starter currently use GPU0.** The engine separates profiles by UUID; the UI is not a multi-GPU dashboard. Never attribute aggregate hashrate to another device. The NVIDIA starter uses current driver settings without copying RTX 3070 clocks; the historical validated profile remains a separate reference.
 
-macOS can display pool data, prices and saved history. Apple GPUs do not provide NVIDIA telemetry, and the included Windows mining/clock scripts do not configure Apple Silicon mining. See [portability](PORTABILIDADE.md).
+The product supports **Windows 10/11 x64 only**. See [backup and transfer between Windows computers](PORTABILIDADE.md).
+
+## Optional contribution
+
+For an address other than the author's, an optional, disableable contribution reserves **5% of mining time**: 57 minutes for you and 3 for the author. Setup displays the option. A TCP proxy switches the destination without restarting the GPU or miner. The author's default address receives no additional split. This is separate from SRBMiner's 2% developer fee. Forecasts deduct the expected contribution when enabled; actual observed credits are never deducted twice. [Details](docs/contribution.md).
 
 ## From source
 
@@ -50,7 +54,7 @@ mise exec -- python -m unittest discover -v
 
 The public repository includes the author's public address and an explicitly authorized historical snapshot in `portable-data/`. That snapshot is dated reference data, not earnings produced by your machine. Initial restoration never replaces an existing local database.
 
-Windows data: `%LOCALAPPDATA%\PearlMonitor`. macOS data: `~/Library/Application Support/HashPilot`.
+Local data: `%LOCALAPPDATA%\PearlMonitor`.
 
 [Architecture](docs/architecture.md) · [Technical reference](docs/reference.md) · [FAQ](docs/faq.md) · [Contributing](CONTRIBUTING.md) · [Security](SECURITY.md)
 

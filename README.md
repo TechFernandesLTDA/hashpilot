@@ -31,7 +31,7 @@ O instalador prepara o mise/Python, instala o aplicativo em `%LOCALAPPDATA%\Prog
 - Coleta local a cada 2 s; pool e cotações públicas a cada 60 s, com idade/cache visíveis.
 - Projeções são estimativas. Valores em USD/BTC são equivalentes; **o pagamento continua em PRL**.
 
-## Hardware e plataformas
+## Hardware e Windows
 
 O monitor de hardware usa **NVIDIA `nvidia-smi`**. A **RTX 3070 no Windows** é o perfil de mineração validado de referência deste projeto. Os resultados dessa unidade não certificam outras placas ou ambientes.
 
@@ -39,7 +39,11 @@ O [catálogo NVIDIA](docs/gpu-catalog.md) reúne **158 modelos com fontes primá
 
 **O painel e o iniciador padrão acompanham GPU0.** O motor separa perfis por UUID, mas isso não torna a interface um painel mult GPU: não atribua hashrate agregado a outra placa. O iniciador NVIDIA usa os ajustes atuais do driver, sem copiar clocks da RTX 3070; o perfil histórico continua separado como referência.
 
-No macOS, o painel pode acompanhar pool, cotações e histórico. GPU Apple não recebe telemetria NVIDIA, e os scripts de mineração/clock Windows não configuram mineração em Apple Silicon. [Portabilidade e snapshot](PORTABILIDADE.md).
+O produto é exclusivo para **Windows 10/11 x64**. Veja [backup e transferência entre computadores Windows](PORTABILIDADE.md).
+
+## Contribuição opcional
+
+Com uma carteira diferente da do autor, a contribuição opcional e desativável reserva **5% do tempo de mineração**: 57 minutos para você e 3 para o autor. Ela fica visível no assistente e usa proxy TCP, sem reiniciar a GPU ou o minerador. A carteira padrão do autor não recebe uma divisão adicional. Isso é separado da devfee de 2% do SRBMiner. As projeções descontam a contribuição esperada quando ativa; créditos reais observados não são descontados novamente. [Como funciona](docs/contribution.md).
 
 ## Código e dados
 
@@ -51,7 +55,7 @@ mise exec -- python -m unittest discover -v
 
 O snapshot em `portable-data/` pertence ao autor e foi incluído com autorização, assim como seu endereço público. Ele é uma fotografia datada, não o rendimento do seu computador. A restauração inicial não substitui um banco local existente. [Arquitetura](docs/architecture.md) · [Referência técnica](docs/reference.md).
 
-Dados locais Windows: `%LOCALAPPDATA%\PearlMonitor`. macOS: `~/Library/Application Support/HashPilot`.
+Dados locais: `%LOCALAPPDATA%\PearlMonitor`.
 
 ## Participar
 

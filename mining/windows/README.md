@@ -22,4 +22,6 @@ Perfil histórico medido: core 1740 MHz, offset +150 MHz, memória 5001 MHz, ven
 
 Os binários de terceiros não são versionados. `downloads.json` registra URLs oficiais e hashes esperados. O monitor não precisa de seed, chave privada ou arquivos internos da Pearl Wallet; não publique esses dados.
 
-Os scripts de mineração e controle deste diretório são Windows/NVIDIA. Não configuram mineração em GPU Apple. Código sob [GPL-3.0-only](../../LICENSE); marca e componentes de terceiros seguem seus avisos em [NOTICE](../../NOTICE).
+O produto e os scripts de mineração e controle são exclusivos para Windows. Código sob [GPL-3.0-only](../../LICENSE); marca e componentes de terceiros seguem seus avisos em [NOTICE](../../NOTICE).
+
+A [contribuição opcional](../../docs/contribution.md) reserva 5% do tempo quando outra carteira é usada: 57 minutos para ela e 3 para o autor, via proxy TCP sem reiniciar GPU ou minerador. A opção pode ser desativada no assistente. A carteira padrão do autor não adiciona uma divisão extra; a devfee de 2% do SRBMiner permanece distinta.

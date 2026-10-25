@@ -10,7 +10,8 @@ import threading
 import time
 import urllib.request
 
-from config import WALLET
+from config import WALLET, SETTINGS
+from contribution import support_configuration
 from payout import payout_model
 from valuation import value_in_currencies
 BASE = "https://pool.kryptex.com/prl/api/v1/"
@@ -156,14 +157,18 @@ def financial_model(state: dict, hashrate_ths: float | None, now: float | None =
     result["accumulated_brl"] = result["accumulated_prl"]*price if result["accumulated_prl"] is not None and price else None
     network_source = sources.get("network", {})
     network = network_source.get("data", {})
+    contribution = support_configuration(SETTINGS,WALLET)
+    result['support_contribution']=contribution
     if hashrate_ths and price and network.get("net_hashrate") and network.get("block_time") and network.get("block_reward"):
         pool_fee = float(network.get("fee", 0))
         dev_fee = .02  # SRBMiner pearlhash: taxa exibida no próprio log.
+        support_fraction = contribution['percent']/100 if contribution['enabled'] else 0
         prl_day = (hashrate_ths*1e12 / float(network["net_hashrate"]) * float(network["block_reward"])
-                   * 86400 / float(network["block_time"]) * (1-pool_fee) * (1-dev_fee))
+                   * 86400 / float(network["block_time"]) * (1-pool_fee) * (1-dev_fee) * (1-support_fraction))
         result["forecast"] = {"prl_day": prl_day, "brl_day": prl_day*price, "brl_7days": prl_day*price*7,
                               "brl_30days": prl_day*price*30, "hashrate_ths": hashrate_ths,
-                              "pool_fee": pool_fee, "dev_fee": dev_fee, "network_at": network_source.get("fetched_at")}
+                              "pool_fee": pool_fee, "dev_fee": dev_fee, "support_fraction":support_fraction,
+                              "support_assumption":"configured_mining_time", "network_at": network_source.get("fetched_at")}
     result["wallet"] = WALLET
     result["payout"] = payout_model(state, result["forecast"], price, now)
     bitcoin = price_source.get("data", {}).get("bitcoin", {})

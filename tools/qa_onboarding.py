@@ -19,10 +19,11 @@ def inspect():
     window.update_idletasks()
     reports.append({'client':[window.winfo_width(),window.winfo_height()], 'errors':inspect_widgets(window)})
     window.destroy()
-for screen in [(1280,720),(1920,1080),(3840,2160)]:
-    with patch.object(tk.Misc,'winfo_screenwidth',return_value=screen[0]),patch.object(tk.Misc,'winfo_screenheight',return_value=screen[1]):
-        root.after(250,inspect)
-        assert onboarding.run_setup(root) is False
+for settings in ({'wallet':onboarding.DEFAULT_WALLET},{'wallet':'prl1'+'q'*60},{'wallet':'prl1'+'q'*60,'support_enabled':False}):
+    for screen in [(1280,720),(1920,1080),(3840,2160)]:
+        with patch.object(tk.Misc,'winfo_screenwidth',return_value=screen[0]),patch.object(tk.Misc,'winfo_screenheight',return_value=screen[1]),patch.object(onboarding,'read_settings',return_value=settings):
+            root.after(250,inspect)
+            assert onboarding.run_setup(root) is False
 root.destroy()
 output=Path(tempfile.gettempdir())/'HashPilot-onboarding-qa.json'
 output.write_text(json.dumps(reports,indent=2),encoding='utf-8')

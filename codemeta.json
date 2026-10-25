@@ -7,7 +7,7 @@
   "issueTracker": "https://github.com/TechFernandesLTDA/hashpilot/issues",
   "license": "https://spdx.org/licenses/GPL-3.0-only.html",
   "programmingLanguage": ["Python", "PowerShell"],
-  "operatingSystem": ["Windows 10 x64", "Windows 11 x64", "macOS (monitoring only)"],
+  "operatingSystem": ["Windows 10 x64", "Windows 11 x64"],
   "runtimePlatform": "Python 3.14 with Tkinter",
   "author": [{"@type": "Organization", "name": "Tech Fernandes", "url": "https://github.com/TechFernandesLTDA"}],
   "keywords": ["NVIDIA", "GeForce", "GTX", "RTX", "Pearl", "PRL", "mining", "SRBMiner", "GPU benchmark", "Ollama", "local AI", "SQLite", "BRL", "USD", "BTC"],

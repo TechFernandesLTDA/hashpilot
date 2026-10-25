@@ -1,4 +1,4 @@
-# Dados portáteis e fork para o MacBook
+# Backup, fork e transferência entre computadores Windows
 
 Este repositório público inclui o endereço **público do autor** em `config.py` e `settings.example.json`, o código, a identidade visual oficial, os scripts usados na RTX 3070 e um snapshot autorizado do histórico em `portable-data`. Manter a carteira padrão direciona os pagamentos ao autor; o assistente permite trocar o endereço de recebimento.
 
@@ -10,9 +10,9 @@ Não inclui frases de recuperação, chaves privadas ou arquivos internos da Pea
 
 Os lançadores restauram o snapshot somente quando o perfil local ainda não tem banco de histórico. Um banco existente nunca é substituído automaticamente. A restauração preserva os dados locais já coletados; não mescla dois bancos diferentes.
 
-Windows mantém os dados existentes em `%LOCALAPPDATA%\PearlMonitor`. No macOS o diretório é `~/Library/Application Support/HashPilot`. Para personalizar carteira, pool ou pasta dos logs, copie `settings.example.json` para `settings.json` no diretório local e edite-o.
+O HashPilot suporta somente Windows 10/11 x64. Os dados ficam em `%LOCALAPPDATA%\PearlMonitor`. Para personalizar carteira, pool ou pasta dos logs, use o assistente ou edite `settings.json` no diretório local, tendo `settings.example.json` como referência.
 
-A versão macOS pode exibir pool, cotação, rendimentos e histórico. A telemetria NVIDIA depende de `nvidia-smi` disponível naquela máquina. Os scripts de clock e a instalação do minerador incluídos são específicos do Windows e do perfil de RTX 3070 testado; não instalam mineração para o hardware Apple.
+Para transferir dados entre dois computadores Windows, gere um backup consistente pelo exportador abaixo. No destino, preserve qualquer banco já existente antes de importar. A restauração automática atende apenas perfis sem banco/cache local: não mescla históricos. Revise os caminhos de logs e a GPU detectada no destino; resultados e ajustes da unidade de origem não validam outra placa.
 
 ## Atualizar o backup versionado
 

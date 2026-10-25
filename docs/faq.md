@@ -12,9 +12,13 @@ Não. A instalação prepara o painel e abre a configuração. O minerador é um
 
 A telemetria usa NVIDIA `nvidia-smi`. A RTX 3070 no Windows é a referência de mineração validada neste repositório. Outros modelos exigem avaliação e medição no próprio hardware. Presença em catálogo não certifica compatibilidade do minerador, estabilidade ou overclock.
 
-## Funciona no MacBook?
+## Qual sistema é suportado?
 
-O painel pode exibir pool, cotações e histórico no macOS com Python/Tkinter. GPU Apple não disponibiliza esses sensores NVIDIA, e os scripts Windows não configuram mineração em Apple Silicon. [Portabilidade](../PORTABILIDADE.md).
+O HashPilot é exclusivo para Windows 10/11 x64. Para copiar dados entre computadores Windows, consulte [backup e transferência](../PORTABILIDADE.md).
+
+## Há contribuição para o autor?
+
+Há uma opção visível e desativável no assistente: com outra carteira, reserva 5% do tempo de mineração, em ciclos de 57 minutos para você e 3 para o autor. O proxy TCP alterna o destino sem reiniciar GPU ou minerador. Usar a carteira padrão do autor não adiciona outra divisão. A devfee de 2% do SRBMiner é separada. Projeções consideram a contribuição ativa; créditos reais não sofrem desconto duplicado. [Detalhes](contribution.md).
 
 ## Quando recebo PRL?
 

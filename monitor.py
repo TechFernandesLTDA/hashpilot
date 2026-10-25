@@ -12,7 +12,6 @@ import queue
 import re
 import subprocess
 import shutil
-import platform
 import webbrowser
 from urllib.parse import quote
 import threading
@@ -25,7 +24,8 @@ from tkinter import ttk
 from collections import deque
 from finance import FinanceCollector, financial_model
 from history import HistoryStore
-from config import WALLET, POOL, LOG_DIR, STATE_DIR
+from config import WALLET, POOL, LOG_DIR, STATE_DIR, SETTINGS_PATH
+from contribution import read_support_status, read_settings as read_support_settings
 from tray import WindowsTray
 from bootstrap import restore_bundled_data
 
@@ -64,7 +64,7 @@ def read_gpu() -> dict:
         fallback = Path(os.environ.get("WINDIR", "C:/Windows")) / "System32/nvidia-smi.exe"
         smi = str(fallback) if fallback.exists() else None
     if not smi:
-        raise RuntimeError("Sensores NVIDIA indisponíveis" + (" neste Mac ("+platform.machine()+"). GPU Apple não é monitorada pelo nvidia-smi." if sys.platform == "darwin" else ": nvidia-smi não encontrado."))
+        raise RuntimeError("Sensores NVIDIA indisponíveis: nvidia-smi não encontrado.")
     output = run([smi, "-i", "0", "--query-gpu=" + ",".join(fields), "--format=csv,noheader,nounits"])
     row = next(csv.reader(io.StringIO(output)))
     result = dict(zip(fields, [x.strip() for x in row]))
@@ -182,14 +182,8 @@ class Collector:
         except Exception as error:
             result["gpu_error"] = str(error)
         try:
-            if os.name == "nt":
-                processes = run(["tasklist", "/FI", "IMAGENAME eq SRBMiner-MULTI.exe", "/FO", "CSV", "/NH"])
-                result["miner_running"] = "srbminer-multi.exe" in processes.lower()
-            else:
-                process = subprocess.run(["pgrep", "-i", "SRBMiner"], capture_output=True, text=True, timeout=3)
-                if process.returncode not in (0, 1):
-                    raise RuntimeError(process.stderr.strip() or "Não foi possível consultar o processo")
-                result["miner_running"] = process.returncode == 0
+            processes = run(["tasklist", "/FI", "IMAGENAME eq SRBMiner-MULTI.exe", "/FO", "CSV", "/NH"])
+            result["miner_running"] = "srbminer-multi.exe" in processes.lower()
         except Exception as error:
             result["process_error"] = str(error)
         try:
@@ -218,6 +212,7 @@ class Collector:
         result["miner"] = self.log_data.copy()
         result["log_path"] = str(self.log_path) if self.log_path else None
         result["thermal_control"] = read_thermal_status()
+        result["support_contribution"] = read_support_status(LOG_DIR,WALLET,read_support_settings(SETTINGS_PATH))
         return result
 
     def work(self):
@@ -574,19 +569,6 @@ class Monitor(tk.Tk):
             webbrowser.open("https://pool.kryptex.com/prl/miner/stats/" + quote(wallet, safe=""))
 
     def open_console(self):
-        if os.name != "nt":
-            if self.console_window and self.console_window.winfo_exists():
-                self.console_window.deiconify()
-                self.console_window.lift()
-                return
-            window = self.console_window = tk.Toplevel(self)
-            window.title(APP_NAME + " · Console resumido")
-            window.geometry("900x420")
-            window.configure(bg=BG)
-            self.console_widget = tk.Text(window, bg=BG, fg=TEXT, font=("Menlo", -12), padx=16, pady=16, wrap="word", state="disabled")
-            self.console_widget.pack(fill="both", expand=True)
-            self.refresh_summary()
-            return
         python = Path(sys.executable).with_name("python.exe")
         subprocess.Popen([str(python), str(Path(__file__).resolve()), "--console"],
                          cwd=Path(__file__).resolve().parent, creationflags=subprocess.CREATE_NEW_CONSOLE)
@@ -782,6 +764,8 @@ class Monitor(tk.Tk):
         self.wallet_entry = tk.Entry(row, textvariable=self.wallet_var, state="readonly", readonlybackground=PANEL, foreground=TEXT, selectbackground=BLUE,
                                     selectforeground=TEXT, relief="flat", font=("Consolas", 10), width=64)
         self.wallet_entry.pack(side="left", fill="x", expand=True, ipady=4)
+        self.support_status_label=self.label(wallet_panel,'Ajuda pela ferramenta: aguardando configuração',bg=PANEL,fg=MUTED,font=(BODY_FONT,9))
+        self.support_status_label.pack(anchor='w',pady=(3,0))
         payout = tk.Frame(parent, bg=PANEL, padx=12, pady=10, highlightthickness=1, highlightbackground=BORDER)
         payout.grid(row=3, column=0, sticky="ew", padx=4, pady=(0, 8))
         payout.columnconfigure((0, 1), weight=1, uniform="payout")
@@ -1004,7 +988,8 @@ class Monitor(tk.Tk):
         self.quote_note.configure(text="Cotação PRL: "+timestamp(model.get("price_at"))+" · BTC: "+timestamp(model.get("btc_price_at"))+" · Pool: "+timestamp(model.get("pool_at"))+(" · cache/desatualizado" if stale else " · atualização 60 s"),fg=ORANGE if stale else MUTED)
         self.finance_pay_summary.configure(text="Pagamento real em PRL · Carteira "+(wallet[:12]+"—"+wallet[-8:] if wallet else "não configurada")+" · Mínimo "+format_prl(threshold)+" · Falta "+format_prl(payout.get("remaining_prl"))+"\n"+str(payout.get("eta_label") or "Estimativa aguardando dados"))
         partial = model.get("periods",{}).get("day",{})
-        self.finance_explanation.configure(text=("Observado parcialmente desde "+timestamp(partial.get("since"))+". " if partial.get("partial") else "")+"Conversões equivalentes à cotação atual; o pagamento permanece em PRL. Projeções: 24 h/dia e condições atuais.")
+        support_note=' Ajuda opcional de 5% configurada já descontada da projeção.' if (model.get('support_contribution') or {}).get('enabled') else ''
+        self.finance_explanation.configure(text=("Observado parcialmente desde "+timestamp(partial.get("since"))+". " if partial.get("partial") else "")+"Conversões equivalentes à cotação atual; o pagamento permanece em PRL. Projeções: 24 h/dia e condições atuais."+support_note)
         self.finance_sources.configure(text="Fontes: Kryptex Pool API · CoinGecko (Pearl pearl-2 / Bitcoin). Semana: segunda até agora, São Paulo. Histórico permanente local.")
         snapshots = self.finance_state.get("snapshots",[])
         self.money_chart.points.clear()
@@ -1021,6 +1006,16 @@ class Monitor(tk.Tk):
 
     def apply(self, data):
         self.last_data = data
+        support=data.get('support_contribution') or {}
+        if support.get('ready') and support.get('enabled') and support.get('connected'):
+            note='Ajuda pela ferramenta: 5% ativa · Janela atual: '+('autor' if support.get('active_role')=='support' else 'sua carteira')
+        elif support.get('ready') and support.get('enabled'):
+            note='Ajuda pela ferramenta: 5% habilitada · Aguardando conexão com a pool'
+        elif support.get('enabled') or support.get('configured_enabled'):
+            note='Ajuda pela ferramenta: 5% habilitada · Aplicável ao iniciar pelo novo minerador'
+        else:
+            note='Ajuda pela ferramenta: sem contribuição adicional · Altere em Configurar'
+        self.support_status_label.configure(text=note)
         now = time.time()
         gpu, miner = data.get("gpu") or {}, data["miner"]
         stamp = miner.get("hashrate_at")

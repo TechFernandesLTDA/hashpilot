@@ -16,7 +16,7 @@ Get-ChildItem -LiteralPath $PSScriptRoot -File | Where-Object {$_.Extension -in 
  if($_.Extension -eq '.cmd'){Set-Content -LiteralPath (Join-Path $destination $_.Name) -Value $content -Encoding ASCII}else{Set-Content -LiteralPath (Join-Path $destination $_.Name) -Value $content -Encoding UTF8}
 }
 $project=([IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..')))
-foreach($name in @('thermal.py','thermal_controller.py','gpu_agent.py','config.py')){Copy-Item -LiteralPath (Join-Path $project $name) -Destination (Join-Path $destination $name) -Force}
+foreach($name in @('thermal.py','thermal_controller.py','gpu_agent.py','config.py','contribution.py')){Copy-Item -LiteralPath (Join-Path $project $name) -Destination (Join-Path $destination $name) -Force}
 $profile=Join-Path $PSScriptRoot '..\..\portable-data\miner-logs\validated-profile.json'
 if(Test-Path -LiteralPath $profile){Copy-Item -LiteralPath $profile -Destination (Join-Path $destination 'logs\validated-profile.json') -Force}
 Write-Host ('Instalado em '+$destination+'. Inicie pelo INICIAR-PEARL.cmd. Nada foi iniciado automaticamente.')

@@ -2,6 +2,8 @@
 
 Comece pelo [índice da documentação](docs/index.md) e pela [arquitetura](docs/architecture.md). Para contexto de hardware, consulte os [scripts de referência](mining/windows/README.md).
 
+O produto suporta somente Windows 10/11 x64. Valide mudanças no ambiente Windows e diferencie testes reais de simulações de layout ou hardware.
+
 ## Preparar o ambiente
 
 Clone o repositório fora de pastas de sincronização de documentos e use o Python gerenciado pelo mise:

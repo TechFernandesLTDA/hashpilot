@@ -29,6 +29,8 @@ prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t
 
 Use **Configurar** para alterar depois. A mudança reinicia apenas o painel, preserva o banco e separa os dados por carteira. Se um minerador já estiver ativo, ele continua com a carteira com que foi iniciado; pare e reinicie esse minerador para mudar o destino das recompensas. Não há redirecionamento silencioso de um processo existente.
 
+Ao selecionar outra carteira, o assistente oferece **ajudar a manter a ferramenta com 5% do tempo de mineração**. A sugestão aparece marcada quando ainda não há uma escolha salva; desmarque para desativar. O destino é a carteira padrão do autor, exibida no assistente. A divisão usa 57 minutos para a carteira principal e 3 para o autor por hora conectada, sem reiniciar o processo do minerador. São 5% aproximados de tempo, não uma cobrança em dinheiro nem garantia de exatamente 5% das moedas. Configurações antigas sem escolha salva continuam sem contribuição. [Detalhes e desativação](contribution.md).
+
 ## Minerador e benchmark NVIDIA
 
 Marque a opção de instalar e iniciar o minerador para baixar o SRBMiner oficial. O ZIP é conferido contra o SHA256 registrado em [`downloads.json`](../mining/windows/downloads.json). O perfil medido de referência é uma RTX 3070 desktop; consulte o [agente GPU](gpu-agent.md) para os limites de controle e benchmark de outras GPUs NVIDIA. Estar no [catálogo](gpu-catalog.md) não significa ter overclock validado.
@@ -58,6 +60,6 @@ Dados permanentes ficam separados da instalação em `%LOCALAPPDATA%\PearlMonito
 | IA indisponível | Aguarde o download do modelo e confirme Ollama em `127.0.0.1:11434`. |
 | Configuração inválida | Revise o JSON em `%LOCALAPPDATA%\PearlMonitor\settings.json`. |
 
-Para executar de um clone: `mise install`, depois `mise exec -- python monitor.py --setup`. macOS usa `zsh Abrir-HashPilot.command` para monitoramento; o instalador e o controle NVIDIA descritos aqui são para Windows.
+Para executar de um clone no Windows: `mise install`, depois `mise exec -- python monitor.py --setup`. O aplicativo está disponível somente para Windows 10/11 de 64 bits.
 
 Referências do instalador: [instalação oficial do mise](https://mise.jdx.dev/getting-started.html), [arquivos de repositório e ZIPs no GitHub](https://docs.github.com/en/rest/repos/contents#download-a-repository-archive-zip).

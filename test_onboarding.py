@@ -8,6 +8,16 @@ from onboarding import save_settings, read_settings
 
 
 class OnboardingSettingsTests(unittest.TestCase):
+    def test_optional_support_and_ai_choices_are_saved_and_can_be_disabled(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path=Path(temporary)/'settings.json'
+            wallet='prl1'+'q'*60
+            save_settings(wallet,'',path,support_enabled=True,ai_enabled=False)
+            self.assertTrue(read_settings(path)['support_enabled'])
+            save_settings(wallet,'',path,support_enabled=False)
+            self.assertFalse(read_settings(path)['support_enabled'])
+            self.assertFalse(read_settings(path)['ai_enabled'])
+
     def test_explicit_author_wallet_and_existing_configuration_are_preserved(self):
         with tempfile.TemporaryDirectory() as temporary:
             path=Path(temporary)/'settings.json'

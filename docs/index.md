@@ -18,7 +18,8 @@
 | [Referência técnica](reference.md) | Conteúdo detalhado preservado da documentação anterior |
 | [Controle térmico](../CONTROLE-TERMICO.md) | Política e supervisor do perfil Windows de referência |
 | [Scripts de mineração](../mining/windows/README.md) | Instalador do minerador, perfil validado e scripts históricos |
-| [Portabilidade](../PORTABILIDADE.md) | Snapshot, fork e caminhos por sistema |
+| [Backup e transferência](../PORTABILIDADE.md) | Snapshot, fork e transferência entre computadores Windows |
+| [Contribuição opcional](contribution.md) | Divisão de tempo de mineração, configuração e impacto nas projeções |
 | [Contribuição](../CONTRIBUTING.md) | Ambiente, testes e revisão |
 | [Segurança](../SECURITY.md) | Relato de vulnerabilidades e conteúdo sensível |
 | [Origem da marca](../assets/brand/ORIGEM.md) | Logos, derivados e tokens oficiais |
@@ -32,4 +33,5 @@
 - O catálogo e o benchmark não devem ser interpretados como validação universal de overclock.
 - A interface e o iniciador padrão usam GPU0; perfis por UUID no motor não significam telemetria mult GPU na interface.
 - Código GPL-3.0-only; marca e logos separados conforme [NOTICE](../NOTICE).
+- Produto exclusivo Windows 10/11 x64.
 - Instalação ou simples monitoramento não são autorização implícita para alterar clocks de outra GPU.

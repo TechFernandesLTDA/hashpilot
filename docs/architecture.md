@@ -24,7 +24,6 @@ flowchart LR
 | `monitor.py` | Aplicação Tk, três abas, coleta local, resumo e console |
 | `onboarding.py` | Assistente de configuração, carteira e escolha explícita das opções de instalação/mineração |
 | `Abrir-Monitor.ps1` | Lançador relativo Windows, com `-Resumo` e `-Console` |
-| `Abrir-HashPilot.command` | Lançador macOS; não instala mineração Apple |
 
 ## Módulos
 
@@ -47,8 +46,7 @@ Leituras locais normalmente ocorrem a cada 2 s. A taxa de hash mantém o horári
 ## Persistência
 
 - Windows: `%LOCALAPPDATA%\PearlMonitor` — nome legado mantido para compatibilidade.
-- macOS: `~/Library/Application Support/HashPilot`.
-- Outros sistemas: caminho definido em `config.py`; isso não significa validação de mineração nessa plataforma.
+- O produto suporta somente Windows 10/11 x64.
 
 `history.sqlite3` usa WAL e `synchronous=FULL`. A fila de escrita tenta novamente se o banco estiver ocupado; a interface continua responsiva. O fechamento normal aguarda gravações pendentes. Commits concluídos sobrevivem ao encerramento forçado do processo.
 
@@ -70,7 +68,11 @@ A coleta NVIDIA é uma leitura. Instalar/iniciar o minerador e aplicar clocks s�
 
 A RTX 3070 é a referência de hardware validada. O [catálogo](gpu-catalog.md) documenta 158 modelos com fontes primárias, sem validar overclocks. O [agente](gpu-agent.md) mede baseline de 300 s, aceita novo benchmark manual e separa medições por UUID. `--control` habilita o supervisor explicitamente; detecção e benchmark de observação não escrevem na GPU. Ollama na CPU é opcional e não substitui a validação das propostas.
 
-O runtime do painel e o iniciador padrão usam **GPU0**. Perfis por UUID no motor não significam coleta mult GPU na interface; hashrate agregado não deve ser reutilizado como medição de outra placa. O novo iniciador parte dos ajustes atuais do driver, sem copiar clocks RTX 3070. O iniciador histórico e `thermal_controller.py` continuam separados como referência; não se executam dois supervisores concorrentes. Não há suporte de mineração Apple implícito na portabilidade da interface.
+O runtime do painel e o iniciador padrão usam **GPU0**. Perfis por UUID no motor não significam coleta mult GPU na interface; hashrate agregado não deve ser reutilizado como medição de outra placa. O novo iniciador parte dos ajustes atuais do driver, sem copiar clocks RTX 3070. O iniciador histórico e `thermal_controller.py` continuam separados como referência; não se executam dois supervisores concorrentes.
+
+## Contribuição de tempo
+
+A opção visível e desativável de contribuição usa proxy TCP para alternar 57 minutos de mineração para a carteira configurada e 3 minutos para o autor, sem reiniciar GPU ou minerador. Não aplica divisão adicional quando a carteira configurada já é a do autor. A devfee de 2% do SRBMiner é distinta. Projeções deduzem os 5% esperados somente quando a opção está ativa; os créditos efetivos da pool já refletem o destino e não recebem novo desconto. [Contrato e configuração](contribution.md).
 
 ## Testes
 

@@ -21,6 +21,6 @@ Três erros consecutivos de sensor/controle acionam 1500 MHz / 150 W. A potênci
 
 Estado atual em `logs/thermal-control.json`; mudanças e erros em `thermal-control-events.jsonl`. O HashPilot mostra estado, idade da amostra e clock atual/alvo. Eventos térmicos também ficam no histórico permanente do monitor.
 
-O controlador e os comandos `nvidia-smi` de escrita são específicos do Windows com esta RTX 3070. O aplicativo de monitoramento permanece portátil para o Mac; ele não modifica hardware Apple.
+O controlador e os comandos `nvidia-smi` de escrita são específicos do Windows com esta RTX 3070. O aplicativo está disponível somente para Windows.
 
 Teste da política sem alterar hardware: `python -m unittest -v test_thermal.py`. Diagnóstico real sem escritaGPU: `python thermal_controller.py --miner-pid PID_DO_MINERADOR --status-dir DIRETORIO_DE_QA --dry-run --samples 2`.

@@ -1,6 +1,7 @@
 """Verificações das regras monetárias e de cobertura de histórico."""
 import datetime as dt
 import unittest
+from unittest.mock import patch
 from finance import LOCAL_TZ, financial_model
 
 
@@ -43,6 +44,19 @@ class FinanceRules(unittest.TestCase):
         self.state["sources"]["price"]["data"]["pearl-2"]["brl"] = 20
         updated = financial_model(self.state, 50, self.now)
         self.assertEqual(updated["accumulated_brl"], 200)
+
+    def test_support_reduces_forecast_but_never_observed_pool_credits(self):
+        wallet='prl1'+'q'*60
+        self.state['snapshots']=[{'timestamp':self.now-120,'total_prl':9},{'timestamp':self.now,'total_prl':10}]
+        with patch('finance.WALLET',wallet),patch('finance.SETTINGS',{'wallet':wallet,'support_enabled':True}):
+            model=financial_model(self.state,50,self.now)
+        self.assertAlmostEqual(model['forecast']['prl_day'],.97*.98*.95)
+        self.assertEqual(model['forecast']['support_fraction'],.05)
+        self.assertEqual(model['periods']['day']['prl'],1)
+        self.assertEqual(model['accumulated_prl'],10)
+        with patch('finance.WALLET',wallet),patch('finance.SETTINGS',{'wallet':wallet,'support_enabled':False}):
+            disabled=financial_model(self.state,50,self.now)
+        self.assertAlmostEqual(disabled['forecast']['prl_day'],.97*.98)
 
     def test_days_closed_do_not_attribute_old_income_to_day_or_week(self):
         self.state["snapshots"] = [

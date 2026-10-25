@@ -36,15 +36,13 @@ No Windows, a maximização usa toda a área útil do monitor atual e preserva e
 
 Ativos e tokens seguem a identidade oficial. Consulte [assets/brand/ORIGEM.md](../assets/brand/ORIGEM.md).
 
-## macOS
+## Dados entre computadores Windows
 
-Com Python/Tkinter disponível pelo mise, execute `zsh Abrir-HashPilot.command` (ou `mise exec -- python monitor.py`). O launcher é relativo e pode acompanhar um fork em qualquer pasta. O caminho local de dados é definido por `config.py` para cada sistema; preserve/restaure o banco existente ao migrar entre máquinas.
+O HashPilot suporta somente Windows 10/11 x64. O launcher usa caminhos relativos e pode acompanhar um fork em outra pasta. Preserve o banco em `%LOCALAPPDATA%\PearlMonitor` ao transferir dados entre computadores Windows. Consulte [backup e transferência](../PORTABILIDADE.md).
 
 No primeiro clone, o aplicativo restaura o snapshot incluído em `portable-data/` apenas se o banco/cache local ainda não existir. Dados locais existentes nunca são sobrescritos. O repositório público inclui o endereço público e o snapshot autorizado do histórico; não contém chaves privadas ou frase de recuperação.
 
-Painel, resumo, cotação, pool e histórico usam a mesma base Python. `nvidia-smi` só é usado se estiver disponível; em MacBook com GPU Apple, os sensores NVIDIA ficam explicitamente indisponíveis. A consulta de processo usa `pgrep` no macOS, sem comandos de alteração de hardware. Isso não configura nem promete mineração em Apple Silicon.
-
-A bandeja nativa é exclusiva do Windows. No macOS, recolher mantém a janela minimizada no Dock; o botão Console abre um resumo textual na própria interface, e `--console` também funciona ao executar pelo Terminal. A compatibilidade de código foi revisada, mas não houve validação em um Mac físico nesta sessão.
+Painel, resumo, cotação, pool e histórico usam a mesma base Python. Os sensores exigem `nvidia-smi`; quando indisponíveis, a interface identifica a ausência explicitamente. A bandeja nativa mantém a coleta enquanto o painel está recolhido.
 
 - Sensores NVIDIA a cada 2 segundos: temperatura, potência, limite, clocks, utilização, VRAM e ventoinhas.
 - Hashrate, médias, shares, rejeições e erros do log mais recente do SRBMiner.

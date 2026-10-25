@@ -1,6 +1,6 @@
 # Identidade oficial — HashPilot / Tech Fernandes
 
-Fonte: repositório privado **TechFernandesLTDA/design**, documentos `README.md`, `MARCA-TOKENS.md`, `00-marca-nucleo/00-guia-de-uso.md` e `03-kit-github/00-guia-de-uso.md`. Consulta em 24/10/2026. A biblioteca original não foi alterada.
+Fonte: repositório **TechFernandesLTDA/design**, documentos `README.md`, `MARCA-TOKENS.md`, `00-marca-nucleo/00-guia-de-uso.md` e `03-kit-github/00-guia-de-uso.md`. Consulta em 24/10/2026. A biblioteca original não foi alterada.
 
 Arquivos originais copiados sem recoloração ou redesenho:
 
