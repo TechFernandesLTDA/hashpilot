@@ -2,7 +2,7 @@
 
 Revisão de estabilidade do HashPilot a partir de `9a21999`. Foram corrigidos **12 bugs principais e 60 microbugs/casos de borda**, com 72 regressões específicas em `test_bug_audit.py`. A suíte completa tem **229 testes**.
 
-Principal significa efeito em controle, histórico, integração de IA ou interpretação financeira. Microbug significa um defeito pontual de validação, formatação, diagnóstico ou isolamento. São reproduções com fixtures; não se afirma que os 71 ocorreram na máquina física.
+Principal significa efeito em controle, histórico, integração de IA ou interpretação financeira. Microbug significa um defeito pontual de validação, formatação, diagnóstico ou isolamento. São reproduções com fixtures; não se afirma que os 72 ocorreram na máquina física.
 
 O teste de conexão OpenRouter foi realizado com a configuração do usuário, sem imprimir/exportar a chave e sem aplicar sua resposta ao hardware. O benchmark manual `4c6bf1f7031e4a59880ac71a9316838e` concluiu validado: 300 s configurados, três medições independentes, média de 75,0467 TH/s, 154,4567 W, perfil 1710 MHz e limite de 240 W, sem amostras instáveis. Isso é evidência de uma RTX 3070, não de seis placas físicas.
 

@@ -23,7 +23,7 @@ A Windows desktop monitor for Pearl (PRL) mining with **up to six NVIDIA GPUs**,
 Run in PowerShell on **Windows 10/11 x64**, with `winget` available:
 
 ```powershell
-irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.3.2/install.ps1 | iex
 ```
 
 The installer prepares mise/Python, installs into `%LOCALAPPDATA%\Programs\HashPilot`, creates shortcuts, and opens setup. Existing local settings and history are preserved. See the [installation guide](docs/installation.md) for requirements and troubleshooting.
@@ -75,3 +75,7 @@ Local data: `%LOCALAPPDATA%\PearlMonitor`.
 Code is licensed **GPL-3.0-only**: [LICENSE](LICENSE). Tech Fernandes names and logos are not licensed under GPL; see [NOTICE](NOTICE) and [brand provenance](assets/brand/ORIGEM.md).
 
 AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e Ollama local](docs/ai-providers.md). A política adaptativa funciona sem IA.
+
+## Verification and evidence
+
+[Release verification, deterministic source packaging, diagnostic export and 24/72-hour observation protocol](docs/verification.md). Physical evidence still covers one RTX 3070; multi-GPU tests are simulated. Checksums are not publisher signatures or an independent security audit. [v0.3.2 notes](docs/releases/v0.3.2.md).

@@ -1,4 +1,4 @@
-﻿# HashPilot — Tech Fernandes
+# HashPilot — Tech Fernandes
 
 [English](README.en.md) · [Documentação](docs/index.md) · [Instalação](docs/installation.md) · [Para LLMs](llms.txt)
 
@@ -8,9 +8,9 @@ Monitor local de mineração Pearl (PRL) para **até seis GPUs NVIDIA**, iguais 
 
 ## Veja o aplicativo
 
-![Painel atual com até seis GPUs NVIDIA ? simulação de interface](media/v0.2.0/six-gpus-simulation.png)
+![Painel atual com até seis GPUs NVIDIA — simulação de interface](media/v0.2.0/six-gpus-simulation.png)
 
-Painel multiGPU da v0.2.0: **simulação de seis placas**, com valores fict?cios. [Captura com a RTX 3070 real](media/v0.2.0/overview-real-rtx3070.png) ? [Operação e limites da validação](docs/multi-gpu.md).
+Painel multiGPU da v0.2.0: **simulação de seis placas**, com valores fictícios. [Captura com a RTX 3070 real](media/v0.2.0/overview-real-rtx3070.png) · [Operação e limites da validação](docs/multi-gpu.md).
 
 [▶ Demonstração de 44 segundos — vídeo MP4 com legendas em inglês](media/hashpilot-demo.mp4) · [Resultado real da RTX 3070 e metodologia](docs/performance/rtx3070.md)
 
@@ -27,7 +27,7 @@ O vídeo e estas capturas documentam a **versão v0.1.0, com uma GPU**, em uma j
 No PowerShell do **Windows 10/11 x64**, com `winget` disponível:
 
 ```powershell
-irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.3.2/install.ps1 | iex
 ```
 
 O instalador prepara o mise/Python, instala o aplicativo em `%LOCALAPPDATA%\Programs\HashPilot`, cria atalhos e abre o assistente de configuração. Configurações e histórico existentes são preservados. [Passos, requisitos e solução de problemas](docs/installation.md).
@@ -64,6 +64,10 @@ O produto é exclusivo para **Windows 10/11 x64**. Veja [backup e transferência
 ## Contribuição opcional
 
 Com uma carteira diferente da do autor, a contribuição opcional e desativável reserva **5% do tempo de mineração**: 57 minutos para você e 3 para o autor. Ela fica visível no assistente e usa proxy TCP, sem reiniciar a GPU ou o minerador. A carteira padrão do autor não recebe uma divisão adicional. Isso é separado da devfee de 2% do SRBMiner. As projeções descontam a contribuição esperada quando ativa; créditos reais observados não são descontados novamente. [Como funciona](docs/contribution.md).
+
+## Verificação e evidências
+
+[Verificar a release e reproduzir o pacote](docs/verification.md) · [Protocolo de estabilidade de 24/72 horas](docs/verification.md#protocolo-de-estabilidade-de-24-e-72-horas) · [Notas da v0.3.2](docs/releases/v0.3.2.md). Hashes não substituem assinatura de publicador ou revisão independente.
 
 ## Código e dados
 

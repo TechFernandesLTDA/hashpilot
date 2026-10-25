@@ -24,6 +24,7 @@
 | [Backup e transferência](../PORTABILIDADE.md) | Snapshot, fork e transferência entre computadores Windows |
 | [Contribuição opcional](contribution.md) | Divisão de tempo de mineração, configuração e impacto nas projeções |
 | [Contribuição](../CONTRIBUTING.md) | Ambiente, testes e revisão |
+| [Verificação e validação](verification.md) | Releases, diagnóstico, matriz de evidências e protocolo de 24/72 horas |
 | [Segurança](../SECURITY.md) | Relato de vulnerabilidades e conteúdo sensível |
 | [Origem da marca](../assets/brand/ORIGEM.md) | Logos, derivados e tokens oficiais |
 

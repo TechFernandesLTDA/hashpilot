@@ -4,6 +4,8 @@
 param(
     [string]$InstallRoot = (Join-Path $env:LOCALAPPDATA 'Programs\HashPilot'),
     [string]$SourcePath,
+    [ValidatePattern('^v[0-9]+\.[0-9]+\.[0-9]+$')]
+    [string]$Release = 'v0.3.2',
     [switch]$NoLaunch,
     [switch]$NoShortcuts
 )
@@ -54,14 +56,52 @@ if ($SourcePath) {
     $source = (Resolve-Path -LiteralPath $SourcePath).Path
     $revision = 'local-' + [Guid]::NewGuid().ToString('N')
 } else {
-    $headers = @{ 'User-Agent' = 'HashPilot-Installer'; 'Accept' = 'application/vnd.github+json' }
-    $commit = Invoke-RestMethod -Uri 'https://api.github.com/repos/TechFernandesLTDA/hashpilot/commits/main' -Headers $headers -TimeoutSec 60
-    $revision = [string]$commit.sha
-    if ($revision -notmatch '^[a-f0-9]{40}$') { throw 'GitHub returned an invalid revision.' }
-    $archive = Join-Path $stage 'source.zip'
-    Invoke-WebRequest -UseBasicParsing -Uri ('https://codeload.github.com/TechFernandesLTDA/hashpilot/zip/' + $revision) -OutFile $archive -TimeoutSec 180
-    Expand-Archive -LiteralPath $archive -DestinationPath (Join-Path $stage 'expanded')
-    $source = Join-Path $stage ('expanded\hashpilot-' + $revision)
+    $base = 'https://github.com/TechFernandesLTDA/hashpilot/releases/download/' + $Release + '/'
+    $packageName = 'hashpilot-' + $Release + '.zip'
+    $archive = Join-Path $stage $packageName
+    $sums = Join-Path $stage 'SHA256SUMS'
+    Invoke-WebRequest -UseBasicParsing -Uri ($base + 'SHA256SUMS') -OutFile $sums -TimeoutSec 60
+    Invoke-WebRequest -UseBasicParsing -Uri ($base + $packageName) -OutFile $archive -TimeoutSec 180
+    function Confirm-HashPilotRelease {
+    param([string]$Archive,[string]$Sums,[string]$Release,[string]$Destination)
+    $packageName = [IO.Path]::GetFileName($Archive)
+    $hashes = @{}
+    foreach ($line in (Get-Content -LiteralPath $sums -Encoding ASCII)) {
+        if ($line -notmatch '^([a-f0-9]{64})  ([^/\\:]+)$' -or $hashes.ContainsKey($Matches[2])) { throw 'Invalid release checksums.' }
+        $hashes[$Matches[2]] = $Matches[1]
+    }
+    if (-not $hashes.ContainsKey($packageName) -or (Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLowerInvariant() -ne $hashes[$packageName]) {
+        throw 'Release SHA256 mismatch. No downloaded application code was run.'
+    }
+    # Inspect names before extraction, including Windows case-insensitive collisions.
+    Add-Type -AssemblyName System.IO.Compression.FileSystem
+    $zip = [IO.Compression.ZipFile]::OpenRead($archive)
+    $seen = @{}
+    try {
+        foreach ($entry in $zip.Entries) {
+            $name = $entry.FullName
+            if ($name -match '(^/|\\|:|(^|/)\.\.?(/|$)|//)' -or $name.EndsWith('/') -or $seen.ContainsKey($name)) { throw 'Unsafe release archive path.' }
+            $seen[$name] = $true
+        }
+        if (($zip.Entries | Measure-Object -Property Length -Sum).Sum -gt 536870912) { throw 'Release archive exceeds size limit.' }
+    } finally { $zip.Dispose() }
+    $source = $Destination
+    Expand-Archive -LiteralPath $archive -DestinationPath $source
+    $manifest = Get-Content -LiteralPath (Join-Path $source 'RELEASE-MANIFEST.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+    $revision = [string]$manifest.commit
+    if ($manifest.schema -ne 1 -or $manifest.version -cne $Release -or $revision -cnotmatch '^[a-f0-9]{40}$') { throw 'Invalid release manifest.' }
+    $properties = @($manifest.files.PSObject.Properties)
+    if ($properties.Count -ne $seen.Count - 1) { throw 'Release inventory mismatch.' }
+    foreach ($file in $properties) {
+        if (-not $seen.ContainsKey($file.Name) -or $file.Name -ceq 'RELEASE-MANIFEST.json') { throw 'Invalid manifest file.' }
+        $path = Join-Path $source $file.Name
+        if ((Get-Item -LiteralPath $path).Length -ne $file.Value.size -or (Get-FileHash -LiteralPath $path -Algorithm SHA256).Hash.ToLowerInvariant() -cne $file.Value.sha256) { throw 'Release file verification failed.' }
+    }
+    return $manifest
+    }
+    $source = Join-Path $stage 'expanded'
+    $verifiedManifest = Confirm-HashPilotRelease -Archive $archive -Sums $sums -Release $Release -Destination $source
+    $revision = [string]$verifiedManifest.commit
 }
 foreach ($required in @('monitor.py','onboarding.py','config.py','contribution.py','rig.py','rig_config.py','rig_controller.py','gpu_telemetry.py','ai_advisor.py','ai_setup.py','rig_panel.py','assets\brand\hashpilot.ico','mining\windows\downloads.json')) {
     if (-not (Test-Path -LiteralPath (Join-Path $source $required))) { throw ('Incomplete package: ' + $required) }
@@ -74,7 +114,7 @@ if (-not (Test-Path -LiteralPath $application)) {
     New-Item -ItemType Directory -Path $application | Out-Null
     Get-ChildItem -LiteralPath $source -Force | Where-Object { $_.Name -notin @('.git','__pycache__','.venv','.env','settings.json') } | Copy-Item -Destination $application -Recurse -Force
 }
-$metadata = @{ revision=$revision; app=$application; python=$python; installed_at=[DateTime]::UtcNow.ToString('o') }
+$metadata = @{ revision=$revision; release=$(if($SourcePath){'local'}else{$Release}); app=$application; python=$python; installed_at=[DateTime]::UtcNow.ToString('o') }
 $metadata | ConvertTo-Json | Set-Content -LiteralPath (Join-Path $InstallRoot 'installation.json') -Encoding UTF8
 Write-Host '[4/5] Creating shortcuts...'
 if (-not $NoShortcuts) {

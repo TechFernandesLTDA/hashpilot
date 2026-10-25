@@ -1,0 +1,44 @@
+name: Validação de hardware
+description: Registrar testes reais, inclusive resultados com falhas, sem dados privados.
+title: "[Validação] GPU / driver / versão"
+body:
+  - type: markdown
+    attributes:
+      value: "Siga docs/verification.md. Não envie carteiras, UUIDs, seeds, chaves, configurações ou logs brutos. Revise qualquer diagnóstico. Testes simulados devem ser identificados. Não implica aprovação de pool/fabricante."
+  - type: input
+    id: revision
+    attributes:
+      label: Release e commit realmente executados
+    validations:
+      required: true
+  - type: textarea
+    id: environment
+    attributes:
+      label: Ambiente
+      description: Windows, driver, GPUs/quantidade, minerador/versão, ambiente térmico e se o teste é físico ou simulado.
+    validations:
+      required: true
+  - type: textarea
+    id: protocol
+    attributes:
+      label: Procedimento e intervenções
+      description: Duração, configuração original/adaptativa, ajuda ativa/desativada, reinícios, mudanças e motivo de interrupções.
+    validations:
+      required: true
+  - type: textarea
+    id: results
+    attributes:
+      label: Resultados e evidências revisadas
+      description: Cobertura, lacunas, temperaturas, hashrate independente, deltas de shares/erros e falhas; explique limites. Não omita resultados negativos.
+    validations:
+      required: true
+  - type: dropdown
+    id: relation
+    attributes:
+      label: Relação com o projeto
+      options:
+        - Mantenedor ou colaborador
+        - Usuário externo voluntário
+        - Revisor independente (descrever escopo no resultado)
+    validations:
+      required: true

@@ -6,6 +6,8 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 
 ## Read first
 
+- [Verification and evidence](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/verification.md): deterministic source releases, allowlisted diagnostics, passive 24/72-hour protocol; no independent audit or hardware certification claimed.
+
 - [Measured RTX 3070 observation](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/performance/rtx3070.md): 15-minute observation, independent hashrate updates, power, temperature and limitations; not a universal overclock or A/B comparison.
 - [Observation aggregates](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/performance/rtx3070-observation.json): machine-readable methodology and aggregate evidence.
 - [Demo provenance](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/media/README.md): historical v0.1.0, single-GPU UI captured in an isolated renderer using real local data; not evidence of six physical devices.

@@ -3,7 +3,7 @@
 Windows 10/11 de 64 bits, conexão com a internet e driver NVIDIA. Abra o PowerShell e execute:
 
 ```powershell
-irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/install.ps1 | iex
+irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.3.2/install.ps1 | iex
 ```
 
 O comando baixa e executa o instalador público deste repositório. Você pode [ler o script](../install.ps1) antes de executar. Não é necessário clonar o repositório, instalar Git ou configurar Python manualmente. Se o Windows não tiver `winget`, instale o **App Installer**, da Microsoft Store, e repita o comando.
@@ -11,7 +11,7 @@ O comando baixa e executa o instalador público deste repositório. Você pode [
 ## O que é instalado
 
 1. O instalador reutiliza o mise existente ou instala `jdx.mise` pelo winget. O Python 3.14.9 é gerenciado pelo mise, sem alterar seus perfis de shell ou a versão global do Python.
-2. Resolve o commit atual de `main` e baixa o ZIP desse commit do GitHub por HTTPS. A revisão fica registrada em `installation.json`.
+2. Baixa o pacote da release fixa v0.3.2 por HTTPS. Confere SHA-256, nomes do ZIP e inventário de arquivos; a revisão Git e a release ficam registradas em `installation.json`. Uma divergência interrompe a instalação antes de usar o código baixado.
 3. Instala o aplicativo em `%LOCALAPPDATA%\Programs\HashPilot\versions\<commit>` e cria atalhos no menu Iniciar e na Área de Trabalho.
 4. Abre o assistente para conferir a carteira, a pasta dos logs, a instalação opcional do minerador e a IA local.
 
@@ -49,7 +49,7 @@ A IA pode usar OpenRouter Cloud Free, OpenCode Cloud Free pelo cliente ou Ollama
 
 Versões atuais aceitam uma solicitação de fechamento normal enviada pelo instalador, salvam o histórico e permitem abrir a nova versão automaticamente. Se uma versão antiga não responder, o instalador informa que ela precisa ser fechada pelo menu **Sair**; ele não encerra a mineração à força.
 
-Execute o mesmo comando para instalar a revisão atual. Versões anteriores são mantidas e os atalhos passam a apontar para a nova versão. O assistente reabre; feche a versão antiga pelo menu **Sair** antes de abrir a nova quando houver atualização de código.
+O comando acima instala sempre a v0.3.2. Para atualizar, use o comando da versão publicada desejada na página de releases, depois de conferir suas evidências. Versões anteriores são mantidas e os atalhos passam a apontar para a nova versão. O assistente reabre; feche a versão antiga pelo menu **Sair** antes de abrir a nova quando houver atualização de código.
 
 Dados permanentes ficam separados da instalação em `%LOCALAPPDATA%\PearlMonitor`: configurações, `history.sqlite3`, estado do gerenciador e caches. Logs e bancos `gpu-agent.sqlite3` individuais ficam sob `LOG_DIR/gpus/<UUID>/`; bancos anteriores permanecem preservados. Atualizações não removem esses arquivos. No primeiro perfil vazio, o snapshot público do autor pode ser importado; ele é identificado por carteira. Consulte [portabilidade](../PORTABILIDADE.md).
 
@@ -69,3 +69,7 @@ Para executar de um clone no Windows: `mise install`, depois `mise exec -- pytho
 Referências do instalador: [instalação oficial do mise](https://mise.jdx.dev/getting-started.html), [arquivos de repositório e ZIPs no GitHub](https://docs.github.com/en/rest/repos/contents#download-a-repository-archive-zip).
 
 AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e Ollama local](ai-providers.md). A política adaptativa funciona sem IA.
+
+## Verificar antes de instalar
+
+A URL do comando fixa também a versão do script de instalação. O arquivo baixado pode ser salvo e inspecionado antes da execução. [Confira hashes, inventário e reprodução do pacote](verification.md). O modo de desenvolvimento `-SourcePath` usa arquivos locais e não declara que foram verificados contra uma release. Hashes obtidos da mesma conta não substituem assinatura ou auditoria independente.
