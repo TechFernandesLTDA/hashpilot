@@ -58,7 +58,95 @@ def launch_ai_setup():
         str(ROOT/'mining/windows/Instalar-IA.ps1')],cwd=ROOT,creationflags=subprocess.CREATE_NEW_CONSOLE)
 
 
-def run_setup(parent=None) -> bool:
+def launch_rig_service():
+    """Explicit user action; the Windows elevation prompt belongs to the OS."""
+    subprocess.Popen(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',
+        str(ROOT/'mining/windows/Iniciar-Rig.ps1'),'-Python',sys.executable],cwd=ROOT,
+        creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+
+
+def run_gpu_setup(parent=None,selected_uuid=None,devices=None,path=SETTINGS_PATH):
+    """Até seis carteiras/interruptores, sempre associados ao UUID físico."""
+    from gpu_agent import detect_nvidia_gpus
+    from rig_config import resolve_devices,update_gpu_settings
+    settings=read_settings(path)
+    if devices is None:
+        devices=((getattr(parent,'last_data',None) or {}).get('rig') or {}).get('devices')
+    if devices is None: devices=detect_nvidia_gpus(max_devices=6)
+    resolved=resolve_devices(devices,settings,LOG_DIR)
+    window=tk.Toplevel(parent) if parent else tk.Tk()
+    window.title('GPUs e carteiras — HashPilot')
+    window.configure(bg=BG)
+    width=min(1100,window.winfo_screenwidth()-60)
+    height=min(650,window.winfo_screenheight()-80)
+    window.geometry(f'{width}x{height}')
+    window.minsize(min(width,980),min(height,560))
+    window.columnconfigure(0,weight=1)
+    tk.Label(window,text='Seu rig NVIDIA · até 6 GPUs',bg=BG,fg=TEAL,font=('Segoe UI',-24,'bold'),anchor='w').grid(row=0,column=0,sticky='ew',padx=20,pady=(14,5))
+    tk.Label(window,text='Todas são ativadas por padrão. Cada placa pode usar a carteira global ou um endereço próprio. Desativar encerra somente o minerador daquela GPU.',bg=BG,fg=MUTED,font=('Segoe UI',-13),wraplength=width-40,justify='left',anchor='w').grid(row=1,column=0,sticky='ew',padx=20,pady=(0,8))
+    holder=tk.Frame(window,bg=BG)
+    holder.grid(row=2,column=0,sticky='nsew',padx=20)
+    holder.columnconfigure(0,weight=1)
+    window.rowconfigure(2,weight=1)
+    rows=[]
+    for index,device in enumerate(resolved):
+        frame=tk.Frame(holder,bg=PANEL,highlightbackground=TEAL if device['uuid']==selected_uuid else '#23446D',highlightthickness=1,padx=8,pady=5)
+        frame.grid(row=index,column=0,sticky='ew',pady=3)
+        frame.columnconfigure(2,weight=1)
+        enabled=tk.BooleanVar(value=device['enabled'])
+        inherit=tk.BooleanVar(value=device['uses_default_wallet'])
+        address=tk.StringVar(value=device['wallet'])
+        title=device['name'].removeprefix('NVIDIA ').removeprefix('GeForce ')
+        title=title if len(title)<=26 else title[:23]+'…'
+        tk.Checkbutton(frame,text=f"GPU {device['index']} · {title}",variable=enabled,bg=PANEL,fg=TEXT,selectcolor=BG,activebackground=PANEL,activeforeground=TEXT,font=('Segoe UI',-12,'bold'),anchor='w',width=32).grid(row=0,column=0,sticky='w')
+        tk.Label(frame,text=device['uuid'],bg=PANEL,fg=MUTED,font=('Consolas',-10),anchor='w').grid(row=1,column=0,columnspan=2,sticky='w')
+        inherit_box=tk.Checkbutton(frame,text='Carteira global',variable=inherit,bg=PANEL,fg=TEXT,selectcolor=BG,activebackground=PANEL,activeforeground=TEXT,font=('Segoe UI',-12))
+        inherit_box.grid(row=0,column=1,padx=8)
+        entry=tk.Entry(frame,textvariable=address,bg=BG,fg=TEXT,readonlybackground=PANEL,insertbackground=TEXT,relief='flat',font=('Consolas',-11))
+        entry.grid(row=0,column=2,rowspan=2,sticky='ew',ipady=9)
+        def mode(inherit=inherit,address=address,entry=entry,device=device):
+            if inherit.get():
+                address.set(settings.get('wallet',DEFAULT_WALLET));entry.configure(state='readonly')
+            else:
+                if address.get()==settings.get('wallet',DEFAULT_WALLET): address.set(device.get('wallet_override') or '')
+                entry.configure(state='normal');entry.focus_set()
+        inherit_box.configure(command=mode)
+        if inherit.get(): entry.configure(state='readonly')
+        rows.append((device['uuid'],enabled,inherit,address))
+    if not resolved:
+        tk.Label(holder,text='Nenhuma GPU NVIDIA detectada. Confira o driver e nvidia-smi.',bg=BG,fg=MUTED,font=('Segoe UI',-16)).pack(pady=30)
+    support=tk.BooleanVar(value=settings.get('support_enabled') is True)
+    tk.Checkbutton(window,text='Ajuda opcional pela ferramenta: 5% do tempo para a carteira do autor',variable=support,bg=BG,fg=TEXT,selectcolor=PANEL,activebackground=BG,activeforeground=TEXT,font=('Segoe UI',-13),anchor='w').grid(row=3,column=0,sticky='ew',padx=20,pady=(7,3))
+    tk.Label(window,text='Aplica-se somente a carteiras diferentes da do autor. Pode ser desativada. O serviço reinicia apenas GPUs cuja carteira mudou; um rig parado só inicia pelo botão de mineração.',bg=BG,fg=MUTED,font=('Segoe UI',-12),wraplength=width-40,justify='left',anchor='w').grid(row=4,column=0,sticky='ew',padx=20,pady=3)
+    saved=False
+    def finish():
+        nonlocal saved
+        try:
+            updated=read_settings(path)
+            for identifier,enabled,inherit,address in rows:
+                updated=update_gpu_settings(updated,identifier,enabled=enabled.get(),wallet_override=None if inherit.get() else address.get().strip(),change_wallet=True)
+            updated['support_enabled']=support.get()
+            path.parent.mkdir(parents=True,exist_ok=True)
+            temporary=path.with_name(path.name+'.gpu-setup.tmp')
+            temporary.write_text(json.dumps(updated,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+            temporary.replace(path)
+            from rig import write_request
+            write_request(path.parent,'reconcile')
+        except (OSError,ValueError,RuntimeError) as error:
+            messagebox.showerror('Configurar GPUs',str(error),parent=window);return
+        saved=True;window.destroy()
+    buttons=tk.Frame(window,bg=BG)
+    buttons.grid(row=5,column=0,sticky='e',padx=20,pady=12)
+    tk.Button(buttons,text='Cancelar',command=window.destroy,padx=14,pady=7).pack(side='left',padx=6)
+    tk.Button(buttons,text='Salvar GPUs e carteiras',command=finish,bg=TEAL,fg=TEXT,relief='flat',padx=16,pady=8).pack(side='left')
+    if parent:
+        window.transient(parent);window.grab_set();parent.wait_window(window)
+    else: window.mainloop()
+    return saved
+
+
+def run_setup(parent=None,selected_uuid=None) -> bool:
+    if selected_uuid is not None: return run_gpu_setup(parent,selected_uuid)
     settings = read_settings()
     window = tk.Toplevel(parent) if parent else tk.Tk()
     window.title('Configurar HashPilot — Tech Fernandes')
@@ -86,7 +174,7 @@ def run_setup(parent=None) -> bool:
 
     label('Bem-vindo ao HashPilot', 0, TEAL, 20)
     label('Acompanhe sua GPU NVIDIA, a mineração e os recebimentos em PRL.',1)
-    label('Carteira pública para acompanhar e receber Pearl',2,TEAL)
+    label('Carteira global · padrão para todas as GPUs sem carteira própria',2,TEAL)
     entry = tk.Entry(window,textvariable=wallet,font=('Consolas',-14),bg=PANEL,fg=TEXT,insertbackground=TEXT,relief='flat')
     entry.grid(row=3,column=0,sticky='ew',padx=24,ipady=9)
     label('O endereço preenchido por padrão pertence ao autor. Mantê-lo direciona a mineração iniciada por este assistente para o autor. Você pode substituí-lo pelo seu endereço público. Nunca informe seed ou chave privada.',4,MUTED,10)

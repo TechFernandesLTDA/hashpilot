@@ -46,7 +46,9 @@ Configuração malformada, carteira incompatível ou ledger inválido desligam o
 
 ## Protocolo e limites
 
-O proxy aceita uma sessão de minerador por vez, em loopback, para o fluxo atual da GPU 0. Reconhece autenticações JSON por linha `mining.authorize`, `eth_submitLogin`, `login` e `mining.login`. Substitui somente o campo de carteira na autenticação e, quando presente, no envio de shares `mining.submit`. A carteira precisa ser exatamente a principal ou a principal seguida de `.worker`; outros campos e dados das shares não são alterados.
+Cada GPU gerenciada tem seu próprio proxy, porta de loopback e diretório de estado em `LOG_DIR/gpus/<UUID>/`. Cada proxy aceita uma sessão de minerador por vez; o serviço não mistura conexões entre placas. A opção global de contribuição é avaliada contra a carteira efetiva daquela GPU: um override para a carteira do autor não recebe divisão adicional. Carteiras compartilhadas continuam sendo contadas uma única vez no saldo financeiro do aplicativo. Veja [rig multiGPU](multi-gpu.md).
+
+O proxy reconhece autenticações JSON por linha `mining.authorize`, `eth_submitLogin`, `login` e `mining.login`. Substitui somente o campo de carteira na autenticação e, quando presente, no envio de shares `mining.submit`. A carteira precisa ser exatamente a principal ou a principal seguida de `.worker`; outros campos e dados das shares não são alterados.
 
 O dialeto Pearl documentado pela Suprnova usa parâmetros nomeados: `mining.authorize.params.wallet` autoriza a carteira, um campo `worker` separado continua preservado e `mining.submit.params` pode conter apenas `job_id` e `plain_proof`. O proxy aceita linhas de até 4 MiB e preserva integralmente provas grandes. Os testes locais incluem autorização `wallet.worker` e uma prova de 1,5 milhão de caracteres encaminhada sem alterações. Essa evidência cobre a compatibilidade do formato em uma pool simulada; não equivale a um teste real de redirecionamento ou crédito na Kryptex. Consulte a [especificação Pearl Stratum da Suprnova](https://prl.suprnova.cc/stratum-spec.html).
 

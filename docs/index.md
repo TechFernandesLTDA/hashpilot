@@ -16,6 +16,7 @@
 |---|---|
 | [Arquitetura](architecture.md) | Módulos, fluxo de dados e limites entre monitor e controle da GPU |
 | [Agente NVIDIA](gpu-agent.md) | Baseline, benchmark manual, controle explícito e IA local opcional |
+| [Rig com até seis GPUs](multi-gpu.md) | Identidade por UUID, carteiras, processos e benchmarks individuais |
 | [Catálogo NVIDIA](gpu-catalog.md) | 158 modelos documentados com fontes primárias; não são perfis de overclock validados |
 | [Referência técnica](reference.md) | Conteúdo detalhado preservado da documentação anterior |
 | [Controle térmico](../CONTROLE-TERMICO.md) | Política e supervisor do perfil Windows de referência |
@@ -33,7 +34,9 @@
 - O snapshot incluído é histórico do autor, não o rendimento do computador de quem instala.
 - Telemetria de GPU depende de NVIDIA `nvidia-smi`; o perfil validado de mineração é a RTX 3070 no Windows.
 - O catálogo e o benchmark não devem ser interpretados como validação universal de overclock.
-- A interface e o iniciador padrão usam GPU0; perfis por UUID no motor não significam telemetria mult GPU na interface.
+- A interface acompanha até seis GPUs NVIDIA por UUID, com processos e benchmarks separados. Abrir o monitor não inicia mineração; o serviço exige início explícito.
+- O saldo é deduplicado por carteira. Hashrate agregado não é ganho realizado de cada placa.
+- Somente uma RTX 3070 foi medida fisicamente neste computador; testes de seis placas são simulados.
 - Código GPL-3.0-only; marca e logos separados conforme [NOTICE](../NOTICE).
 - Produto exclusivo Windows 10/11 x64.
 - Instalação ou simples monitoramento não são autorização implícita para alterar clocks de outra GPU.

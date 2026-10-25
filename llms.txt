@@ -1,6 +1,6 @@
 # HashPilot — Tech Fernandes
 
-> Desktop monitor for Pearl (PRL) mining: NVIDIA telemetry, persistent SQLite history, pool balances, payout estimates, and PRL/BRL/USD/BTC equivalents.
+> Windows desktop monitor for Pearl (PRL) mining with up to six NVIDIA GPUs: UUID-scoped telemetry, miner/controller/benchmark isolation, persistent SQLite history, wallet-deduplicated pool balances, payout estimates, and PRL/BRL/USD/BTC equivalents.
 
 Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 
@@ -8,7 +8,7 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 
 - [Measured RTX 3070 observation](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/performance/rtx3070.md): 15-minute observation, independent hashrate updates, power, temperature and limitations; not a universal overclock or A/B comparison.
 - [Observation aggregates](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/performance/rtx3070-observation.json): machine-readable methodology and aggregate evidence.
-- [Demo provenance](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/media/README.md): real application UI captured in an isolated renderer using real local data.
+- [Demo provenance](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/media/README.md): historical v0.1.0, single-GPU UI captured in an isolated renderer using real local data; not evidence of six physical devices.
 
 - [Portuguese README](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/README.md): product scope, Windows install command, default author wallet and hardware limits.
 - [English README](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/README.en.md): English introduction and the same important defaults.
@@ -23,7 +23,10 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 - The initial receiving address is the author's PUBLIC wallet. Keeping it sends mining payouts to the author. Users can replace it in setup. No seed/private key is required.
 - GPU telemetry is NVIDIA-only via nvidia-smi. The Windows RTX 3070 is the validated reference mining profile. A catalog entry is not a validated overclock; per-device measurements matter.
 - The catalog documents 158 NVIDIA models with primary sources, not 158 validated overclocks. gpu_agent.py supports driver/UUID identification, a 300-second baseline, manual benchmark requests, explicit adaptive --control and optional CPU Ollama. No paid AI API is required.
-- The dashboard and default starter use GPU0. Per-UUID engine profiles do not imply multi-GPU UI collection; never attribute aggregate miner hashrate to another GPU. The generic NVIDIA starter uses current driver settings; historical RTX 3070 starters remain separate.
+- The current dashboard supports up to six NVIDIA GPUs, identical or different, keyed by persistent driver UUID. Each has independent enable/disable, effective wallet, miner, controller, logs and benchmark. Newly detected GPUs default enabled in settings; opening the UI never starts mining. The rig service must be started explicitly before it reconciles desired enabled devices. Devices beyond six are reported and ignored.
+- A GPU inherits the global public wallet unless gpu_settings[UUID].wallet overrides it. Settings use gpu_settings[UUID] = {enabled: true, wallet: null}. Disabling a managed GPU stops only its owned processes. Names and ordinal indices are not stable device identities; NVIDIA and SRBMiner indices can differ and must be matched by PCI bus.
+- Actual pool balances/credits are deduplicated by effective wallet. Multiple GPUs sharing one wallet do not multiply its balance. Hashrate and power can be summed, but realized per-GPU coins cannot be inferred from hashrate proportions. Missing wallet sources mean incomplete data, not zero.
+- Physical evidence on this computer covers one RTX 3070. Six-device scenarios are simulated tests, not measurements of six physical cards. Historical v0.1.0 media and performance observations remain single-device evidence. Generic control reads actual driver limits; historical RTX 3070 presets remain separate.
 - The product supports Windows 10/11 x64 only. Backup and transfer documentation refers to Windows computers.
 - An optional, visible, disableable contribution routes 5% of mining time (57 minutes user / 3 minutes author) through a TCP proxy without restarting GPU or miner. It applies only to an address different from the author's; the default author address gets no extra split. SRBMiner's 2% developer fee is separate. Forecasts deduct the expected contribution when enabled; actual pool credits must not be deducted again.
 - Actual observed credits are distinct from hashrate-based forecasts. Incomplete history is partial, and missing data is N/D rather than invented zero.
@@ -47,6 +50,10 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 - [Pure thermal policy](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/thermal.py)
 - [Hardware controller](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/thermal_controller.py)
 - [NVIDIA benchmark and adaptive engine](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/gpu_agent.py)
+- [UUID-scoped batch telemetry and miner-log parsing](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/gpu_telemetry.py)
+- [Rig configuration](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/rig_config.py)
+- [Rig process manager](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/rig.py)
+- [Per-device snapshots](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/rig_controller.py)
 - [NVIDIA catalog dataset](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/data/nvidia-gpus.json)
 
 ## Operational reference
@@ -54,6 +61,7 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 - [Payout semantics](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/PAGAMENTOS.md)
 - [Thermal control](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/CONTROLE-TERMICO.md)
 - [GPU agent operation](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/gpu-agent.md)
+- [Multi-GPU setup and isolation](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/multi-gpu.md): up to six GPUs, UUID keys, wallet overrides, benchmarks, process scope, artifact paths and evidence limits.
 - [GPU catalog research](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/gpu-catalog.md)
 - [Windows reference mining](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/mining/windows/README.md)
 - [Windows backup, transfer and author snapshot](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/PORTABILIDADE.md)

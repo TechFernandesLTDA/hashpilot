@@ -22,12 +22,13 @@ import sys
 import math
 from tkinter import ttk
 from collections import deque
-from finance import FinanceCollector, financial_model
+from finance import FinanceCollector, financial_model, PortfolioFinanceCollector, portfolio_model, portfolio_snapshots
 from history import HistoryStore
 from config import WALLET, POOL, LOG_DIR, STATE_DIR, SETTINGS_PATH
 from contribution import read_support_status, read_settings as read_support_settings
 from tray import WindowsTray
 from bootstrap import restore_bundled_data
+from rig_panel import RigCards, project_selected, totals, save_enabled, show_identity
 
 APP_NAME = "HashPilot — Tech Fernandes"
 DPI_MODE = {"requested":"PerMonitorV2","enabled":False,"fallback":True}
@@ -149,10 +150,12 @@ def thermal_description(control, compact=False):
     if not control.get("enabled"):
         return "Controle desativado"
     modes = {"hold": "Mantendo", "cooling": "Resfriando", "anticipating": "Antecipando calor",
-             "recovering": "Recuperando", "emergency": "Emergência"}
+             "recovering": "Recuperando", "emergency": "Emergência",'baseline':'Calibrando referência',
+             'manual_baseline':'Benchmark solicitado','validating':'Validando ajuste','accepted':'Ajuste validado',
+             'rollback':'Revertendo ajuste','insufficient_data':'Aguardando medições válidas'}
     mode = modes.get(control.get("mode"), str(control.get("mode", "Aguardando")))
-    clock = control.get("current_clock_mhz", "—")
-    desired = control.get("desired_clock_mhz")
+    clock = control.get("current_clock_mhz",(control.get('sample') or {}).get('clock_mhz',"—"))
+    desired = control.get("desired_clock_mhz",(control.get('proposal') or {}).get('clock_mhz'))
     clock_text = f"{clock} → {desired} MHz" if desired is not None and desired != clock else f"{clock} MHz"
     age = control.get("age_seconds")
     age_text = f"{age:.0f} s" if age is not None else "sem horário"
@@ -173,8 +176,34 @@ class Collector:
         self.log_data: dict = parse_log("")
         self.start_times: dict[str, float | None] = {}
         self.history = history
+        from gpu_runtime import RigTelemetry
+        self.rig_reader=RigTelemetry()
+        self.selected_uuid=None
 
     def sample(self) -> dict:
+        processes=None
+        process_error=None
+        try:
+            output=run(['tasklist','/FI','IMAGENAME eq SRBMiner-MULTI.exe','/FO','CSV','/NH'])
+            processes={int(row[1]) for row in csv.reader(output.splitlines()) if len(row)>1 and row[0].lower()=='srbminer-multi.exe' and row[1].isdigit()}
+        except Exception as error:process_error=str(error)
+        try:
+            rig=self.rig_reader.sample(processes)
+        except Exception as error:
+            rig={'schema_version':2,'devices':[],'totals':totals([]),'ignored_devices':[],'error':str(error)}
+        now=time.time()
+        for device in rig['devices']:
+            directory=Path(device['log_dir'])
+            if device.get('state')=='legacy_readonly':directory=LOG_DIR
+            device['support_contribution']=read_support_status(directory,device['wallet'],read_support_settings(SETTINGS_PATH))
+            if self.history and device.get('log_path'):
+                try:self.history.archive_log(Path(device['log_path']),gpu_uuid=device['uuid'],wallet=device['wallet'])
+                except OSError:pass
+        result={'collected_at':now,'rig':rig,'gpu':None,'gpu_error':rig.get('error'),'miner':parse_log(''),
+            'miner_running':None,'process_error':process_error,'log_error':None,'log_path':None,'thermal_control':None,'support_contribution':{}}
+        return project_selected(result,self.selected_uuid)
+
+    def sample_legacy(self) -> dict:
         result = {"collected_at": time.time(), "gpu": None, "gpu_error": None,
                   "miner_running": None, "process_error": None, "log_error": None}
         try:
@@ -220,7 +249,11 @@ class Collector:
             started = time.monotonic()
             data = self.sample()
             if self.history:
-                self.history.telemetry(data)
+                if hasattr(self.history,'rig_telemetry'):
+                    self.history.rig_telemetry(data['rig'])
+                legacy=next((d for d in data['rig']['devices'] if d['index']==0),None)
+                if legacy:
+                    self.history.telemetry({**data,'wallet':legacy['wallet'],**{k:legacy.get(k) for k in ('gpu','miner','miner_running','log_path')}},source='live')
                 try:
                     self.history.archive_thermal(LOG_DIR / "thermal-control-events.jsonl")
                 except OSError as error:
@@ -434,7 +467,7 @@ class Monitor(tk.Tk):
         self._panel_return_state = "normal"
         self._normal_geometry = None
         self.collector = Collector(self.history)
-        self.finance_collector = FinanceCollector(STATE_DIR, self.history)
+        self.finance_collector = PortfolioFinanceCollector(STATE_DIR, self.history)
         self.finance_state = {}
         from gpu_runtime import GPURuntime
         self.gpu_runtime = GPURuntime()
@@ -489,6 +522,56 @@ class Monitor(tk.Tk):
     def open_gpu_agent(self):
         from gpu_runtime import show_gpu_panel
         show_gpu_panel(self, self.gpu_runtime)
+
+    def select_gpu(self,identifier):
+        self.selected_gpu_uuid=identifier
+        if hasattr(self,'collector'):self.collector.selected_uuid=identifier
+        if hasattr(self,'gpu_runtime'):self.gpu_runtime.select(identifier)
+        if self.last_data:
+            self.apply(project_selected(self.last_data,identifier))
+
+    def configure_gpu(self,identifier):
+        from onboarding import run_setup
+        changed=run_setup(self,selected_uuid=identifier)
+        if changed:
+            self.restart_requested=True;self.close()
+
+    def toggle_gpu(self,identifier,enabled):
+        from tkinter import messagebox
+        try:
+            save_enabled(SETTINGS_PATH,identifier,enabled)
+            from rig import write_request
+            write_request(STATE_DIR,'reconcile',identifier)
+            if enabled and not self.rig_service_running():
+                from onboarding import launch_rig_service
+                launch_rig_service()
+            self.status.configure(text='● Preferência salva · aguardando serviço do rig',fg=ORANGE)
+            if hasattr(self,'collector'):self.collector.rig_reader.detected_at=0
+        except (OSError,ValueError) as error:messagebox.showerror('Configuração da GPU',str(error),parent=self)
+
+    def rig_service_running(self):
+        try:
+            status=json.loads((STATE_DIR/'rig-manager.json').read_text(encoding='utf-8-sig'))
+            pid=int(status.get('pid',0))
+            if not status.get('ready') or pid<=0 or not 0<=time.time()-float(status.get('sampled_at',0))<=15:return False
+            output=run(['tasklist','/FI',f'PID eq {pid}','/FO','CSV','/NH'])
+            return any(len(row)>1 and row[1]==str(pid) for row in csv.reader(output.splitlines()))
+        except (OSError,ValueError,RuntimeError):return False
+
+    def start_rig(self):
+        from onboarding import launch_rig_service
+        from rig import write_request
+        from tkinter import messagebox
+        try:
+            write_request(STATE_DIR,'reconcile')
+            if not self.rig_service_running():launch_rig_service()
+            self.status.configure(text='● Rig solicitado · confira o Windows',fg=ORANGE)
+        except (OSError,ValueError,RuntimeError) as error:messagebox.showerror('Iniciar rig',str(error),parent=self)
+
+    def selected_identity(self):
+        devices=((self.last_data or {}).get('rig') or {}).get('devices') or []
+        device=next((d for d in devices if d['uuid']==getattr(self,'selected_gpu_uuid',None)),devices[0] if devices else {})
+        show_identity(self,device)
 
     def remember_window_state(self):
         state = self.state()
@@ -586,7 +669,7 @@ class Monitor(tk.Tk):
         model = getattr(self, "last_finance_model", {})
         forecast = model.get("forecast") or {}
         payout = model.get("payout") or {}
-        wallet = str(model.get("wallet") or WALLET or "")
+        wallet = str(model.get("wallet") or (f"{model.get('wallet_count',0)} carteiras · Rendimentos" if model.get('scope')=='portfolio' else WALLET) or "")
         money = lambda value: "N/D" if value is None else "R$ " + f"{value:.2f}".replace(".", ",")
         values = {
             "wallet": (wallet[:14] + "…" + wallet[-10:]) if len(wallet) > 28 else (wallet or "Não configurada"),
@@ -604,6 +687,11 @@ class Monitor(tk.Tk):
             "thermal": thermal_description(data.get("thermal_control"), compact=True),
             "history": f"{self.history.info.get('telemetry', (0,))[0]} amostras · {'gravando' if not self.history.last_error else 'aguardando'}",
         }
+        if data.get('rig'):
+            rig=data['rig'];aggregate=rig.get('totals') or {}
+            values['status']=f"Rig: {aggregate.get('mining_count',0)}/{len(rig.get('devices',[]))} minerando · GPU {gpu.get('index',0)} selecionada"
+            values['hash']=fmt(aggregate.get('hashrate_ths'),' TH/s',1)+' · total do rig'
+            values['gpu']=fmt(aggregate.get('max_temperature_c'),' °C máx')+' / '+fmt(aggregate.get('power_w'),' W total',1)
         for key, value in values.items():
             self.summary_values[key].configure(text=value)
 
@@ -611,7 +699,9 @@ class Monitor(tk.Tk):
         self.history.ready.wait(2)
         try:
             previous = json.loads((STATE_DIR / "latest.json").read_text(encoding="utf-8"))
-            if previous.get("collected_at"):
+            # New rig snapshots may project any selected UUID; their committed
+            # samples already live in gpu_telemetry, never import them as GPU0.
+            if previous.get("collected_at") and not previous.get('rig'):
                 self.history.telemetry(previous, source="legacy_snapshot")
         except (OSError, ValueError):
             pass
@@ -668,7 +758,8 @@ class Monitor(tk.Tk):
         self.remember_window_state()
         self.history.preferences({"geometry": getattr(self,"_normal_geometry",None) or self.geometry(),
             "window_state": getattr(self,"_panel_return_state","normal"),
-            "tab": self.tabs.index(self.tabs.select()), "tab_schema": "three-tabs-v1"})
+            "tab": self.tabs.index(self.tabs.select()), "tab_schema": "three-tabs-v1",
+            "selected_gpu_uuid":getattr(self,'selected_gpu_uuid',None)})
 
     def label(self, master, text="", **kwargs):
         return tk.Label(master, text=text, bg=kwargs.pop("bg", BG), fg=kwargs.pop("fg", TEXT),
@@ -710,7 +801,7 @@ class Monitor(tk.Tk):
         self.status.pack(anchor="e", pady=(0, 4))
         buttons = tk.Frame(controls, bg=BG)
         buttons.pack(anchor="e")
-        for text, command in (("Configurar", self.configure_setup), ("Benchmark / IA", self.open_gpu_agent), ("Resumo", self.show_summary), ("Console", self.open_console), ("Recolher", self.hide_to_tray), ("Sair", self.close)):
+        for text, command in (("Configurar", self.configure_setup), ("Iniciar rig", self.start_rig), ("Benchmark / IA", self.open_gpu_agent), ("Resumo", self.show_summary), ("Console", self.open_console), ("Recolher", self.hide_to_tray), ("Sair", self.close)):
             tk.Button(buttons, text=text, command=command, bg=PANEL, fg=TEXT, activebackground=BLUE,
                       activeforeground=TEXT, relief="flat", padx=10, pady=4, font=(BODY_FONT, 9)).pack(side="left", padx=(5, 0))
         style = ttk.Style(self)
@@ -739,7 +830,7 @@ class Monitor(tk.Tk):
     def build_overview(self):
         parent = self.overview_tab
         parent.columnconfigure(0, weight=1)
-        parent.rowconfigure(4, weight=1)
+        parent.rowconfigure(2, weight=0)
         self.overview_values, self.overview_notes = {}, {}
         cards = tk.Frame(parent, bg=BG)
         cards.grid(row=0, column=0, sticky="ew", pady=(9, 6))
@@ -750,7 +841,7 @@ class Monitor(tk.Tk):
         self.overview_thermal = self.label(parent, "Controle térmico: aguardando supervisor", fg=MUTED, anchor="w", font=(BODY_FONT, 9))
         self.overview_thermal.grid(row=1, column=0, sticky="ew", padx=6, pady=(0, 6))
         wallet_panel = tk.Frame(parent, bg=PANEL, padx=12, pady=8, highlightthickness=1, highlightbackground=BORDER)
-        wallet_panel.grid(row=2, column=0, sticky="ew", padx=4, pady=(0, 8))
+        wallet_panel.grid(row=3, column=0, sticky="ew", padx=4, pady=(0, 5))
         self.label(wallet_panel, "CARTEIRA CONFIGURADA PARA RECEBER PEARL (PRL)", bg=PANEL, fg=TEAL, font=(BODY_FONT, 9, "bold")).pack(anchor="w", pady=(0, 4))
         row = tk.Frame(wallet_panel, bg=PANEL)
         row.pack(fill="x")
@@ -767,7 +858,7 @@ class Monitor(tk.Tk):
         self.support_status_label=self.label(wallet_panel,'Ajuda pela ferramenta: aguardando configuração',bg=PANEL,fg=MUTED,font=(BODY_FONT,9))
         self.support_status_label.pack(anchor='w',pady=(3,0))
         payout = tk.Frame(parent, bg=PANEL, padx=12, pady=10, highlightthickness=1, highlightbackground=BORDER)
-        payout.grid(row=3, column=0, sticky="ew", padx=4, pady=(0, 8))
+        payout.grid(row=4, column=0, sticky="ew", padx=4, pady=(0, 5))
         payout.columnconfigure((0, 1), weight=1, uniform="payout")
         self.label(payout, "Próximo pagamento", bg=PANEL, font=(TITLE_FONT, 14, "bold")).grid(row=0, column=0, sticky="w")
         self.payout_threshold = self.label(payout, "Mínimo: N/D", bg=PANEL, fg=MUTED, anchor="e", font=(BODY_FONT, 9))
@@ -779,12 +870,16 @@ class Monitor(tk.Tk):
         right.grid(row=2, column=1, sticky="nsew", padx=(12, 0))
         self.payout_generated_text = self.label(left, "Gerado na pool: N/D", bg=PANEL, anchor="w", font=(BODY_FONT, 9))
         self.payout_generated_text.pack(fill="x")
-        self.payout_generated_bar = ttk.Progressbar(left, style="Generated.Horizontal.TProgressbar", maximum=100, mode="determinate")
-        self.payout_generated_bar.pack(fill="x", pady=(3, 7))
+        generated_track=tk.Frame(left,bg=BG,height=8)
+        generated_track.pack(fill='x',pady=(3,4));generated_track.pack_propagate(False)
+        self.payout_generated_bar = ttk.Progressbar(generated_track, style="Generated.Horizontal.TProgressbar", maximum=100, mode="determinate")
+        self.payout_generated_bar.place(x=0,y=0,relwidth=1,height=8)
         self.payout_confirmed_text = self.label(left, "Confirmado para envio: N/D", bg=PANEL, anchor="w", font=(BODY_FONT, 9))
         self.payout_confirmed_text.pack(fill="x")
-        self.payout_confirmed_bar = ttk.Progressbar(left, style="Confirmed.Horizontal.TProgressbar", maximum=100, mode="determinate")
-        self.payout_confirmed_bar.pack(fill="x", pady=(3, 6))
+        confirmed_track=tk.Frame(left,bg=BG,height=8)
+        confirmed_track.pack(fill='x',pady=(3,4));confirmed_track.pack_propagate(False)
+        self.payout_confirmed_bar = ttk.Progressbar(confirmed_track, style="Confirmed.Horizontal.TProgressbar", maximum=100, mode="determinate")
+        self.payout_confirmed_bar.place(x=0,y=0,relwidth=1,height=8)
         self.payout_remaining = self.label(left, "Pendente / restante: N/D", bg=PANEL, fg=MUTED, anchor="w", justify="left", font=(BODY_FONT, 9))
         self.payout_remaining.pack(fill="x")
         self.payout_eta = self.label(right, "Estimativa: aguardando dados", bg=PANEL, fg=TEAL, font=(TITLE_FONT, 12, "bold"), anchor="w", justify="left")
@@ -796,20 +891,38 @@ class Monitor(tk.Tk):
         self.payout_rule = self.label(payout, "Envio automático a cada hora após mínimo confirmado; crédito depende da rede.", bg=PANEL, fg=MUTED, anchor="w", font=(BODY_FONT, 8))
         self.payout_rule.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(7, 0))
         self.overview_activity = self.label(parent, "Atividade: aguardando dados", bg=PANEL, fg=MUTED, anchor="nw", justify="left", padx=12, pady=9, font=(BODY_FONT, 9))
-        self.overview_activity.grid(row=4, column=0, sticky="nsew", padx=4, pady=(0, 7))
+        self.rig_cards=RigCards(parent,self.select_gpu,self.toggle_gpu,self.configure_gpu)
+        self.rig_cards.grid(row=2,column=0,sticky='nsew',padx=2,pady=(0,4))
+        self.overview_trends=tk.Frame(parent,bg=BG)
+        self.overview_trends.grid(row=5,column=0,sticky='nsew',padx=2,pady=(0,5))
+        self.overview_trends.columnconfigure((0,1),weight=1,uniform='overview-trends')
+        self.overview_trends.rowconfigure(0,weight=1)
+        parent.rowconfigure(5,weight=1)
+        self.overview_charts={}
+        for column,(key,title,color,unit,gap) in enumerate((('hash','Hashrate do rig · esta sessão',TEAL,'TH/s',180),('power','Potência do rig · esta sessão',BLUE,'W',10))):
+            chart=Chart(self.overview_trends,title,color,unit,max_gap=gap)
+            chart.grid(row=0,column=column,sticky='nsew',padx=3,pady=2)
+            self.overview_charts[key]=chart
 
     def build_gpu(self):
         parent = self.live_tab
         parent.columnconfigure(0, weight=1)
         parent.rowconfigure(2, weight=1)
+        selector=tk.Frame(parent,bg=BG)
+        selector.grid(row=0,column=0,sticky='ew',padx=5,pady=(4,0))
+        self.gpu_selection=ttk.Combobox(selector,state='readonly',width=48)
+        self.gpu_selection.pack(side='left',fill='x',expand=True)
+        self.gpu_selection.bind('<<ComboboxSelected>>',lambda e:self.select_gpu(self.gpu_ids[self.gpu_selection.current()]) if self.gpu_selection.current()>=0 else None)
+        tk.Button(selector,text='Identificação completa',command=self.selected_identity,bg=PANEL,fg=TEXT,relief='flat',font=(BODY_FONT,9)).pack(side='left',padx=5)
         cards = tk.Frame(parent, bg=BG)
-        cards.grid(row=0, column=0, sticky="ew", pady=(9, 5))
+        cards.grid(row=1, column=0, sticky="ew", pady=(5, 4))
         for index, (key, title, color) in enumerate((("hash", "HASHRATE", TEAL), ("temp", "TEMPERATURA", ORANGE), ("power", "POTÊNCIA", BLUE), ("fan", "VENTOINHAS", PINK), ("shares", "SHARES ACEITAS", TEAL))):
             self.metric_card(cards, title, color, index, self.card_values, self.card_notes, key)
         self.details = self.label(parent, "Lendo sensores…", fg=MUTED, anchor="w", justify="left", font=(BODY_FONT, 9))
-        self.details.grid(row=1, column=0, sticky="ew", padx=5, pady=(0, 5))
+        self.details.grid(row=2, column=0, sticky="ew", padx=5, pady=(0, 5))
         chart_grid = tk.Frame(parent, bg=BG)
-        chart_grid.grid(row=2, column=0, sticky="nsew")
+        chart_grid.grid(row=3, column=0, sticky="nsew")
+        parent.rowconfigure(2,weight=0);parent.rowconfigure(3,weight=1)
         chart_grid.columnconfigure((0, 1), weight=1, uniform="charts")
         chart_grid.rowconfigure((0, 1), weight=1, uniform="charts")
         self.charts = {}
@@ -818,18 +931,24 @@ class Monitor(tk.Tk):
             chart.grid(row=index//2, column=index%2, sticky="nsew", padx=4, pady=3)
             self.charts[key] = chart
         self.info = self.label(parent, "Pool e sessão: aguardando", fg=MUTED, anchor="w", font=(BODY_FONT, 8))
-        self.info.grid(row=3, column=0, sticky="ew", padx=5, pady=(5, 3))
+        self.info.grid(row=4, column=0, sticky="ew", padx=5, pady=(5, 3))
         self.log_title = self.label(parent, "ÚLTIMOS EVENTOS", fg=TEAL, anchor="w", font=(BODY_FONT, 8, "bold"))
-        self.log_title.grid(row=4, column=0, sticky="ew", padx=5)
+        self.log_title.grid(row=5, column=0, sticky="ew", padx=5)
         self.logs = self.label(parent, "Aguardando atividade", bg=PANEL, fg=MUTED, anchor="nw", justify="left", font=("Consolas", 8), padx=8, pady=5)
-        self.logs.grid(row=5, column=0, sticky="ew", padx=4, pady=(3, 7))
+        self.logs.grid(row=6, column=0, sticky="ew", padx=4, pady=(3, 7))
 
     def build_finance(self):
         parent = self.finance_tab
         parent.columnconfigure(0, weight=1)
         parent.rowconfigure(2, weight=1)
-        self.quote = self.label(parent, "Consultando cotações PRL / BRL / USD / BTC…", fg=TEAL, anchor="w", font=(TITLE_FONT, 12, "bold"))
-        self.quote.grid(row=0, column=0, sticky="ew", padx=5, pady=(10, 4))
+        quote_row=tk.Frame(parent,bg=BG)
+        quote_row.grid(row=0,column=0,sticky='ew',padx=5,pady=(7,4))
+        self.finance_wallet_filter=ttk.Combobox(quote_row,state='readonly',width=23,values=['Todas as carteiras'])
+        self.finance_wallet_filter.current(0)
+        self.finance_wallet_filter.pack(side='right',padx=(6,0))
+        self.finance_wallet_filter.bind('<<ComboboxSelected>>',lambda e:self.refresh_finance())
+        self.quote = self.label(quote_row, "Consultando cotações PRL / BRL / USD / BTC…", fg=TEAL, anchor="w", font=(TITLE_FONT, 12, "bold"))
+        self.quote.pack(side='left',fill='x',expand=True)
         self.quote_note = self.label(parent, "Cotações e pool a cada 60 s", fg=MUTED, anchor="w", font=(BODY_FONT, 8))
         self.quote_note.grid(row=1, column=0, sticky="ew", padx=5, pady=(0, 6))
         table_frame = tk.Frame(parent, bg=BG)
@@ -875,12 +994,17 @@ class Monitor(tk.Tk):
             self.brand_logo = self.logo_images[logo_width]
             self.brand_logo_label.configure(image=self.brand_logo)
         compact = height < 850 or width < 1450
-        if height < 780:
-            self.overview_activity.grid_remove()
-            self.overview_tab.rowconfigure(4, weight=0)
+        self.overview_activity.grid_remove()
+        self.overview_tab.rowconfigure(4,weight=0)
+        if height>=900 and width>=1450:
+            self.overview_trends.grid();self.overview_tab.rowconfigure(5,weight=1)
         else:
-            self.overview_activity.grid()
-            self.overview_tab.rowconfigure(4, weight=1)
+            self.overview_trends.grid_remove();self.overview_tab.rowconfigure(5,weight=0)
+        if hasattr(self,'rig_cards'):self.rig_cards.adapt(width-30)
+        for widget in (self.payout_details,self.payout_source,self.payout_rule):
+            if height<780:widget.pack_forget() if widget is not self.payout_rule else widget.grid_remove()
+            elif widget is self.payout_rule:widget.grid()
+            else:widget.pack(fill='x',pady=(3,0))
         body = 12 if compact else min(19, max(14, round(min(width/1650, height/1000)*14)))
         value_size = 29 if compact else min(46, max(34, round(body*2.4)))
         if not hasattr(self, "_font_baselines"):
@@ -906,6 +1030,29 @@ class Monitor(tk.Tk):
             label.configure(font=(TITLE_FONT, -value_size, "bold"))
         for label in list(self.card_notes.values())+list(self.overview_notes.values()):
             label.configure(font=(BODY_FONT, -body))
+        if height>=780:
+            self.support_status_label.pack(anchor='w',pady=(3,0))
+            self.wallet_entry.master.master.configure(pady=8)
+        if height<780:
+            for label in self.overview_values.values():label.configure(font=(TITLE_FONT,-23,'bold'))
+            for label in self.overview_notes.values():label.configure(font=(BODY_FONT,-10))
+            for label in self.overview_values.values():label.master.title_label.configure(font=(BODY_FONT,-11,'bold'))
+            for label in self.overview_values.values():
+                label.master.title_label.pack_configure(pady=(3,0))
+                self.overview_notes[next(key for key,value in self.overview_values.items() if value is label)].pack_configure(pady=(0,3))
+            self.rig_cards.adapt(width-30)
+            wallet_panel=self.wallet_entry.master.master
+            wallet_panel.configure(pady=4)
+            wallet_panel.winfo_children()[0].configure(font=(BODY_FONT,-10,'bold'))
+            self.wallet_entry.configure(font=('Consolas',-11));self.wallet_entry.pack_configure(ipady=0)
+            self.support_status_label.configure(font=(BODY_FONT,-10))
+            self.support_status_label.pack_forget()
+            for button in (self.wallet_copy_button,self.wallet_pool_button):button.configure(font=(BODY_FONT,-10),pady=2)
+            for widget in (self.payout_state,self.payout_generated_text,self.payout_confirmed_text,self.payout_remaining):widget.configure(font=(BODY_FONT,-11))
+            self.payout_eta.configure(font=(TITLE_FONT,-13,'bold'))
+            self.payout_threshold.configure(font=(BODY_FONT,-10))
+            ttk.Style(self).configure('Generated.Horizontal.TProgressbar',thickness=8)
+            ttk.Style(self).configure('Confirmed.Horizontal.TProgressbar',thickness=8)
         for label in (self.details, self.overview_thermal, self.payout_generated_text, self.payout_confirmed_text, self.payout_remaining, self.payout_details):
             label.configure(font=(BODY_FONT, -body))
         half = max(450, (width-95)//2)
@@ -929,6 +1076,10 @@ class Monitor(tk.Tk):
             chart.title_px = max(13,body)
             chart.axis_px = max(11,body-2)
             chart.draw()
+        if height<780:
+            for widget in (self.payout_state,self.payout_generated_text,self.payout_confirmed_text,self.payout_remaining):widget.configure(font=(BODY_FONT,-11))
+            self.payout_state.master.configure(pady=4)
+            self.payout_remaining.configure(text=self.payout_remaining.cget('text').replace('\n',' · ').replace('Pendente:','Pend.').replace('Falta gerar:','Falta:'))
 
     def refresh_finance(self):
         def timestamp(value):
@@ -936,11 +1087,24 @@ class Monitor(tk.Tk):
             return dt.datetime.fromtimestamp(value).strftime("%d/%m %H:%M") if value else "N/D"
         miner = self.last_data.get("miner", {}) if self.last_data else {}
         fresh = bool(self.last_data and self.last_data.get("miner_running") and miner.get("hashrate_at") and time.time()-miner["hashrate_at"] < 180 and not miner.get("paused"))
-        model = financial_model(self.finance_state, miner.get("average_1m") if fresh else None)
+        devices=((self.last_data or {}).get('rig') or {}).get('devices') or []
+        portfolio=None
+        if self.finance_state.get('schema_version')==2:
+            portfolio=portfolio_model(self.finance_state,devices)
+            wallets=list(portfolio.get('wallet_models',{}))
+            previous=getattr(self,'_finance_wallets',[])
+            index=self.finance_wallet_filter.current()
+            selected=previous[index-1] if 0<index<=len(previous) else None
+            self._finance_wallets=wallets
+            self.finance_wallet_filter.configure(values=['Todas as carteiras']+[w[:12]+'…'+w[-8:] for w in wallets])
+            self.finance_wallet_filter.current(wallets.index(selected)+1 if selected in wallets else 0)
+            model=portfolio_model(self.finance_state,devices,selected_wallet=selected)
+        else:
+            model = financial_model(self.finance_state, miner.get("average_1m") if fresh else None)
         self.last_finance_model = model
-        wallet = str(model.get("wallet") or WALLET or "")
+        wallet = str(model.get("wallet") or ('' if model.get('scope')=='portfolio' else WALLET) or "")
         if self.wallet_var.get() != wallet:
-            self.wallet_var.set(wallet)
+            self.wallet_var.set(wallet or f"{model.get('wallet_count',0)} carteiras · selecione em Rendimentos")
         for button in (self.wallet_copy_button, self.wallet_pool_button):
             button.configure(state="normal" if wallet else "disabled")
         payout = model.get("payout") or {}
@@ -954,7 +1118,7 @@ class Monitor(tk.Tk):
             widget.configure(text=f"{label}: {format_prl(payout.get(key))} / {format_prl(threshold)} · {pct_text}")
             bar.configure(value=max(0,min(100,pct)) if pct is not None else 0)
             bar.state(["!disabled"] if pct is not None else ["disabled"])
-        self.payout_remaining.configure(text="Pendente: " + format_prl(payout.get("unconfirmed_prl")) + "\nFalta gerar: " + format_prl(payout.get("remaining_prl")) + " · " + format_brl(payout.get("remaining_brl")))
+        self.payout_remaining.configure(text="Pendente: " + format_prl(payout.get("unconfirmed_prl")) + (" · " if self.winfo_height()<780 else "\n") + "Falta gerar: " + format_prl(payout.get("remaining_prl")) + " · " + format_brl(payout.get("remaining_brl")))
         self.payout_eta.configure(text=payout.get("eta_label") or "Estimativa indisponível")
         details = [str(payout[key]) for key in ("eta_details","rate_label") if payout.get(key)]
         self.payout_details.configure(text="\n".join(details))
@@ -974,7 +1138,8 @@ class Monitor(tk.Tk):
             values = ((f"{prl:.8f}".replace(".",",") if prl is not None else "N/D"),format_brl(row.get("brl")),("US$ "+f"{usd:,.2f}".replace(",","_").replace(".",",").replace("_",".") if usd is not None else "N/D"),(f"{btc:.8f}".replace(".",",") if btc is not None else "N/D"))
             self.finance_table.item(key, values=values)
         today = currencies.get("day") or {}
-        today_partial = model.get("periods",{}).get("day",{}).get("partial")
+        if portfolio:today=(portfolio.get('currencies') or {}).get('day') or {}
+        today_partial = (portfolio or model).get("periods",{}).get("day",{}).get("partial")
         self.overview_today_title.configure(text="HOJE · PARCIAL · BRL" if today_partial else "GERADO HOJE · BRL")
         today_brl = today.get("brl",model.get("periods",{}).get("day",{}).get("brl"))
         self.overview_values["today"].configure(text=format_brl(today_brl))
@@ -991,7 +1156,8 @@ class Monitor(tk.Tk):
         support_note=' Ajuda opcional de 5% configurada já descontada da projeção.' if (model.get('support_contribution') or {}).get('enabled') else ''
         self.finance_explanation.configure(text=("Observado parcialmente desde "+timestamp(partial.get("since"))+". " if partial.get("partial") else "")+"Conversões equivalentes à cotação atual; o pagamento permanece em PRL. Projeções: 24 h/dia e condições atuais."+support_note)
         self.finance_sources.configure(text="Fontes: Kryptex Pool API · CoinGecko (Pearl pearl-2 / Bitcoin). Semana: segunda até agora, São Paulo. Histórico permanente local.")
-        snapshots = self.finance_state.get("snapshots",[])
+        graph_wallets=[model['selected_wallet']] if model.get('scope')=='wallet' and model.get('selected_wallet') else list(model.get('wallet_models',{})) or None
+        snapshots = portfolio_snapshots(self.finance_state,graph_wallets)
         self.money_chart.points.clear()
         if len(snapshots)>=2 and price:
             baseline=snapshots[0]["total_prl"]
@@ -1005,6 +1171,33 @@ class Monitor(tk.Tk):
             pass
 
     def apply(self, data):
+        devices=(data.get('rig') or {}).get('devices') or []
+        if 'rig' in data and not devices:
+            self.rig_cards.render([],None)
+            self.gpu_ids=[];self.gpu_selection.configure(values=[]);self.gpu_selection.set('Nenhuma GPU NVIDIA detectada')
+            self.selected_gpu_uuid=None
+        if devices:
+            selected=getattr(self,'selected_gpu_uuid',None)
+            if selected not in {d['uuid'] for d in devices}:selected=devices[0]['uuid']
+            self.selected_gpu_uuid=selected
+            data=project_selected(data,selected)
+            if hasattr(self,'collector'):self.collector.selected_uuid=selected
+            if hasattr(self,'gpu_runtime'):
+                self.gpu_runtime.select(selected);self.gpu_runtime.update(data)
+            if hasattr(self,'finance_collector') and hasattr(self.finance_collector,'configure_wallets'):
+                self.finance_collector.configure_wallets({d['wallet'] for d in devices})
+            self.rig_cards.render(devices,selected)
+            self.gpu_ids=[d['uuid'] for d in devices]
+            self.gpu_selection.configure(values=[f"GPU {d['index']} · {d['name']} · {d['uuid'][-8:]} · {'ativa' if d['enabled'] else 'desativada'}" for d in devices])
+            self.gpu_selection.current(self.gpu_ids.index(selected))
+            if getattr(self,'_chart_gpu_uuid',None)!=selected:
+                self._chart_gpu_uuid=selected
+                for chart in self.charts.values():chart.points.clear()
+                if hasattr(self.history,'restore_gpu'):
+                    restored=self.history.restore_gpu(selected,time.time()-900)
+                    for key,points in restored.get('points',{}).items():
+                        if key in self.charts:
+                            for stamp,value in points:self.charts[key].add(stamp,value)
         self.last_data = data
         support=data.get('support_contribution') or {}
         if support.get('ready') and support.get('enabled') and support.get('connected'):
@@ -1049,11 +1242,35 @@ class Monitor(tk.Tk):
         for key in ("hash", "temp", "power"):
             self.overview_values[key].configure(text=self.card_values[key].cget("text"))
             self.overview_notes[key].configure(text=self.card_notes[key].cget("text"))
+        if devices:
+            aggregate=(data['rig'].get('totals') or totals(devices))
+            self.overview_values['hash'].configure(text=fmt(aggregate.get('hashrate_ths'),' TH/s',1))
+            self.overview_notes['hash'].configure(text=f"Rig · {aggregate.get('mining_count',0)}/{len(devices)} minerando")
+            self.overview_values['power'].configure(text=fmt(aggregate.get('power_w'),' W',1))
+            self.overview_notes['power'].configure(text='Consumo de todas as GPUs detectadas')
+            self.overview_values['temp'].configure(text=fmt(aggregate.get('max_temperature_c'),' °C'))
+            self.overview_notes['temp'].configure(text='Maior temperatura do rig')
+            # A new aggregate hash point requires a new underlying miner log
+            # timestamp. Sensor polling must not multiply repeated log samples.
+            signature=tuple((d['uuid'],(d.get('miner') or {}).get('hashrate_at'),bool(d.get('miner_running')),bool(d.get('enabled'))) for d in devices)
+            if signature!=getattr(self,'_overview_hash_signature',None):
+                self._overview_hash_signature=signature
+                observed=[(d.get('miner') or {}).get('hashrate_at') for d in devices if d.get('enabled') and d.get('miner_running') and not (d.get('miner') or {}).get('paused')]
+                observed=[stamp for stamp in observed if isinstance(stamp,(int,float)) and -5<=now-stamp<=180]
+                if observed:self.overview_charts['hash'].add(max(observed),aggregate.get('hashrate_ths'))
+            if aggregate.get('hashrate_ths') is None:self.overview_charts['hash'].add(now,None)
+            self.overview_charts['power'].add(data.get('collected_at',now),aggregate.get('power_w'))
+            for chart in self.overview_charts.values():chart.draw()
+        ignored=(data.get('rig') or {}).get('ignored_devices') or []
         efficiency = hashrate/gpu["power.draw"] if hashrate and gpu.get("power.draw") else None
         thermal_text = thermal_description(data.get("thermal_control"))
         self.overview_thermal.configure(text="Controle térmico: " + thermal_description(data.get("thermal_control"), compact=True))
+        if self.winfo_height()<780:
+            contribution='Ajuda 5% ativa' if support.get('ready') and support.get('enabled') else 'Ajuda 5% configurada' if support.get('enabled') or support.get('configured_enabled') else 'Sem ajuda adicional'
+            self.overview_thermal.configure(text=self.overview_thermal.cget('text')+' · '+contribution)
+        if ignored:self.overview_thermal.configure(text=f"Limite: 6 GPUs · {len(ignored)} dispositivos adicionais fora do rig",fg=ORANGE)
         self.details.configure(text=f"Núcleo {fmt(gpu.get('clocks.gr'), ' MHz')} · Memória {fmt(gpu.get('clocks.mem'), ' MHz')} · VRAM {fmt(gpu.get('memory.used'))} / {fmt(gpu.get('memory.total'), ' MiB')} · Eficiência {fmt(efficiency, ' TH/s/W', 3)}\nDriver {gpu.get('driver_version', '—')} · Estado {gpu.get('pstate', '—')} · Uso GPU {fmt(gpu.get('utilization.gpu'), '%')} / memória {fmt(gpu.get('utilization.memory'), '%')} · Média 15 min {fmt(miner.get('average_15m') if fresh else None, ' TH/s', 1)}\nControle térmico: {thermal_text}", wraplength=max(700, self.winfo_width()-60))
-        self.subtitle.configure(text=f"{gpu.get('name', 'GPU indisponível')} · PRL / pearlhash · atualização a cada 2 s")
+        self.subtitle.configure(text=f"{len(devices)} NVIDIA · GPU {gpu.get('index',0)} selecionada · PRL" if devices else f"{gpu.get('name', 'GPU indisponível')} · PRL")
         for timestamp, rate in miner.get("rate_points", []):
             self.charts["hash"].add(timestamp, rate)
         if not fresh:
@@ -1077,7 +1294,7 @@ class Monitor(tk.Tk):
         if self.history.last_error:
             errors.append("Histórico aguardando gravação: " + self.history.last_error)
         archived = self.history.info.get("telemetry", (0, None, None))[0]
-        self.footer.configure(text=" | ".join(errors) if errors else f"Somente leitura · histórico salvo em SQLite: {archived} amostras · gráficos mostram 15 min · atualização {dt.datetime.fromtimestamp(data['collected_at']).strftime('%H:%M:%S')}")
+        self.footer.configure(text=" | ".join(errors) if errors else f"Histórico permanente · gráficos mostram 15 min · atualização {dt.datetime.fromtimestamp(data['collected_at']).strftime('%H:%M:%S')}")
         STATE_DIR.mkdir(parents=True, exist_ok=True)
         snapshot = {k: v for k, v in data.items() if k != "miner"}
         snapshot["miner"] = {k: v for k, v in miner.items() if k not in ("recent_logs", "rate_points")}
@@ -1134,6 +1351,10 @@ class Monitor(tk.Tk):
             pass
         try:
             restored = self.history_restore.get_nowait()
+            selected=getattr(self,'selected_gpu_uuid',None)
+            if selected and hasattr(self.history,'restore_gpu'):
+                restored_points=self.history.restore_gpu(selected,time.time()-900)
+                restored['points']=restored_points.get('points',{})
             for key, points in restored.get("points", {}).items():
                 self.restored_points[key] = len(points)
                 combined = dict(points)
@@ -1143,6 +1364,7 @@ class Monitor(tk.Tk):
                     self.charts[key].add(stamp, value)
                 self.charts[key].draw()
             preferences = restored.get("preferences", {})
+            if preferences.get('selected_gpu_uuid'):self.selected_gpu_uuid=preferences['selected_gpu_uuid']
             self.restore_window_preferences(preferences)
             if preferences.get("tab") in (0, 1, 2):
                 index = preferences["tab"]
@@ -1198,13 +1420,16 @@ def console_text(snapshot, finance):
     forecast = finance.get("forecast") or {}
     today = finance.get("periods", {}).get("day", {})
     payout = finance.get("payout") or {}
-    wallet = str(finance.get("wallet") or WALLET or "não configurada")
+    wallet = str(finance.get("wallet") or (f"{finance.get('wallet_count',0)} carteiras; selecione uma em Rendimentos" if finance.get('scope')=='portfolio' else WALLET) or "não configurada")
     history = snapshot.get("history", {})
+    rig=snapshot.get('rig') or {}
+    aggregate=rig.get('totals') or {}
     return "\n".join([
         "HASHPILOT  |  TECH FERNANDES",
         "Resumo local do monitor. Ctrl+C fecha somente este console.",
         "="*82,
         (snapshot.get("monitor_status", "Aguardando monitor") if active else "MONITOR SEM ATUALIZACAO - ultimo registro abaixo"),
+        f"Rig total: {fmt(aggregate.get('hashrate_ths'),' TH/s',2)} | {fmt(aggregate.get('power_w'),' W',1)} | {aggregate.get('mining_count',0)} minerando. GPU selecionada: {gpu.get('index',0)} {snapshot.get('selected_gpu_uuid','legado GPU0')}",
         "Carteira de recebimento configurada (Pearl PRL): " + wallet,
         f"Hashrate: {fmt(miner.get('hashrate'), ' TH/s', 2)}    Media 1 min: {fmt(miner.get('average_1m'), ' TH/s', 2)}",
         f"GPU: {fmt(gpu.get('temperature.gpu'), ' C')}  |  Potencia: {fmt(gpu.get('power.draw'), ' W', 1)}  |  Fan: {fmt(gpu.get('fan.speed'), '%')}",

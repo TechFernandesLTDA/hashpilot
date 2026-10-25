@@ -4,16 +4,19 @@ O HashPilot separa coleta, apresentação, cálculo financeiro, persistência e 
 
 ```mermaid
 flowchart LR
-  NVIDIA[nvidia-smi] --> UI[monitor.py / Tkinter]
-  Logs[Logs SRBMiner e supervisor] --> UI
+  NVIDIA[nvidia-smi / até seis UUIDs] --> Telemetry[gpu_telemetry.py]
+  Logs[Logs SRBMiner por UUID] --> Telemetry
+  Telemetry --> UI[monitor.py / rig_panel.py]
   API[Kryptex + CoinGecko] --> Finance[finance.py]
   Finance --> Payout[payout.py / valuation.py]
   Payout --> UI
   UI --> History[history.py / SQLite]
   Finance --> History
-  Policy[thermal.py] --> Controller[thermal_controller.py]
-  Controller --> GPU[Comandos de clock NVIDIA]
-  Controller --> Logs
+  Start[Início explícito] --> Rig[rig.py / processos por UUID]
+  Rig --> Miner[SRBMiner por GPU]
+  Rig --> Controller[gpu_agent.py / supervisor por GPU]
+  Controller --> GPU[Comandos NVIDIA por UUID]
+  Miner --> Logs
 ```
 
 ## Pontos de entrada
@@ -38,6 +41,10 @@ flowchart LR
 | `thermal.py` | Política pura: temperatura e timestamp entram; decisão de clock sai |
 | `thermal_controller.py` | Aplicação real das decisões NVIDIA no perfil suportado |
 | `gpu_agent.py` | Detecção por UUID, benchmark persistente, supervisor NVIDIA explícito e consultor Ollama opcional |
+| `gpu_telemetry.py` | Consulta NVIDIA em lote e parser de log atribuído a uma única GPU |
+| `rig_config.py` | Seleção de até seis UUIDs, habilitação e herança de carteira |
+| `rig.py` / `rig_controller.py` | Ciclo de vida dos processos por GPU, fila de pedidos e snapshots isolados |
+| `rig_panel.py` | Seleção e informações individuais das GPUs na interface |
 | `data/nvidia-gpus.json` | 158 modelos com proveniência NVIDIA; não contém presets universais de overclock |
 | `tray.py` | Ícone e menu nativos Windows, com eventos enviados à thread Tk |
 
@@ -50,7 +57,7 @@ Leituras locais normalmente ocorrem a cada 2 s. A taxa de hash mantém o horári
 
 `history.sqlite3` usa WAL e `synchronous=FULL`. A fila de escrita tenta novamente se o banco estiver ocupado; a interface continua responsiva. O fechamento normal aguarda gravações pendentes. Commits concluídos sobrevivem ao encerramento forçado do processo.
 
-Os registros são separados por carteira e sessão. Não há expurgo automático. A janela de 15 minutos dos gráficos e o cache financeiro de trabalho de 35 dias não apagam o arquivo permanente. `latest.json` e `finance-latest.json` são resumos, não substitutos do banco.
+Os registros são separados por carteira e sessão; as tabelas `gpu_devices` e `gpu_telemetry` preservam também a identidade e as observações por UUID. O histórico anterior de uma GPU permanece disponível e sua importação não deve duplicar linhas. Não há expurgo automático. A janela de 15 minutos dos gráficos e o cache financeiro de trabalho de 35 dias não apagam o arquivo permanente. `latest.json` e `finance-latest.json` são resumos, não substitutos do banco.
 
 O snapshot em `portable-data/` é do autor e tem um manifesto datado. O bootstrap o restaura somente em um perfil sem banco/cache de destino. Restaurar não mescla bancos diferentes nem sobrescreve um banco existente.
 
@@ -68,7 +75,15 @@ A coleta NVIDIA é uma leitura. Instalar/iniciar o minerador e aplicar clocks s�
 
 A RTX 3070 é a referência de hardware validada. O [catálogo](gpu-catalog.md) documenta 158 modelos com fontes primárias, sem validar overclocks. O [agente](gpu-agent.md) mede baseline de 300 s, aceita novo benchmark manual e separa medições por UUID. `--control` habilita o supervisor explicitamente; detecção e benchmark de observação não escrevem na GPU. Ollama na CPU é opcional e não substitui a validação das propostas.
 
-O runtime do painel e o iniciador padrão usam **GPU0**. Perfis por UUID no motor não significam coleta mult GPU na interface; hashrate agregado não deve ser reutilizado como medição de outra placa. O novo iniciador parte dos ajustes atuais do driver, sem copiar clocks RTX 3070. O iniciador histórico e `thermal_controller.py` continuam separados como referência; não se executam dois supervisores concorrentes.
+O runtime acompanha **até seis GPUs NVIDIA**, iguais ou diferentes, por UUID persistente. Uma consulta em lote coleta sensores, enquanto cada instância de minerador tem seu log, supervisor e benchmark. O índice do SRBMiner pode diferir do índice do driver: a associação precisa ser confirmada pelo barramento PCI. Totais e médias globais de um log compartilhado não substituem medições individuais.
+
+O serviço do rig precisa ser iniciado explicitamente; abrir a interface não inicia processos de mineração. Uma GPU nova fica habilitada na configuração por padrão, mas só passa a minerar quando o serviço autorizado a inicia. Alterações de habilitação são reconciliadas por GPU. O gerenciador conserva a identidade dos processos que criou e não encerra processos alheios ou PIDs reutilizados.
+
+`rig-manager.json` e `rig-requests/` ficam no diretório local do aplicativo. Cada UUID possui um diretório em `LOG_DIR/gpus/<UUID>/` com logs, status, `latest.json`, controle exclusivo e `gpu-agent.sqlite3`. Carteiras usam a configuração global ou um override em `gpu_settings`. Veja [caminhos e contratos](multi-gpu.md).
+
+O novo iniciador parte dos ajustes atuais do driver, sem copiar clocks RTX 3070. O iniciador histórico e `thermal_controller.py` continuam separados como referência; não se executam dois supervisores concorrentes na mesma GPU. Migração de uma sessão antiga é uma ação própria, com verificação de identidade e preservação dos logs; atualizar a interface não autoriza assumir um processo externo.
+
+Consultas financeiras são deduplicadas por carteira efetiva. Se seis GPUs usam o mesmo endereço, o saldo é contado uma vez. Carteiras distintas possuem coletores e períodos próprios; ganhos reais por placa não são inferidos da participação no hashrate.
 
 ## Contribuição de tempo
 

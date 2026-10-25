@@ -10,13 +10,13 @@
 |---|---|
 | ![Actual RTX 3070 telemetry and charts](media/screenshots/gpu-mining.png) | ![Observed credits and PRL, BRL, USD and BTC equivalents](media/screenshots/earnings.png) |
 
-Actual application UI in an isolated renderer using real local data. The video includes setup and benchmarking screens; it does not simulate a terminal installation. [Capture provenance](media/README.md).
+The video and screenshots document **v0.1.0 with one GPU**, rendered from real local data. The current version adds an up-to-six-GPU panel. Historical media does not constitute physical validation of six devices. [Capture provenance](media/README.md).
 
 **One RTX 3070, 15-minute observation:** 78.40 TH/s mean, 159.06 W mean, 75.08 °C mean, fan 100%, configured power limit 240 W. Based on 448 sensor samples and 10 independent hashrate updates. These are observed results from one device, not an A/B comparison, universal preset or profit guarantee. [Method and evidence](docs/performance/rtx3070.md).
 
 ![Tech Fernandes](assets/brand/tech-fernandes_github_banner-readme_escuro_1280x400.png)
 
-A local desktop monitor for Pearl (PRL) mining: NVIDIA telemetry, miner activity, persistent history, and earnings expressed in **PRL, BRL, USD and BTC**. The monitoring UI uses Python/Tkinter and the Python standard library.
+A Windows desktop monitor for Pearl (PRL) mining with **up to six NVIDIA GPUs**, including mixed models: per-device telemetry, miner activity, independent benchmarks and bounded tuning, persistent history, and earnings expressed in **PRL, BRL, USD and BTC**. The monitoring UI uses Python/Tkinter and the Python standard library.
 
 ## Windows installation
 
@@ -48,7 +48,9 @@ GPU telemetry requires **NVIDIA `nvidia-smi`**. A **Windows RTX 3070** is the va
 
 The [NVIDIA catalog](docs/gpu-catalog.md) contains **158 models with primary sources**. This validates source provenance, not overclocks on every card. The [local agent](docs/gpu-agent.md) identifies devices by driver/UUID, measures a 300-second baseline, and supports manual benchmarking and explicit adaptive control. CPU-based Ollama is optional and requires no paid API.
 
-**The dashboard and default starter currently use GPU0.** The engine separates profiles by UUID; the UI is not a multi-GPU dashboard. Never attribute aggregate hashrate to another device. The NVIDIA starter uses current driver settings without copying RTX 3070 clocks; the historical validated profile remains a separate reference.
+The dashboard identifies **up to six GPUs by persistent UUID**, including identical models. Every device has an enable/disable setting, a global or individual wallet, its own miner, controller and benchmark. Newly detected devices default to enabled in configuration; **opening the UI never starts mining**. The rig service requires an explicit start. Once authorized, it reconciles the selected devices and stops only the processes belonging to a disabled GPU. Additional devices beyond six are reported and ignored. [Multi-GPU operation](docs/multi-gpu.md).
+
+Hashrate and power can be summed across devices. Actual credits are collected and deduplicated **by wallet**: two GPUs using the same address never duplicate its balance. Hashrate is not used to fabricate per-device realized earnings. Physical evidence remains limited to one RTX 3070; six-device scenarios use simulated tests.
 
 The product supports **Windows 10/11 x64 only**. See [backup and transfer between Windows computers](PORTABILIDADE.md).
 

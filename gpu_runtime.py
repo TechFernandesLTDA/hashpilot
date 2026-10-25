@@ -9,8 +9,59 @@ import tkinter as tk
 from tkinter import ttk
 
 from config import STATE_DIR, LOG_DIR
-from gpu_agent import GPUAgent, OllamaAdvisor, detect_nvidia_gpus
+from gpu_agent import GPUAgent, OllamaAdvisor, BackgroundAdvisor, detect_nvidia_gpus
 from onboarding import read_settings
+from rig_config import resolve_devices
+from gpu_telemetry import read_gpu_samples, read_device_payload
+from rig_panel import totals
+
+def read_json(path):
+    try:return json.loads(Path(path).read_text(encoding='utf-8-sig'))
+    except (OSError,ValueError):return {}
+
+class RigTelemetry:
+    """One batch sensor query; each process/log belongs to an explicit UUID."""
+    def __init__(self):
+        self.detected=[];self.detected_at=0;self.error=None
+    def sample(self,processes=None):
+        now=time.time()
+        if now-self.detected_at>=30:
+            try:self.detected=detect_nvidia_gpus(max_devices=6);self.error=None
+            except Exception as error:self.error=str(error);self.detected=[]
+            self.detected_at=now
+        settings=read_settings()
+        devices=resolve_devices(self.detected,settings,LOG_DIR)
+        manager=read_json(STATE_DIR/'rig-manager.json')
+        manager_fresh=0<=now-float(manager.get('sampled_at',manager.get('updated_at',0)))<=15
+        samples=read_gpu_samples(devices)
+        result=[]
+        for device in devices:
+            identifier=device['uuid'];managed=(manager.get('devices') or {}).get(identifier,{})
+            logs=list(Path(device['log_dir']).glob('*.log'))
+            path=Path(managed['miner_log']) if managed.get('miner_log') else max(logs,key=lambda p:p.stat().st_mtime) if logs else None
+            legacy=False
+            if path is None and device['index']==0:
+                logs=list(LOG_DIR.glob('*.log'))
+                path=max(logs,key=lambda p:p.stat().st_mtime) if logs else None
+                legacy=path is not None
+            pid=managed.get('miner_pid')
+            running=(pid in processes) if pid and processes is not None else False if managed and not pid else None
+            if legacy and not managed:
+                # Match the legacy supervisor PID; another GPU's miner is not GPU0 evidence.
+                legacy_control=read_json(LOG_DIR/'thermal-control.json')
+                legacy_pid=legacy_control.get('miner_pid')
+                running=(legacy_pid in processes) if legacy_pid and processes is not None else None
+            payload=read_device_payload(device,path,miner_running=running,now=now,allow_local_gpu0=True)
+            control=read_json(Path(device['state_dir'])/'gpu-agent-control.json')
+            if legacy and not control:control=read_json(LOG_DIR/'thermal-control.json')
+            if control:
+                control['age_seconds']=now-float(control.get('sampled_at',0));control['stale']=control['age_seconds']>15
+            entry={**device,**payload,'gpu':samples.get(identifier), 'thermal_control':control or None,
+                'state':managed.get('state','legacy_readonly' if legacy else 'disabled' if not device['enabled'] else 'stopped'),
+                'collected_at':now,'support_contribution':{},'manager_stale':bool(managed and not manager_fresh)}
+            result.append(entry)
+        return {'schema_version':2,'devices':result,'totals':totals(result,now),'ignored_devices':manager.get('ignored_devices',manager.get('ignored',[])),
+                'sampled_at':now,'error':self.error,'manager':{'state':manager.get('state'),'stale':not manager_fresh}}
 
 
 class GPURuntime:
@@ -20,20 +71,36 @@ class GPURuntime:
         self.commands=queue.Queue()
         self.lock=threading.Lock()
         self.latest={'state':'starting','reason':'Identificando GPU NVIDIA…'}
+        self.selected_uuid=None
+        self.telemetry={}
         self.thread=threading.Thread(target=self.work,daemon=True,name='gpu-benchmark')
         self.thread.start()
 
-    def snapshot(self):
-        with self.lock: return dict(self.latest)
+    def snapshot(self, gpu_uuid=None):
+        with self.lock:
+            data=dict(self.latest)
+            selected=gpu_uuid or self.selected_uuid
+            if selected and selected in data.get('devices',{}):
+                return {**data['devices'][selected],'devices':data['devices'],'selected_uuid':selected}
+            return data
 
-    def benchmark(self, objective='performance'):
-        self.commands.put(('benchmark',objective))
-        gpu=self.snapshot().get('gpu') or {}
+    def update(self,data):
+        with self.lock:self.telemetry=data
+
+    def select(self,gpu_uuid):
+        self.selected_uuid=gpu_uuid
+
+    def benchmark(self, objective='performance', gpu_uuid=None):
+        identifier=gpu_uuid or self.selected_uuid
+        self.commands.put(('benchmark',objective,identifier))
+        gpu=self.snapshot(identifier).get('gpu') or {}
         if gpu.get('uuid'):
             try:
                 request={'action':'benchmark','gpu_uuid':gpu['uuid'],'objective':objective,'duration_seconds':300,'at':time.time()}
-                LOG_DIR.mkdir(parents=True,exist_ok=True)
-                target=LOG_DIR/'gpu-agent-request.json'
+                from rig_config import gpu_paths
+                directory=Path(gpu_paths(LOG_DIR,gpu['uuid'])['state_dir'])
+                directory.mkdir(parents=True,exist_ok=True)
+                target=directory/'gpu-agent-request.json'
                 temporary=target.with_suffix('.tmp')
                 temporary.write_text(json.dumps(request),encoding='utf-8')
                 temporary.replace(target)
@@ -41,49 +108,52 @@ class GPURuntime:
                 with self.lock: self.latest['request_error']=str(error)
 
     def work(self):
-        agent=GPUAgent(self.state_dir,advisor=OllamaAdvisor())
-        gpu=None
-        decision={}
-        last_advice=0
+        agent=GPUAgent(self.state_dir)
+        advisor=BackgroundAdvisor(OllamaAdvisor())
+        advice_uuid=None
         try:
             while not self.stop.is_set():
-                try:
-                    if gpu is None:
-                        devices=detect_nvidia_gpus()
-                        if not devices: raise RuntimeError('Nenhuma GPU NVIDIA compatível encontrada.')
-                        # Telemetria do monitor atual é da GPU 0. UUID mantém históricos separados.
-                        gpu=next((item for item in devices if int(item['index'])==0),devices[0])
-                    status=agent.status(gpu['uuid'])
-                    if status['state']=='idle' or (status['state']=='complete' and not status.get('validated')):
-                        agent.start_benchmark(gpu,duration_seconds=300)
-                    while not self.commands.empty():
-                        _,objective=self.commands.get_nowait()
-                        agent.start_benchmark(gpu,duration_seconds=300,objective=objective)
-                    data=json.loads((self.state_dir/'latest.json').read_text(encoding='utf-8-sig'))
-                    sample=data.get('gpu') or {}
-                    miner=data.get('miner') or {}
-                    fresh=time.time()-float(data.get('collected_at',0))<=10
-                    if fresh and sample:
-                        status=agent.observe(gpu,sample,hashrate_ths=miner.get('hashrate'),
-                            accepted=miner.get('accepted',0),rejected=miner.get('rejected',0),
-                            hash_sampled_at=miner.get('hashrate_at'))
-                        if time.time()-last_advice>=60:
-                            decision=agent.recommend(gpu,sample,ollama=bool(read_settings().get('ai_enabled')))
-                            last_advice=time.time()
-                    else:
-                        status=agent.status(gpu['uuid'])
-                        status['reason']='Aguardando telemetria recente do monitor e hashrate real.'
+                with self.lock: data=self.telemetry
+                if not data:
+                    data=read_json(self.state_dir/'latest.json')
+                devices=(data.get('rig') or {}).get('devices') or []
+                commands=[]
+                while not self.commands.empty(): commands.append(self.commands.get_nowait())
+                states={}
+                for device in devices:
+                    gpu=device.get('identity') or device
+                    identifier=device['uuid']
                     try:
-                        controller=json.loads((LOG_DIR/'gpu-agent-control.json').read_text(encoding='utf-8-sig'))
-                    except (OSError,ValueError): controller={}
-                    status.update(gpu=gpu,recommendation=decision,controller=controller,
-                        control_mode='observação; controle térmico pertence ao supervisor do minerador',sampled_at=time.time())
-                    with self.lock: self.latest=status
-                except (OSError,ValueError,RuntimeError,KeyError) as error:
-                    with self.lock: self.latest={'state':'unavailable','reason':str(error),'sampled_at':time.time()}
+                        status=agent.status(identifier)
+                        if device.get('enabled') and status['state']=='idle':
+                            agent.start_benchmark(gpu,duration_seconds=300)
+                        for _,objective,target in commands:
+                            if target==identifier:agent.start_benchmark(gpu,duration_seconds=300,objective=objective)
+                        sample=device.get('gpu') or {};miner=device.get('miner') or {}
+                        fresh=0<=time.time()-float(device.get('collected_at',0))<=10
+                        if fresh and sample and not sample.get('error') and device.get('enabled'):
+                            status=agent.observe(gpu,sample,hashrate_ths=miner.get('hashrate') if device.get('miner_running') and not miner.get('paused') else None,
+                                accepted=miner.get('accepted',0),rejected=miner.get('rejected',0),hash_sampled_at=miner.get('hashrate_at'))
+                        plan=agent.recommend(gpu,sample,ollama=False) if sample and not sample.get('error') else {}
+                        if read_settings().get('ai_enabled') and identifier==(self.selected_uuid or devices[0]['uuid']):
+                            if advice_uuid!=identifier:
+                                if advisor.thread is None or (not advisor.thread.is_alive() and time.monotonic()-(advisor.last_started or 0)>=60):
+                                    with advisor.lock:advisor.advice=None;advisor.completed_at=None
+                                    advice_uuid=identifier
+                            if advice_uuid==identifier:
+                                response=advisor.poll({'gpu_uuid':identifier,'sample':sample,'benchmark':status})
+                                plan['ai_status']=response['status']
+                                if response.get('advice'):plan['local_advice']=response['advice']
+                            else:plan['ai_status']='Aguardando janela global da IA local (60 s)'
+                        status.update(gpu=gpu,recommendation=plan,controller=device.get('thermal_control') or {},
+                            control_mode='read-only monitor; exclusive miner supervisor controls hardware',sampled_at=time.time())
+                    except (OSError,ValueError,RuntimeError,KeyError) as error:
+                        status={'state':'unavailable','reason':str(error),'gpu':gpu,'sampled_at':time.time()}
+                    states[identifier]=status
+                selected=self.selected_uuid if self.selected_uuid in states else next(iter(states),None)
+                with self.lock:self.latest={**states.get(selected,{'state':'unavailable','reason':'No NVIDIA telemetry'}),'devices':states,'selected_uuid':selected}
                 self.stop.wait(2)
-        finally:
-            agent.close()
+        finally:agent.close()
 
 
 def show_gpu_panel(parent, runtime):

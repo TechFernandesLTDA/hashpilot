@@ -54,7 +54,19 @@ O monitor e seus cálculos não precisam de um modelo de IA. O assistente opcion
 
 ## O aplicativo acompanha todas as GPUs ao mesmo tempo?
 
-Não. O painel e o iniciador padrão usam GPU0. O motor identifica placas por UUID e separa suas medições, mas não se deve atribuir o hashrate agregado de um minerador a outra GPU. O catálogo de 158 modelos documenta especificações e fontes; não representa 158 overclocks testados.
+O painel acompanha até seis GPUs NVIDIA, iguais ou diferentes, por UUID. Cada placa tem seus próprios sensores, log, minerador, supervisor e benchmark. Placas novas ficam habilitadas na configuração, mas abrir o painel não inicia mineração: o serviço exige início explícito. Dispositivos acima de seis são informados e ignorados. [Operação multiGPU](multi-gpu.md).
+
+## Posso desabilitar uma placa ou usar carteiras diferentes?
+
+Sim. A habilitação fica salva por UUID. Com o serviço de mineração autorizado em execução, desabilitar uma GPU encerra somente seus processos; as demais continuam. Cada placa herda a carteira global ou usa um endereço próprio. Duas placas iguais continuam sendo identificadas separadamente.
+
+## Se várias placas usam minha carteira, o saldo será multiplicado?
+
+Não. Consultas e saldos são deduplicados por endereço efetivo. Hashrate e potência são individuais e podem ser agregados, mas o aplicativo não distribui créditos reais por placa com base na proporção de hashrate. Uma consulta ausente fica indisponível/parcial; não vira zero.
+
+## O suporte a seis GPUs foi validado em seis placas físicas?
+
+Não neste computador. A evidência física disponível é de uma RTX 3070. Os cenários com seis GPUs usam testes simulados de identidade, processos, dados, carteira e benchmark. O catálogo de 158 modelos documenta fontes primárias; não representa 158 overclocks testados. Vídeo, capturas e observação de desempenho da v0.1.0 registram uma única placa.
 
 ## Posso publicar meu backup?
 

@@ -63,7 +63,7 @@ if ($SourcePath) {
     Expand-Archive -LiteralPath $archive -DestinationPath (Join-Path $stage 'expanded')
     $source = Join-Path $stage ('expanded\hashpilot-' + $revision)
 }
-foreach ($required in @('monitor.py','onboarding.py','config.py','contribution.py','assets\brand\hashpilot.ico','mining\windows\downloads.json')) {
+foreach ($required in @('monitor.py','onboarding.py','config.py','contribution.py','rig.py','rig_config.py','rig_controller.py','gpu_telemetry.py','rig_panel.py','assets\brand\hashpilot.ico','mining\windows\downloads.json')) {
     if (-not (Test-Path -LiteralPath (Join-Path $source $required))) { throw ('Incomplete package: ' + $required) }
 }
 Write-Host '[3/5] Installing application (history and settings are preserved)...'

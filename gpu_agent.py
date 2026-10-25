@@ -61,7 +61,32 @@ def validate_device(gpu):
     return gpu
 
 
-def detect_nvidia_gpus(command=smi_command):
+def catalog_identity(name, pci_device_id=None):
+    """Enriquece identidade; fatos do catálogo nunca viram limites de controle."""
+    try:
+        catalog=json.loads((Path(__file__).resolve().parent/"data/nvidia-gpus.json").read_text(encoding="utf-8"))
+        normalized=re.sub(r"\s+"," ",str(name)).strip().casefold()
+        matches=[item for item in catalog["gpus"] if normalized in
+                 {str(value).casefold() for value in [item["name"],*item.get("aliases",[])]}]
+        if len(matches)!=1:
+            return {}
+        item=matches[0]
+        # A contradictory PCI id cannot establish an architecture match.
+        code=re.sub(r"^0x","",str(pci_device_id or ""),flags=re.I).upper()
+        code=code[:4] if len(code)==8 else code
+        if code and code not in item.get("pci_device_ids",[]):
+            return {"catalog_match":"name_only_pci_mismatch"}
+        return {"catalog_id":item["id"],"architecture":item.get("architecture"),
+                "form_factor":item.get("form_factor"),"family":item.get("family"),
+                "catalog_match":"name_and_pci" if code else "name_only",
+                "catalog_sources":item.get("sources",[])}
+    except (OSError,ValueError,KeyError,TypeError):
+        return {}
+
+
+def detect_nvidia_gpus(command=smi_command, max_devices=None):
+    if max_devices is not None and int(max_devices)<=0:
+        return []
     output = command(["--query-gpu=index,name,uuid,pci.bus_id", "--format=csv,noheader,nounits"])
     devices = []
     for row in csv.reader(output.splitlines()):
@@ -72,6 +97,14 @@ def detect_nvidia_gpus(command=smi_command):
             continue
         gpu = {"vendor":"NVIDIA", "index":int(index), "name":name, "uuid":identifier,
                "pci_bus_id":pci, "capabilities_queried_at":time.time(), "supported_graphics_clocks_mhz":[]}
+        for field,key in (("driver_version","driver_version"),("serial","serial"),
+                          ("pci.device_id","pci_device_id"),("pci.sub_device_id","pci_subdevice_id"),
+                          ("vbios_version","vbios_version"),("compute_cap","compute_capability")):
+            try:
+                value=command(["-i",identifier,"--query-gpu="+field,"--format=csv,noheader,nounits"]).strip()
+                gpu[key]=value if value and value.upper() not in ("N/A","[N/A]","NOT SUPPORTED","[NOT SUPPORTED]") else None
+            except (OSError,RuntimeError,subprocess.SubprocessError):
+                gpu[key]=None
         for field, key in (("power.min_limit","power_min_w"),("power.max_limit","power_max_w"),
             ("power.default_limit","power_default_w"),("power.limit","power_limit_w"),
             ("clocks.max.graphics","graphics_max_mhz"),("memory.total","memory_mib"),
@@ -87,7 +120,11 @@ def detect_nvidia_gpus(command=smi_command):
                 if (value:=numeric(line)) is not None and value > 0 and value.is_integer()})
         except (OSError, RuntimeError, subprocess.SubprocessError):
             pass
+        gpu.update(catalog_identity(name,gpu.get("pci_device_id")))
+        gpu.setdefault("architecture",None)
         devices.append(validate_device(gpu))
+        if max_devices is not None and len(devices)>=max(0,int(max_devices)):
+            break
     return devices
 
 
@@ -575,8 +612,12 @@ def main():
     parser.add_argument("--benchmark",action="store_true",help="Mede o minerador ativo; não altera clocks")
     parser.add_argument("--duration",type=int,default=300)
     parser.add_argument("--objective",choices=("performance","efficiency"),default="performance")
-    parser.add_argument("--gpu",type=int,default=0)
+    parser.add_argument("--gpu",type=int,default=None)
     parser.add_argument("--index",type=int,dest="gpu",help="Alias de --gpu")
+    parser.add_argument("--uuid",help="Identidade NVIDIA estável; índice informado precisa corresponder")
+    parser.add_argument("--log-dir",type=Path,help="Diretório exclusivo de logs desta GPU")
+    parser.add_argument("--miner-log",type=Path,help="Log da instância exclusiva do minerador desta GPU")
+    parser.add_argument("--miner-index",type=int,help="Índice SRBMiner confirmado por PCI; pode diferir do índice NVIDIA")
     parser.add_argument("--state-dir",type=Path)
     parser.add_argument("--monitor-state-dir",type=Path)
     parser.add_argument("--control",action="store_true",help="Supervisor NVIDIA explícito; exige --miner-pid e elevação")
@@ -594,21 +635,14 @@ def main():
     if args.snapshot or not args.benchmark:
         print(json.dumps({"gpus":devices,"hardware_writes":False},ensure_ascii=False,indent=2))
         return
-    gpu=next((gpu for gpu in devices if gpu["index"]==args.gpu),None)
-    if not gpu:
-        raise SystemExit("GPU NVIDIA selecionada não encontrada")
+    gpu=select_device(devices,args)
     agent=GPUAgent(state_dir,advisor=OllamaAdvisor() if args.ollama else None)
     agent.start_benchmark(gpu,args.duration,args.objective)
     try:
         while True:
-            snapshot={}
-            try:
-                snapshot=json.loads((state_dir/"latest.json").read_text(encoding="utf-8-sig"))
-            except (OSError,ValueError):
-                pass
-            miner=snapshot.get("miner") or {}
+            miner,fresh=read_miner_data(args,gpu,args.monitor_state_dir or state_dir,len(devices))
             sample=read_sample(gpu)
-            status=agent.observe(gpu,sample,miner.get("hashrate"),miner.get("accepted",0),miner.get("rejected",0),hash_sampled_at=miner.get("hashrate_at"))
+            status=agent.observe(gpu,sample,miner.get("hashrate") if fresh else None,miner.get("accepted",0),miner.get("rejected",0),hash_sampled_at=miner.get("hashrate_at"))
             plan=agent.recommend(gpu,sample,ollama=args.ollama)
             print(json.dumps({"benchmark":status,"proposal":plan,"hardware_writes":False},ensure_ascii=False),flush=True)
             if status["state"]!="running":
@@ -644,17 +678,144 @@ def process_alive(pid):
         return False
 
 
-def external_supervisor_active(*directories):
+def external_supervisor_active(*directories,gpu_uuid=None,gpu_index=None):
     for directory in directories:
         for name in ("thermal-control.json","gpu-agent-control.json"):
             try:
                 status=json.loads((Path(directory)/name).read_text(encoding="utf-8-sig"))
                 pid=status.get("controller_pid")
+                reported=status.get("gpu_uuid") or (status.get("gpu") or {}).get("uuid")
+                if gpu_uuid is not None:
+                    if reported and reported!=gpu_uuid:
+                        continue
+                    if not reported and gpu_index is not None and int(status.get("gpu_index",0))!=int(gpu_index):
+                        continue
                 if pid!=os.getpid() and status.get("enabled") and process_alive(pid):
                     return True
             except (OSError,ValueError,TypeError):
                 pass
     return False
+
+
+def process_identity(pid):
+    """PID mais horário de criação e executável; um PID reutilizado é outro processo."""
+    if not isinstance(pid,int) or pid<=0:
+        return None
+    if os.name=="nt":
+        import ctypes
+        from ctypes import wintypes
+        kernel=ctypes.WinDLL("kernel32",use_last_error=True)
+        kernel.OpenProcess.argtypes=[wintypes.DWORD,wintypes.BOOL,wintypes.DWORD]
+        kernel.OpenProcess.restype=wintypes.HANDLE
+        kernel.GetProcessTimes.argtypes=[wintypes.HANDLE,*([ctypes.POINTER(wintypes.FILETIME)]*4)]
+        kernel.QueryFullProcessImageNameW.argtypes=[wintypes.HANDLE,wintypes.DWORD,wintypes.LPWSTR,ctypes.POINTER(wintypes.DWORD)]
+        kernel.CloseHandle.argtypes=[wintypes.HANDLE]
+        handle=kernel.OpenProcess(0x1000,False,pid)
+        if not handle:
+            return None
+        try:
+            created,exited,system,user=(wintypes.FILETIME() for _ in range(4))
+            if not kernel.GetProcessTimes(handle,ctypes.byref(created),ctypes.byref(exited),ctypes.byref(system),ctypes.byref(user)):
+                return None
+            buffer=ctypes.create_unicode_buffer(32768)
+            length=wintypes.DWORD(len(buffer))
+            if not kernel.QueryFullProcessImageNameW(handle,0,buffer,ctypes.byref(length)):
+                return None
+            return {"created_filetime":(created.dwHighDateTime<<32)|created.dwLowDateTime,"executable":buffer.value.casefold()}
+        finally:
+            kernel.CloseHandle(handle)
+    try:
+        proc=Path("/proc")/str(pid)
+        fields=(proc/"stat").read_text().rsplit(")",1)[1].split()
+        return {"start_ticks":fields[19],"executable":str((proc/"exe").resolve(strict=True))}
+    except (OSError,ValueError,IndexError):
+        return None
+
+
+def same_process(pid,identity):
+    return identity is not None and process_alive(pid) and process_identity(pid)==identity
+
+
+def requested_control_stop(state_dir,gpu_uuid,started_at,now=None):
+    stamp=time.time() if now is None else float(now)
+    try:
+        request=json.loads((Path(state_dir)/"gpu-agent-stop.json").read_text(encoding="utf-8-sig"))
+        requested=numeric(request.get("at"),0)
+        return (request.get("gpu_uuid")==gpu_uuid and request.get("pid")==os.getpid()
+                and requested>=started_at and -2<=stamp-requested<=60)
+    except (OSError,ValueError,AttributeError):
+        return False
+
+
+def select_device(devices,args):
+    identifier=getattr(args,"uuid",None)
+    index=getattr(args,"gpu",None)
+    if identifier:
+        gpu=next((item for item in devices if item["uuid"]==identifier),None)
+        if gpu is not None and index is not None and gpu["index"]!=index:
+            raise RuntimeError("UUID e índice NVIDIA não correspondem; atualização de identidade necessária")
+    else:
+        gpu=next((item for item in devices if item["index"]==(0 if index is None else index)),None)
+    if gpu is None:
+        raise RuntimeError("GPU NVIDIA selecionada não encontrada")
+    miner_index=getattr(args,"miner_index",None)
+    if miner_index is not None:
+        if not isinstance(miner_index,int) or not 0<=miner_index<=255:
+            raise RuntimeError("Índice SRBMiner inválido")
+        gpu={**gpu,"miner_index":miner_index}
+    return validate_device(gpu)
+
+
+def snapshot_device_payload(snapshot,gpu,device_count):
+    """Nunca utiliza hashrate agregado de um rig como se pertencesse a uma GPU."""
+    devices=(snapshot.get("rig") or {}).get("devices",snapshot.get("devices"))
+    if isinstance(devices,dict):
+        entry=devices.get(gpu["uuid"])
+        if isinstance(entry,dict):
+            return entry
+        return None
+    elif isinstance(devices,list):
+        for entry in devices:
+            if not isinstance(entry,dict):
+                continue
+            identity=entry.get("identity") or entry.get("gpu") or entry
+            if identity.get("uuid")==gpu["uuid"] or entry.get("gpu_uuid")==gpu["uuid"]:
+                return entry
+        return None
+    reported=(snapshot.get("gpu") or {}).get("uuid") or ((snapshot.get("gpu_agent") or {}).get("gpu") or {}).get("uuid")
+    if reported==gpu["uuid"]:
+        return snapshot
+    if not reported and device_count==1 and gpu["index"]==0:
+        return snapshot
+    return None
+
+
+def read_miner_data(args,gpu,monitor_state_dir,device_count,now=None):
+    stamp=time.time() if now is None else float(now)
+    path=getattr(args,"miner_log",None)
+    log_dir=getattr(args,"log_dir",None)
+    if path is None and log_dir is not None:
+        paths=list(Path(log_dir).glob("mining-*.log"))
+        path=max(paths,key=lambda item:item.stat().st_mtime) if paths else None
+        if path is None:
+            return {},False
+    if path is not None:
+        from gpu_telemetry import read_device_payload
+        payload=read_device_payload(gpu,path,now=stamp,allow_local_gpu0=True,
+                                    miner_index=getattr(args,"miner_index",None))
+        miner=payload["miner"]
+        hash_stamp=numeric(miner.get("hashrate_at"))
+        return miner,not payload["log_error"] and hash_stamp is not None and 0<=stamp-hash_stamp<=180
+    try:
+        snapshot=json.loads((Path(monitor_state_dir)/"latest.json").read_text(encoding="utf-8-sig"))
+    except (OSError,ValueError):
+        return {},False
+    entry=snapshot_device_payload(snapshot,gpu,device_count)
+    if entry is None:
+        return {},False
+    collected=numeric(entry.get("collected_at"),numeric(snapshot.get("collected_at"),0))
+    miner=entry.get("miner") or {}
+    return miner,0<=stamp-collected<=10
 
 
 def write_status(path,payload):
@@ -674,14 +835,17 @@ def control(args,state_dir,monitor_state_dir):
     if args.duration<300 or args.duration>3600:
         raise ValueError("Controle exige baseline de 300 a 3600 segundos")
     devices=detect_nvidia_gpus()
-    gpu=next((item for item in devices if item["index"]==args.gpu),None)
-    if not gpu:
-        raise RuntimeError("GPU NVIDIA selecionada não encontrada")
+    gpu=select_device(devices,args)
     state_dir,monitor_state_dir=Path(state_dir),Path(monitor_state_dir)
-    if external_supervisor_active(state_dir,monitor_state_dir):
+    def other_supervisor():
+        return external_supervisor_active(state_dir,monitor_state_dir,gpu_uuid=gpu["uuid"],gpu_index=gpu["index"])
+    if other_supervisor():
         raise RuntimeError("Já existe supervisor ativo: o agente fica somente leitura")
     if not process_alive(args.miner_pid):
         raise RuntimeError("Processo do minerador já não está ativo")
+    miner_identity=process_identity(args.miner_pid)
+    if miner_identity is None or Path(miner_identity["executable"]).name.casefold()!="srbminer-multi.exe":
+        raise RuntimeError("Não foi possível confirmar identidade e criação do processo SRBMiner")
     baseline=read_sample(gpu)
     original_power=baseline["power_limit_w"]
     actuator=NvidiaActuator(state_dir,enabled=True,command=smi_command)
@@ -691,8 +855,9 @@ def control(args,state_dir,monitor_state_dir):
     status={"enabled":False,"controller_pid":os.getpid(),"miner_pid":args.miner_pid,"gpu_uuid":gpu["uuid"],
             "gpu_name":gpu["name"],"mode":"baseline","sampled_at":time.time(),"error":None,"writes":0}
     owns=False
+    controller_started_at=time.time()
     try:
-        actuator.acquire(gpu["uuid"],external_controller_active=external_supervisor_active(state_dir,monitor_state_dir))
+        actuator.acquire(gpu["uuid"],external_controller_active=other_supervisor())
         owns=True
         status["enabled"]=True
         agent.start_benchmark(gpu,args.duration,args.objective)
@@ -701,15 +866,13 @@ def control(args,state_dir,monitor_state_dir):
         last_request=0
         last_thermal_adjustment=0
         objective=args.objective
-        while process_alive(args.miner_pid):
-            if external_supervisor_active(state_dir,monitor_state_dir):
+        while same_process(args.miner_pid,miner_identity):
+            if requested_control_stop(state_dir,gpu["uuid"],controller_started_at):
+                status.update(mode="stopped",reason="Parada solicitada pelo gerenciador desta GPU")
+                break
+            if other_supervisor():
                 raise RuntimeError("Outro supervisor detectado; interrompendo controle concorrente")
-            snapshot={}
-            try:
-                snapshot=json.loads((monitor_state_dir/"latest.json").read_text(encoding="utf-8-sig"))
-            except (OSError,ValueError):
-                pass
-            miner=snapshot.get("miner") or {}
+            miner,fresh=read_miner_data(args,gpu,monitor_state_dir,len(devices))
             sample=read_sample(gpu)
             if sample["temperature_c"] is None or sample["temperature_c"]>=thermal_limits(gpu)[1]:
                 raise RuntimeError("Limite térmico ou sensor inválido: supervisor deve encerrar o minerador")
@@ -743,9 +906,6 @@ def control(args,state_dir,monitor_state_dir):
                 pass
             except (ValueError,TypeError):
                 status["request_error"]="Pedido de benchmark inválido; ignorado"
-            reported_uuid=((snapshot.get("gpu_agent") or {}).get("gpu") or {}).get("uuid")
-            matching_gpu=reported_uuid==gpu["uuid"] or (not reported_uuid and len(devices)==1 and gpu["index"]==0)
-            fresh=matching_gpu and 0<=now-numeric(snapshot.get("collected_at"),0)<=10
             if trial_active and not fresh:
                 raise RuntimeError("Monitor sem telemetria atual durante ajuste; encerrando controle")
             result=agent.observe(gpu,sample,miner.get("hashrate") if fresh else None,miner.get("accepted",0),

@@ -4,9 +4,13 @@
 
 ![Tech Fernandes](assets/brand/tech-fernandes_github_banner-readme_escuro_1280x400.png)
 
-Monitor local de mineração Pearl (PRL): telemetria NVIDIA, atividade do minerador, histórico permanente e rendimentos equivalentes em **PRL, BRL, USD e BTC**. Interface desktop Python/Tkinter, sem servidor web ou dependências Python adicionais para o monitor.
+Monitor local de mineração Pearl (PRL) para **até seis GPUs NVIDIA**, iguais ou diferentes: telemetria e benchmark por placa, ajuste dinâmico, histórico permanente e rendimentos equivalentes em **PRL, BRL, USD e BTC**. Interface desktop Python/Tkinter para Windows, sem servidor web ou dependências Python adicionais para o monitor.
 
 ## Veja o aplicativo
+
+![Painel atual com at? seis GPUs NVIDIA ? simula??o de interface](media/v0.2.0/six-gpus-simulation.png)
+
+Painel multiGPU da v0.2.0: **simula??o de seis placas**, com valores fict?cios. [Captura com a RTX 3070 real](media/v0.2.0/overview-real-rtx3070.png) ? [Opera??o e limites da valida??o](docs/multi-gpu.md).
 
 [▶ Demonstração de 44 segundos — vídeo MP4 com legendas em inglês](media/hashpilot-demo.mp4) · [Resultado real da RTX 3070 e metodologia](docs/performance/rtx3070.md)
 
@@ -16,7 +20,7 @@ Monitor local de mineração Pearl (PRL): telemetria NVIDIA, atividade do minera
 |---|---|
 | ![Telemetria e gráficos reais da RTX 3070](media/screenshots/gpu-mining.png) | ![Créditos observados e equivalentes PRL, BRL, USD e BTC](media/screenshots/earnings.png) |
 
-Capturas da interface real, em uma janela isolada alimentada por dados locais reais. O vídeo inclui configuração de carteira e benchmark; não simula uma instalação de terminal nem modifica a mineração. [Origem e reprodução da mídia](media/README.md).
+O vídeo e estas capturas documentam a **versão v0.1.0, com uma GPU**, em uma janela isolada alimentada por dados locais reais. A versão atual acrescenta o painel de até seis GPUs. A mídia histórica não representa uma validação física de seis placas. [Origem e reprodução da mídia](media/README.md).
 
 ## Instalar no Windows
 
@@ -51,7 +55,9 @@ O monitor de hardware usa **NVIDIA `nvidia-smi`**. A **RTX 3070 no Windows** é 
 
 O [catálogo NVIDIA](docs/gpu-catalog.md) reúne **158 modelos com fontes primárias**. Isso valida a origem dos dados, não o overclock de cada placa. O [agente local](docs/gpu-agent.md) identifica GPUs pelo driver/UUID, mede uma baseline de 300 s e permite benchmark manual e controle adaptativo explícito. Ollama na CPU é opcional, sem API paga.
 
-**O painel e o iniciador padrão acompanham GPU0.** O motor separa perfis por UUID, mas isso não torna a interface um painel mult GPU: não atribua hashrate agregado a outra placa. O iniciador NVIDIA usa os ajustes atuais do driver, sem copiar clocks da RTX 3070; o perfil histórico continua separado como referência.
+O painel identifica **até seis placas por UUID persistente**, mesmo quando são do mesmo modelo. Cada GPU possui opção de habilitar/desabilitar, carteira herdada da configuração global ou endereço próprio, minerador, supervisor e benchmark separados. Placas novas ficam habilitadas na configuração; **abrir o painel não inicia mineração**. O serviço do rig é iniciado explicitamente. Depois de autorizado, reconciliará a seleção e encerrará somente os processos da GPU desabilitada. Dispositivos além do limite de seis são informados e ignorados. [Operação multiGPU](docs/multi-gpu.md).
+
+Hashrate e potência podem ser somados por GPU. Créditos reais são consultados e deduplicados **por carteira**: duas placas no mesmo endereço não duplicam o saldo, e hashrate não é usado para inventar ganhos individuais. A validação física disponível continua sendo uma RTX 3070; cenários com seis placas usam testes simulados.
 
 O produto é exclusivo para **Windows 10/11 x64**. Veja [backup e transferência entre computadores Windows](PORTABILIDADE.md).
 

@@ -14,6 +14,14 @@ O HashPilot suporta somente Windows 10/11 x64. Os dados ficam em `%LOCALAPPDATA%
 
 Para transferir dados entre dois computadores Windows, gere um backup consistente pelo exportador abaixo. No destino, preserve qualquer banco já existente antes de importar. A restauração automática atende apenas perfis sem banco/cache local: não mescla históricos. Revise os caminhos de logs e a GPU detectada no destino; resultados e ajustes da unidade de origem não validam outra placa.
 
+## Rigs e identidades físicas
+
+O painel atual acompanha até seis GPUs por UUID. Preserve `settings.json` com `gpu_settings`, o banco `history.sqlite3` com as tabelas `gpu_devices`/`gpu_telemetry` e os diretórios individuais `LOG_DIR/gpus/<UUID>/`, incluindo cada `gpu-agent.sqlite3`. Um UUID de outra máquina não deve ser substituído pelo índice de uma placa apenas porque ambas aparecem como `GPU0` ou têm o mesmo nome.
+
+`rig-manager.json` e `rig-requests/` são estado operacional, não autorização para executar os mesmos PIDs no destino. Não copie uma sessão ativa como se seus processos continuassem válidos em outro computador. Instale o aplicativo, revise UUIDs, habilitação e carteiras e inicie explicitamente o serviço no destino. O histórico legado de uma placa é mantido; a migração não deve apagar registros nem atribuí-los a outra unidade.
+
+O exportador inclui os dados que sua versão conhece. Antes de uma transferência multiGPU, confira o manifesto e preserve separadamente qualquer diretório por UUID que não esteja listado. Não presuma que um snapshot antigo contém bancos ou logs criados em versões posteriores. [Mapa completo dos arquivos](docs/multi-gpu.md#arquivos-e-histórico).
+
 ## Atualizar o backup versionado
 
 Com o monitor aberto ou fechado, execute na raiz do projeto:

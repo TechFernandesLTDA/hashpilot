@@ -1,0 +1,15 @@
+{
+  "captured_at": 1792899232.3148239,
+  "images": [
+    {
+      "file": "overview-real-rtx3070.png",
+      "simulated": false,
+      "captured_at": 1792899234.9865441
+    },
+    {
+      "file": "six-gpus-simulation.png",
+      "simulated": true,
+      "captured_at": 1792899237.437875
+    }
+  ]
+}

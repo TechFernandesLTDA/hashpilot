@@ -9,6 +9,7 @@ import queue
 import threading
 import time
 import urllib.request
+import copy
 
 from config import WALLET, SETTINGS
 from contribution import support_configuration
@@ -28,6 +29,190 @@ if not WALLET:
 LOCAL_TZ = dt.timezone(dt.timedelta(hours=-3), "America/Sao_Paulo")
 
 
+def urls_for_wallet(wallet):
+    result={key:value for key,value in URLS.items() if key in ('price','network')}
+    if wallet:
+        result.update(balance=BASE+'miner/balance/'+wallet,payouts=BASE+'miner/payouts/'+wallet+'/stats',
+            rewards=BASE+'miner/reward-chart/'+wallet,payout_history=BASE+'miner/payouts/'+wallet)
+    return result
+
+
+class SharedMarketFetcher:
+    """Coalesces only public price/network requests; wallet balances stay separate."""
+    def __init__(self,fetcher=None,ttl=45):
+        self.fetcher,self.ttl=fetcher or fetch_json,ttl
+        self.cache={}
+        self.lock=threading.Lock()
+
+    def __call__(self,url):
+        if url not in (URLS.get('price'),URLS.get('network')):
+            return self.fetcher(url)
+        with self.lock:
+            cached=self.cache.get(url)
+            if cached and time.monotonic()-cached[0]<self.ttl:
+                return copy.deepcopy(cached[1])
+            data=self.fetcher(url)
+            self.cache[url]=(time.monotonic(),copy.deepcopy(data))
+            return data
+
+
+class PortfolioFinanceCollector:
+    """One independent cache per public wallet, one balance counted once."""
+    def __init__(self,state_dir,history=None,*,wallets=None,fetcher=None):
+        self.state_dir=Path(state_dir)
+        self.history=history
+        self.stop=threading.Event()
+        self.samples=queue.Queue(maxsize=2)
+        self.lock=threading.Lock()
+        self.wallets=set(wallets or [WALLET])
+        self.collectors={}
+        self.fetcher=SharedMarketFetcher(fetcher or fetch_json)
+        self.state={'schema_version':2,'primary_wallet':WALLET,'wallets':{}}
+
+    def configure_wallets(self,wallets):
+        from contribution import valid_wallet
+        desired={wallet for wallet in wallets if valid_wallet(wallet)}
+        with self.lock: self.wallets=desired or {WALLET}
+
+    def _collector(self,wallet):
+        if wallet not in self.collectors:
+            directory=self.state_dir if wallet==WALLET else self.state_dir/'wallets'/wallet
+            collector=FinanceCollector(directory,self.history,wallet=wallet,fetcher=self.fetcher)
+            if self.history:
+                self.history.ready.wait(2)
+                archived=self.history.finance_state(time.time()-35*86400,wallet=wallet)
+                snapshots={point['timestamp']:point for point in archived.get('snapshots',[])}
+                snapshots.update({point['timestamp']:point for point in collector.state['snapshots']})
+                collector.state['snapshots']=sorted(snapshots.values(),key=lambda point:point['timestamp'])
+                for key,value in archived.get('sources',{}).items():
+                    if value['fetched_at']>collector.state['sources'].get(key,{}).get('fetched_at',0):
+                        collector.state['sources'][key]=value
+            self.collectors[wallet]=collector
+        return self.collectors[wallet]
+
+    def sample(self):
+        with self.lock: wallets=sorted(self.wallets)
+        collectors={wallet:self._collector(wallet) for wallet in wallets}
+        states={}
+        with ThreadPoolExecutor(max_workers=3) as executor:
+            futures={wallet:executor.submit(collector.sample) for wallet,collector in collectors.items()}
+            for wallet,future in futures.items():
+                try: states[wallet]=future.result()
+                except Exception as error:
+                    states[wallet]=copy.deepcopy(collectors[wallet].state)
+                    states[wallet].setdefault('errors',{})['collector']=str(error)
+        self.state={'schema_version':2,'primary_wallet':WALLET,'wallets':states,'attempted_at':time.time()}
+        return copy.deepcopy(self.state)
+
+    def work(self):
+        while not self.stop.is_set():
+            state=self.sample()
+            try: self.samples.put_nowait(state)
+            except queue.Full:
+                try: self.samples.get_nowait()
+                except queue.Empty: pass
+                self.samples.put_nowait(state)
+            self.stop.wait(60)
+
+
+def portfolio_model(state,devices,now=None,selected_wallet=None,*,settings=None):
+    """Sum unique-wallet credits; GPU-level earnings cannot be inferred from a pool balance."""
+    now=time.time() if now is None else now
+    settings=SETTINGS if settings is None else settings
+    wallet_states=state.get('wallets') if state.get('schema_version')==2 else None
+    wallet_states=wallet_states if isinstance(wallet_states,dict) else {state.get('wallet',WALLET):state}
+    wallets={device.get('wallet') or settings.get('wallet',WALLET) for device in devices}
+    if not wallets: wallets={state.get('primary_wallet',WALLET)}
+    hashes={wallet:0.0 for wallet in wallets}
+    missing={wallet:[] for wallet in wallets}
+    for device in devices:
+        miner=device.get('miner') or {}
+        measured=miner.get('hashrate_at')
+        wallet=device.get('wallet') or settings.get('wallet',WALLET)
+        if (device.get('enabled',True) and device.get('miner_running') and measured and 0<=now-measured<=180
+                and not miner.get('paused') and isinstance(miner.get('hashrate'),(int,float))):
+            hashes[wallet]+=max(0,miner['hashrate'])
+        elif device.get('enabled',True) and device.get('miner_running') and not miner.get('paused'):
+            missing[wallet].append(device.get('uuid'))
+    common={}
+    for cached in wallet_states.values():
+        for key in ('price','network'):
+            value=cached.get('sources',{}).get(key)
+            if value and value.get('fetched_at',0)>common.get(key,{}).get('fetched_at',0):common[key]=value
+    models={}
+    for wallet in sorted(wallets):
+        cached=copy.deepcopy(wallet_states.get(wallet,{'wallet':wallet,'sources':{},'snapshots':[]}))
+        for key,value in common.items():
+            if value.get('fetched_at',0)>cached.get('sources',{}).get(key,{}).get('fetched_at',0):cached.setdefault('sources',{})[key]=value
+        models[wallet]=financial_model(cached,None if missing[wallet] else hashes[wallet] or None,now,wallet=wallet,settings=settings)
+        models[wallet]['forecast_missing_gpu_uuids']=missing[wallet]
+    if selected_wallet in models or len(models)==1:
+        key=selected_wallet if selected_wallet in models else next(iter(models))
+        result=copy.deepcopy(models[key])
+        result.update(scope='wallet',selected_wallet=key,wallet_count=len(models),wallet_models=models,
+            hashrate_by_wallet=hashes,forecast_partial=bool(missing[key]),earnings_attribution='wallet_balance_not_individual_gpu')
+        return result
+    first=next(iter(models.values()))
+    result={key:copy.deepcopy(first.get(key)) for key in ('price_brl','price_usd','price_at','price_btc_usd','price_btc_brl','btc_price_at','btc_price_stale')}
+    def total(values):
+        values=list(values)
+        return sum(values) if values and all(value is not None for value in values) else None
+    result.update(scope='portfolio',wallet=None,selected_wallet=None,wallet_count=len(models),wallet_models=models,
+        hashrate_by_wallet=hashes,forecast_partial=any(missing.values()),forecast_missing_gpu_uuids=[identifier for items in missing.values() for identifier in items],
+        earnings_attribution='unique_wallets',periods={},errors={},forecast=None)
+    result['pool_at']=min((model.get('pool_at') or 0 for model in models.values()),default=0) or None
+    result['snapshot_count']=sum(model.get('snapshot_count',0) for model in models.values())
+    for wallet,model in models.items():
+        for key,error in model.get('errors',{}).items(): result['errors'][wallet+':'+key]=error
+    for period in ('day','week','month'):
+        rows=[model['periods'][period] for model in models.values()]
+        amount=total(row.get('prl') for row in rows)
+        result['periods'][period]={'prl':amount,'brl':amount*result['price_brl'] if amount is not None and result['price_brl'] else None,
+            'partial':any(row.get('partial') for row in rows) or amount is None,
+            'since':min((row['since'] for row in rows if row.get('since') is not None),default=None)}
+    for key in ('unpaid_prl','unconfirmed_prl','paid_prl','accumulated_prl'):
+        result[key]=total(model.get(key) for model in models.values())
+    result['accumulated_brl']=result['accumulated_prl']*result['price_brl'] if result['accumulated_prl'] is not None and result['price_brl'] else None
+    active=[model.get('forecast') for wallet,model in models.items() if hashes[wallet]>0]
+    if active and all(active):
+        result['forecast']={key:sum(item.get(key,0) for item in active) for key in ('prl_day','brl_day','brl_7days','brl_30days','hashrate_ths')}
+        result['forecast'].update(scope='unique_wallet_groups',support_fraction=None)
+    confirmed=total(model['payout'].get('confirmed_prl') for model in models.values())
+    result['payout']={'state':'multiple_wallets','state_label':f'{len(models)} carteiras · selecione uma para ver o pagamento',
+        'eta_label':'Estimativa individual por carteira','threshold_prl':None,'remaining_prl':None,
+        'confirmed_prl':confirmed,'unconfirmed_prl':result['unconfirmed_prl'],'total_prl':result['unpaid_prl'],
+        'progress_pct':None,'confirmed_progress_pct':None,'eta_details':'Não existe um único mínimo ou prazo para carteiras diferentes.'}
+    amounts={period:result['periods'][period]['prl'] for period in ('day','week','month')}
+    amounts.update(accumulated=result['accumulated_prl'],unpaid=result['unpaid_prl'],confirmed=confirmed,
+        pending=result['unconfirmed_prl'],paid=result['paid_prl'],forecast7=result['forecast']['prl_day']*7 if result['forecast'] else None,
+        forecast30=result['forecast']['prl_day']*30 if result['forecast'] else None,threshold=None,remaining=None)
+    result['currencies']={key:value_in_currencies(amount,result['price_brl'],result['price_usd'],result['price_btc_usd'],result['price_btc_brl']) for key,amount in amounts.items()}
+    result['support_contribution']={'enabled':any(model.get('support_contribution',{}).get('enabled') for model in models.values()),'scope':'per_wallet'}
+    return result
+
+
+def portfolio_snapshots(state,wallets=None):
+    """Observed as-of totals only after every selected wallet has a first sample."""
+    if state.get('schema_version')!=2:
+        return copy.deepcopy(state.get('snapshots',[]))
+    states=state.get('wallets',{})
+    identifiers=list(dict.fromkeys(wallets or states.keys()))
+    if not identifiers:return []
+    if len(identifiers)==1:return copy.deepcopy(states.get(identifiers[0],{}).get('snapshots',[]))
+    events=[]
+    for wallet in identifiers:
+        snapshots=states.get(wallet,{}).get('snapshots',[])
+        if not snapshots:return []
+        events.extend((point['timestamp'],wallet,point['total_prl']) for point in snapshots)
+    grouped={}
+    for stamp,wallet,value in events:grouped.setdefault(stamp,{})[wallet]=value
+    seen={};result=[]
+    for stamp,values in sorted(grouped.items()):
+        seen.update(values)
+        if len(seen)==len(identifiers):result.append({'timestamp':stamp,'total_prl':sum(seen.values())})
+    return result
+
+
 def fetch_json(url):
     request = urllib.request.Request(url, headers={"User-Agent": "HashPilot/1.0 (Tech Fernandes; local read-only dashboard)", "Accept": "application/json"})
     with urllib.request.urlopen(request, timeout=9) as response:
@@ -35,15 +220,18 @@ def fetch_json(url):
 
 
 class FinanceCollector:
-    def __init__(self, state_dir: Path, history=None):
+    def __init__(self, state_dir: Path, history=None, *, wallet=None, fetcher=None):
+        self.wallet=WALLET if wallet is None else wallet
+        self.urls=urls_for_wallet(self.wallet)
+        self.fetcher=fetcher or fetch_json
         self.path = state_dir / "finance-cache.json"
         self.samples = queue.Queue(maxsize=2)
         self.stop = threading.Event()
-        self.state = {"wallet": WALLET, "sources": {}, "snapshots": []}
+        self.state = {"wallet": self.wallet, "sources": {}, "snapshots": []}
         self.history = history
         try:
             cached = json.loads(self.path.read_text(encoding="utf-8"))
-            if cached.get("wallet") == WALLET:
+            if cached.get("wallet") == self.wallet:
                 self.state = cached
         except (OSError, ValueError):
             pass
@@ -51,7 +239,7 @@ class FinanceCollector:
     def sample(self):
         errors = {}
         with ThreadPoolExecutor(max_workers=6) as executor:
-            futures = {key: executor.submit(fetch_json, url) for key, url in URLS.items()}
+            futures = {key: executor.submit(self.fetcher, url) for key, url in self.urls.items()}
             for key, future in futures.items():
                 try:
                     payload = future.result()
@@ -97,7 +285,7 @@ class FinanceCollector:
         if self.history:
             self.history.ready.wait(2)
             self.history.finance(self.state)  # migração idempotente do JSON legado
-            archived = self.history.finance_state(time.time()-35*86400)
+            archived = self.history.finance_state(time.time()-35*86400,wallet=self.wallet)
             snapshots = {p["timestamp"]: p for p in archived["snapshots"]}
             snapshots.update({p["timestamp"]: p for p in self.state["snapshots"]})
             self.state["snapshots"] = sorted(snapshots.values(), key=lambda p: p["timestamp"])
@@ -121,7 +309,9 @@ class FinanceCollector:
             self.samples.put_nowait(state)
 
 
-def financial_model(state: dict, hashrate_ths: float | None, now: float | None = None):
+def financial_model(state: dict, hashrate_ths: float | None, now: float | None = None, *, wallet=None, settings=None):
+    wallet=WALLET if wallet is None else wallet
+    settings=SETTINGS if settings is None else settings
     now = time.time() if now is None else now
     sources = state.get("sources", {})
     price_source = sources.get("price", {})
@@ -157,7 +347,7 @@ def financial_model(state: dict, hashrate_ths: float | None, now: float | None =
     result["accumulated_brl"] = result["accumulated_prl"]*price if result["accumulated_prl"] is not None and price else None
     network_source = sources.get("network", {})
     network = network_source.get("data", {})
-    contribution = support_configuration(SETTINGS,WALLET)
+    contribution = support_configuration({**settings,'wallet':wallet},wallet)
     result['support_contribution']=contribution
     if hashrate_ths and price and network.get("net_hashrate") and network.get("block_time") and network.get("block_reward"):
         pool_fee = float(network.get("fee", 0))
@@ -169,7 +359,7 @@ def financial_model(state: dict, hashrate_ths: float | None, now: float | None =
                               "brl_30days": prl_day*price*30, "hashrate_ths": hashrate_ths,
                               "pool_fee": pool_fee, "dev_fee": dev_fee, "support_fraction":support_fraction,
                               "support_assumption":"configured_mining_time", "network_at": network_source.get("fetched_at")}
-    result["wallet"] = WALLET
+    result["wallet"] = wallet
     result["payout"] = payout_model(state, result["forecast"], price, now)
     bitcoin = price_source.get("data", {}).get("bitcoin", {})
     result["price_btc_usd"], result["price_btc_brl"] = bitcoin.get("usd"), bitcoin.get("brl")

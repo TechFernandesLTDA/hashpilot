@@ -6,7 +6,7 @@ O HashPilot combina um controlador adaptativo local com um consultor de IA opcio
 
 `gpu_agent.py` detecta GPUs pelo `nvidia-smi`, identifica cada unidade por UUID e consulta seus próprios clocks suportados e limites mínimo, máximo e de fábrica de potência. Uma especificação do catálogo não autoriza um ajuste. Campos que o driver não informa permanecem indisponíveis e bloqueiam o respectivo tipo de escrita.
 
-O motor e o catálogo aceitam apenas NVIDIA. A telemetria e o parser de hashrate atuais da interface correspondem à **GPU 0**. O armazenamento separa UUIDs, mas isso não significa benchmark simultâneo validado de todas as GPUs de um rig. O supervisor exige correspondência de UUID no snapshot; o fallback sem UUID só é permitido com uma única GPU, índice 0.
+O motor e o catálogo aceitam apenas NVIDIA. O painel acompanha **até seis GPUs**, com telemetria e parser de hashrate isolados por UUID. Cada GPU tem sua instância do minerador, log, supervisor e banco de benchmark. O índice do minerador é associado ao barramento PCI e pode diferir do índice `nvidia-smi`. Um snapshot agregado jamais serve como hashrate individual; o fallback legado sem UUID só é permitido com uma única GPU, índice 0. [Operação multiGPU](multi-gpu.md).
 
 As evidências físicas incluídas no repositório são da RTX 3070 do autor. Testes automatizados de outros dispositivos usam respostas simuladas. A presença de um modelo no catálogo não promete suporte a todos os comandos do driver, estabilidade de clocks, suporte do minerador ou rentabilidade.
 
@@ -57,7 +57,7 @@ No supervisor que escreve no hardware, a inferência roda em uma thread separada
 
 ## Histórico e propriedade do controle
 
-`gpu-agent.sqlite3` no diretório local do aplicativo usa WAL e `synchronous=FULL`. As tabelas `benchmarks`, `observations`, `decisions` e `trials` preservam sessões, medições, recomendações, cancelamentos e resultados por UUID. Novo benchmark não apaga sessões anteriores.
+Cada diretório `LOG_DIR/gpus/<UUID>/` possui seu `gpu-agent.sqlite3`, em WAL e `synchronous=FULL`. As tabelas `benchmarks`, `observations`, `decisions` e `trials` preservam sessões, medições, recomendações, cancelamentos e resultados por UUID. Novo benchmark não apaga sessões anteriores. O banco legado permanece preservado; resultados não são transferidos automaticamente para outra identidade física.
 
 `gpu-control-owner.json` funciona como trava exclusiva. Se o processo for encerrado abruptamente e deixar a trava, o sistema bloqueia outro controlador. Antes de recuperar, confirme que o PID registrado não está mais executando, que o minerador foi parado e que nenhum utilitário está ajustando a GPU; então arquive a trava para permitir nova sessão. O aplicativo não apaga automaticamente uma trava cuja posse esteja em dúvida.
 
@@ -77,7 +77,9 @@ Medição somente leitura do minerador que já está rodando:
 mise exec -- python gpu_agent.py --benchmark --duration 300 --objective performance
 ```
 
-O modo `--control` é destinado ao iniciador que acompanha o ciclo de vida do minerador. Não deve ser iniciado em paralelo ao controlador histórico ou a outro utilitário de ajustes. Requer `--miner-pid`, `--state-dir`, `--monitor-state-dir` e elevação no Windows. Um retorno diferente de zero exige que o iniciador encerre o seu minerador.
+O modo `--control` é destinado ao iniciador que acompanha o ciclo de vida do minerador. Não deve ser iniciado em paralelo ao controlador histórico ou a outro utilitário de ajustes da mesma GPU. Requer `--miner-pid`, `--state-dir`, `--monitor-state-dir` e elevação no Windows. O gerenciador fornece também `--uuid`, `--index`, `--miner-index` e `--miner-log` para impedir mistura entre dispositivos. Divergência de UUID/índice é recusada; reutilização do PID por outro processo encerra a supervisão. Um retorno diferente de zero exige que o iniciador encerre somente o minerador que possui.
+
+Uma parada normal usa `gpu-agent-stop.json`, com UUID, PID do supervisor e timestamp recentes. O supervisor rejeita pedidos antigos ou destinados a outra GPU e tenta restaurar os ajustes ao sair. Essa fila não aceita comandos de shell.
 
 Testes locais, sem escrever em uma GPU:
 

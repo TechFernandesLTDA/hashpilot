@@ -62,7 +62,14 @@ class HistoryStore:
           CREATE TABLE IF NOT EXISTS preferences (
             wallet TEXT NOT NULL, name TEXT NOT NULL, data_json TEXT NOT NULL,
             PRIMARY KEY(wallet,name));
-          PRAGMA user_version=1;
+          CREATE TABLE IF NOT EXISTS gpu_devices (
+            gpu_uuid TEXT PRIMARY KEY,first_seen REAL NOT NULL,last_seen REAL NOT NULL,identity_json TEXT NOT NULL);
+          CREATE TABLE IF NOT EXISTS gpu_telemetry (
+            gpu_uuid TEXT NOT NULL,timestamp REAL NOT NULL,wallet TEXT NOT NULL,session TEXT NOT NULL,
+            source TEXT NOT NULL,gpu_json TEXT,miner_json TEXT NOT NULL,miner_running INTEGER,
+            enabled INTEGER,errors_json TEXT,log_path TEXT,PRIMARY KEY(gpu_uuid,timestamp));
+          CREATE INDEX IF NOT EXISTS gpu_telemetry_wallet_time ON gpu_telemetry(wallet,timestamp);
+          PRAGMA user_version=2;
         """)
         connection.commit()
 
@@ -79,18 +86,24 @@ class HistoryStore:
         for line in data.get("miner", {}).get("recent_logs", "").splitlines():
             key = hashlib.sha256(((data.get("log_path") or "")+"\n"+line).encode()).hexdigest()
             self.submit("event", {"timestamp": data["collected_at"], "key": "log:"+key,
-                                  "kind": "miner_log", "data": {"line": line, "path": data.get("log_path")}})
+                                  "kind": "miner_log", "wallet": data.get("wallet"), "data": {"line": line, "path": data.get("log_path")}})
 
     def finance(self, state):
         self.submit("finance", json.loads(encode(state)))
 
+    def rig_telemetry(self, rig):
+        devices=rig.get('devices',[])
+        if len(devices)>6 or len({item['uuid'] for item in devices})!=len(devices):
+            raise ValueError('Amostra do rig precisa conter até seis UUIDs únicos')
+        self.submit('rig_telemetry',json.loads(encode(rig)))
+
     def preferences(self, data):
         self.submit("preferences", data)
 
-    def event(self, timestamp, kind, data, key=None):
-        self.submit("event", {"timestamp": timestamp, "key": key or uuid.uuid4().hex, "kind": kind, "data": data})
+    def event(self, timestamp, kind, data, key=None, *, wallet=None):
+        self.submit("event", {"timestamp": timestamp, "key": key or uuid.uuid4().hex, "kind": kind, "data": data,'wallet':wallet})
 
-    def archive_log(self, path: Path):
+    def archive_log(self, path: Path, *, gpu_uuid=None, wallet=None):
         """Segue o arquivo completo, inclusive rajadas maiores que o tail da UI."""
         import datetime as dt
         import re
@@ -109,7 +122,7 @@ class HistoryStore:
                 match = stamp_pattern.match(line)
                 stamp = dt.datetime.strptime(match[1], "%Y-%m-%d %H:%M:%S").timestamp() if match else time.time()
                 key = "log:"+hashlib.sha256((str(path)+"\n"+line).encode()).hexdigest()
-                self.event(stamp, "miner_log", {"line": line, "path": str(path)}, key)
+                self.event(stamp, "miner_log", {"line": line, "path": str(path),'gpu_uuid':gpu_uuid}, key,wallet=wallet)
             self.log_offsets[str(path)] = handle.tell()
 
     def archive_thermal(self, path: Path):
@@ -140,7 +153,7 @@ class HistoryStore:
             data, source = payload["data"], payload["source"]
             errors = {k: data.get(k) for k in ("gpu_error", "process_error", "log_error") if data.get(k)}
             connection.execute("INSERT OR IGNORE INTO telemetry VALUES(?,?,?,?,?,?,?,?,?)", (
-                self.wallet, data["collected_at"], self.session, source,
+                data.get('wallet') or self.wallet, data["collected_at"], self.session, source,
                 encode(data.get("gpu")), encode(data.get("miner", {})),
                 data.get("miner_running"), encode(errors), data.get("log_path")))
             miner = data.get("miner", {})
@@ -149,15 +162,27 @@ class HistoryStore:
                 self.write(connection, "event", {"timestamp": data["collected_at"], "key": "status:"+str(data["collected_at"]),
                     "kind": "status_changed", "data": {"miner_running": status[0], "paused": status[1], "connection": status[2], "errors": errors, "log_path": status[4]}})
                 self.last_status = status
+        elif kind == 'rig_telemetry':
+            for device in payload.get('devices',[]):
+                identifier=device['uuid']
+                stamp=device.get('collected_at',payload.get('collected_at',time.time()))
+                identity={key:device.get(key) for key in ('uuid','index','name','vendor','pci_bus_id','pci_device_id','pci_sub_device_id','pci_subdevice_id','vbios_version','driver_version','serial','architecture','memory_mib')}
+                connection.execute('INSERT INTO gpu_devices VALUES(?,?,?,?) ON CONFLICT(gpu_uuid) DO UPDATE SET last_seen=excluded.last_seen,identity_json=excluded.identity_json',
+                    (identifier,stamp,stamp,encode(identity)))
+                errors={key:device.get(key) for key in ('gpu_error','log_error','process_error','configuration_error') if device.get(key)}
+                connection.execute('INSERT OR IGNORE INTO gpu_telemetry VALUES(?,?,?,?,?,?,?,?,?,?,?)',
+                    (identifier,stamp,device.get('wallet') or self.wallet,self.session,'live',encode(device.get('gpu')),
+                     encode(device.get('miner') or {}),device.get('miner_running'),device.get('enabled',True),encode(errors),device.get('log_path')))
         elif kind == "event":
             connection.execute("INSERT OR IGNORE INTO events VALUES(?,?,?,?,?,?)", (
-                self.wallet, payload["key"], payload["timestamp"], self.session, payload["kind"], encode(payload["data"])))
+                payload.get('wallet') or self.wallet, payload["key"], payload["timestamp"], self.session, payload["kind"], encode(payload["data"])))
         elif kind == "finance":
+            wallet=payload.get('wallet') or self.wallet
             connection.executemany("INSERT OR IGNORE INTO finance_snapshots VALUES(?,?,?)", [
-                (self.wallet, point["timestamp"], point["total_prl"]) for point in payload.get("snapshots", [])])
+                (wallet, point["timestamp"], point["total_prl"]) for point in payload.get("snapshots", [])])
             for key, source in payload.get("sources", {}).items():
                 connection.execute("INSERT OR IGNORE INTO finance_sources VALUES(?,?,?,?)", (
-                    self.wallet, key, source["fetched_at"], encode(source["data"])))
+                    wallet, key, source["fetched_at"], encode(source["data"])))
             if payload.get("errors"):
                 stamp = payload.get("attempted_at", time.time())
                 self.write(connection, "event", {"timestamp": stamp, "key": "finance-error:"+str(stamp),
@@ -241,14 +266,46 @@ class HistoryStore:
         except (sqlite3.Error, ValueError) as error:
             return {"points": {}, "preferences": {}, "count": 0, "error": str(error)}
 
-    def finance_state(self, since):
+    def restore_gpu(self,gpu_uuid,since,wallet=None):
         try:
+            query='SELECT timestamp,gpu_json,miner_json FROM gpu_telemetry WHERE gpu_uuid=? AND timestamp>=?'
+            parameters=[gpu_uuid,since]
+            if wallet is not None:
+                query+=' AND wallet=?'
+                parameters.append(wallet)
+            rows=self.read(query+' ORDER BY timestamp',parameters)
+            points={key:{} for key in ('hash','temp','power','fan')}
+            for stamp,gpu_json,miner_json in rows:
+                gpu,miner=json.loads(gpu_json) or {},json.loads(miner_json)
+                measured=miner.get('hashrate_at')
+                if measured and measured>=since and 0<=stamp-measured<=180 and miner.get('hashrate') is not None:
+                    points['hash'][measured]=miner['hashrate']
+                for key,field in (('temp','temperature.gpu'),('power','power.draw'),('fan','fan.speed')):
+                    if gpu.get(field) is not None: points[key][stamp]=gpu[field]
+            identity=self.read('SELECT identity_json FROM gpu_devices WHERE gpu_uuid=?',(gpu_uuid,))
+            return {'points':{key:sorted(values.items()) for key,values in points.items()},'count':len(rows),
+                'identity':json.loads(identity[0][0]) if identity else {}}
+        except (sqlite3.Error,ValueError) as error:
+            return {'points':{},'count':0,'identity':{},'error':str(error)}
+
+    def gpu_stats(self,gpu_uuid=None):
+        query='SELECT gpu_uuid,COUNT(*),MIN(timestamp),MAX(timestamp) FROM gpu_telemetry'
+        params=()
+        if gpu_uuid is not None:
+            query+=' WHERE gpu_uuid=?'
+            params=(gpu_uuid,)
+        try: return {row[0]:list(row[1:]) for row in self.read(query+' GROUP BY gpu_uuid',params)}
+        except sqlite3.Error: return {}
+
+    def finance_state(self, since, wallet=None):
+        try:
+            wallet=self.wallet if wallet is None else wallet
             snapshots = [{"timestamp": stamp, "total_prl": total} for stamp, total in self.read(
-                "SELECT timestamp,total_prl FROM finance_snapshots WHERE wallet=? AND timestamp>=? ORDER BY timestamp", (self.wallet, since))]
+                "SELECT timestamp,total_prl FROM finance_snapshots WHERE wallet=? AND timestamp>=? ORDER BY timestamp", (wallet, since))]
             sources = {}
-            for key, stamp, payload in self.read("SELECT source,MAX(fetched_at),data_json FROM finance_sources WHERE wallet=? GROUP BY source", (self.wallet,)):
+            for key, stamp, payload in self.read("SELECT source,MAX(fetched_at),data_json FROM finance_sources WHERE wallet=? GROUP BY source", (wallet,)):
                 sources[key] = {"fetched_at": stamp, "data": json.loads(payload)}
-            return {"wallet": self.wallet, "snapshots": snapshots, "sources": sources}
+            return {"wallet": wallet, "snapshots": snapshots, "sources": sources}
         except (sqlite3.Error, ValueError):
             return {"wallet": self.wallet, "snapshots": [], "sources": {}}
 

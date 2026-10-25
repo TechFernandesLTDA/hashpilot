@@ -9,7 +9,9 @@ from unittest.mock import patch
 from types import SimpleNamespace
 
 from gpu_agent import (GPUAgent, NvidiaActuator, OllamaAdvisor, detect_nvidia_gpus,
-                       thermal_limits, validated_plan, control, BackgroundAdvisor)
+                       thermal_limits, validated_plan, control, BackgroundAdvisor,
+                       select_device,read_miner_data,external_supervisor_active)
+from gpu_agent import process_identity,same_process,requested_control_stop
 
 
 def device(identifier="GPU-test-3070"):
@@ -281,12 +283,74 @@ class OllamaAndActuatorTests(unittest.TestCase):
         self.assertIsNone(result[0]["power_min_w"])
         self.assertEqual(result[0]["supported_graphics_clocks_mhz"],[])
 
+    def test_full_identity_preserves_optional_serial_pci_vbios_and_catalog_architecture(self):
+        values={"driver_version":"580.95","serial":"[N/A]","pci.device_id":"0x248410DE",
+                "pci.sub_device_id":"0x12341043","vbios_version":"94.04.46.00.01","compute_cap":"8.6"}
+        def command(arguments):
+            if arguments[0].startswith("--query-gpu=index,name"):
+                return "0, NVIDIA GeForce RTX 3070, GPU-test-3070, 00000000:01:00.0"
+            query=next((part.removeprefix("--query-gpu=") for part in arguments if part.startswith("--query-gpu=")),None)
+            if query in values:
+                return values[query]
+            raise RuntimeError("Not supported")
+        result=detect_nvidia_gpus(command)[0]
+        self.assertIsNone(result["serial"])
+        self.assertEqual(result["pci_device_id"],"0x248410DE")
+        self.assertEqual(result["vbios_version"],"94.04.46.00.01")
+        self.assertEqual(result["architecture"],"Ampere")
+        self.assertEqual(result["catalog_match"],"name_and_pci")
+
+    def test_uuid_selection_rejects_index_mismatch_instead_of_controlling_other_card(self):
+        devices=[{**device(f"GPU-test-{index}"),"index":index} for index in range(6)]
+        self.assertEqual(select_device(devices,SimpleNamespace(uuid="GPU-test-5",gpu=5))["index"],5)
+        with self.assertRaises(RuntimeError):
+            select_device(devices,SimpleNamespace(uuid="GPU-test-5",gpu=0))
+
+    def test_rig_snapshot_extracts_only_selected_gpu_and_never_aggregate_hashrate(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            gpu={**device("GPU-test-5"),"index":5}
+            payload={"collected_at":1000,"miner":{"hashrate":999},"rig":{"devices":[
+                {"identity":{"uuid":f"GPU-test-{index}"},"miner":{"hashrate":index+10,"hashrate_at":999}}
+                for index in range(6)]}}
+            path=Path(temporary)/"latest.json"
+            path.write_text(json.dumps(payload),encoding="utf-8")
+            miner,fresh=read_miner_data(SimpleNamespace(),gpu,temporary,6,now=1001)
+            self.assertEqual(miner["hashrate"],15)
+            self.assertTrue(fresh)
+            del payload["rig"]
+            path.write_text(json.dumps(payload),encoding="utf-8")
+            miner,fresh=read_miner_data(SimpleNamespace(),gpu,temporary,6,now=1001)
+            self.assertEqual(miner,{})
+            self.assertFalse(fresh)
+            payload["rig"]={"devices":{"GPU-other":{"miner":{"hashrate":555}}}}
+            path.write_text(json.dumps(payload),encoding="utf-8")
+            single_gpu={**gpu,"index":0}
+            miner,fresh=read_miner_data(SimpleNamespace(),single_gpu,temporary,1,now=1001)
+            self.assertEqual(miner,{})
+            self.assertFalse(fresh)
+
+    def test_other_gpu_supervisor_does_not_block_selected_gpu(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            path=Path(temporary)/"gpu-agent-control.json"
+            path.write_text(json.dumps({"enabled":True,"controller_pid":123456,"gpu_uuid":"GPU-test-0"}))
+            with patch("gpu_agent.process_alive",return_value=True):
+                self.assertFalse(external_supervisor_active(temporary,gpu_uuid="GPU-test-5",gpu_index=5))
+                self.assertTrue(external_supervisor_active(temporary,gpu_uuid="GPU-test-0",gpu_index=0))
+
+    def test_legacy_thermal_supervisor_without_uuid_belongs_only_to_gpu_zero(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            (Path(temporary)/"thermal-control.json").write_text(json.dumps({"enabled":True,"controller_pid":123456}))
+            with patch("gpu_agent.process_alive",return_value=True):
+                self.assertFalse(external_supervisor_active(temporary,gpu_uuid="GPU-test-5",gpu_index=5))
+                self.assertTrue(external_supervisor_active(temporary,gpu_uuid="GPU-test-0",gpu_index=0))
+
     def test_control_baseline_does_not_tune_and_cleanup_restores_driver(self):
         with tempfile.TemporaryDirectory() as temporary:
             gpu=device()
             commands=[]
             args=SimpleNamespace(duration=300,gpu=0,miner_pid=123,ollama=False,objective="performance",samples=1)
             with patch("gpu_agent.detect_nvidia_gpus",return_value=[gpu]), \
+                 patch("gpu_agent.process_identity",return_value={"created_filetime":1,"executable":"SRBMiner-MULTI.exe"}), \
                  patch("gpu_agent.process_alive",return_value=True), \
                  patch("gpu_agent.external_supervisor_active",return_value=False), \
                  patch("gpu_agent.read_sample",side_effect=lambda gpu:sample(time.time())), \
@@ -322,6 +386,7 @@ class OllamaAndActuatorTests(unittest.TestCase):
                 def close(self): pass
             args=SimpleNamespace(duration=300,gpu=0,miner_pid=123,ollama=False,objective="performance",samples=1)
             with patch("gpu_agent.detect_nvidia_gpus",return_value=[device()]), \
+                 patch("gpu_agent.process_identity",return_value={"created_filetime":1,"executable":"SRBMiner-MULTI.exe"}), \
                  patch("gpu_agent.process_alive",return_value=True), \
                  patch("gpu_agent.external_supervisor_active",return_value=False), \
                  patch("gpu_agent.read_sample",side_effect=lambda gpu:sample(time.time())), \
@@ -333,6 +398,26 @@ class OllamaAndActuatorTests(unittest.TestCase):
             status=json.loads((Path(temporary)/"gpu-agent-control.json").read_text())
             self.assertEqual(status["mode"],"insufficient_data")
             self.assertEqual(status["writes"],0)
+
+    def test_pid_reuse_does_not_keep_supervisor_active(self):
+        identity={"created_filetime":100,"executable":"SRBMiner-MULTI.exe"}
+        replacement={"created_filetime":200,"executable":"SRBMiner-MULTI.exe"}
+        with patch("gpu_agent.process_alive",return_value=True),patch("gpu_agent.process_identity",return_value=replacement):
+            self.assertFalse(same_process(123,identity))
+
+    def test_stop_request_requires_recent_current_pid_and_matching_uuid(self):
+        import os
+        with tempfile.TemporaryDirectory() as temporary:
+            path=Path(temporary)/"gpu-agent-stop.json"
+            payload={"gpu_uuid":"GPU-test-5","pid":os.getpid(),"at":1001}
+            path.write_text(json.dumps(payload))
+            self.assertTrue(requested_control_stop(temporary,"GPU-test-5",1000,now=1002))
+            self.assertFalse(requested_control_stop(temporary,"GPU-test-0",1000,now=1002))
+            self.assertFalse(requested_control_stop(temporary,"GPU-test-5",1000,now=1100))
+            self.assertFalse(requested_control_stop(temporary,"GPU-test-5",1002,now=1003))
+            payload["pid"]=os.getpid()+1
+            path.write_text(json.dumps(payload))
+            self.assertFalse(requested_control_stop(temporary,"GPU-test-5",1000,now=1002))
 
 
 if __name__=="__main__":
