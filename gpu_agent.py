@@ -4,6 +4,7 @@ Importar, detectar, observar e recomendar nunca altera o hardware. Escritas fica
 isoladas em NvidiaActuator, desativado por padrão e protegido por posse exclusiva.
 """
 from __future__ import annotations
+from ai_advisor import RoutedAdvisor
 
 import argparse
 from contextlib import contextmanager
@@ -212,7 +213,7 @@ class BackgroundAdvisor:
         try:
             advice=self.advisor.advise(context)
             error=None
-        except (OSError,ValueError,KeyError,TypeError,TimeoutError,URLError) as failure:
+        except (OSError,ValueError,KeyError,TypeError,TimeoutError,URLError,sqlite3.Error) as failure:
             advice=None
             error=str(failure)[:160]
         with self.lock:
@@ -223,17 +224,18 @@ class BackgroundAdvisor:
         stamp=time.monotonic() if now is None else float(now)
         with self.lock:
             alive=self.thread is not None and self.thread.is_alive()
-            if not alive and (self.last_started is None or stamp-self.last_started>=self.interval):
+            interval=max(self.interval,3600 if isinstance(self.advisor,RoutedAdvisor) and self.advisor.settings().get("ai",{}).get("provider") in ("openrouter","opencode") and self.advice is not None else 60)
+            if not alive and (self.last_started is None or stamp-self.last_started>=interval):
                 self.last_started=stamp
                 # Only immutable telemetry leaves this loop; the result remains a suggestion.
                 copied=json.loads(json.dumps(context))
-                self.thread=threading.Thread(target=self._work,args=(copied,),daemon=True,name="ollama-advisor")
+                self.thread=threading.Thread(target=self._work,args=(copied,),daemon=True,name="hashpilot-advisor")
                 self.thread.start()
                 alive=True
             fresh=self.completed_at is not None and 0<=stamp-self.completed_at<=90
             return {"advice":dict(self.advice) if self.advice is not None and fresh else None,
-                "status":"local_ollama" if self.advice is not None and fresh else
-                         "unavailable: "+self.error if self.error and not alive else "pending: análise local em segundo plano"}
+                "status":getattr(self.advisor,"label","local_ollama") if self.advice is not None and fresh else
+                         "unavailable: "+self.error if self.error and not alive else "pending: IA em segundo plano"}
 
 
 class GPUAgent:
@@ -636,7 +638,7 @@ def main():
         print(json.dumps({"gpus":devices,"hardware_writes":False},ensure_ascii=False,indent=2))
         return
     gpu=select_device(devices,args)
-    agent=GPUAgent(state_dir,advisor=OllamaAdvisor() if args.ollama else None)
+    agent=GPUAgent(state_dir,advisor=RoutedAdvisor(__import__("config").STATE_DIR))
     agent.start_benchmark(gpu,args.duration,args.objective)
     try:
         while True:
@@ -846,7 +848,7 @@ def control(args,state_dir,monitor_state_dir):
     baseline=read_sample(gpu)
     original_power=baseline["power_limit_w"]
     actuator=NvidiaActuator(state_dir,enabled=True,command=smi_command)
-    agent=GPUAgent(state_dir,advisor=OllamaAdvisor() if args.ollama else None)
+    agent=GPUAgent(state_dir,advisor=RoutedAdvisor(__import__("config").STATE_DIR))
     background_advisor=BackgroundAdvisor(agent.advisor) if agent.advisor else None
     status_path=state_dir/"gpu-agent-control.json"
     status={"enabled":False,"controller_pid":os.getpid(),"miner_pid":args.miner_pid,"gpu_uuid":gpu["uuid"],
@@ -909,7 +911,7 @@ def control(args,state_dir,monitor_state_dir):
                                  miner.get("rejected",0),hash_sampled_at=miner.get("hashrate_at"))
             status.update(sampled_at=now,sample=sample,benchmark=result)
             answer=None
-            if background_advisor and result.get("elapsed_seconds",0)>=60:
+            if background_advisor and agent.advisor.settings().get("ai_enabled") is True and result.get("elapsed_seconds",0)>=60:
                 answer=background_advisor.poll({"sample":sample,"benchmark":{key:result.get(key) for key in
                     ("validated","mean_hashrate_ths","mean_power_w","efficiency_ths_per_w")},"allowed_actions":list(ACTIONS)})
                 status["ai_status"]=answer["status"]

@@ -2,15 +2,49 @@
   "@context": "https://doi.org/10.5063/schema/codemeta-2.0",
   "@type": "SoftwareSourceCode",
   "name": "HashPilot",
-  "description": "Windows Pearl (PRL) mining dashboard for up to six NVIDIA GPUs: UUID-scoped miners, telemetry, benchmarks and bounded adaptive tuning, wallet-deduplicated earnings, persistent history and optional local Ollama AI.",
+  "description": "Windows Pearl (PRL) mining dashboard for up to six NVIDIA GPUs: UUID-scoped miners, telemetry, benchmarks and bounded adaptive tuning, wallet-deduplicated earnings, persistent history and optional OpenRouter/OpenCode Cloud Free or local Ollama advice.",
   "codeRepository": "https://github.com/TechFernandesLTDA/hashpilot",
   "issueTracker": "https://github.com/TechFernandesLTDA/hashpilot/issues",
   "license": "https://spdx.org/licenses/GPL-3.0-only.html",
-  "programmingLanguage": ["Python", "PowerShell"],
-  "operatingSystem": ["Windows 10 x64", "Windows 11 x64"],
+  "programmingLanguage": [
+    "Python",
+    "PowerShell"
+  ],
+  "operatingSystem": [
+    "Windows 10 x64",
+    "Windows 11 x64"
+  ],
   "runtimePlatform": "Python 3.14 with Tkinter",
-  "author": [{"@type": "Organization", "name": "Tech Fernandes", "url": "https://github.com/TechFernandesLTDA"}],
-  "keywords": ["NVIDIA", "GeForce", "GTX", "RTX", "Pearl", "PRL", "mining", "mining rig", "multi-GPU", "GPU UUID", "SRBMiner", "GPU benchmark", "Ollama", "local AI", "SQLite", "BRL", "USD", "BTC"],
+  "author": [
+    {
+      "@type": "Organization",
+      "name": "Tech Fernandes",
+      "url": "https://github.com/TechFernandesLTDA"
+    }
+  ],
+  "keywords": [
+    "NVIDIA",
+    "GeForce",
+    "GTX",
+    "RTX",
+    "Pearl",
+    "PRL",
+    "mining",
+    "mining rig",
+    "multi-GPU",
+    "GPU UUID",
+    "SRBMiner",
+    "GPU benchmark",
+    "Ollama",
+    "local AI",
+    "SQLite",
+    "BRL",
+    "USD",
+    "BTC",
+    "OpenRouter",
+    "OpenCode",
+    "Cloud Free"
+  ],
   "readme": "https://github.com/TechFernandesLTDA/hashpilot/blob/main/README.md",
   "softwareHelp": "https://github.com/TechFernandesLTDA/hashpilot/blob/main/docs/index.md"
 }

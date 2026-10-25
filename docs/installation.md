@@ -43,7 +43,7 @@ A interface detecta até seis GPUs NVIDIA iguais ou diferentes e mantém habilit
 
 ## IA gratuita e local
 
-A opção de IA instala Ollama pelo winget e baixa `qwen2.5:0.5b`. Isso exige download adicional, espaço em disco e memória RAM. O HashPilot solicita inferência na **CPU** (`num_gpu=0`) para evitar disputar a GPU com a mineração. Não é necessário token ou assinatura. O modelo só sugere ações enumeradas; o código valida os limites antes de qualquer ajuste. Sem Ollama disponível, o estado informa a indisponibilidade e usa a política adaptativa.
+A IA pode usar OpenRouter Cloud Free, OpenCode Cloud Free pelo cliente ou Ollama local. Escolha o provedor no assistente; somente a opção local baixa Ollama/modelo. Veja [configuração e condições](ai-providers.md).
 
 ## Atualização e histórico
 
@@ -67,3 +67,5 @@ Dados permanentes ficam separados da instalação em `%LOCALAPPDATA%\PearlMonito
 Para executar de um clone no Windows: `mise install`, depois `mise exec -- python monitor.py --setup`. O aplicativo está disponível somente para Windows 10/11 de 64 bits.
 
 Referências do instalador: [instalação oficial do mise](https://mise.jdx.dev/getting-started.html), [arquivos de repositório e ZIPs no GitHub](https://docs.github.com/en/rest/repos/contents#download-a-repository-archive-zip).
+
+AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e Ollama local](ai-providers.md). A política adaptativa funciona sem IA.

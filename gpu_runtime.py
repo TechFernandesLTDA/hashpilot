@@ -9,7 +9,8 @@ import tkinter as tk
 from tkinter import ttk
 
 from config import STATE_DIR, LOG_DIR
-from gpu_agent import GPUAgent, OllamaAdvisor, BackgroundAdvisor, detect_nvidia_gpus
+from gpu_agent import GPUAgent, BackgroundAdvisor, detect_nvidia_gpus
+from ai_advisor import RoutedAdvisor, configuration
 from onboarding import read_settings
 from rig_config import resolve_devices
 from gpu_telemetry import read_gpu_samples, read_device_payload
@@ -109,7 +110,7 @@ class GPURuntime:
 
     def work(self):
         agent=GPUAgent(self.state_dir)
-        advisor=BackgroundAdvisor(OllamaAdvisor())
+        advisor=BackgroundAdvisor(RoutedAdvisor(self.state_dir))
         advice_uuid=None
         try:
             while not self.stop.is_set():
@@ -135,16 +136,23 @@ class GPURuntime:
                             status=agent.observe(gpu,sample,hashrate_ths=miner.get('hashrate') if device.get('miner_running') and not miner.get('paused') else None,
                                 accepted=miner.get('accepted',0),rejected=miner.get('rejected',0),hash_sampled_at=miner.get('hashrate_at'))
                         plan=agent.recommend(gpu,sample,ollama=False) if sample and not sample.get('error') else {}
-                        if read_settings().get('ai_enabled') and identifier==(self.selected_uuid or devices[0]['uuid']):
+                        ai_settings=read_settings()
+                        ai_config=configuration(ai_settings)
+                        control=device.get('thermal_control') or {}
+                        if ai_settings.get('ai_enabled') and ai_config['provider']!='ollama':
+                            # The miner controller owns cloud consultations; the UI never duplicates them.
+                            plan['ai_status']=control.get('ai_status') or 'Cloud configurada; aguardando supervisor/consulta'
+                            if control.get('proposal'):plan['cloud_proposal']=control['proposal']
+                        elif ai_settings.get('ai_enabled') and identifier==(self.selected_uuid or devices[0]['uuid']):
                             if advice_uuid!=identifier:
-                                if advisor.thread is None or (not advisor.thread.is_alive() and time.monotonic()-(advisor.last_started or 0)>=60):
+                                if advisor.thread is None or not advisor.thread.is_alive():
                                     with advisor.lock:advisor.advice=None;advisor.completed_at=None
                                     advice_uuid=identifier
                             if advice_uuid==identifier:
-                                response=advisor.poll({'gpu_uuid':identifier,'sample':sample,'benchmark':status})
+                                response=advisor.poll({'sample':sample,'benchmark':status})
                                 plan['ai_status']=response['status']
                                 if response.get('advice'):plan['local_advice']=response['advice']
-                            else:plan['ai_status']='Aguardando janela global da IA local (60 s)'
+                        else:plan['ai_status']='Desativada; controle adaptativo ativo'
                         status.update(gpu=gpu,recommendation=plan,controller=device.get('thermal_control') or {},
                             control_mode='read-only monitor; exclusive miner supervisor controls hardware',sampled_at=time.time())
                     except (OSError,ValueError,RuntimeError,KeyError) as error:
@@ -158,13 +166,13 @@ class GPURuntime:
 
 def show_gpu_panel(parent, runtime):
     window=tk.Toplevel(parent)
-    window.title('Benchmark e IA local — NVIDIA')
+    window.title('Benchmark e IA — NVIDIA')
     window.configure(bg='#0A1628')
     window.geometry('820x530')
     window.minsize(650,460)
     window.columnconfigure(0,weight=1)
     text=tk.StringVar()
-    title=tk.Label(window,text='Benchmark por GPU • IA local gratuita',font=('Segoe UI',17,'bold'),bg='#0A1628',fg='#12A98E')
+    title=tk.Label(window,text='Benchmark por GPU • IA local ou Cloud Free',font=('Segoe UI',17,'bold'),bg='#0A1628',fg='#12A98E')
     title.grid(row=0,column=0,sticky='w',padx=20,pady=15)
     label=tk.Label(window,textvariable=text,justify='left',anchor='nw',font=('Segoe UI',11),bg='#0A1628',fg='white',wraplength=760)
     label.grid(row=1,column=0,sticky='nsew',padx=20,pady=5)
@@ -175,6 +183,7 @@ def show_gpu_panel(parent, runtime):
     buttons.grid(row=3,column=0,sticky='ew',padx=20,pady=15)
     tk.Button(buttons,text='Benchmark 5 min · desempenho',command=runtime.benchmark,padx=8,pady=8).pack(side='left',padx=(0,8))
     tk.Button(buttons,text='Benchmark 5 min · eficiência',command=lambda:runtime.benchmark('efficiency'),padx=8,pady=8).pack(side='left')
+    tk.Button(buttons,text='Configurar IA',command=lambda:__import__('ai_setup').show_ai_setup(window),padx=8,pady=8).pack(side='left',padx=6)
     tk.Button(buttons,text='Fechar',command=window.destroy,padx=8,pady=8).pack(side='right')
     def refresh():
         if not window.winfo_exists(): return
@@ -195,7 +204,7 @@ def show_gpu_panel(parent, runtime):
             f"IA: {plan.get('ai_status','aguardando análise')} · Sugestão: {plan.get('action','hold')}",
             str(plan.get('reason','')),
             'Este painel observa e recomenda. Ajustes são aplicados pelo supervisor exclusivo do minerador.',
-            'Histórico por UUID é preservado. A IA usa Ollama na CPU; não executa comandos de texto.'
+            'Histórico por UUID preservado. Escolha o provedor em Configurar IA; a política local valida as sugestões.'
         ]))
         progress['value']=state.get('progress',0)*100
         label.configure(wraplength=max(500,window.winfo_width()-40))

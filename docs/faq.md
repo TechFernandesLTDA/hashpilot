@@ -50,7 +50,7 @@ O Windows usa PerMonitorV2 quando disponível, maximização nativa na área út
 
 ## A IA é obrigatória? Precisa de API paga?
 
-O monitor e seus cálculos não precisam de um modelo de IA. O assistente opcional usa Ollama na CPU, sem API paga. A política adaptativa continua disponível sem o modelo. A IA propõe ações limitadas; não certifica estabilidade de qualquer GPU. Veja [agente NVIDIA](gpu-agent.md).
+O monitor, benchmark e controle adaptativo funcionam sem IA. Para CPU simples, há OpenRouter Cloud Free e OpenCode Cloud Free pelo cliente; Ollama local permanece opcional. Veja [provedores e cotas](ai-providers.md).
 
 ## O aplicativo acompanha todas as GPUs ao mesmo tempo?
 
@@ -79,8 +79,10 @@ O código usa [GPL-3.0-only](../LICENSE). A marca e os logos Tech Fernandes não
 
 ## O minerador parou; o computador hibernou?
 
-Uma parada de minera??o n?o prova suspens?o. Cruze o hor?rio dos logs com a continuidade de `history.sqlite3` e os eventos de energia do Windows. O desligamento da tela tamb?m n?o indica hiberna??o.
+Uma parada de mineração n?o prova suspensão. Cruze o hor?rio dos logs com a continuidade de `history.sqlite3` e os eventos de energia do Windows. O desligamento da tela tamb?m n?o indica hibernação.
 
-Se o controlador registrar `WinError 5` ao substituir um JSON de status, existe uma falha de acesso ao arquivo. Um bloqueio tempor?rio de leitura ou de outro software pode impedir a substitui??o; o erro sozinho n?o identifica qual processo o causou. A grava??o at?mica tenta novamente por at? um segundo, mantendo o JSON anterior completo. Um bloqueio persistente continua sendo reportado como erro, sem desativar as prote??es do controlador.
+Se o controlador registrar `WinError 5` ao substituir um JSON de status, existe uma falha de acesso ao arquivo. Um bloqueio tempor?rio de leitura ou de outro software pode impedir a substitui??o; o erro sozinho n?o identifica qual processo o causou. A gravação at?mica tenta novamente por at? um segundo, mantendo o JSON anterior completo. Um bloqueio persistente continua sendo reportado como erro, sem desativar as prote??es do controlador.
 
-O painel ignora `reset.log` ao escolher o log legado de minera??o: esse arquivo pertence ? restaura??o da GPU e pode usar uma conex?o local propositalmente inv?lida. Sua mensagem de reconex?o n?o descreve a sa?de da conex?o real com a pool.
+O painel ignora `reset.log` ao escolher o log legado de mineração: esse arquivo pertence ? restauração da GPU e pode usar uma conex?o local propositalmente inv?lida. Sua mensagem de reconex?o n?o descreve a sa?de da conex?o real com a pool.
+
+AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e Ollama local](ai-providers.md). A política adaptativa funciona sem IA.

@@ -205,10 +205,13 @@ def run_setup(parent=None,selected_uuid=None) -> bool:
     if os.name != 'nt': check.configure(state='disabled')
     label('O SRBMiner tem SHA256 conferido. O controle NVIDIA solicita elevação do Windows. A carteira de um minerador ativo só muda ao reiniciá-lo.',9,MUTED,10)
     label('Histórico permanente por carteira • você pode voltar em Configurar a qualquer momento.',10,MUTED,10)
-    ai_check=tk.Checkbutton(window,text='Ativar IA local grátis (Ollama + modelo na CPU)',variable=ai,bg=BG,fg=TEXT,selectcolor=PANEL,activebackground=BG,activeforeground=TEXT,anchor='w',font=('Segoe UI',-14))
-    ai_check.grid(row=11,column=0,sticky='ew',padx=20,pady=4)
-    if os.name != 'nt': ai_check.configure(state='disabled')
-    label('Opcional: baixa Ollama e um modelo local. Sem API paga; usa memória e processamento da CPU.',12,MUTED,10)
+    ai_check=tk.Checkbutton(window,text='Ativar sugestões de IA',variable=ai,bg=BG,fg=TEXT,selectcolor=PANEL,activebackground=BG,activeforeground=TEXT,anchor='w',font=('Segoe UI',-14))
+    ai_check.grid(row=11,column=0,sticky='w',padx=20,pady=4)
+    def choose_ai():
+        __import__('ai_setup').show_ai_setup(window)
+        ai.set(read_settings().get('ai_enabled') is True)
+    tk.Button(window,text='Escolher provedor de IA',command=choose_ai).grid(row=11,column=0,sticky='e',padx=24)
+    label('Escolha OpenRouter, OpenCode ou Ollama local no assistente de IA. Cloud Free poupa CPU/RAM do rig.',12,MUTED,10)
     window.rowconfigure(13,weight=1)
     buttons=tk.Frame(window,bg=BG)
     buttons.grid(row=14,column=0,sticky='e',padx=24,pady=12)
@@ -216,7 +219,8 @@ def run_setup(parent=None,selected_uuid=None) -> bool:
         nonlocal saved
         try:
             save_settings(wallet.get(),logs.get(),support_enabled=support.get(),ai_enabled=ai.get())
-            if ai.get(): launch_ai_setup()
+            if ai.get() and not read_settings().get("ai"):
+                __import__("ai_setup").show_ai_setup(window)
             if mine.get(): launch_mining_setup(wallet.get().strip())
         except (ValueError,OSError,RuntimeError) as error:
             messagebox.showerror('Configuração',str(error),parent=window)

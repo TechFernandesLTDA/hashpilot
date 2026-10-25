@@ -8,9 +8,9 @@ Monitor local de mineração Pearl (PRL) para **até seis GPUs NVIDIA**, iguais 
 
 ## Veja o aplicativo
 
-![Painel atual com at? seis GPUs NVIDIA ? simula??o de interface](media/v0.2.0/six-gpus-simulation.png)
+![Painel atual com até seis GPUs NVIDIA ? simulação de interface](media/v0.2.0/six-gpus-simulation.png)
 
-Painel multiGPU da v0.2.0: **simula??o de seis placas**, com valores fict?cios. [Captura com a RTX 3070 real](media/v0.2.0/overview-real-rtx3070.png) ? [Opera??o e limites da valida??o](docs/multi-gpu.md).
+Painel multiGPU da v0.2.0: **simulação de seis placas**, com valores fict?cios. [Captura com a RTX 3070 real](media/v0.2.0/overview-real-rtx3070.png) ? [Operação e limites da validação](docs/multi-gpu.md).
 
 [▶ Demonstração de 44 segundos — vídeo MP4 com legendas em inglês](media/hashpilot-demo.mp4) · [Resultado real da RTX 3070 e metodologia](docs/performance/rtx3070.md)
 
@@ -82,3 +82,5 @@ Dados locais: `%LOCALAPPDATA%\PearlMonitor`.
 [Contribuir](CONTRIBUTING.md) · [Reportar bug](https://github.com/TechFernandesLTDA/hashpilot/issues/new?template=bug_report.yml) · [Pedir recurso](https://github.com/TechFernandesLTDA/hashpilot/issues/new?template=feature_request.yml) · [Segurança](SECURITY.md)
 
 O código está sob **GPL-3.0-only**: [LICENSE](LICENSE). A marca e os logos Tech Fernandes não são licenciados sob GPL; veja [NOTICE](NOTICE) e a [origem dos ativos](assets/brand/ORIGEM.md).
+
+AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e Ollama local](docs/ai-providers.md). A política adaptativa funciona sem IA.

@@ -556,7 +556,7 @@ class RigManager:
             if reference_rtx3070 and not migrate_legacy_uuid:
                 current=next((gpu for gpu in self.detector() if gpu.get("uuid")==reference_uuid),None)
                 if not current or not reference_device_confirmed(current):
-                    raise RuntimeError("UUID ou limites da GPU de refer?ncia n?o confirmados")
+                    raise RuntimeError("UUID ou limites da GPU de referência não confirmados")
                 self.reference_uuid=reference_uuid
             if adopt_legacy: self.adopt_legacy()
             if migrate_legacy_uuid:

@@ -73,3 +73,5 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 - [Brand and third-party notices](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/NOTICE)
 
 Testing: mise exec -- python -m unittest discover -v. UI/windowing QA is opt-in and must distinguish physical displays from virtual 4K cases. Do not run mining or apply clocks merely to inspect the application.
+
+AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e Ollama local](docs/ai-providers.md). A política adaptativa funciona sem IA.

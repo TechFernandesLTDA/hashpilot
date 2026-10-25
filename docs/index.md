@@ -40,3 +40,5 @@
 - Código GPL-3.0-only; marca e logos separados conforme [NOTICE](../NOTICE).
 - Produto exclusivo Windows 10/11 x64.
 - Instalação ou simples monitoramento não são autorização implícita para alterar clocks de outra GPU.
+
+AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e Ollama local](ai-providers.md). A política adaptativa funciona sem IA.

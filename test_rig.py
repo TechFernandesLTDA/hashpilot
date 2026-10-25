@@ -386,7 +386,7 @@ class RigManagerTests(unittest.TestCase):
 
     def test_unknown_reference_start_fails_before_any_process(self):
         self.manager.shutting_down=True
-        with self.assertRaisesRegex(RuntimeError,"n?o confirmados"):
+        with self.assertRaisesRegex(RuntimeError,"não confirmados"):
             self.manager.serve(reference_rtx3070=True,reference_uuid="GPU-test-0")
         self.assertIsNone(self.manager.reference_uuid)
         self.assertEqual(self.backend.started,[])

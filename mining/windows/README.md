@@ -8,7 +8,7 @@ O assistente do HashPilot permite instalar o minerador separadamente do monitor 
 
 `Iniciar-Pearl.ps1` usa **GPU0** e os ajustes atuais do driver. Não copia clocks, offset, memória ou ventoinhas da RTX 3070 para outros modelos. Depois de iniciar o minerador, inicia `gpu_agent.py --control` com baseline de **300 segundos**. O supervisor exige elevação e posse exclusiva: não deve concorrer com outro controlador. Consulte [agente NVIDIA](../../docs/gpu-agent.md).
 
-O agente separa capacidades e medições por UUID. A interface atual continua coletando GPU0; não use hashrate agregado como benchmark de outra placa. Novo benchmark manual usa a GPU identificada, e os ajustes dependem dos limites informados pelo driver e das medições reais. Ollama na CPU é opcional; a política adaptativa não exige API paga.
+O agente separa capacidades, medições, mineradores e supervisores por UUID para até seis NVIDIA. O hashrate de outra placa nunca é usado como benchmark desta unidade.
 
 O [catálogo de 158 modelos](../../docs/gpu-catalog.md) documenta fontes primárias NVIDIA. Não contém 158 presets validados nem certifica estabilidade, suporte do driver ou compatibilidade com Pearl.
 
@@ -25,3 +25,5 @@ Os binários de terceiros não são versionados. `downloads.json` registra URLs 
 O produto e os scripts de mineração e controle são exclusivos para Windows. Código sob [GPL-3.0-only](../../LICENSE); marca e componentes de terceiros seguem seus avisos em [NOTICE](../../NOTICE).
 
 A [contribuição opcional](../../docs/contribution.md) reserva 5% do tempo quando outra carteira é usada: 57 minutos para ela e 3 para o autor, via proxy TCP sem reiniciar GPU ou minerador. A opção pode ser desativada no assistente. A carteira padrão do autor não adiciona uma divisão extra; a devfee de 2% do SRBMiner permanece distinta.
+
+AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e Ollama local](../../docs/ai-providers.md). A política adaptativa funciona sem IA.

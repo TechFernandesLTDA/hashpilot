@@ -1,6 +1,6 @@
 # Agente NVIDIA, benchmark e ajustes dinâmicos
 
-O HashPilot combina um controlador adaptativo local com um consultor de IA opcional via Ollama. O controlador funciona sem conta, token ou API paga. O modelo de linguagem só escolhe entre ações enumeradas; o programa valida temperatura, dados recentes, limites reais do driver e posse exclusiva antes de escrever no hardware.
+O HashPilot combina um controlador adaptativo local com consultores opcionais: Ollama local, OpenRouter Cloud Free e OpenCode Cloud Free pelo cliente. O programa valida cada sugestão antes de alterar o hardware.
 
 ## O que é medido e o que foi validado
 
@@ -45,15 +45,11 @@ O alívio térmico tem prioridade durante a própria medição: a partir de 76 �
 
 O perfil histórico RTX 3070 possui limites e histerese próprios, documentados em [CONTROLE-TERMICO.md](../CONTROLE-TERMICO.md). O agente recusa adquirir controle se detectar esse supervisor em execução. Atualizar o monitor não troca o controlador de uma mineração já em andamento.
 
-## IA local gratuita
+## IA local ou Cloud Free
 
-Quando habilitado no onboarding, o consultor usa Ollama local com `qwen2.5:0.5b`. A integração chama somente um endereço de loopback e não usa serviços de nuvem. A inferência solicita `num_gpu: 0`, contexto de 2.048 tokens e resposta curta, para preservar a GPU usada na mineração. Há consumo de CPU/RAM e download do runtime/modelo.
+Escolha OpenRouter Cloud Free, OpenCode Cloud Free pelo cliente oficial ou Ollama local em **Benchmark / IA > Configurar IA**. Para rigs com CPU simples, OpenRouter evita inferência local. A política adaptativa, o benchmark e a proteção térmica continuam independentes do modelo. Consulte [provedores, cadastro, cotas e dados enviados](ai-providers.md).
 
-O modelo retorna JSON com uma ação: `hold`, `clock_up`, `clock_down`, `power_up`, `power_down` ou `restore_best`, mais uma justificativa. Não fornece comandos de shell, valores arbitrários de clock ou autorização de hardware. JSON inválido, indisponibilidade ou timeout deixam a política adaptativa funcionando e exibem o estado da IA como indisponível. **Uma sugestão de IA não equivale a um ajuste aplicado.**
-
-Instalação e downloads opcionais são apresentados pelo onboarding. Um Ollama já configurado pode ser usado pelo CLI com `--ollama`. O cliente tem timeout limitado e desabilita proxies HTTP para manter a telemetria no computador.
-
-No supervisor que escreve no hardware, a inferência roda em uma thread separada, com no máximo uma solicitação por minuto e aproveitamento temporário da última resposta. A leitura térmica e os controles continuam em seu ciclo de dois segundos enquanto o modelo responde. Toda sugestão é revalidada contra a telemetria atual antes de ser aplicada.
+As respostas são sugestões JSON com ação enumerada e justificativa. O controlador revalida a telemetria atual e limita cada ajuste. A inferência roda em segundo plano. Não há fallback pago; a chave OpenRouter fica no cofre do Windows. Ollama Cloud possui créditos iniciais e preços por uso, sem promessa de gratuidade contínua.
 
 ## Histórico e propriedade do controle
 

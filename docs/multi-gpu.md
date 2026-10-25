@@ -103,3 +103,5 @@ Para backup, consulte [portabilidade](../PORTABILIDADE.md). A publicação do sn
 ## Limitações da evidência
 
 A evidência física disponível neste ambiente é de uma RTX 3070. Os testes multiGPU cobrem seis identidades simuladas, modelos iguais/diferentes, carteiras compartilhadas/distintas e isolamento de processos, telemetria e benchmark. Não são apresentados como teste de seis placas físicas, desempenho agregado real ou lucro garantido. A [observação histórica de desempenho](performance/rtx3070.md) e a mídia da v0.1.0 continuam documentando uma única unidade.
+
+AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e Ollama local](ai-providers.md). A política adaptativa funciona sem IA.
