@@ -11,12 +11,15 @@ import time
 import urllib.request
 
 from config import WALLET
+from payout import payout_model
+from valuation import value_in_currencies
 BASE = "https://pool.kryptex.com/prl/api/v1/"
 URLS = {
-    "price": "https://api.coingecko.com/api/v3/simple/price?ids=pearl-2&vs_currencies=brl,usd&include_last_updated_at=true",
+    "price": "https://api.coingecko.com/api/v3/simple/price?ids=pearl-2,bitcoin&vs_currencies=brl,usd&include_last_updated_at=true",
     "balance": BASE + "miner/balance/" + WALLET,
     "payouts": BASE + "miner/payouts/" + WALLET + "/stats",
     "rewards": BASE + "miner/reward-chart/" + WALLET,
+    "payout_history": BASE + "miner/payouts/" + WALLET,
     "network": BASE + "pool/info",
 }
 if not WALLET:
@@ -46,7 +49,7 @@ class FinanceCollector:
 
     def sample(self):
         errors = {}
-        with ThreadPoolExecutor(max_workers=5) as executor:
+        with ThreadPoolExecutor(max_workers=6) as executor:
             futures = {key: executor.submit(fetch_json, url) for key, url in URLS.items()}
             for key, future in futures.items():
                 try:
@@ -55,6 +58,8 @@ class FinanceCollector:
                         raise ValueError("Cotação da Pearl (pearl-2) ausente")
                     if key == "balance" and "total" not in payload:
                         raise ValueError("Saldo total ausente na resposta da pool")
+                    if key == "payout_history" and (not isinstance(payload, dict) or not isinstance(payload.get("results"), list)):
+                        raise ValueError("Histórico de pagamentos ausente na resposta da pool")
                     if key == "payouts" and "paid" not in payload:
                         raise ValueError("Total pago ausente na resposta da pool")
                     self.state["sources"][key] = {"fetched_at": time.time(), "data": payload}
@@ -159,4 +164,18 @@ def financial_model(state: dict, hashrate_ths: float | None, now: float | None =
         result["forecast"] = {"prl_day": prl_day, "brl_day": prl_day*price, "brl_7days": prl_day*price*7,
                               "brl_30days": prl_day*price*30, "hashrate_ths": hashrate_ths,
                               "pool_fee": pool_fee, "dev_fee": dev_fee, "network_at": network_source.get("fetched_at")}
+    result["wallet"] = WALLET
+    result["payout"] = payout_model(state, result["forecast"], price, now)
+    bitcoin = price_source.get("data", {}).get("bitcoin", {})
+    result["price_btc_usd"], result["price_btc_brl"] = bitcoin.get("usd"), bitcoin.get("brl")
+    result["btc_price_at"] = bitcoin.get("last_updated_at", price_source.get("fetched_at")) if bitcoin else None
+    result["btc_price_stale"] = not result["btc_price_at"] or now-result["btc_price_at"] > 180
+    amounts = {key: result["periods"][key]["prl"] for key in ("day", "week", "month")}
+    amounts.update(accumulated=result["accumulated_prl"], unpaid=result["unpaid_prl"],
+                   confirmed=balance.get("confirmed"), pending=result["unconfirmed_prl"], paid=result["paid_prl"],
+                   forecast7=result["forecast"]["prl_day"]*7 if result["forecast"] else None,
+                   forecast30=result["forecast"]["prl_day"]*30 if result["forecast"] else None,
+                   threshold=result["payout"]["threshold_prl"], remaining=result["payout"]["remaining_prl"])
+    result["currencies"] = {key: value_in_currencies(amount, price, result["price_usd"],
+                               result["price_btc_usd"], result["price_btc_brl"]) for key, amount in amounts.items()}
     return result

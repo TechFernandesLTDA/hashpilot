@@ -6,6 +6,18 @@ Aplicativo Windows local para acompanhar a RTX 3070 e o SRBMiner em tempo real. 
 
 Abra **HashPilot** no menu Iniciar, ou execute `python monitor.py` nesta pasta usando o Python gerenciado pelo mise. As configurações locais ficam em `%LOCALAPPDATA%\PearlMonitor\settings.json`; use `settings.example.json` como referência. O diretório legado `PearlMonitor` é mantido para preservar banco e histórico existentes.
 
+## Organização da interface
+
+O painel principal tem três abas, com grids e tipografia adaptados à área útil da janela:
+
+1. **Visão geral:** indicadores principais, carteira de recebimento, saldo e progresso para o próximo pagamento.
+2. **GPU e mineração:** telemetria, controle térmico, quatro gráficos e atividade recente do minerador.
+3. **Rendimentos:** tabela em PRL, reais, dólares e BTC, períodos observados, projeções e gráfico financeiro.
+
+As abas não usam barras de rolagem; o layout foi preparado para HD a 4K, respeitando a área útil do sistema e o dimensionamento da janela. Valores em USD/BTC são equivalentes à cotação atual. O pagamento da pool continua sendo em PRL na carteira configurada.
+
+Veja [pagamentos, carteira e previsão de recebimento](PAGAMENTOS.md).
+
 ## Bandeja, resumo e console
 
 - Minimizar ou clicar no **X** recolhe o painel para a bandeja do Windows, mantendo coleta e histórico ativos.
@@ -38,15 +50,15 @@ Logs lidos: `%LOCALAPPDATA%\Mining\Pearl\logs\*.log`. Snapshot de diagnóstico: 
 
 Validação: `python monitor.py --snapshot` lê uma amostra real; `python monitor.py --smoke-test` abre a janela por sete segundos.
 
-## Rendimentos em reais
+## Rendimentos em reais, dólares e BTC
 
-A aba **Rendimentos em reais** mostra créditos observados hoje, na semana (segunda-feira até agora, São Paulo) e na janela móvel dos últimos 30 dias, além do acumulado da pool e projeções para os próximos 7 e 30 dias.
+A aba **Rendimentos** mostra créditos observados hoje, na semana (segunda-feira até agora, São Paulo) e na janela móvel dos últimos 30 dias, além do acumulado da pool e projeções para os próximos 7 e 30 dias.
 
 Os valores realizados vêm da variação de **total pago + saldo atual da pool**, incluindo saldo não confirmado. Isso impede contar pagamentos duas vezes quando uma transferência reduz o saldo e aumenta o total pago. Não é uma contagem baseada em shares ou hashrate. Recompensas pendentes ainda podem sofrer ajustes da pool.
 
 O histórico local começa na primeira amostra do monitor. Um período sem cobertura completa é marcado **parcial desde...**; antes de duas amostras, exibe **N/D**. A pool atualmente retorna um gráfico de recompensas vazio para esta carteira, portanto o aplicativo não inventa rendimentos anteriores ao acompanhamento. O acumulado da pool é exibido separadamente e inclui créditos anteriores à primeira amostra.
 
-**Todos os valores em reais usam a cotação atual** da Pearl e são reavaliados quando ela muda; não representam o câmbio histórico de um saque. São consultados dados públicos, sem credenciais, a cada 60 segundos. Falhas conservam o cache com aviso e data; valores ausentes são N/D.
+**Os equivalentes em reais, dólares e BTC usam as cotações atuais** da Pearl e do Bitcoin e são reavaliados quando ela muda; não representam o câmbio histórico de um saque. São consultados dados públicos, sem credenciais, a cada 60 segundos. Falhas conservam o cache com aviso e data; valores ausentes são N/D.
 
 A projeção é uma estimativa por rede: `hashrate / hashrate da rede × recompensa do bloco × 86400 / tempo de bloco × (1 − taxa da pool) × (1 − 0,02)`. Os 2% são a taxa pearlhash do SRBMiner exibida no log. Ela pressupõe 24 h/dia, o hashrate médio de 1 minuto atual e preço/dificuldade/recompensa constantes. Não promete preço futuro nem é crédito realizado.
 
@@ -54,7 +66,7 @@ Fontes verificadas:
 
 - [Documentação pública Kryptex](https://pool.kryptex.com/api) e [OpenAPI](https://pool.kryptex.com/openapi.yaml): `prl/api/v1/miner/balance/{carteira}`, `miner/payouts/{carteira}/stats`, `miner/reward-chart/{carteira}` e `pool/info`.
 - [Pearl no CoinGecko](https://www.coingecko.com/en/coins/pearl-2): API ID **pearl-2**, site oficial **pearlresearch.ai**. Não confundir com Perle, outro ativo de ticker PRL.
-- [Endpoint de cotação](https://api.coingecko.com/api/v3/simple/price?ids=pearl-2&vs_currencies=brl,usd&include_last_updated_at=true): preço BRL/USD e instante `last_updated_at`.
+- [Endpoint de cotação](https://api.coingecko.com/api/v3/simple/price?ids=pearl-2,bitcoin&vs_currencies=brl,usd&include_last_updated_at=true): preço BRL/USD e instante `last_updated_at`.
 
 Persistência: `%LOCALAPPDATA%\PearlMonitor\finance-cache.json` mantém uma janela de 35 dias para cálculo rápido e cache das fontes; `finance-latest.json` contém o resumo calculado. O histórico completo permanece no banco descrito abaixo. Não há chaves privadas ou senhas nesses arquivos.
 

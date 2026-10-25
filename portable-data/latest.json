@@ -1,20 +1,20 @@
 {
-  "collected_at": 1792889684.4469953,
+  "collected_at": 1792891791.171993,
   "gpu": {
     "name": "NVIDIA GeForce RTX 3070",
     "driver_version": "617.14",
     "temperature.gpu": 76.0,
-    "power.draw": 163.75,
+    "power.draw": 160.91,
     "power.limit": 240.0,
-    "clocks.gr": 1755.0,
+    "clocks.gr": 1740.0,
     "clocks.mem": 5001.0,
-    "utilization.gpu": 98.0,
+    "utilization.gpu": 100.0,
     "utilization.memory": 3.0,
-    "memory.used": 1932.0,
+    "memory.used": 1985.0,
     "memory.total": 8192.0,
     "fan.speed": 100.0,
     "pstate": "P3",
-    "sampled_at": 1792889684.5213132
+    "sampled_at": 1792891791.2267635
   },
   "gpu_error": null,
   "miner_running": true,
@@ -25,8 +25,8 @@
     "enabled": true,
     "mode": "hold",
     "reason": "Temperatura na banda estável; mantendo clock",
-    "current_clock_mhz": 1755,
-    "desired_clock_mhz": 1755,
+    "current_clock_mhz": 1740,
+    "desired_clock_mhz": 1740,
     "min_clock_mhz": 1500,
     "max_clock_mhz": 1800,
     "target_band_c": [
@@ -34,56 +34,56 @@
       78
     ],
     "emergency_pause_c": 84,
-    "sampled_at": 1792889683.0912566,
+    "sampled_at": 1792891789.4238245,
     "error": null,
     "controller_pid": 18964,
     "miner_pid": 27740,
     "dry_run": false,
     "name": "NVIDIA GeForce RTX 3070",
     "temperature_c": 76.0,
-    "power_w": 164.62,
-    "actual_clock_mhz": 1755.0,
+    "power_w": 161.25,
+    "actual_clock_mhz": 1740.0,
     "memory_clock_mhz": 5001.0,
     "power_limit_w": 240.0,
-    "age_seconds": 1.5387732982635498,
+    "age_seconds": 1.8797698020935059,
     "stale": false,
     "available": true
   },
   "miner": {
-    "hashrate": 76.49,
-    "hashrate_at": 1792889637.0,
-    "accepted": 37,
+    "hashrate": 76.06,
+    "hashrate_at": 1792891710.0,
+    "accepted": 52,
     "rejected": 0,
     "hw_errors": 0,
-    "average_1m": 76.23,
-    "average_15m": 79.03,
+    "average_1m": 76.39,
+    "average_15m": 76.47,
     "started_at": 1792886184.0,
-    "last_share_at": 1792889647.0,
+    "last_share_at": 1792891663.0,
     "connection": "Conectado à pool",
     "paused": false
   },
   "charts": {
     "hash": {
       "point_count": 10,
-      "latest_sample_at": 1792889637.0,
-      "latest_value": 76.49,
+      "latest_sample_at": 1792891710.0,
+      "latest_value": 76.06,
       "gap_limit_seconds": 180
     },
     "temp": {
-      "point_count": 459,
-      "latest_sample_at": 1792889684.6794486,
+      "point_count": 477,
+      "latest_sample_at": 1792891791.4829323,
       "latest_value": 76.0,
       "gap_limit_seconds": 80
     },
     "power": {
-      "point_count": 459,
-      "latest_sample_at": 1792889684.6794486,
-      "latest_value": 163.75,
+      "point_count": 477,
+      "latest_sample_at": 1792891791.4829323,
+      "latest_value": 160.91,
       "gap_limit_seconds": 80
     },
     "fan": {
-      "point_count": 459,
-      "latest_sample_at": 1792889684.6794486,
+      "point_count": 477,
+      "latest_sample_at": 1792891791.4829323,
       "latest_value": 100.0,
       "gap_limit_seconds": 80
     }
@@ -94,39 +94,67 @@
     "tray_registered": true,
     "tray_error": null,
     "panel_state": "normal",
-    "pid": 27208,
+    "pid": 2344,
     "summary_open": false
   },
   "window": {
-    "width": 1280,
-    "height": 930
+    "width": 2032,
+    "height": 1060
+  },
+  "layout": {
+    "tab_count": 3,
+    "tab_names": [
+      "Visão geral",
+      "GPU e mineração",
+      "Rendimentos"
+    ],
+    "selected_tab": 0,
+    "client_size": [
+      2032,
+      1060
+    ],
+    "profile": {
+      "width": 2032,
+      "height": 1060,
+      "compact": false,
+      "body_font": 15,
+      "rowheight": 28
+    },
+    "font_units": "pixels",
+    "scrollbars": false,
+    "work_area": [
+      0,
+      0,
+      2048,
+      1104
+    ]
   },
   "history": {
     "database": "C:\\Users\\renan\\AppData\\Local\\PearlMonitor\\history.sqlite3",
-    "session": "1bd6a371254e4be7874f5fe94b1a05e2",
+    "session": "27d1c16375854686a0429e9760ebdc8b",
     "counts": {
       "telemetry": [
-        2722,
+        3800,
         1792882576.0,
-        1792889670.389558
+        1792891787.1565275
       ],
       "events": [
-        946,
+        1151,
         1792882545.0,
-        1792889647.0
+        1792891755.0054054
       ],
       "finance_snapshots": [
-        96,
+        131,
         1792883595.5142565,
-        1792889628.8381162
+        1792891756.3943114
       ],
       "finance_sources": [
-        465,
+        666,
         1792884222.299892,
-        1792889639.2180426
+        1792891756.3939338
       ]
     },
-    "last_commit": 1792889684.6495798,
+    "last_commit": 1792891791.3224478,
     "pending_jobs": 0,
     "error": null,
     "restored_points": {

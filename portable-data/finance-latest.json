@@ -1,44 +1,151 @@
 {
-  "price_brl": 9.27,
+  "price_brl": 9.24,
   "price_usd": 1.86,
-  "price_at": 1792889623,
-  "pool_at": 1792889639.2180326,
+  "price_at": 1792891707,
+  "pool_at": 1792891755.7020676,
   "errors": {},
   "periods": {
     "day": {
-      "prl": 0.10365991819781284,
-      "brl": 0.960927441693725,
+      "prl": 0.11967976869371438,
+      "brl": 1.1058410627299209,
       "partial": true,
       "since": 1792883595.5142565
     },
     "week": {
-      "prl": 0.10365991819781284,
-      "brl": 0.960927441693725,
+      "prl": 0.11967976869371438,
+      "brl": 1.1058410627299209,
       "partial": true,
       "since": 1792883595.5142565
     },
     "month": {
-      "prl": 0.10365991819781284,
-      "brl": 0.960927441693725,
+      "prl": 0.11967976869371438,
+      "brl": 1.1058410627299209,
       "partial": true,
       "since": 1792883595.5142565
     }
   },
   "forecast": {
-    "prl_day": 0.7599576741164025,
-    "brl_day": 7.044807639059051,
-    "brl_7days": 49.31365347341335,
-    "brl_30days": 211.34422917177153,
-    "hashrate_ths": 76.23,
+    "prl_day": 0.8034473457457908,
+    "brl_day": 7.423853474691107,
+    "brl_7days": 51.96697432283775,
+    "brl_30days": 222.71560424073323,
+    "hashrate_ths": 76.39,
     "pool_fee": 0.03,
     "dev_fee": 0.02,
-    "network_at": 1792889639.2180426
+    "network_at": 1792891756.3939338
   },
   "reward_history": [],
-  "snapshot_count": 96,
-  "unpaid_prl": 0.11976339932197612,
-  "unconfirmed_prl": 0.11976339932197612,
+  "snapshot_count": 131,
+  "unpaid_prl": 0.13578324981787765,
+  "unconfirmed_prl": 0.13578324981787765,
   "paid_prl": 0.0,
-  "accumulated_prl": 0.11976339932197612,
-  "accumulated_brl": 1.1102067117147185
+  "accumulated_prl": 0.13578324981787765,
+  "accumulated_brl": 1.2546372283171896,
+  "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+  "payout": {
+    "threshold_prl": 1.0,
+    "threshold_brl": 9.24,
+    "threshold_source": "carteira",
+    "total_prl": 0.13578324981787765,
+    "confirmed_prl": 0.0,
+    "unconfirmed_prl": 0.13578324981787765,
+    "remaining_prl": 0.8642167501821223,
+    "remaining_confirmed_prl": 1.0,
+    "remaining_brl": 7.98536277168281,
+    "progress_pct": 13.578324981787764,
+    "confirmed_progress_pct": 0.0,
+    "rate_prl_day": 1.2480147867061668,
+    "rate_label": "Ritmo observado na pool nos últimos 59 min",
+    "maturation_seconds": 19400.0,
+    "maturation_label": "5 h 24 min",
+    "maturation_blocks": 100.0,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": 1792891755.7020676,
+    "stale": false,
+    "eta_min_seconds": 79229.6815158772,
+    "eta_max_seconds": 82829.6815158772,
+    "generation_seconds": 59829.68151587719,
+    "state_label": "Acumulando até o mínimo de pagamento",
+    "eta_label": "Estimativa de envio: 22 h 1 min a 23 h 1 min",
+    "eta_details": "Faltam cerca de 16 h 38 min para gerar o mínimo, se o ritmo continuar. Foi incluída uma maturação típica de 5 h 24 min, mais até aproximadamente 1 h de espera pelo ciclo. Não é um cronômetro da pool; dificuldade, créditos pendentes e confirmação/sincronização da carteira podem mudar o prazo."
+  },
+  "price_btc_usd": 80727,
+  "price_btc_brl": 401955,
+  "btc_price_at": 1792891716,
+  "btc_price_stale": false,
+  "currencies": {
+    "day": {
+      "prl": 0.11967976869371438,
+      "brl": 1.1058410627299209,
+      "usd": 0.22260436977030876,
+      "btc": 2.757495878334495e-06
+    },
+    "week": {
+      "prl": 0.11967976869371438,
+      "brl": 1.1058410627299209,
+      "usd": 0.22260436977030876,
+      "btc": 2.757495878334495e-06
+    },
+    "month": {
+      "prl": 0.11967976869371438,
+      "brl": 1.1058410627299209,
+      "usd": 0.22260436977030876,
+      "btc": 2.757495878334495e-06
+    },
+    "accumulated": {
+      "prl": 0.13578324981787765,
+      "brl": 1.2546372283171896,
+      "usd": 0.25255684466125244,
+      "btc": 3.1285300415134026e-06
+    },
+    "unpaid": {
+      "prl": 0.13578324981787765,
+      "brl": 1.2546372283171896,
+      "usd": 0.25255684466125244,
+      "btc": 3.1285300415134026e-06
+    },
+    "confirmed": {
+      "prl": 0.0,
+      "brl": 0.0,
+      "usd": 0.0,
+      "btc": 0.0
+    },
+    "pending": {
+      "prl": 0.13578324981787765,
+      "brl": 1.2546372283171896,
+      "usd": 0.25255684466125244,
+      "btc": 3.1285300415134026e-06
+    },
+    "paid": {
+      "prl": 0.0,
+      "brl": 0.0,
+      "usd": 0.0,
+      "btc": 0.0
+    },
+    "forecast7": {
+      "prl": 5.624131420220536,
+      "brl": 51.96697432283775,
+      "usd": 10.460884441610197,
+      "btc": 0.00012958346577489807
+    },
+    "forecast30": {
+      "prl": 24.103420372373723,
+      "brl": 222.7156042407332,
+      "usd": 44.832361892615125,
+      "btc": 0.0005553577104638488
+    },
+    "threshold": {
+      "prl": 1.0,
+      "brl": 9.24,
+      "usd": 1.86,
+      "btc": 2.30406183804675e-05
+    },
+    "remaining": {
+      "prl": 0.8642167501821223,
+      "brl": 7.98536277168281,
+      "usd": 1.6074431553387476,
+      "btc": 1.99120883389541e-05
+    }
+  }
 }
