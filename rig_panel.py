@@ -6,6 +6,7 @@ from pathlib import Path
 import tkinter as tk
 from tkinter import ttk, messagebox
 import time
+from valuation import numeric
 
 BG,PANEL,BORDER,TEXT,MUTED,TEAL,ORANGE='#0A1628','#10213B','#23446D','#FFFFFF','#E8EDF5','#12A98E','#ffbc66'
 
@@ -13,7 +14,9 @@ def fresh_hash(device,now=None):
     now=time.time() if now is None else now
     miner=device.get('miner') or {}
     stamp=miner.get('hashrate_at')
-    return miner.get('hashrate') if device.get('enabled') and device.get('miner_running') and not miner.get('paused') and isinstance(stamp,(int,float)) and -5<=now-stamp<=180 else None
+    stamp=numeric(stamp)
+    rate=numeric(miner.get('hashrate'))
+    return rate if rate is not None and rate>=0 and device.get('enabled') and device.get('miner_running') and not miner.get('paused') and stamp is not None and -5<=now-stamp<=180 else None
 
 def project_selected(data,identifier):
     devices=(data.get('rig') or {}).get('devices') or []
@@ -28,13 +31,15 @@ def project_selected(data,identifier):
 
 def totals(devices,now=None):
     rates=[fresh_hash(d,now) for d in devices]
-    powers=[(d.get('gpu') or {}).get('power.draw') for d in devices]
-    temperatures=[(d.get('gpu') or {}).get('temperature.gpu') for d in devices]
+    powers=[numeric((d.get('gpu') or {}).get('power.draw')) for d in devices]
+    powers=[v if v is not None and v>=0 else None for v in powers]
+    temperatures=[numeric((d.get('gpu') or {}).get('temperature.gpu')) for d in devices]
+    temperatures=[v if v is not None and 0<=v<=120 else None for v in temperatures]
     return {'hashrate_ths':sum(v for v in rates if isinstance(v,(int,float))) if any(v is not None for v in rates) else None,
       'power_w':sum(v for v in powers if isinstance(v,(int,float))) if any(v is not None for v in powers) else None,
       'max_temperature_c':max((v for v in temperatures if isinstance(v,(int,float))),default=None),
       'enabled_count':sum(bool(d.get('enabled')) for d in devices),'mining_count':sum(v is not None for v in rates),
-      'detected_count':len(devices)}
+      'detected_count':len(devices),'power_partial':any(v is None for v in powers)}
 
 def save_enabled(settings_path,identifier,enabled):
     from rig_config import update_gpu_settings

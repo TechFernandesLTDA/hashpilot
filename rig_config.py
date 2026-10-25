@@ -34,9 +34,11 @@ def resolve_devices(detected,settings,log_root):
         raise ValueError("gpu_settings precisa ser um objeto por UUID")
     result=[]
     seen=set()
-    for detected_gpu in sorted(detected,key=lambda item:int(item.get("index",999))):
-        if detected_gpu.get("vendor")!="NVIDIA":
-            continue
+    candidates=[gpu for gpu in detected if isinstance(gpu,dict) and gpu.get('vendor')=='NVIDIA']
+    for gpu in candidates:
+        if isinstance(gpu.get('index'),bool) or not isinstance(gpu.get('index'),int) or gpu['index']<0:
+            raise ValueError('Índice NVIDIA inválido')
+    for detected_gpu in sorted(candidates,key=lambda item:item['index']):
         identifier=device_key(detected_gpu.get("uuid"))
         if identifier in seen:
             continue
@@ -52,7 +54,8 @@ def resolve_devices(detected,settings,log_root):
         if not isinstance(enabled,bool):
             enabled=False
             error="enabled precisa ser booleano; dispositivo desabilitado"
-        override=entry.get("wallet") or None
+        override=entry.get("wallet")
+        if override=='':override=None
         if override is not None and not valid_wallet(override):
             enabled=False
             override=None
@@ -61,7 +64,7 @@ def resolve_devices(detected,settings,log_root):
         gpu={**detected_gpu,**gpu_paths(log_root,identifier),"enabled":enabled,
             "wallet":wallet,"effective_wallet":wallet,"wallet_override":override,
             "uses_default_wallet":override is None,"uses_author_wallet":wallet==AUTHOR_WALLET,
-            "device_key":identifier,"worker_name":"HashPilot_"+identifier[4:20],
+            "device_key":identifier,"worker_name":"HashPilot_"+identifier[4:],
             "configuration_error":error}
         result.append(gpu)
     return result
@@ -77,6 +80,9 @@ def update_gpu_settings(settings,gpu_uuid,*,enabled=None,wallet_override=None,ch
     if not isinstance(overrides,dict):
         raise ValueError("gpu_settings inválido")
     entry=overrides.setdefault(identifier,{})
+    if not isinstance(entry,dict):
+        entry={'enabled':False}
+        overrides[identifier]=entry
     if enabled is not None:
         if not isinstance(enabled,bool):
             raise ValueError("enabled precisa ser booleano")

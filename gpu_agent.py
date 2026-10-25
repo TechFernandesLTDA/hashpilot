@@ -37,7 +37,7 @@ def numeric(value, default=None):
     try:
         result = float(value)
         return result if math.isfinite(result) else default
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, OverflowError):
         return default
 
 
@@ -133,7 +133,7 @@ def read_sample(gpu, command=smi_command):
     validate_device(gpu)
     fields = "temperature.gpu,power.draw,power.limit,clocks.gr,utilization.gpu"
     values = next(csv.reader(command(["-i",gpu["uuid"],"--query-gpu="+fields,
-                                      "--format=csv,noheader,nounits"]).splitlines()))
+                                      "--format=csv,noheader,nounits"]).splitlines()),[])
     if len(values) != 5:
         raise RuntimeError("Resposta NVIDIA incompleta")
     result=dict(zip(("temperature_c","power_w","power_limit_w","clock_mhz","utilization_pct"),
@@ -149,7 +149,7 @@ def normalize_sample(sample, now=None):
              "power_limit_w":("power_limit_w","power.limit"), "clock_mhz":("clock_mhz","clocks.gr"),
              "utilization_pct":("utilization_pct","utilization.gpu")}
     result = {key:numeric(sample.get(keys[0], sample.get(keys[1]))) for key, keys in pairs.items()}
-    result["sampled_at"] = numeric(sample.get("sampled_at"), now)
+    result["sampled_at"] = numeric(sample['sampled_at']) if 'sampled_at' in sample else now
     return result
 
 
@@ -166,17 +166,19 @@ class OllamaAdvisor:
         parsed = urlparse(endpoint)
         if parsed.scheme != "http" or parsed.hostname not in ("localhost","127.0.0.1","::1") or parsed.username or parsed.password:
             raise ValueError("A IA deve usar o Ollama local, sem API externa")
-        if not re.fullmatch(r"[a-zA-Z0-9._:/-]{1,120}", model):
+        if not isinstance(model,str) or not re.fullmatch(r"[a-zA-Z0-9._:/-]{1,120}", model):
             raise ValueError("Nome de modelo inválido")
+        if model.endswith((':cloud','-cloud')):raise ValueError('Ollama local não aceita modelos cloud')
         self.endpoint, self.model = endpoint.rstrip("/"), model
         self.timeout = max(1,min(30,float(timeout)))
 
     @staticmethod
     def parse(text):
+        if not isinstance(text,str):raise ValueError('Resposta da IA precisa ser texto JSON')
         value = json.loads(text)
         if not isinstance(value,dict) or set(value) != {"action","reason"} or value["action"] not in ACTIONS:
             raise ValueError("Resposta da IA fora do conjunto permitido")
-        if not isinstance(value["reason"],str) or not 1 <= len(value["reason"]) <= 400:
+        if not isinstance(value["reason"],str) or not 1 <= len(value["reason"].strip()) <= 400:
             raise ValueError("Justificativa da IA inválida")
         return value
 
@@ -208,8 +210,10 @@ class BackgroundAdvisor:
         self.completed_at=None
         self.advice=None
         self.error=None
+        self.config_signature=None
+        self.revision=0
 
-    def _work(self,context):
+    def _work(self,context,revision=None):
         try:
             advice=self.advisor.advise(context)
             error=None
@@ -217,6 +221,8 @@ class BackgroundAdvisor:
             advice=None
             error=str(failure)[:160]
         with self.lock:
+            if revision is not None and revision!=self.revision:
+                return
             self.advice,self.error=advice,error
             self.completed_at=time.monotonic()
 
@@ -224,18 +230,35 @@ class BackgroundAdvisor:
         stamp=time.monotonic() if now is None else float(now)
         with self.lock:
             alive=self.thread is not None and self.thread.is_alive()
-            interval=max(self.interval,3600 if isinstance(self.advisor,RoutedAdvisor) and self.advisor.settings().get("ai",{}).get("provider") in ("openrouter","opencode") and self.advice is not None else 60)
+            cloud=False
+            if isinstance(self.advisor,RoutedAdvisor):
+                try:config=self.advisor.settings()
+                except (OSError,ValueError,TypeError):
+                    return {'advice':None,'status':'unavailable: configuração de IA inválida','in_flight':alive}
+                signature=json.dumps(config.get('ai',{}),sort_keys=True)+str(config.get('ai_enabled'))
+                if signature!=self.config_signature:
+                    self.config_signature=signature
+                    self.revision+=1
+                    self.advice=self.error=self.completed_at=self.last_started=None
+                cloud=isinstance(config.get('ai'),dict) and config['ai'].get('provider') in ('openrouter','opencode')
+            interval=max(self.interval,3600 if cloud and self.advice is not None else 60)
             if not alive and (self.last_started is None or stamp-self.last_started>=interval):
                 self.last_started=stamp
                 # Only immutable telemetry leaves this loop; the result remains a suggestion.
                 copied=json.loads(json.dumps(context))
-                self.thread=threading.Thread(target=self._work,args=(copied,),daemon=True,name="hashpilot-advisor")
+                self.thread=threading.Thread(target=self._work,args=(copied,self.revision),daemon=True,name="hashpilot-advisor")
                 self.thread.start()
                 alive=True
             fresh=self.completed_at is not None and 0<=stamp-self.completed_at<=90
+            waiting=max(0,int(interval-(stamp-self.last_started))) if self.last_started is not None else 0
+            label=getattr(self.advisor,'label','local_ollama')
+            if fresh and self.advice is not None:status=label
+            elif alive:status='pending: IA em segundo plano'
+            elif self.error:status='unavailable: '+self.error
+            else:status=f'{label} · em espera; próxima consulta em {waiting} s'
             return {"advice":dict(self.advice) if self.advice is not None and fresh else None,
-                "status":getattr(self.advisor,"label","local_ollama") if self.advice is not None and fresh else
-                         "unavailable: "+self.error if self.error and not alive else "pending: IA em segundo plano"}
+                "status":status,'in_flight':alive,'next_request_seconds':waiting,
+                'response_age_seconds':max(0,stamp-self.completed_at) if self.completed_at is not None else None}
 
 
 class GPUAgent:
@@ -285,31 +308,35 @@ class GPUAgent:
     def _latest(self, identifier):
         return self.db.execute("SELECT * FROM benchmarks WHERE gpu_uuid=? ORDER BY started DESC,rowid DESC LIMIT 1",(identifier,)).fetchone()
 
-    def observe(self, gpu, sample, hashrate_ths=None, accepted=0, rejected=0, now=None, hash_sampled_at=None):
+    def observe(self, gpu, sample, hashrate_ths=None, accepted=0, rejected=0, now=None, hash_sampled_at=None,hw_errors=0):
         validate_device(gpu)
         stamp = time.time() if now is None else float(now)
         sample = normalize_sample(sample,stamp)
         rate, hash_stamp = numeric(hashrate_ths), numeric(hash_sampled_at)
-        accepted,rejected = max(0,int(accepted or 0)),max(0,int(rejected or 0))
+        counters=[numeric(value) for value in (accepted,rejected,hw_errors)]
+        counters_valid=all(value is not None and 0<=value<=2**63-1 and value.is_integer() for value in counters)
+        accepted,rejected,hw_errors=[int(value) for value in counters] if counters_valid else [0,0,0]
         valid,reason = True,"ok"
         soft,hard = thermal_limits(gpu)
         if sample["temperature_c"] is None or not 0 <= sample["temperature_c"] < hard:
             valid,reason = False,"thermal_or_sensor"
-        elif stamp-sample["sampled_at"]>10 or sample["sampled_at"]>stamp+2:
+        elif sample['sampled_at'] is None or stamp-sample["sampled_at"]>10 or sample["sampled_at"]>stamp+2:
             valid,reason = False,"stale_sensor"
         elif rate is None or rate <= 0 or hash_stamp is None or not 0 <= stamp-hash_stamp <= 180:
             valid,reason = False,"missing_or_stale_hashrate"
         elif sample["power_w"] is None or sample["power_w"]<=0 or sample["clock_mhz"] is None:
             valid,reason = False,"incomplete_sensor"
+        elif not counters_valid:valid,reason=False,'invalid_counters'
+        elif hw_errors:valid,reason=False,'hardware_error'
         with self.lock,self.db:
             session = self._latest(gpu["uuid"])
             if session and session["state"]=="running":
                 if hash_stamp is not None and hash_stamp<session["started"]:
                     valid,reason = False,"hashrate_before_benchmark"
                 previous = self.db.execute("SELECT accepted,rejected FROM observations WHERE session=? ORDER BY id DESC LIMIT 1",(session["id"],)).fetchone()
-                if previous and (accepted < previous["accepted"] or rejected < previous["rejected"]):
+                if counters_valid and previous and (accepted < previous["accepted"] or rejected < previous["rejected"]):
                     valid,reason = False,"miner_restarted"
-                elif previous and rejected>previous["rejected"]:
+                elif counters_valid and previous and rejected>previous["rejected"]:
                     valid,reason = False,"new_rejected_share"
                 self.db.execute("""INSERT INTO observations(session,stamp,hash_stamp,hashrate,accepted,rejected,
                     temperature,power,power_limit,clock,valid,reason) VALUES(?,?,?,?,?,?,?,?,?,?,?,?)""",
@@ -339,7 +366,7 @@ class GPUAgent:
                 coverage+=gap
         result["observed_seconds"]=coverage
         result["invalid_samples"] = sum(not row["valid"] for row in rows)
-        result["unstable_samples"] = sum(row["reason"] in ("thermal_or_sensor","stale_sensor","incomplete_sensor","miner_restarted","new_rejected_share")
+        result["unstable_samples"] = sum(row["reason"] in ("thermal_or_sensor","stale_sensor","incomplete_sensor","miner_restarted","new_rejected_share","invalid_counters","hardware_error")
             for row in rows if row["stamp"]-session["started"]>=30)
         # A repeated miner log line is one measurement, not 45 new hashes.
         independent = {}
@@ -644,7 +671,7 @@ def main():
         while True:
             miner,fresh=read_miner_data(args,gpu,args.monitor_state_dir or state_dir,len(devices))
             sample=read_sample(gpu)
-            status=agent.observe(gpu,sample,miner.get("hashrate") if fresh else None,miner.get("accepted",0),miner.get("rejected",0),hash_sampled_at=miner.get("hashrate_at"))
+            status=agent.observe(gpu,sample,miner.get("hashrate") if fresh else None,miner.get("accepted",0),miner.get("rejected",0),hash_sampled_at=miner.get("hashrate_at"),hw_errors=miner.get("hw_errors",0))
             plan=agent.recommend(gpu,sample,ollama=args.ollama)
             print(json.dumps({"benchmark":status,"proposal":plan,"hardware_writes":False},ensure_ascii=False),flush=True)
             if status["state"]!="running":
@@ -908,10 +935,10 @@ def control(args,state_dir,monitor_state_dir):
             if trial_active and not fresh:
                 raise RuntimeError("Monitor sem telemetria atual durante ajuste; encerrando controle")
             result=agent.observe(gpu,sample,miner.get("hashrate") if fresh else None,miner.get("accepted",0),
-                                 miner.get("rejected",0),hash_sampled_at=miner.get("hashrate_at"))
+                                 miner.get("rejected",0),hash_sampled_at=miner.get("hashrate_at"),hw_errors=miner.get("hw_errors",0))
             status.update(sampled_at=now,sample=sample,benchmark=result)
             answer=None
-            if background_advisor and agent.advisor.settings().get("ai_enabled") is True and result.get("elapsed_seconds",0)>=60:
+            if background_advisor and agent.advisor.enabled() and result.get("elapsed_seconds",0)>=60:
                 answer=background_advisor.poll({"sample":sample,"benchmark":{key:result.get(key) for key in
                     ("validated","mean_hashrate_ths","mean_power_w","efficiency_ths_per_w")},"allowed_actions":list(ACTIONS)})
                 status["ai_status"]=answer["status"]

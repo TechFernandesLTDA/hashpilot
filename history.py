@@ -9,6 +9,7 @@ import sqlite3
 import threading
 import time
 import uuid
+import math
 
 
 def encode(value):
@@ -24,6 +25,7 @@ class HistoryStore:
         self.last_error = None
         self.last_commit = None
         self.closed = False
+        self.enqueue_lock=threading.RLock()
         self.last_status = None
         self.ready = threading.Event()
         self.info = {}
@@ -74,8 +76,12 @@ class HistoryStore:
         connection.commit()
 
     def submit(self, kind, payload):
-        if not self.closed:
-            self.jobs.put((kind, payload))
+        snapshot=json.loads(encode(payload))
+        with self.enqueue_lock:
+            if not self.closed:
+                self.jobs.put((kind, snapshot))
+                return True
+        return False
 
     def telemetry(self, data, source="live"):
         # Raw log lines are archived separately once, not copied on every 2 s sample.
@@ -120,7 +126,8 @@ class HistoryStore:
                     break
                 line = raw.decode("utf-8-sig", errors="replace").rstrip()
                 match = stamp_pattern.match(line)
-                stamp = dt.datetime.strptime(match[1], "%Y-%m-%d %H:%M:%S").timestamp() if match else time.time()
+                try:stamp = dt.datetime.strptime(match[1], "%Y-%m-%d %H:%M:%S").timestamp() if match else time.time()
+                except ValueError:stamp=time.time()
                 key = "log:"+hashlib.sha256((str(path)+"\n"+line).encode()).hexdigest()
                 self.event(stamp, "miner_log", {"line": line, "path": str(path),'gpu_uuid':gpu_uuid}, key,wallet=wallet)
             self.log_offsets[str(path)] = handle.tell()
@@ -143,6 +150,7 @@ class HistoryStore:
                 try:
                     payload = json.loads(raw.decode("utf-8-sig"))
                     stamp = float(payload["sampled_at"])
+                    if not math.isfinite(stamp) or stamp<0:raise ValueError('Timestamp térmico inválido')
                     self.event(stamp, "thermal_control", payload, key)
                 except (ValueError, KeyError, TypeError) as error:
                     self.event(time.time(), "thermal_import_error", {"path": str(path), "error": str(error)}, key)
@@ -157,16 +165,17 @@ class HistoryStore:
                 encode(data.get("gpu")), encode(data.get("miner", {})),
                 data.get("miner_running"), encode(errors), data.get("log_path")))
             miner = data.get("miner", {})
-            status = (data.get("miner_running"), miner.get("paused"), miner.get("connection"), bool(errors), data.get("log_path"))
+            status = (data.get("miner_running"), miner.get("paused"), miner.get("connection"), bool(errors), data.get("log_path"),data.get('wallet') or self.wallet)
             if source == "live" and status != self.last_status:
                 self.write(connection, "event", {"timestamp": data["collected_at"], "key": "status:"+str(data["collected_at"]),
-                    "kind": "status_changed", "data": {"miner_running": status[0], "paused": status[1], "connection": status[2], "errors": errors, "log_path": status[4]}})
+                    "kind": "status_changed", "wallet":status[5], "data": {"miner_running": status[0], "paused": status[1], "connection": status[2], "errors": errors, "log_path": status[4]}})
                 self.last_status = status
         elif kind == 'rig_telemetry':
             for device in payload.get('devices',[]):
                 identifier=device['uuid']
                 stamp=device.get('collected_at',payload.get('collected_at',time.time()))
-                identity={key:device.get(key) for key in ('uuid','index','name','vendor','pci_bus_id','pci_device_id','pci_sub_device_id','pci_subdevice_id','vbios_version','driver_version','serial','architecture','memory_mib')}
+                identity=dict(device.get('identity') or {})
+                identity.update({key:device.get(key) for key in ('uuid','index','name','vendor','pci_bus_id','pci_device_id','pci_sub_device_id','pci_subdevice_id','vbios_version','driver_version','serial','architecture','memory_mib') if device.get(key) is not None})
                 connection.execute('INSERT INTO gpu_devices VALUES(?,?,?,?) ON CONFLICT(gpu_uuid) DO UPDATE SET last_seen=excluded.last_seen,identity_json=excluded.identity_json',
                     (identifier,stamp,stamp,encode(identity)))
                 errors={key:device.get(key) for key in ('gpu_error','log_error','process_error','configuration_error') if device.get(key)}
@@ -186,7 +195,7 @@ class HistoryStore:
             if payload.get("errors"):
                 stamp = payload.get("attempted_at", time.time())
                 self.write(connection, "event", {"timestamp": stamp, "key": "finance-error:"+str(stamp),
-                    "kind": "finance_error", "data": payload["errors"]})
+                    "kind": "finance_error", "wallet":wallet, "data": payload["errors"]})
         elif kind == "preferences":
             connection.executemany("INSERT OR REPLACE INTO preferences VALUES(?,?,?)", [
                 (self.wallet, key, encode(value)) for key, value in payload.items()])
@@ -212,6 +221,15 @@ class HistoryStore:
                         self.info = self.stats()
                         self.info_at = time.monotonic()
                     break
+                except (sqlite3.IntegrityError,ValueError,TypeError,KeyError,AttributeError) as error:
+                    # A malformed sample must not kill or permanently block the writer.
+                    self.last_error='Amostra rejeitada: '+str(error)
+                    if connection is not None:connection.rollback()
+                    try:
+                        with self.path.with_name('history-rejected.jsonl').open('a',encoding='utf-8') as rejected:
+                            rejected.write(encode({'at':time.time(),'kind':job[0],'error':str(error)})+'\n')
+                    except OSError:self.last_error+='; não foi possível gravar o diagnóstico'
+                    break
                 except (sqlite3.Error, OSError) as error:
                     self.last_error = str(error)
                     if connection is not None:
@@ -233,11 +251,11 @@ class HistoryStore:
         return not self.jobs.unfinished_tasks
 
     def close(self):
-        if self.closed:
-            return
-        self.event(time.time(), "session_closed", {"session": self.session})
-        self.closed = True
-        self.jobs.put(None)
+        with self.enqueue_lock:
+            if not self.closed:
+                self.event(time.time(), "session_closed", {"session": self.session})
+                self.closed = True
+                self.jobs.put(None)
         self.worker.join(timeout=4)
 
     def read(self, query, parameters=()):
@@ -307,7 +325,7 @@ class HistoryStore:
                 sources[key] = {"fetched_at": stamp, "data": json.loads(payload)}
             return {"wallet": wallet, "snapshots": snapshots, "sources": sources}
         except (sqlite3.Error, ValueError):
-            return {"wallet": self.wallet, "snapshots": [], "sources": {}}
+            return {"wallet": wallet, "snapshots": [], "sources": {}}
 
     def stats(self):
         return {table: self.read(f"SELECT COUNT(*),MIN({column}),MAX({column}) FROM {table} WHERE wallet=?", (self.wallet,))[0]

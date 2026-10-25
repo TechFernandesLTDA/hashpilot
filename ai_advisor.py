@@ -30,12 +30,16 @@ SYSTEM = ('You advise NVIDIA mining. Return only JSON with exactly action and re
 
 
 def configuration(settings):
+    if not isinstance(settings,dict):raise ValueError('Configuração de IA precisa ser um objeto')
     raw = settings.get('ai', {})
+    if not isinstance(raw,dict):raise ValueError('A seção ai precisa ser um objeto')
     provider = raw.get('provider', 'ollama' if settings.get('ai_enabled') else 'openrouter')
-    if provider not in PROVIDERS:
+    if not isinstance(provider,str) or provider not in PROVIDERS:
         raise ValueError('Provedor de IA inválido')
-    model = str(raw.get('model') or {'ollama':'qwen2.5:0.5b', 'openrouter':'openrouter/free',
-                                    'opencode':'opencode/glm-5.3-flash-free'}[provider])
+    if 'model' in raw and raw['model'] is not None and not isinstance(raw['model'],str):raise ValueError('Modelo precisa ser texto')
+    model = raw.get('model') or {'ollama':'qwen2.5:0.5b', 'openrouter':'openrouter/free',
+                                    'opencode':'opencode/glm-5.3-flash-free'}[provider]
+    if not isinstance(model,str):raise ValueError('Modelo precisa ser texto')
     if not re.fullmatch(r'[A-Za-z0-9._:/-]{1,160}', model):
         raise ValueError('Identificador de modelo inválido')
     if provider == 'openrouter' and model != 'openrouter/free' and not model.endswith(':free'):
@@ -52,6 +56,8 @@ class _NoRedirect(HTTPRedirectHandler):
 
 
 def request_json(url, payload=None, key=None):
+    if key is not None and (not isinstance(key,str) or not key or any(c.isspace() or not 33<=ord(c)<=126 for c in key)):
+        raise ValueError('Chave inválida')
     headers={'Content-Type':'application/json','User-Agent':'HashPilot/0.3'}
     if key: headers['Authorization']='Bearer '+key
     request=Request(url, json.dumps(payload).encode() if payload is not None else None, headers)
@@ -59,7 +65,8 @@ def request_json(url, payload=None, key=None):
         with build_opener(ProxyHandler({}),_NoRedirect()).open(request,timeout=20) as response:
             body=response.read(2_000_001)
         if len(body)>2_000_000: raise ValueError('Resposta do provedor excedeu o limite')
-        return json.loads(body)
+        try:return json.loads(body)
+        except (ValueError,UnicodeError):raise ValueError('Resposta JSON inválida do provedor') from None
     except HTTPError as error:
         # Do not include a response body, URL parameters, headers or credential.
         error.close()
@@ -77,11 +84,20 @@ def telemetry_context(context):
                     'temperature.gpu','power.draw','power.limit','clocks.gr','utilization.gpu')
     allowed_bench=('mean_hashrate_ths','mean_power_w','efficiency_ths_per_w',
                    'independent_hash_samples','invalid_samples','validated','elapsed_seconds')
+    if not isinstance(context,dict):raise ValueError('Contexto de IA inválido')
     result={}
     for section,keys in [('sample',allowed_sample),('benchmark',allowed_bench)]:
         source=context.get(section) or {}
-        result[section]={k:source[k] for k in keys if isinstance(source.get(k),(int,float))
-                         and math.isfinite(source[k])}
+        if not isinstance(source,dict):source={}
+        result[section]={}
+        for key in keys:
+            value=source.get(key)
+            if section=='benchmark' and key=='validated' and isinstance(value,bool):
+                result[section][key]=value;continue
+            if isinstance(value,bool) or not isinstance(value,(int,float)):continue
+            try:valid=math.isfinite(value) and value>=0
+            except OverflowError:valid=False
+            if valid:result[section][key]=value
     return result
 
 
@@ -100,7 +116,9 @@ def credential(provider, value=None):
     if value is not None:
         if not value or len(value)>2048 or any(c.isspace() for c in value):
             raise ValueError('Chave inválida')
-        blob=value.encode('utf-8');buffer=(ctypes.c_ubyte*len(blob)).from_buffer_copy(blob)
+        blob=value.encode('utf-8')
+        if len(blob)>2560:raise ValueError('Chave excede o limite do cofre do Windows')
+        buffer=(ctypes.c_ubyte*len(blob)).from_buffer_copy(blob)
         item=CREDENTIAL(Type=1,TargetName=target,CredentialBlobSize=len(blob),CredentialBlob=buffer,
                         Persist=2,UserName='HashPilot')
         api.CredWriteW.argtypes=[ctypes.POINTER(CREDENTIAL),wintypes.DWORD]
@@ -111,7 +129,9 @@ def credential(provider, value=None):
     api.CredReadW.argtypes=[wintypes.LPCWSTR,wintypes.DWORD,wintypes.DWORD,ctypes.POINTER(ctypes.POINTER(CREDENTIAL))]
     api.CredReadW.restype=wintypes.BOOL
     api.CredFree.argtypes=[ctypes.c_void_p]
-    if not api.CredReadW(target,1,0,ctypes.byref(pointer)):return None
+    if not api.CredReadW(target,1,0,ctypes.byref(pointer)):
+        if ctypes.get_last_error()==1168:return None
+        raise ValueError('Cofre do Windows indisponível ou acesso negado')
     try:return ctypes.string_at(pointer.contents.CredentialBlob,pointer.contents.CredentialBlobSize).decode('utf-8')
     finally:api.CredFree(pointer)
 
@@ -121,26 +141,38 @@ class RequestBudget:
     def __init__(self, state_dir): self.path=Path(state_dir)/'ai-requests.sqlite3'
     def reserve(self, now=None):
         now=time.time() if now is None else now
+        if isinstance(now,bool) or not isinstance(now,(int,float)) or not math.isfinite(now) or not 0<=now<=253402300799:
+            raise ValueError('Horário inválido para a cota de IA')
         day=dt.datetime.fromtimestamp(now,dt.timezone.utc).strftime('%Y-%m-%d')
         self.path.parent.mkdir(parents=True,exist_ok=True)
         with closing(sqlite3.connect(self.path,timeout=2)) as db, db:
             db.execute('CREATE TABLE IF NOT EXISTS requests(day TEXT,stamp REAL)')
             db.execute('BEGIN IMMEDIATE')
-            count,last=db.execute('SELECT count(*),max(stamp) FROM requests WHERE day=?',(day,)).fetchone()
+            count=db.execute('SELECT count(*) FROM requests WHERE day=?',(day,)).fetchone()[0]
+            last=db.execute('SELECT max(stamp) FROM requests').fetchone()[0]
             if count>=40:raise ValueError('Limite local de 40 consultas cloud/dia atingido')
             if last is not None and now-last<60:raise ValueError('Intervalo global da IA: aguarde 60 segundos')
             db.execute('INSERT INTO requests VALUES(?,?)',(day,now))
 
 
 class RoutedAdvisor:
-    def __init__(self,state_dir,settings_path=None):
+    def __init__(self,state_dir,settings_path=None,*,config_override=None,key_override=None):
         self.state_dir=Path(state_dir)
         self.settings_path=Path(settings_path) if settings_path else self.state_dir/'settings.json'
         self.catalog=None;self.catalog_at=0
         self.label='IA opcional'
+        self.config_override=config_override
+        self.key_override=key_override
     def settings(self):
-        try:return json.loads(self.settings_path.read_text(encoding='utf-8-sig'))
+        if self.config_override is not None:return self.config_override
+        try:
+            result=json.loads(self.settings_path.read_text(encoding='utf-8-sig'))
+            if not isinstance(result,dict):raise ValueError('Configuração de IA inválida')
+            return result
         except FileNotFoundError:return {}
+    def enabled(self):
+        try:return self.settings().get('ai_enabled') is True
+        except (OSError,ValueError,TypeError):return False
     def advise(self,context):
         from gpu_agent import OllamaAdvisor
         config=configuration(self.settings())
@@ -150,7 +182,7 @@ class RoutedAdvisor:
         if provider=='ollama':return OllamaAdvisor(model=config['model']).advise(safe)
         if not config['cloud_consent']:raise ValueError('Autorize o envio de telemetria resumida à nuvem')
         if provider=='opencode':return self.opencode(config,safe)
-        key=credential('openrouter')
+        key=self.key_override or credential('openrouter')
         if not key:raise ValueError('Configure sua chave OpenRouter no assistente de IA')
         if not self.catalog or time.time()-self.catalog_at>300:
             self.catalog=request_json('https://openrouter.ai/api/v1/models')['data'];self.catalog_at=time.time()
@@ -196,5 +228,9 @@ class RoutedAdvisor:
         parts=[]
         for line in raw.decode('utf-8').splitlines():
             event=json.loads(line)
-            if event.get('type')=='text':parts.append(event.get('part',{}).get('text',''))
+            if not isinstance(event,dict):raise ValueError('Evento OpenCode inválido')
+            if event.get('type')=='text':
+                part=event.get('part')
+                if not isinstance(part,dict) or not isinstance(part.get('text'),str):raise ValueError('Resposta OpenCode inválida')
+                parts.append(part['text'])
         return OllamaAdvisor.parse(''.join(parts))

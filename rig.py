@@ -297,7 +297,7 @@ class RigManager:
         previous=self.devices.get(identifier,{})
         if previous.get("external_readonly") or previous.get("ownership_unverified"):
             return False
-        if previous.get("miner") and self.backend.is_owned(previous["miner"]):
+        if any(previous.get(role) and self.backend.is_owned(previous[role]) for role in ('miner','controller','proxy')):
             return False
         entry={"gpu_uuid":identifier,"identity":dict(device),"index":device["index"],"name":device["name"],
             "wallet":device["wallet"],"desired_wallet":device["wallet"],"enabled":device["enabled"],
@@ -361,13 +361,21 @@ class RigManager:
             atomic_json(Path(entry["log_dir"])/"gpu-agent-stop.json",{"gpu_uuid":identifier,"pid":controller["pid"],
                 "at":self.clock(),"reason":"rig_stop"})
         miner=entry.get("miner")
-        if miner and self.backend.is_owned(miner): self.backend.stop(miner)
+        if miner and self.backend.is_owned(miner):
+            if not self.backend.stop(miner):
+                entry.update(state='stop_failed',error='Minerador não confirmou parada; identidade preservada')
+                return False
         if controller and self.backend.is_owned(controller):
             if not self.backend.wait(controller,timeout=12):
-                self.backend.stop(controller)
+                if not self.backend.stop(controller):
+                    entry.update(state='stop_failed',error='Supervisor não confirmou parada; identidade preservada')
+                    return False
                 entry["restore_warning"]="Supervisor não confirmou a restauração no prazo; verificar clocks no driver"
         proxy=entry.get("proxy")
-        if proxy and self.backend.is_owned(proxy): self.backend.stop(proxy)
+        if proxy and self.backend.is_owned(proxy):
+            if not self.backend.stop(proxy):
+                entry.update(state='stop_failed',error='Proxy não confirmou parada; identidade preservada')
+                return False
         entry.update(state="stopped",miner_running=False,miner=None,controller=None,proxy=None,
             miner_pid=None,controller_pid=None,proxy_pid=None,stopped_at=self.clock())
         return True
@@ -417,7 +425,7 @@ class RigManager:
             changed=entry.get("wallet")!=device["wallet"] or entry.get("index")!=device["index"] or entry.get("miner_index",entry.get("index"))!=device["miner_index"]
             healthy=bool(entry.get("miner") and entry.get("controller") and self.backend.is_owned(entry["miner"]) and self.backend.is_owned(entry["controller"])
                 and (not entry.get("proxy") or self.backend.is_owned(entry["proxy"])))
-            if not device["enabled"] or changed or entry.get("state")=="running" and not healthy:
+            if not device["enabled"] or changed or entry.get('state')=='stop_failed' or entry.get("state")=="running" and not healthy:
                 if not self.stop_gpu(identifier): continue
                 if device["enabled"] and not changed and not healthy:
                     entry.update(state="error",error="Um processo desta GPU encerrou; demais GPUs preservadas",retry_after=self.clock()+60)

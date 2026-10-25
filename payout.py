@@ -11,12 +11,13 @@ def number(value):
         return None
     try:
         value = float(value)
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return None
     return value if math.isfinite(value) and value >= 0 else None
 
 
 def duration(seconds):
+    seconds=number(seconds)
     if seconds is None:
         return "não disponível"
     minutes = max(0, math.ceil(seconds / 60))
@@ -33,6 +34,7 @@ def duration(seconds):
 def observed_rate(state, now):
     points = {}
     for point in state.get("snapshots", []):
+        if not isinstance(point,dict):continue
         stamp, total = number(point.get("timestamp")), number(point.get("total_prl"))
         if stamp is not None and total is not None and now-3600 <= stamp <= now+5:
             points[stamp] = total
@@ -71,11 +73,11 @@ def payout_model(state, forecast=None, price_brl=None, now=None):
         if blocks is not None and block_time is not None:
             maturation = blocks * block_time
     source_at = number(balance_source.get("fetched_at"))
-    stale = source_at is None or now-source_at > 180 or bool(state.get("errors", {}).get("balance"))
+    stale = source_at is None or not -5<=now-source_at<=180 or bool(state.get("errors", {}).get("balance"))
     missing = max(0.0, threshold-total) if threshold is not None and total is not None else None
     missing_confirmed = max(0.0, threshold-confirmed) if threshold is not None and confirmed is not None else None
     results = sources.get("payout_history", {}).get("data", {}).get("results", [])
-    payments = [p for p in results if isinstance(p, dict) and number(p.get("date")) is not None]
+    payments = [p for p in results if isinstance(p, dict) and number(p.get("date")) is not None and number(p['date'])<=now+5]
     last_payment = None
     if payments:
         payment = max(payments, key=lambda p: float(p["date"]))

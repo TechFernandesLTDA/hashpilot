@@ -14,8 +14,49 @@ import copy
 from config import WALLET, SETTINGS
 from contribution import support_configuration
 from payout import payout_model
-from valuation import value_in_currencies
+from valuation import value_in_currencies, numeric as finite_number
 BASE = "https://pool.kryptex.com/prl/api/v1/"
+
+
+def normalize_finance_state(state,now=None):
+    """Order real observations and tolerate malformed external/cache fields."""
+    now=time.time() if now is None else now
+    result=copy.deepcopy(state) if isinstance(state,dict) else {}
+    sources=result.get('sources')
+    result['sources']={}
+    if isinstance(sources,dict):
+        for key,source in sources.items():
+            if not isinstance(source,dict):continue
+            source=dict(source);data=source.get('data')
+            if key=='rewards':
+                if not isinstance(data,list):continue
+            elif not isinstance(data,dict):continue
+            source['fetched_at']=finite_number(source.get('fetched_at')) or 0
+            if key=='price':
+                for asset in ('pearl-2','bitcoin'):
+                    asset_data=data.get(asset)
+                    if not isinstance(asset_data,dict):data[asset]={};continue
+                    for currency in ('brl','usd'):asset_data[currency]=finite_number(asset_data.get(currency),True)
+                    if 'last_updated_at' in asset_data:asset_data['last_updated_at']=finite_number(asset_data['last_updated_at'])
+            if key in ('balance','payouts','network'):
+                fields={'balance':('total','confirmed','unconfirmed','threshold','maturation_time'),
+                        'payouts':('paid',),'network':('net_hashrate','block_time','block_reward','fee','minpay','blocks_for_maturation')}
+                for field in fields[key]:
+                    if field not in data:continue
+                    value=finite_number(data[field])
+                    data[field]=value if value is not None and value>=0 else None
+            result['sources'][key]=source
+    points={}
+    snapshots=result.get('snapshots')
+    if isinstance(snapshots,list):
+        for point in snapshots:
+            if not isinstance(point,dict):continue
+            stamp,total=finite_number(point.get('timestamp')),finite_number(point.get('total_prl'))
+            if stamp is not None and 0<=stamp<=now+5 and total is not None and total>=0:
+                points[stamp]={'timestamp':stamp,'total_prl':total}
+    result['snapshots']=[points[stamp] for stamp in sorted(points)]
+    if not isinstance(result.get('errors'),dict):result['errors']={}
+    return result
 URLS = {
     "price": "https://api.coingecko.com/api/v3/simple/price?ids=pearl-2,bitcoin&vs_currencies=brl,usd&include_last_updated_at=true",
     "balance": BASE + "miner/balance/" + WALLET,
@@ -127,14 +168,15 @@ def portfolio_model(state,devices,now=None,selected_wallet=None,*,settings=None)
     missing={wallet:[] for wallet in wallets}
     for device in devices:
         miner=device.get('miner') or {}
-        measured=miner.get('hashrate_at')
         wallet=device.get('wallet') or settings.get('wallet',WALLET)
-        if (device.get('enabled',True) and device.get('miner_running') and measured and 0<=now-measured<=180
-                and not miner.get('paused') and isinstance(miner.get('hashrate'),(int,float))):
-            hashes[wallet]+=max(0,miner['hashrate'])
+        from rig_panel import fresh_hash
+        rate=fresh_hash({**device,'enabled':device.get('enabled',True)},now)
+        if rate is not None:
+            hashes[wallet]+=rate
         elif device.get('enabled',True) and device.get('miner_running') and not miner.get('paused'):
             missing[wallet].append(device.get('uuid'))
     common={}
+    wallet_states={wallet:normalize_finance_state(cached,now) for wallet,cached in wallet_states.items()}
     for cached in wallet_states.values():
         for key in ('price','network'):
             value=cached.get('sources',{}).get(key)
@@ -230,9 +272,9 @@ class FinanceCollector:
         self.state = {"wallet": self.wallet, "sources": {}, "snapshots": []}
         self.history = history
         try:
-            cached = json.loads(self.path.read_text(encoding="utf-8"))
-            if cached.get("wallet") == self.wallet:
-                self.state = cached
+            cached = json.loads(self.path.read_text(encoding="utf-8-sig"))
+            if isinstance(cached,dict) and cached.get("wallet") == self.wallet:
+                self.state = normalize_finance_state(cached)
         except (OSError, ValueError):
             pass
 
@@ -243,13 +285,17 @@ class FinanceCollector:
             for key, future in futures.items():
                 try:
                     payload = future.result()
+                    if key=='rewards' and not isinstance(payload,list):raise ValueError('Histórico de recompensas inválido')
+                    if key!='rewards' and not isinstance(payload,dict):raise ValueError('Resposta financeira precisa ser um objeto')
+                    normalized=normalize_finance_state({'sources':{key:{'fetched_at':time.time(),'data':payload}}})['sources'].get(key,{})
+                    payload=normalized.get('data',{})
                     if key == "price" and not (payload.get("pearl-2", {}).get("brl", 0) > 0):
                         raise ValueError("Cotação da Pearl (pearl-2) ausente")
-                    if key == "balance" and "total" not in payload:
+                    if key == "balance" and payload.get('total') is None:
                         raise ValueError("Saldo total ausente na resposta da pool")
                     if key == "payout_history" and (not isinstance(payload, dict) or not isinstance(payload.get("results"), list)):
                         raise ValueError("Histórico de pagamentos ausente na resposta da pool")
-                    if key == "payouts" and "paid" not in payload:
+                    if key == "payouts" and payload.get('paid') is None:
                         raise ValueError("Total pago ausente na resposta da pool")
                     self.state["sources"][key] = {"fetched_at": time.time(), "data": payload}
                 except Exception as error:
@@ -313,6 +359,8 @@ def financial_model(state: dict, hashrate_ths: float | None, now: float | None =
     wallet=WALLET if wallet is None else wallet
     settings=SETTINGS if settings is None else settings
     now = time.time() if now is None else now
+    state=normalize_finance_state(state,now)
+    hashrate_ths=finite_number(hashrate_ths,True)
     sources = state.get("sources", {})
     price_source = sources.get("price", {})
     price_data = price_source.get("data", {}).get("pearl-2", {})
@@ -343,14 +391,16 @@ def financial_model(state: dict, hashrate_ths: float | None, now: float | None =
     result["unpaid_prl"] = balance.get("total")
     result["unconfirmed_prl"] = balance.get("unconfirmed")
     result["paid_prl"] = payouts.get("paid")
-    result["accumulated_prl"] = (float(balance["total"])+float(payouts["paid"])) if "total" in balance and "paid" in payouts else None
+    result["accumulated_prl"] = finite_number(balance['total']+payouts['paid']) if balance.get('total') is not None and payouts.get('paid') is not None else None
     result["accumulated_brl"] = result["accumulated_prl"]*price if result["accumulated_prl"] is not None and price else None
     network_source = sources.get("network", {})
     network = network_source.get("data", {})
     contribution = support_configuration({**settings,'wallet':wallet},wallet)
     result['support_contribution']=contribution
-    if hashrate_ths and price and network.get("net_hashrate") and network.get("block_time") and network.get("block_reward"):
-        pool_fee = float(network.get("fee", 0))
+    current_sources=all(-5<=now-source.get('fetched_at',0)<=180 for source in (price_source,network_source))
+    current_sources=current_sources and not any(state.get('errors',{}).get(key) for key in ('price','network'))
+    pool_fee=finite_number(network.get('fee',0))
+    if current_sources and hashrate_ths and price and network.get("net_hashrate") and network.get("block_time") and network.get("block_reward") and pool_fee is not None and 0<=pool_fee<=1:
         dev_fee = .02  # SRBMiner pearlhash: taxa exibida no próprio log.
         support_fraction = contribution['percent']/100 if contribution['enabled'] else 0
         prl_day = (hashrate_ths*1e12 / float(network["net_hashrate"]) * float(network["block_reward"])
@@ -359,12 +409,14 @@ def financial_model(state: dict, hashrate_ths: float | None, now: float | None =
                               "brl_30days": prl_day*price*30, "hashrate_ths": hashrate_ths,
                               "pool_fee": pool_fee, "dev_fee": dev_fee, "support_fraction":support_fraction,
                               "support_assumption":"configured_mining_time", "network_at": network_source.get("fetched_at")}
+        if any(finite_number(result['forecast'][key]) is None for key in ('prl_day','brl_day','brl_7days','brl_30days')):result['forecast']=None
+    result['forecast_unavailable_reason']=None if result['forecast'] else 'Hashrate, preço ou rede ausentes, inválidos ou desatualizados'
     result["wallet"] = wallet
     result["payout"] = payout_model(state, result["forecast"], price, now)
     bitcoin = price_source.get("data", {}).get("bitcoin", {})
     result["price_btc_usd"], result["price_btc_brl"] = bitcoin.get("usd"), bitcoin.get("brl")
     result["btc_price_at"] = bitcoin.get("last_updated_at", price_source.get("fetched_at")) if bitcoin else None
-    result["btc_price_stale"] = not result["btc_price_at"] or now-result["btc_price_at"] > 180
+    result["btc_price_stale"] = not result["btc_price_at"] or not -5<=now-result["btc_price_at"]<=180
     amounts = {key: result["periods"][key]["prl"] for key in ("day", "week", "month")}
     amounts.update(accumulated=result["accumulated_prl"], unpaid=result["unpaid_prl"],
                    confirmed=balance.get("confirmed"), pending=result["unconfirmed_prl"], paid=result["paid_prl"],

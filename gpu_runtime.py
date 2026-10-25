@@ -9,7 +9,7 @@ import tkinter as tk
 from tkinter import ttk
 
 from config import STATE_DIR, LOG_DIR
-from gpu_agent import GPUAgent, BackgroundAdvisor, detect_nvidia_gpus
+from gpu_agent import GPUAgent, BackgroundAdvisor, detect_nvidia_gpus,numeric
 from ai_advisor import RoutedAdvisor, configuration
 from onboarding import read_settings
 from rig_config import resolve_devices
@@ -17,7 +17,9 @@ from gpu_telemetry import read_gpu_samples, read_device_payload
 from rig_panel import totals
 
 def read_json(path):
-    try:return json.loads(Path(path).read_text(encoding='utf-8-sig'))
+    try:
+        value=json.loads(Path(path).read_text(encoding='utf-8-sig'))
+        return value if isinstance(value,dict) else {}
     except (OSError,ValueError):return {}
 
 class RigTelemetry:
@@ -33,12 +35,16 @@ class RigTelemetry:
         settings=read_settings()
         devices=resolve_devices(self.detected,settings,LOG_DIR)
         manager=read_json(STATE_DIR/'rig-manager.json')
-        manager_fresh=0<=now-float(manager.get('sampled_at',manager.get('updated_at',0)))<=15
+        manager_at=numeric(manager.get('sampled_at',manager.get('updated_at',0)))
+        manager_fresh=manager_at is not None and 0<=now-manager_at<=15
+        managed_devices=manager.get('devices')
+        if not isinstance(managed_devices,dict):managed_devices={}
         samples=read_gpu_samples(devices)
         result=[]
         for device in devices:
-            identifier=device['uuid'];managed=(manager.get('devices') or {}).get(identifier,{})
-            logs=list(Path(device['log_dir']).glob('*.log'))
+            identifier=device['uuid'];managed=managed_devices.get(identifier,{})
+            if not isinstance(managed,dict):managed={}
+            logs=list(Path(device['log_dir']).glob('mining-*.log'))
             path=Path(managed['miner_log']) if managed.get('miner_log') else max(logs,key=lambda p:p.stat().st_mtime) if logs else None
             legacy=False
             if path is None and device['index']==0:
@@ -47,6 +53,7 @@ class RigTelemetry:
                 legacy=path is not None
             pid=managed.get('miner_pid')
             running=(pid in processes) if pid and processes is not None else False if managed and not pid else None
+            if managed and not manager_fresh:running=None
             if legacy and not managed:
                 # Match the legacy supervisor PID; another GPU's miner is not GPU0 evidence.
                 legacy_control=read_json(LOG_DIR/'thermal-control.json')
@@ -56,9 +63,10 @@ class RigTelemetry:
             control=read_json(Path(device['state_dir'])/'gpu-agent-control.json')
             if legacy and not control:control=read_json(LOG_DIR/'thermal-control.json')
             if control:
-                control['age_seconds']=now-float(control.get('sampled_at',0));control['stale']=control['age_seconds']>15
+                control_at=numeric(control.get('sampled_at'))
+                control['age_seconds']=now-(control_at or 0);control['stale']=control_at is None or not -5<=control['age_seconds']<=15
             entry={**device,**payload,'gpu':samples.get(identifier), 'thermal_control':control or None,
-                'state':managed.get('state','legacy_readonly' if legacy else 'disabled' if not device['enabled'] else 'stopped'),
+                'state':'manager_unavailable' if managed and not manager_fresh else managed.get('state','legacy_readonly' if legacy else 'disabled' if not device['enabled'] else 'stopped'),
                 'collected_at':now,'support_contribution':{},'manager_stale':bool(managed and not manager_fresh)}
             result.append(entry)
         return {'schema_version':2,'devices':result,'totals':totals(result,now),'ignored_devices':manager.get('ignored_devices',manager.get('ignored',[])),
@@ -134,10 +142,13 @@ class GPURuntime:
                         fresh=0<=time.time()-float(device.get('collected_at',0))<=10
                         if fresh and sample and not sample.get('error') and device.get('enabled'):
                             status=agent.observe(gpu,sample,hashrate_ths=miner.get('hashrate') if device.get('miner_running') and not miner.get('paused') else None,
-                                accepted=miner.get('accepted',0),rejected=miner.get('rejected',0),hash_sampled_at=miner.get('hashrate_at'))
+                                accepted=miner.get('accepted',0),rejected=miner.get('rejected',0),hash_sampled_at=miner.get('hashrate_at'),hw_errors=miner.get('hw_errors',0))
                         plan=agent.recommend(gpu,sample,ollama=False) if sample and not sample.get('error') else {}
                         ai_settings=read_settings()
-                        ai_config=configuration(ai_settings)
+                        try:ai_config=configuration(ai_settings)
+                        except ValueError:
+                            ai_config={'provider':'unavailable'}
+                            plan['ai_status']='Configuração de IA inválida; benchmark local continua ativo'
                         control=device.get('thermal_control') or {}
                         if ai_settings.get('ai_enabled') and ai_config['provider']!='ollama':
                             # The miner controller owns cloud consultations; the UI never duplicates them.

@@ -101,34 +101,39 @@ def parse_gpu_log(text,gpu_uuid,index,now=None,*,allow_local_gpu0=True):
         match=RATE.search(line)
         if match and target is not None and int(match[1])==target:
             value=numeric(match[2])
-            rate=value*UNITS[match[3]] if value is not None and match[3] in UNITS else None
+            rate=numeric(value*UNITS[match[3]]) if value is not None and match[3] in UNITS else None
             # Out-of-order log delivery may add chart points but cannot replace a newer live value.
             if stamp is not None and rate is not None and stamp_now-900<=stamp<=stamp_now+5:
                 result["rate_points"].append((stamp,rate))
-            if result["hashrate_at"] is None or stamp is not None and stamp>=result["hashrate_at"]:
+            if stamp is not None and stamp<=stamp_now+5 and rate is not None and rate>=0 and (result["hashrate_at"] is None or stamp>=result["hashrate_at"]):
                 result["hashrate"],result["hashrate_at"]=rate,stamp
                 counters=dict(re.findall(r"([A-Z]+):([\d.]+)",match[4]))
                 for key,code in (("accepted","A"),("rejected","R"),("hw_errors","HW")):
-                    result[key]=max(0,int(float(counters.get(code,0))))
+                    value=numeric(counters.get(code))
+                    if value is not None and value>=0 and value.is_integer():result[key]=int(value)
         average=AVERAGE.search(line)
         if average and target is not None and (belongs or (label is None and len(labels)==1)):
             first,first_unit,last,last_unit=average.groups()
             if first_unit in UNITS and last_unit in UNITS:
-                result["average_1m"]=float(first)*UNITS[first_unit]
-                result["average_15m"]=float(last)*UNITS[last_unit]
-    result["rate_points"]=sorted(set(result["rate_points"]))
+                first,last=numeric(first),numeric(last)
+                if first is not None:result["average_1m"]=numeric(first*UNITS[first_unit])
+                if last is not None:result["average_15m"]=numeric(last*UNITS[last_unit])
+    result["rate_points"]=sorted(dict(result["rate_points"]).items())
     return result
 
 
 def read_log_tail(path,limit=200_000):
     path=Path(path)
     with path.open("rb") as handle:
+        signature=handle.read(2)
         handle.seek(0,2)
         size=handle.tell()
-        handle.seek(max(0,size-limit))
+        start=max(0,size-limit)
+        if signature in (b'\xff\xfe',b'\xfe\xff'):start-=start%2
+        handle.seek(start)
         body=handle.read()
-    encoding="utf-16" if body.startswith((b"\xff\xfe",b"\xfe\xff")) else "utf-8-sig"
-    text=body.decode(encoding,errors="replace")
+    encoding=('utf-16-le' if signature==b'\xff\xfe' else 'utf-16-be') if signature in (b'\xff\xfe',b'\xfe\xff') else 'utf-8-sig'
+    text=body.decode(encoding,errors="replace").lstrip('\ufeff')
     return text.split("\n",1)[-1] if size>limit else text
 
 

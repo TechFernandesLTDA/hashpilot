@@ -270,14 +270,16 @@ class Collector:
 
 
 def fmt(value, suffix="", precision=0):
+    value=safe_number(value)
     return "—" if value is None else f"{value:,.{precision}f}".replace(",", " ") + suffix
 
 
 def safe_number(value):
+    if isinstance(value,bool):return None
     try:
         value = float(value)
         return value if math.isfinite(value) else None
-    except (TypeError, ValueError):
+    except (TypeError, ValueError, OverflowError):
         return None
 
 
@@ -359,10 +361,11 @@ class Chart(tk.Canvas):
         self.bind("<Configure>", lambda _: self.draw())
 
     def add(self, timestamp, value):
-        timestamp = float(timestamp)
-        value = float(value) if value is not None else None
-        if not math.isfinite(timestamp) or (value is not None and not math.isfinite(value)):
-            return
+        timestamp=safe_number(timestamp)
+        if timestamp is None or timestamp<0:return
+        if value is not None:
+            value=safe_number(value)
+            if value is None:return
         if not self.points or timestamp > self.points[-1][0]:
             self.points.append((timestamp, value))
             return
@@ -1247,7 +1250,7 @@ class Monitor(tk.Tk):
             self.overview_values['hash'].configure(text=fmt(aggregate.get('hashrate_ths'),' TH/s',1))
             self.overview_notes['hash'].configure(text=f"Rig · {aggregate.get('mining_count',0)}/{len(devices)} minerando")
             self.overview_values['power'].configure(text=fmt(aggregate.get('power_w'),' W',1))
-            self.overview_notes['power'].configure(text='Consumo de todas as GPUs detectadas')
+            self.overview_notes['power'].configure(text='Consumo parcial · sensores ausentes' if aggregate.get('power_partial') else 'Consumo de todas as GPUs detectadas')
             self.overview_values['temp'].configure(text=fmt(aggregate.get('max_temperature_c'),' °C'))
             self.overview_notes['temp'].configure(text='Maior temperatura do rig')
             # A new aggregate hash point requires a new underlying miner log
@@ -1415,7 +1418,7 @@ class Monitor(tk.Tk):
 def console_text(snapshot, finance):
     gpu, miner = snapshot.get("gpu") or {}, snapshot.get("miner") or {}
     age = time.time()-snapshot.get("collected_at", 0)
-    active = age <= 8
+    active = -5<=age<=8
     money = lambda value: "N/D" if value is None else "R$ " + f"{value:.2f}".replace(".", ",")
     forecast = finance.get("forecast") or {}
     today = finance.get("periods", {}).get("day", {})

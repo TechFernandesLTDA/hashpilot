@@ -8,7 +8,7 @@ def numeric(value, positive=False):
         return None
     try:
         result = float(value)
-    except (ValueError, TypeError):
+    except (ValueError, TypeError, OverflowError):
         return None
     if not math.isfinite(result) or (positive and result <= 0):
         return None
@@ -28,4 +28,4 @@ def value_in_currencies(prl, price_brl=None, price_usd=None, bitcoin_usd=None, b
         result["btc"] = amount*usd/btc_usd
     elif brl is not None and btc_brl is not None:
         result["btc"] = amount*brl/btc_brl
-    return result
+    return {key:numeric(value) for key,value in result.items()}

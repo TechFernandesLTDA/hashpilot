@@ -42,3 +42,5 @@
 - Instalação ou simples monitoramento não são autorização implícita para alterar clocks de outra GPU.
 
 AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e Ollama local](ai-providers.md). A política adaptativa funciona sem IA.
+
+[Auditoria de estabilidade de 25/10/2026: 11 bugs principais e 60 microbugs/casos de borda](qa/2026-10-25-auditoria.md).

@@ -20,14 +20,23 @@ MODELS={'openrouter':['openrouter/free'],'opencode':['opencode/glm-5.3-flash-fre
         'opencode/deepseek-v4.1-flash-free','opencode/mimo-v2.6-flash-free'],'ollama':['qwen2.5:0.5b']}
 
 
-def save_ai(path,enabled,provider,model,consent,key=''):
-    try:settings=json.loads(Path(path).read_text(encoding='utf-8-sig'))
-    except FileNotFoundError:settings={}
+def prepare_ai(settings,enabled,provider,model,consent):
+    if not isinstance(settings,dict):raise ValueError('Configuração precisa ser um objeto')
+    if not isinstance(enabled,bool) or not isinstance(consent,bool):raise ValueError('Ativação e consentimento precisam ser booleanos')
+    if not isinstance(model,str):raise ValueError('Modelo precisa ser texto')
+    settings=dict(settings)
     settings.update(ai_enabled=bool(enabled),ai={'provider':provider,'model':model.strip(),
                     'cloud_consent':bool(consent),'free_only':True})
     config=configuration(settings)
     if config['enabled'] and provider!='ollama' and not config['cloud_consent']:
         raise ValueError('Marque a autorização de telemetria resumida para usar Cloud Free')
+    return settings
+
+
+def save_ai(path,enabled,provider,model,consent,key=''):
+    try:settings=json.loads(Path(path).read_text(encoding='utf-8-sig'))
+    except FileNotFoundError:settings={}
+    settings=prepare_ai(settings,enabled,provider,model,consent)
     if key.strip():
         if provider!='openrouter':raise ValueError('Esta chave é somente para OpenRouter; OpenCode usa seu próprio login')
         credential(provider,key.strip())
@@ -43,7 +52,7 @@ def referral(provider):
     from urllib.parse import urlparse
     if not isinstance(value,str):return None
     parsed=urlparse(value)
-    return value if parsed.scheme=='https' and parsed.hostname and not parsed.username and not parsed.password else None
+    return value if not any(ord(c)<33 for c in value) and parsed.scheme=='https' and parsed.hostname and not parsed.username and not parsed.password else None
 
 
 def show_ai_setup(parent=None,path=SETTINGS_PATH):
@@ -85,10 +94,12 @@ def show_ai_setup(parent=None,path=SETTINGS_PATH):
     install=tk.Button(links,text='Instalar Ollama local',command=lambda:__import__('onboarding').launch_ai_setup())
     status=label('',11,teal);status.configure(textvariable=result)
     window.rowconfigure(11,weight=1)
-    busy=False;responses=queue.Queue()
+    busy=False;responses=queue.Queue();revision=0;timer=None
     def change(event=None):
+        nonlocal revision
         p=selected();description.set(DESCRIPTIONS[p]);models.configure(values=MODELS[p])
-        if event is not None:model.set(MODELS[p][0]);key.set('');consent.set(False)
+        if event is not None:
+            revision+=1;result.set('');model.set(MODELS[p][0]);key.set('');consent.set(False)
         entry.configure(state='normal' if p=='openrouter' else 'disabled')
         if p=='openrouter':key_label.grid();entry.grid()
         else:key_label.grid_remove();entry.grid_remove()
@@ -106,21 +117,36 @@ def show_ai_setup(parent=None,path=SETTINGS_PATH):
         return True
     def test():
         nonlocal busy
-        if busy or not save(False):return
+        if busy:return
+        try:
+            proposed=prepare_ai(settings,enabled.get(),selected(),model.get(),consent.get())
+            if not proposed['ai_enabled']:raise ValueError('Ative as sugestões de IA para testar a conexão')
+        except ValueError as error:
+            result.set(str(error));return
+        test_key=key.get().strip() or None
+        test_revision=revision
         busy=True;result.set('Consultando em segundo plano…')
         def work():
             try:
-                answer=RoutedAdvisor(Path(path).parent,path).advise({'sample':{},'benchmark':{}})
-                responses.put('Conexão validada · '+answer['reason'])
-            except (OSError,ValueError,KeyError,TypeError,RuntimeError):
-                responses.put('Consulta indisponível. Confira ativação, consentimento, chave/login e cota gratuita.')
+                answer=RoutedAdvisor(Path(path).parent,path,config_override=proposed,key_override=test_key).advise({'sample':{},'benchmark':{}})
+                responses.put((test_revision,'Conexão validada · '+answer['reason']))
+            except ValueError as error:responses.put((test_revision,str(error)))
+            except (OSError,KeyError,TypeError,RuntimeError):
+                responses.put((test_revision,'Consulta indisponível. Confira chave/login e cota gratuita.'))
         threading.Thread(target=work,daemon=True).start()
     def poll():
-        nonlocal busy
+        nonlocal busy,timer
         if not window.winfo_exists():return
-        try:result.set(responses.get_nowait());busy=False
+        try:
+            response_revision,message=responses.get_nowait();busy=False
+            if response_revision==revision:result.set(message)
         except queue.Empty:pass
-        window.after(200,poll)
+        timer=window.after(200,poll)
+    def cleanup(event):
+        if event.widget is window and timer is not None:
+            try:window.after_cancel(timer)
+            except tk.TclError:pass
+    window.bind('<Destroy>',cleanup,add='+')
     tk.Button(buttons,text='Testar conexão',command=test).pack(side='left',padx=4)
     tk.Button(buttons,text='Cancelar',command=window.destroy).pack(side='left',padx=4)
     tk.Button(buttons,text='Salvar IA',command=save,bg=teal,fg=fg,relief='flat',padx=16,pady=8).pack(side='left',padx=4)
