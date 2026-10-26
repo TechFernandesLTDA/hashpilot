@@ -15,6 +15,7 @@ $registry=Join-Path $state 'rig-manager.json'
 $referenceRtx3070=$false
 if(Test-Path -LiteralPath $registry){
     $running=Get-Content -LiteralPath $registry -Raw -Encoding UTF8 | ConvertFrom-Json
+    $referenceRtx3070=($running.marker -eq 'HashPilotRig-v1' -and $running.reference_uuid -eq 'GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75')
     $now=[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()/1000.0
     $process=if($running.pid){Get-CimInstance Win32_Process -Filter ('ProcessId='+[int]$running.pid) -ErrorAction SilentlyContinue}else{$null}
     if($process){
@@ -25,8 +26,6 @@ if(Test-Path -LiteralPath $registry){
             throw 'Identidade do gerenciador nao confirmada. A sessao atual foi preservada.'
         }
         $created=$process.CreationDate
-        # Preserve this machine's explicit reference-profile opt-in after handoff.
-        $referenceRtx3070=$running.reference_uuid -eq 'GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75'
         $queue=Join-Path $state 'rig-requests'
         New-Item -ItemType Directory -Path $queue -Force | Out-Null
         $request=@{id=[Guid]::NewGuid().ToString('N');action='shutdown';at=$now}
@@ -42,5 +41,5 @@ if(Test-Path -LiteralPath $registry){
     }
 }
 $startArguments=@{Python=$Python}
-if($referenceRtx3070){$startArguments.ReferenciaRTX3070=$true}
+if($referenceRtx3070){$startArguments.ReferenciaRTX3070=$true;$startArguments.LegacyUuid='GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75'}
 & (Join-Path $PSScriptRoot 'Iniciar-Rig.ps1') @startArguments
