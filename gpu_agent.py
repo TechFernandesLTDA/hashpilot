@@ -453,6 +453,31 @@ class GPUAgent:
                 (gpu["uuid"],stamp,benchmark.get("id"),json.dumps(plan,ensure_ascii=False)))
         return plan
 
+    def assert_no_pending_trial(self,gpu):
+        validate_device(gpu)
+        with self.lock:
+            if self.db.execute("SELECT 1 FROM trials WHERE gpu_uuid=? AND state='validating'",(gpu['uuid'],)).fetchone():
+                raise RuntimeError("O ajuste anterior ainda está em validação")
+
+    def recover_interrupted_trials(self,gpu,*,ownership_check,now=None):
+        """Only a new exclusive hardware owner may retire a prior controller's trial.
+
+        No rollback is inferred across process lifetimes. The new controller must
+        measure its current startup baseline; old rows remain as interrupted audit.
+        """
+        validate_device(gpu)
+        if not callable(ownership_check):raise ValueError('Comprovação de posse obrigatória')
+        ownership_check()
+        stamp=time.time() if now is None else float(now)
+        with self.lock,self.db:
+            rows=self.db.execute("SELECT id,payload_json FROM trials WHERE gpu_uuid=? AND state='validating'",(gpu['uuid'],)).fetchall()
+            for row in rows:
+                payload=json.loads(row['payload_json'])
+                if not isinstance(payload,dict):raise ValueError('Estado do teste anterior inválido; recuperação recusada')
+                payload.update(interrupted_at=stamp,interruption_reason='Novo supervisor exclusivo; baseline será medido novamente')
+                self.db.execute("UPDATE trials SET state='interrupted_controller_restart',payload_json=? WHERE id=?",(json.dumps(payload,ensure_ascii=False),row['id']))
+        return len(rows)
+
     def record_application(self,gpu,plan,before,baseline_hashrate,now=None):
         """Call only AFTER a successful write by the single hardware supervisor."""
         validate_device(gpu)
@@ -970,6 +995,7 @@ def control(args,state_dir,monitor_state_dir):
     try:
         actuator.acquire(gpu["uuid"],external_controller_active=other_supervisor())
         owns=True
+        status['recovered_interrupted_trials']=agent.recover_interrupted_trials(gpu,ownership_check=lambda:actuator.assert_owner(gpu['uuid']))
         status["enabled"]=True
         agent.start_benchmark(gpu,args.duration,args.objective)
         trial_active=False
@@ -1057,6 +1083,8 @@ def control(args,state_dir,monitor_state_dir):
                 plan=validated_plan(gpu,sample,desired,result.get("best_profile"))
                 plan.update(gpu_uuid=gpu["uuid"],at=time.time(),reason="Experimento após baseline validado")
                 if plan["action"]!="hold" and (plan["action"] not in ("clock_up","power_up") or sample["temperature_c"]<soft-3):
+                    # Refuse a conflicting trial before changing hardware.
+                    agent.assert_no_pending_trial(gpu)
                     actuator.apply(gpu,sample,plan,external_controller_active=False)
                     agent.record_application(gpu,plan,sample,result["mean_hashrate_ths"])
                     trial_rejected=int(miner.get("rejected",0))

@@ -14,17 +14,18 @@ class ServiceUpdateTests(unittest.TestCase):
         # still requires real Windows UAC before any shutdown request is written.
         source=source.replace("$principal=[Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())","$principal=$null")
         source=source.replace("if(-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)){","if($false){")
-        for scenario,ok in [('graceful',True),('absent',True),('foreign',False),('stale',False),('timeout',False)]:
+        for scenario,ok in [('graceful',True),('reference',True),('absent',True),('foreign',False),('stale',False),('timeout',False)]:
             with self.subTest(scenario=scenario),tempfile.TemporaryDirectory() as d:
                 root=Path(d);state=root/'PearlMonitor';state.mkdir()
                 (root/'update.ps1').write_text(source,encoding='utf-8-sig')
-                (root/'Iniciar-Rig.ps1').write_text("param([string]$Python)\nSet-Content -LiteralPath (Join-Path $PSScriptRoot 'started.txt') -Value 'fixture only'",encoding='utf-8')
+                (root/'Iniciar-Rig.ps1').write_text("param([string]$Python,[switch]$ReferenciaRTX3070)\nSet-Content -LiteralPath (Join-Path $PSScriptRoot 'started.txt') -Value ([string]$ReferenciaRTX3070.IsPresent)",encoding='utf-8')
                 runner=r'''
 $ErrorActionPreference='Stop'
 $state=Join-Path $env:LOCALAPPDATA 'PearlMonitor'
 $now=[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()/1000.0
 if($env:AUDIT_CASE -eq 'stale'){$now-=3600}
-@{pid=42;marker='HashPilotRig-v1';sampled_at=$now}|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $state 'rig-manager.json')
+$reference=if($env:AUDIT_CASE -eq 'reference'){'GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75'}else{$null}
+@{pid=42;marker='HashPilotRig-v1';sampled_at=$now;reference_uuid=$reference}|ConvertTo-Json|Set-Content -LiteralPath (Join-Path $state 'rig-manager.json')
 $script:queries=0
 function Get-CimInstance {
     param($ClassName,$Filter,$ErrorAction)
@@ -44,6 +45,7 @@ function Start-Process {throw 'Real process launch is forbidden in the fixture'}
                     env=env,capture_output=True,timeout=15,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
                 self.assertEqual(result.returncode==0,ok,result.stderr.decode(errors='replace'))
                 self.assertEqual((root/'started.txt').exists(),ok)
+                if ok:self.assertEqual((root/'started.txt').read_text().strip().lower(),'true' if scenario=='reference' else 'false')
                 requests=list((state/'rig-requests').glob('*.json'))
                 if scenario in ('foreign','stale'):self.assertEqual(requests,[])
                 if scenario in ('graceful','timeout'):

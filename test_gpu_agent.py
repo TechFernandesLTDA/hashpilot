@@ -163,6 +163,34 @@ class GPUAgentTests(unittest.TestCase):
         result=self.agent.trial_feedback(self.gpu,sample(1120),82,1120,now=1120)
         self.assertEqual(result["state"],"accepted")
 
+    def test_new_exclusive_controller_retires_old_trial_and_can_record_next(self):
+        plan={'action':'clock_up','gpu_uuid':self.gpu['uuid']}
+        self.agent.record_application(self.gpu,plan,sample(),80,now=1000)
+        self.agent.close();self.agent=GPUAgent(self.temp.name)
+        with self.assertRaises(RuntimeError):self.agent.assert_no_pending_trial(self.gpu)
+        calls=[]
+        self.assertEqual(self.agent.recover_interrupted_trials(self.gpu,ownership_check=lambda:calls.append('owned'),now=2000),1)
+        self.assertEqual(calls,['owned'])
+        old=self.agent.db.execute('SELECT state,payload_json FROM trials').fetchone()
+        self.assertEqual(old['state'],'interrupted_controller_restart')
+        self.assertEqual(json.loads(old['payload_json'])['baseline_hashrate_ths'],80)
+        self.agent.assert_no_pending_trial(self.gpu)
+        self.agent.record_application(self.gpu,plan,sample(2000),81,now=2000)
+        self.assertEqual(self.agent.db.execute('SELECT COUNT(*) FROM trials').fetchone()[0],2)
+
+    def test_denied_controller_ownership_preserves_pending_trial(self):
+        self.agent.record_application(self.gpu,{'action':'clock_up','gpu_uuid':self.gpu['uuid']},sample(),80,now=1000)
+        def denied():raise RuntimeError('fixture: ownership denied')
+        with self.assertRaises(RuntimeError):self.agent.recover_interrupted_trials(self.gpu,ownership_check=denied,now=2000)
+        self.assertEqual(self.agent.db.execute('SELECT state FROM trials').fetchone()[0],'validating')
+
+    def test_restart_recovery_is_scoped_to_one_gpu_and_idempotent(self):
+        other=device('GPU-other')
+        for gpu in (self.gpu,other):self.agent.record_application(gpu,{'action':'clock_up','gpu_uuid':gpu['uuid']},sample(),80,now=1000)
+        self.assertEqual(self.agent.recover_interrupted_trials(self.gpu,ownership_check=lambda:None),1)
+        self.assertEqual(self.agent.recover_interrupted_trials(self.gpu,ownership_check=lambda:None),0)
+        self.assertEqual(self.agent.db.execute("SELECT state FROM trials WHERE gpu_uuid=?",(other['uuid'],)).fetchone()[0],'validating')
+
     def test_export_requires_validated_session_and_expires(self):
         self.assertIsNone(self.agent.export_policy(self.gpu,self.temp.name,now=1300))
         self.completed()
@@ -381,6 +409,7 @@ class OllamaAndActuatorTests(unittest.TestCase):
             calls=[]
             class IncompleteAgent:
                 advisor=None
+                def recover_interrupted_trials(self,*args,**kwargs):return 0
                 def start_benchmark(self,*args): calls.append(args)
                 def observe(self,*args,**kwargs): return {"state":"complete","validated":False}
                 def close(self): pass
@@ -398,6 +427,31 @@ class OllamaAndActuatorTests(unittest.TestCase):
             status=json.loads((Path(temporary)/"gpu-agent-control.json").read_text())
             self.assertEqual(status["mode"],"insufficient_data")
             self.assertEqual(status["writes"],0)
+
+    def test_controller_restart_with_persisted_trial_survives_next_adjustment(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            gpu=device();agent=GPUAgent(temporary)
+            agent.record_application(gpu,{'action':'clock_up','gpu_uuid':gpu['uuid']},sample(),80,now=1000)
+            agent.close()
+            args=SimpleNamespace(duration=300,gpu=0,miner_pid=123,ollama=False,objective='performance',samples=1)
+            measured={'state':'complete','validated':True,'mean_hashrate_ths':80}
+            with patch('gpu_agent.detect_nvidia_gpus',return_value=[gpu]), \
+                 patch('gpu_agent.process_identity',return_value={'created_filetime':1,'executable':'SRBMiner-MULTI.exe'}), \
+                 patch('gpu_agent.process_alive',return_value=True), \
+                 patch('gpu_agent.external_supervisor_active',return_value=False), \
+                 patch('gpu_agent.read_sample',side_effect=lambda gpu:sample(time.time())), \
+                 patch('gpu_agent.read_miner_data',side_effect=lambda *a:({'hashrate':80,'hashrate_at':time.time(),'accepted':1,'rejected':0},True)), \
+                 patch('gpu_agent.GPUAgent.observe',return_value=measured), \
+                 patch('gpu_agent.RoutedAdvisor',return_value=None), \
+                 patch('gpu_agent.smi_command') as command, \
+                 patch('ctypes.WinDLL',return_value=SimpleNamespace(IsUserAnAdmin=lambda:True)):
+                self.assertEqual(control(args,temporary,temporary),0)
+                self.assertIn(['-i',gpu['uuid'],'-lgc','1545,1545'],[c.args[0] for c in command.call_args_list])
+            status=json.loads((Path(temporary)/'gpu-agent-control.json').read_text())
+            self.assertIsNone(status['error']);self.assertEqual(status['recovered_interrupted_trials'],1)
+            check=GPUAgent(temporary)
+            try:self.assertEqual([r[0] for r in check.db.execute('SELECT state FROM trials ORDER BY id')],['interrupted_controller_restart','validating'])
+            finally:check.close()
 
     def test_pid_reuse_does_not_keep_supervisor_active(self):
         identity={"created_filetime":100,"executable":"SRBMiner-MULTI.exe"}

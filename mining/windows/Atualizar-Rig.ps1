@@ -12,6 +12,7 @@ if(-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrat
     exit
 }
 $registry=Join-Path $state 'rig-manager.json'
+$referenceRtx3070=$false
 if(Test-Path -LiteralPath $registry){
     $running=Get-Content -LiteralPath $registry -Raw -Encoding UTF8 | ConvertFrom-Json
     $now=[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()/1000.0
@@ -24,6 +25,8 @@ if(Test-Path -LiteralPath $registry){
             throw 'Identidade do gerenciador nao confirmada. A sessao atual foi preservada.'
         }
         $created=$process.CreationDate
+        # Preserve this machine's explicit reference-profile opt-in after handoff.
+        $referenceRtx3070=$running.reference_uuid -eq 'GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75'
         $queue=Join-Path $state 'rig-requests'
         New-Item -ItemType Directory -Path $queue -Force | Out-Null
         $request=@{id=[Guid]::NewGuid().ToString('N');action='shutdown';at=$now}
@@ -38,4 +41,6 @@ if(Test-Path -LiteralPath $registry){
         if($current -and $current.CreationDate -eq $created){throw 'Servico ainda esta encerrando. Nenhum processo foi finalizado a forca; verifique o estado antes de tentar novamente.'}
     }
 }
-& (Join-Path $PSScriptRoot 'Iniciar-Rig.ps1') -Python $Python
+$startArguments=@{Python=$Python}
+if($referenceRtx3070){$startArguments.ReferenciaRTX3070=$true}
+& (Join-Path $PSScriptRoot 'Iniciar-Rig.ps1') @startArguments
