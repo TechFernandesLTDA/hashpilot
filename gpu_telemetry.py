@@ -88,6 +88,7 @@ def parse_gpu_log(text,gpu_uuid,index,now=None,*,allow_local_gpu0=True):
         belongs=label is not None and target is not None and int(label[1])==target
         if "Miner version:" in line:
             result["started_at"]=stamp
+            result['version']=line.split('Miner version:',1)[1].strip()
         if "Connected to " in line:
             result["connection"]="Conectado à pool"
         if any(word in line.lower() for word in ("disconnected","connection failed","reconnecting","connection lost")):

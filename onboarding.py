@@ -216,6 +216,7 @@ def run_setup(parent=None,selected_uuid=None) -> bool:
     tk.Button(window,text='Escolher provedor de IA',command=choose_ai).grid(row=11,column=0,sticky='e',padx=24)
     label('Escolha OpenRouter, OpenCode ou Ollama local no assistente de IA. Cloud Free poupa CPU/RAM do rig.',12,MUTED,10)
     window.rowconfigure(13,weight=1)
+    tk.Button(window,text='Central de operação · saúde, perfis, backups e diagnóstico',command=lambda:__import__('operations_ui').show_operations(window)).grid(row=13,column=0,sticky='w',padx=24,pady=5)
     buttons=tk.Frame(window,bg=BG)
     buttons.grid(row=14,column=0,sticky='e',padx=24,pady=12)
     def finish():

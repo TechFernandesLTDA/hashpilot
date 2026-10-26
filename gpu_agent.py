@@ -282,6 +282,8 @@ class GPUAgent:
             session TEXT,payload_json TEXT NOT NULL);
           CREATE TABLE IF NOT EXISTS trials(id INTEGER PRIMARY KEY,gpu_uuid TEXT NOT NULL,stamp REAL NOT NULL,
             state TEXT NOT NULL,payload_json TEXT NOT NULL);
+          CREATE TABLE IF NOT EXISTS adjustments(id INTEGER PRIMARY KEY,gpu_uuid TEXT NOT NULL,stamp REAL NOT NULL,
+            payload_json TEXT NOT NULL);
         """)
         self.db.commit()
         self.advisor = advisor
@@ -289,6 +291,14 @@ class GPUAgent:
     def close(self):
         with self.lock:
             self.db.close()
+
+    def record_adjustment(self,gpu,before,after,plan,hashrate=None,now=None):
+        validate_device(gpu)
+        payload={'before':normalize_sample(before),'after':normalize_sample(after),'plan':plan,
+            'hashrate_ths':numeric(hashrate),'state':'applied','reason':plan.get('reason','Ajuste do controlador')}
+        with self.lock,self.db:
+            self.db.execute('INSERT INTO adjustments(gpu_uuid,stamp,payload_json) VALUES(?,?,?)',
+                (gpu['uuid'],time.time() if now is None else now,json.dumps(payload)))
 
     def start_benchmark(self, gpu, duration_seconds=300, objective="performance", now=None):
         validate_device(gpu)
@@ -504,6 +514,7 @@ class GPUAgent:
             if not row:
                 return {"state":"idle"}
             payload=json.loads(row["payload_json"])
+            payload['after']=sample
             elapsed=stamp-row["stamp"]
             rate,hash_stamp=numeric(hashrate_ths),numeric(hash_sampled_at)
             if rate and hash_stamp and row["stamp"]+30<=hash_stamp<=stamp and stamp-hash_stamp<=180:
@@ -516,6 +527,9 @@ class GPUAgent:
             state="rejected" if failure else "accepted" if elapsed>=90 and len(payload["samples"])>=2 else "validating"
             if elapsed>240 and state=="validating":
                 state="rejected"
+            payload['measured_hashrate_ths']=measured
+            payload['result_reason']=('Temperatura, rejeição, perda >3% ou prazo de validação excedido' if state=='rejected' else
+                'Pelo menos 2 amostras independentes, 90 s e perda inferior a 3%' if state=='accepted' else 'Coletando amostras independentes')
             self.db.execute("UPDATE trials SET state=?,payload_json=? WHERE id=?",(state,json.dumps(payload),row["id"]))
         result={"state":state,"elapsed_seconds":elapsed,"measured_hashrate_ths":measured,
                 "baseline_hashrate_ths":payload["baseline_hashrate_ths"],"independent_hash_samples":len(payload["samples"])}
@@ -728,6 +742,7 @@ def main():
     parser.add_argument("--benchmark",action="store_true",help="Mede o minerador ativo; não altera clocks")
     parser.add_argument("--duration",type=int,default=300)
     parser.add_argument("--objective",choices=("performance","efficiency"),default="performance")
+    parser.add_argument('--profile',choices=('performance','balanced','cool'),default='performance')
     parser.add_argument("--gpu",type=int,default=None)
     parser.add_argument("--index",type=int,dest="gpu",help="Alias de --gpu")
     parser.add_argument("--uuid",help="Identidade NVIDIA estável; índice informado precisa corresponder")
@@ -970,6 +985,9 @@ def control(args,state_dir,monitor_state_dir):
             raise RuntimeError("O supervisor de GPU precisa ser iniciado como administrador")
     if args.duration<300 or args.duration>3600:
         raise ValueError("Controle exige baseline de 300 a 3600 segundos")
+    from gpu_profiles import profile
+    from component_status import identity as component_identity
+    selected_profile=getattr(args,'profile','performance')
     devices=detect_nvidia_gpus()
     gpu=select_device(devices,args)
     state_dir,monitor_state_dir=Path(state_dir),Path(monitor_state_dir)
@@ -990,8 +1008,13 @@ def control(args,state_dir,monitor_state_dir):
     status_path=state_dir/"gpu-agent-control.json"
     status={"enabled":False,"controller_pid":os.getpid(),"miner_pid":args.miner_pid,"gpu_uuid":gpu["uuid"],
             "gpu_name":gpu["name"],"mode":"baseline","sampled_at":time.time(),"error":None,"writes":0}
+    status.update(software=component_identity(),profile=selected_profile)
     owns=False
     controller_started_at=time.time()
+    def apply_recorded(sample,plan,rate=None):
+        actuator.apply(gpu,sample,plan,external_controller_active=False)
+        measured=read_sample(gpu)
+        agent.record_adjustment(gpu,sample,measured,plan,rate)
     try:
         actuator.acquire(gpu["uuid"],external_controller_active=other_supervisor())
         owns=True
@@ -1014,11 +1037,12 @@ def control(args,state_dir,monitor_state_dir):
             if sample["temperature_c"] is None or sample["temperature_c"]>=thermal_limits(gpu)[1]:
                 raise RuntimeError("Limite térmico ou sensor inválido: supervisor deve encerrar o minerador")
             now=time.time()
-            if sample["temperature_c"]>=thermal_limits(gpu)[0] and now-last_thermal_adjustment>=6:
+            soft_limit=thermal_limits(gpu)[0]-profile(selected_profile)['thermal_margin']
+            if sample["temperature_c"]>=soft_limit and now-last_thermal_adjustment>=6:
                 cooling=validated_plan(gpu,sample,"clock_down")
                 cooling.update(gpu_uuid=gpu["uuid"],at=now,reason="Alívio térmico gradual durante a medição")
                 if cooling["action"]!="hold":
-                    actuator.apply(gpu,sample,cooling,external_controller_active=False)
+                    apply_recorded(sample,cooling,miner.get('hashrate'))
                     status.update(mode="cooling",thermal_proposal=cooling,writes=status["writes"]+1)
                     last_thermal_adjustment=now
                     sample=read_sample(gpu)
@@ -1026,6 +1050,8 @@ def control(args,state_dir,monitor_state_dir):
                 request=json.loads((state_dir/"gpu-agent-request.json").read_text(encoding="utf-8-sig"))
                 request_stamp=numeric(request.get("at"),0)
                 if request.get("action")=="benchmark" and request.get("gpu_uuid")==gpu["uuid"] and request_stamp>last_request and 0<=now-request_stamp<=60:
+                    requested_profile=request.get('profile',selected_profile)
+                    profile(requested_profile)
                     objective=request.get("objective","performance")
                     duration=numeric(request.get("duration_seconds"),300)
                     if objective not in ("performance","efficiency") or not 300<=duration<=3600:
@@ -1033,10 +1059,12 @@ def control(args,state_dir,monitor_state_dir):
                     if trial_active:
                         rollback=agent.cancel_trial(gpu,sample)
                         if rollback and rollback["action"]!="hold":
-                            actuator.apply(gpu,sample,rollback,external_controller_active=False)
+                            apply_recorded(sample,rollback,miner.get('hashrate'))
                             status["writes"]+=1
                         trial_active=False
                     agent.start_benchmark(gpu,duration,objective)
+                    selected_profile=requested_profile
+                    status['profile']=selected_profile
                     last_request=request_stamp
                     status.update(mode="manual_baseline",last_manual_request=request_stamp)
             except FileNotFoundError:
@@ -1060,7 +1088,7 @@ def control(args,state_dir,monitor_state_dir):
                 if trial["state"]=="rejected":
                     rollback=trial.get("rollback")
                     if rollback:
-                        actuator.apply(gpu,sample,rollback,external_controller_active=False)
+                        apply_recorded(sample,rollback,miner.get('hashrate'))
                         status["writes"]+=1
                     trial_active=False
                     status["mode"]="rollback"
@@ -1072,12 +1100,12 @@ def control(args,state_dir,monitor_state_dir):
             elif result.get("validated") and fresh:
                 # Explore one device-supported step after a measured baseline.
                 desired="power_down" if objective=="efficiency" else "clock_up"
-                soft,_=thermal_limits(gpu)
+                soft=soft_limit
                 if sample["temperature_c"]>=soft:
                     desired="clock_down"
                 if answer:
                     advice=answer["advice"]
-                    if advice and sample["temperature_c"]<soft:
+                    if advice and sample["temperature_c"]<soft and (selected_profile=='performance' or advice['action'] in ('hold','clock_down','power_down')):
                         desired=advice["action"]
                     status["ai_status"]=answer["status"]
                 plan=validated_plan(gpu,sample,desired,result.get("best_profile"))
@@ -1085,7 +1113,7 @@ def control(args,state_dir,monitor_state_dir):
                 if plan["action"]!="hold" and (plan["action"] not in ("clock_up","power_up") or sample["temperature_c"]<soft-3):
                     # Refuse a conflicting trial before changing hardware.
                     agent.assert_no_pending_trial(gpu)
-                    actuator.apply(gpu,sample,plan,external_controller_active=False)
+                    apply_recorded(sample,plan,miner.get('hashrate'))
                     agent.record_application(gpu,plan,sample,result["mean_hashrate_ths"])
                     trial_rejected=int(miner.get("rejected",0))
                     trial_active=True

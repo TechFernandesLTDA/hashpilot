@@ -18,6 +18,8 @@ Os históricos, carteiras, opções de ajuda, configurações de GPU, chaves loc
 
 O serviço do rig, seus supervisores e os mineradores continuam executando o código atual. A atualização da interface não aplica silenciosamente código novo ao controle de hardware e não altera exceções do Defender. Uma atualização do serviço exige um procedimento separado, com consentimento e elevação do administrador, e pode interromper a mineração.
 
+Na v0.4.0, **Configurar → Central de operação → Saúde e versões** identifica separadamente os componentes. O botão **Atualizar serviço (UAC)** executa esse procedimento e preserva o opt-in de referência da unidade autorizada. Versões antigas sem identidade publicada aparecem como desconhecidas. O UAC não é desativado nem previamente aprovado pelo programa.
+
 ## Limites e recuperação
 
 As pastas anteriores ficam preservadas. Se o fechamento normal exceder o prazo, o helper não encerra processos à força: feche pelo menu **Sair** e abra o novo atalho. Se o download ou a verificação falhar, continue na interface atual e consulte o log.

@@ -23,7 +23,7 @@ def project_selected(data,identifier):
     selected=next((d for d in devices if d['uuid']==identifier),devices[0] if devices else None)
     if not selected: return dict(data)
     result=dict(data)
-    for key in ('gpu','miner','miner_running','log_path','log_error','thermal_control','support_contribution'):
+    for key in ('gpu','miner','miner_running','log_path','log_error','thermal_control','support_contribution','health','recovery'):
         result[key]=selected.get(key)
     result['gpu_error']=(selected.get('gpu') or {}).get('error')
     result['process_error']=selected.get('process_error') or data.get('process_error')

@@ -20,6 +20,9 @@ import uuid
 from contribution import ProxyLease,atomic_json,support_configuration
 from gpu_agent import detect_nvidia_gpus
 from rig_config import MAX_GPUS,device_key,resolve_devices,update_gpu_settings
+from mining_health import OperationalStore,finite
+from component_status import identity as component_identity
+from gpu_profiles import profile
 
 MARKER="HashPilotRig-v1"
 REFERENCE_RTX3070_UUID="GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75"
@@ -202,7 +205,7 @@ class ProcessBackend:
 
 
 def write_request(state_dir,action,gpu_uuid=None,**fields):
-    if action not in ("reconcile","start","stop","benchmark","shutdown"):
+    if action not in ("reconcile","start","stop","benchmark","shutdown","restart","profile"):
         raise ValueError("Ação do rig inválida")
     if gpu_uuid is not None: device_key(gpu_uuid)
     payload={**fields,"id":uuid.uuid4().hex,"action":action,"gpu_uuid":gpu_uuid,"at":time.time()}
@@ -231,6 +234,8 @@ class RigManager:
         self.reference_uuid=None
         self.miner_map={}
         self.mapping_signature=None
+        self.require_recovery_sensors=False
+        self.operations=OperationalStore(self.state_dir/'operations.sqlite3')
         self._load_registry()
 
     def _load_registry(self):
@@ -268,7 +273,8 @@ class RigManager:
         if not self.registry_valid: return
         atomic_json(self.registry_path,{"schema_version":1,"marker":MARKER,"pid":os.getpid(),"sampled_at":self.clock(),
             "ready":not self.shutting_down,"max_gpus":MAX_GPUS,"devices":self.devices,"ignored_devices":self.ignored,
-            "error":self.error,"processed_request_ids":self.processed_ids[-128:],"reference_uuid":self.reference_uuid})
+            "error":self.error,"processed_request_ids":self.processed_ids[-128:],"reference_uuid":self.reference_uuid,
+            "software":component_identity()})
 
     def _wait_proxy(self,entry,identity,timeout=15):
         deadline=time.monotonic()+timeout
@@ -305,6 +311,7 @@ class RigManager:
             "miner":None,"controller":None,"proxy":None,"miner_pid":None,"controller_pid":None,"proxy_pid":None,
             "error":None,"started_at":self.clock(),"pool":"prl.kryptex.network:7048"}
         entry["miner_index"]=device.get("miner_index",device["index"])
+        entry['profile']=device.get('profile','performance')
         self.devices[identifier]=entry
         directory=Path(entry["log_dir"])
         directory.mkdir(parents=True,exist_ok=True)
@@ -331,6 +338,7 @@ class RigManager:
             controller_args=[self.python_path,self.project_dir/"gpu_agent.py","--control","--miner-pid",str(identity["pid"]),
                 "--uuid",identifier,"--index",str(device["index"]),"--duration","300","--state-dir",directory,
                 "--monitor-state-dir",directory,"--log-dir",directory,"--miner-log",entry["miner_log"],"--miner-index",str(entry["miner_index"])]
+            controller_args.extend(['--profile',device.get('profile','performance'),'--objective',profile(device.get('profile','performance'))['objective']])
             if settings.get("ai_enabled") is True: controller_args.append("--ollama")
             identity=self.backend.start(controller_args,self.project_dir,directory/"controller-console.log")
             entry.update(controller=identity,controller_pid=identity["pid"],state="running",miner_running=True)
@@ -437,6 +445,15 @@ class RigManager:
                 self.ignored.append({"uuid":device["uuid"],"name":device["name"],"reason":"Seis registros ocupados; uma sessão externa ou não confirmada foi preservada"})
                 continue
             if device["enabled"] and not entry.get("external_readonly") and not entry.get("ownership_unverified") and entry.get("state")!="running" and self.clock()>=entry.get("retry_after",0):
+                if entry and entry.get('started_at') is not None:
+                    entry['recovery']=self.operations.budget(device['uuid'],self.clock())
+                    sensor=entry.get('last_gpu_sample') or {}
+                    if self.require_recovery_sensors and (sensor.get('temperature.gpu') is None or sensor['temperature.gpu']>=70 or sensor.get('error') or not 0<=self.clock()-sensor.get('sampled_at',0)<=15):
+                        entry.update(state='recovery_wait',retry_after=self.clock()+10,error='Recuperação aguarda sensor atual abaixo de 70 °C')
+                        continue
+                    if not self.operations.reserve(device['uuid'],entry.get('error') or 'Processo encerrado',self.clock()):
+                        entry.update(state='recovery_wait',retry_after=entry['recovery']['next_allowed_at'])
+                        continue
                 self.start_gpu(device,settings)
             elif not entry:
                 self.devices[device["uuid"]]={"gpu_uuid":device["uuid"],"identity":device,"index":device["index"],"name":device["name"],
@@ -540,6 +557,23 @@ class RigManager:
                     settings=update_gpu_settings(self.settings(),gpu_uuid,enabled=action=="start")
                     atomic_json(self.settings_path,settings)
                     if action=="stop": self.stop_gpu(gpu_uuid)
+                elif action=='restart':
+                    entry=self.devices.get(gpu_uuid,{})
+                    if not entry or not entry.get('managed') or entry.get('external_readonly') or entry.get('ownership_unverified') or not entry.get('enabled'):
+                        raise ValueError('GPU precisa estar habilitada e sob controle do rig')
+                    if not self.stop_gpu(gpu_uuid): raise RuntimeError('Parada não confirmada')
+                    entry['error']='Reconexão solicitada pelo usuário'
+                elif action=='profile':
+                    chosen=request.get('profile')
+                    selected=profile(chosen)
+                    settings=self.settings()
+                    settings=update_gpu_settings(settings,gpu_uuid)
+                    settings['gpu_settings'][gpu_uuid]['profile']=chosen
+                    atomic_json(self.settings_path,settings)
+                    entry=self.devices.get(gpu_uuid,{})
+                    if entry and not entry.get('external_readonly'):
+                        atomic_json(Path(entry['log_dir'])/'gpu-agent-request.json',{'action':'benchmark','gpu_uuid':gpu_uuid,
+                            'objective':selected['objective'],'profile':chosen,'duration_seconds':300,'at':self.clock()})
                 elif action=="benchmark":
                     targets=[gpu_uuid] if gpu_uuid else list(self.devices)
                     for target in targets:
@@ -550,7 +584,7 @@ class RigManager:
                 elif action=="shutdown": self.shutting_down=True
                 elif action!="reconcile": raise ValueError("Ação desconhecida")
                 self.processed_ids.append(identifier)
-            except (OSError,ValueError,TypeError) as error:
+            except (OSError,ValueError,TypeError,RuntimeError) as error:
                 self.error=str(error)[:300]
             finally:
                 if path.parent==queue_dir and path.is_file():
@@ -558,7 +592,29 @@ class RigManager:
                     archive.parent.mkdir(parents=True,exist_ok=True)
                     path.replace(archive)
 
+    def observe_health(self,snapshots):
+        for identifier,snapshot in snapshots.items():
+            entry=self.devices[identifier]
+            status=self.operations.assess(identifier,snapshot['miner'],snapshot['miner_running'],self.clock(),entry.get('started_at'))
+            entry['health']=status
+            entry['recovery']=self.operations.budget(identifier,self.clock())
+            sensor=snapshot.get('gpu') or {}
+            entry['last_gpu_sample']={key:sensor.get(key) for key in ('temperature.gpu','sampled_at','error')}
+            temperature=sensor.get('temperature.gpu')
+            # Never turn a thermal pause, missing sensor, external session or manual stop into a restart.
+            sensor_at=sensor.get('sampled_at')
+            safe=finite(temperature) and 0<=temperature<70 and not sensor.get('error') and finite(sensor_at) and 0<=self.clock()-sensor_at<=15
+            age=self.clock()-entry.get('started_at',self.clock())
+            stalled=(status['state'] in ('connecting','no_hashrate') and age>300) or (
+                status['warning'] and status['seconds_without_share']>2*status['warning_after_seconds'])
+            if safe and stalled and entry.get('enabled') and entry.get('managed') and not entry.get('external_readonly') and not snapshot['miner'].get('paused'):
+                budget=entry['recovery']
+                if not budget['blocked'] and self.clock()>=budget['next_allowed_at']:
+                    if self.stop_gpu(identifier):
+                        entry.update(state='error',error='Recuperação automática: '+status['label'],retry_after=self.clock()+2)
+
     def serve(self,adopt_legacy=False,*,migrate_legacy_uuid=None,reference_rtx3070=False,reference_uuid=None):
+        self.require_recovery_sensors=True
         lease=ProxyLease(self.state_dir/"rig-manager-owner.json")
         try:
             if reference_rtx3070 and not migrate_legacy_uuid:
@@ -581,7 +637,9 @@ class RigManager:
                         last_detection=time.monotonic()
                     devices=self.reconcile(detected=detected)
                     from rig_controller import collect_snapshots
-                    collect_snapshots(devices,self.devices)
+                    snapshots=collect_snapshots(devices,self.devices)
+                    self.observe_health(snapshots)
+                    self.publish()
                 except (OSError,RuntimeError,ValueError,subprocess.SubprocessError) as error:
                     self.error=str(error)[:300]
                     self.publish()
@@ -600,7 +658,8 @@ class RigManager:
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--serve",action="store_true")
-    parser.add_argument("--request",choices=("reconcile","start","stop","benchmark","shutdown"))
+    parser.add_argument("--request",choices=("reconcile","start","stop","benchmark","shutdown","restart","profile"))
+    parser.add_argument('--profile',choices=('performance','balanced','cool'),default='performance')
     parser.add_argument("--gpu-uuid")
     parser.add_argument("--objective",choices=("performance","efficiency"),default="performance")
     parser.add_argument("--state-dir",type=Path,required=True)
@@ -614,9 +673,9 @@ def main():
     parser.add_argument("--reference-rtx3070",action="store_true")
     args=parser.parse_args()
     if args.request:
-        if args.request in ("start","stop") and not args.gpu_uuid:
+        if args.request in ("start","stop","restart","profile") and not args.gpu_uuid:
             parser.error("--request start/stop exige --gpu-uuid")
-        print(json.dumps(write_request(args.state_dir,args.request,args.gpu_uuid,objective=args.objective)))
+        print(json.dumps(write_request(args.state_dir,args.request,args.gpu_uuid,objective=args.objective,profile=args.profile)))
         return
     if not args.serve: parser.error("Use --serve para iniciar o gerenciamento explícito de mineração")
     if None in (args.log_dir,args.settings,args.miner_path): parser.error("--serve exige --log-dir, --settings e --miner-path")

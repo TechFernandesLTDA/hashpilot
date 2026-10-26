@@ -22,6 +22,8 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 
 ## Correct interpretation
 
+- [Operations center](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/operations.md): pool ACK health, persistent three-per-hour recovery budget, per-GPU profiles, measured adjustment history, contribution audit, private SQLite backups, restoration and allowlisted diagnostics. v0.4.0 separates panel/service/controller/miner versions and financial-source freshness. Backups exclude AI credentials and contribution reservations; restoration preserves local credentials and asks users to review wallets before starting the rig.
+
 - The initial receiving address is the author's PUBLIC wallet. Keeping it sends mining payouts to the author. Users can replace it in setup. No seed/private key is required.
 - GPU telemetry is NVIDIA-only via nvidia-smi. The Windows RTX 3070 is the validated reference mining profile. A catalog entry is not a validated overclock; per-device measurements matter.
 - The catalog documents 158 NVIDIA models with primary sources, not 158 validated overclocks. gpu_agent.py supports driver/UUID identification, a 300-second baseline, manual benchmark requests, explicit adaptive --control and optional CPU Ollama. No paid AI API is required.

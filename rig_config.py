@@ -4,6 +4,7 @@ import copy
 from pathlib import Path
 import re
 from contribution import AUTHOR_WALLET,valid_wallet
+from gpu_profiles import PROFILES
 
 MAX_GPUS=6
 
@@ -61,7 +62,13 @@ def resolve_devices(detected,settings,log_root):
             override=None
             error="Carteira desta GPU inválida; dispositivo desabilitado"
         wallet=override or global_wallet
+        selected_profile=entry.get('profile','performance')
+        if selected_profile not in PROFILES:
+            enabled=False
+            error='Perfil inválido; dispositivo desabilitado'
+            selected_profile='performance'
         gpu={**detected_gpu,**gpu_paths(log_root,identifier),"enabled":enabled,
+            'profile':selected_profile,
             "wallet":wallet,"effective_wallet":wallet,"wallet_override":override,
             "uses_default_wallet":override is None,"uses_author_wallet":wallet==AUTHOR_WALLET,
             "device_key":identifier,"worker_name":"HashPilot_"+identifier[4:],

@@ -517,9 +517,23 @@ class Monitor(tk.Tk):
         threading.Thread(target=self.collector.work, daemon=True).start()
         threading.Thread(target=self.finance_collector.work, daemon=True).start()
         self.after(200, self.poll)
+        self.after(1500,self.show_restore_result)
         from app_update import UpdateChecker
         self.update_checker = UpdateChecker(STATE_DIR)
         self.after(10000, self.poll_updates)
+
+    def show_restore_result(self):
+        path=STATE_DIR/'restore-result.json'
+        try:
+            result=json.loads(path.read_text(encoding='utf-8-sig'))
+            if result.get('seen'):return
+            from tkinter import messagebox
+            if result.get('ok'):
+                messagebox.showinfo('Backup restaurado','Históricos e configurações restaurados. Credenciais locais preservadas. Confira as carteiras em Configurar antes de iniciar o rig.\nBackup anterior: '+str(result.get('rollback','')),parent=self)
+            else:messagebox.showerror('Restauração não concluída',str(result.get('error','Verifique o backup anterior antes de continuar.')),parent=self)
+            result['seen']=True
+            __import__('contribution').atomic_json(path,result)
+        except (OSError,ValueError):pass
 
     def poll_updates(self):
         if getattr(self,'closing',False):return
@@ -1209,7 +1223,11 @@ class Monitor(tk.Tk):
             'Projeções N/D: rig local parado; saldo e histórico continuam visíveis.' if devices and not any(d.get('miner_running') for d in devices) else
             'Projeções N/D: faltam dados atuais de hashrate, preço ou rede.')
         self.finance_explanation.configure(text=("Observado parcialmente desde "+timestamp(partial.get("since"))+". " if partial.get("partial") else "")+"Conversões à cotação atual; pagamento em PRL. "+forecast_note+support_note)
-        self.finance_sources.configure(text="Fontes: Kryptex Pool API · CoinGecko (Pearl pearl-2 / Bitcoin). Semana: segunda até agora, São Paulo. Histórico permanente local.")
+        from earnings_quality import quality
+        source_quality=quality(self.finance_state)
+        model['source_quality']=source_quality
+        age=source_quality['oldest_age_seconds']
+        self.finance_sources.configure(text=f"Kryptex / CoinGecko · {source_quality['status']} · dado mais antigo: {int(age)} s" if age is not None else 'Kryptex / CoinGecko · fontes indisponíveis')
         graph_wallets=[model['selected_wallet']] if model.get('scope')=='wallet' and model.get('selected_wallet') else list(model.get('wallet_models',{})) or None
         snapshots = portfolio_snapshots(self.finance_state,graph_wallets)
         self.money_chart.points.clear()
@@ -1282,11 +1300,19 @@ class Monitor(tk.Tk):
             status, color = "Minerando · dados atuais", TEAL
         elif stamp:
             status, color = "Sem hashrate recente", ORANGE
+        from mining_health import health
+        mining_health=data.get('health') or health(miner,data['miner_running'],now)
+        if fresh and not miner.get('paused'):
+            status=mining_health['label']
+            color=TEAL if mining_health['state']=='confirmed' else ORANGE
         self.status.configure(text="●  " + status, fg=color)
         hashrate = miner.get("hashrate") if fresh else None
         self.card_values["hash"].configure(text=fmt(hashrate, " TH/s", 1))
         self.card_notes["hash"].configure(text=("Média 1 min: " + fmt(miner.get("average_1m"), " TH/s", 1)) if fresh else
             'Arquivo ausente ou bloqueado' if data.get('miner_executable_available') is False and data['miner_running'] is False else "Hashrate não atualizado")
+        if fresh:
+            accepted_at=mining_health.get('last_accepted_at')
+            self.card_notes['hash'].configure(text=('Última aceita: '+dt.datetime.fromtimestamp(accepted_at).strftime('%H:%M:%S')) if accepted_at else 'Aguardando primeira share aceita')
         self.card_values["temp"].configure(text=fmt(gpu.get("temperature.gpu"), " °C"))
         self.card_notes["temp"].configure(text="Sensor NVIDIA" if gpu else "Sensor indisponível")
         self.card_values["power"].configure(text=fmt(gpu.get("power.draw"), " W", 1))
