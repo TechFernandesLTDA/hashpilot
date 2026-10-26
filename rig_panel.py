@@ -23,7 +23,7 @@ def project_selected(data,identifier):
     selected=next((d for d in devices if d['uuid']==identifier),devices[0] if devices else None)
     if not selected: return dict(data)
     result=dict(data)
-    for key in ('gpu','miner','miner_running','log_path','log_error','thermal_control','support_contribution','health','recovery'):
+    for key in ('gpu','miner','miner_running','log_path','log_error','thermal_control','support_contribution','health','recovery','restoration'):
         result[key]=selected.get(key)
     result['gpu_error']=(selected.get('gpu') or {}).get('error')
     result['process_error']=selected.get('process_error') or data.get('process_error')
@@ -69,7 +69,7 @@ class RigCards(tk.Frame):
             note=tk.Label(frame,text='',bg=PANEL,fg=MUTED,anchor='w',font=('Segoe UI',-11))
             note.pack(fill='x')
             buttons=tk.Frame(frame,bg=PANEL);buttons.pack(fill='x',pady=(3,0))
-            toggle=tk.Button(buttons,text='Desativar',command=lambda s=slot:self.toggle(s),bg=BG,fg=TEXT,relief='flat',font=('Segoe UI',-11),padx=5,pady=1)
+            toggle=tk.Button(buttons,text='Parar',command=lambda s=slot:self.toggle(s),bg=BG,fg=TEXT,relief='flat',font=('Segoe UI',-11),padx=5,pady=1)
             toggle.pack(side='left')
             config=tk.Button(buttons,text='Carteira',command=lambda s=slot:self.configure_gpu(s),bg=BG,fg=TEXT,relief='flat',font=('Segoe UI',-11),padx=5,pady=1)
             config.pack(side='right')
@@ -79,7 +79,7 @@ class RigCards(tk.Frame):
         if slot<len(self.devices):self.on_select(self.devices[slot]['uuid'])
     def toggle(self,slot):
         if slot<len(self.devices):
-            device=self.devices[slot];self.on_toggle(device['uuid'],not device.get('enabled'))
+            device=self.devices[slot];self.on_toggle(device['uuid'],not (device.get('enabled') or device.get('miner_running')))
     def configure_gpu(self,slot):
         if slot<len(self.devices):self.on_config(self.devices[slot]['uuid'])
     def render(self,devices,selected=None):
@@ -91,8 +91,10 @@ class RigCards(tk.Frame):
             def f(v,unit):return 'N/D' if v is None else f'{v:.1f}{unit}'
             values.configure(text=f"{f(rate,' TH/s')}  ·  {f(gpu.get('temperature.gpu'),'°C')}  ·  {f(gpu.get('power.draw'),' W')}")
             state=('Parada pendente' if d.get('miner_running') else 'Desativada · sensores ativos') if not d.get('enabled') else 'Minerando' if rate is not None else d.get('state','Aguardando')
-            note.configure(text=f"{d['uuid'][-8:]} · {'Global' if d.get('uses_default_wallet') else 'Própria'} · {'OFF' if not d.get('enabled') else 'ON' if rate is not None else 'Aguarda'}")
-            toggle.configure(text='Desativar' if d.get('enabled') else 'Ativar')
+            restoration=d.get('restoration') or {}
+            stopped_note='Padrão restaurado' if restoration.get('state')=='restored' else 'Restauração incompleta' if restoration.get('state') in ('partial','failed') else 'Restaurando' if restoration.get('state')=='restoring' else 'Parada'
+            note.configure(text=(stopped_note if not d.get('enabled') else f"{d['uuid'][-8:]} · {'Global' if d.get('uses_default_wallet') else 'Própria'} · {'ON' if rate is not None else 'Aguarda'}"))
+            toggle.configure(text='Parar' if d.get('enabled') or d.get('miner_running') else 'Iniciar')
             frame.configure(highlightbackground=TEAL if d['uuid']==selected else BORDER)
         self.adapt(self.winfo_width())
     def adapt(self,width):

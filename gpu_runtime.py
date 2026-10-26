@@ -53,7 +53,7 @@ class RigTelemetry:
                 legacy=path is not None
             pid=managed.get('miner_pid')
             running=(pid in processes) if pid and processes is not None else False if managed and not pid else None
-            if managed and not manager_fresh:running=None
+            if managed and not manager_fresh:running=False if processes is not None and not processes else None
             if legacy and not managed:
                 # Match the legacy supervisor PID; another GPU's miner is not GPU0 evidence.
                 legacy_control=read_json(LOG_DIR/'thermal-control.json')
@@ -68,9 +68,13 @@ class RigTelemetry:
             entry={**device,**payload,'gpu':samples.get(identifier), 'thermal_control':control or None,
                 'health':managed.get('health') if manager_fresh else None,
                 'recovery':managed.get('recovery') if manager_fresh else None,
+                'restoration':managed.get('restoration') or read_json(Path(device['state_dir'])/'gpu-defaults.json'),
                 'process_error':managed.get('error') if manager_fresh else None,
                 'state':'manager_unavailable' if managed and not manager_fresh else managed.get('state','legacy_readonly' if legacy else 'disabled' if not device['enabled'] else 'stopped'),
                 'collected_at':now,'support_contribution':{},'manager_stale':bool(managed and not manager_fresh)}
+            persisted=read_json(Path(device['state_dir'])/'gpu-defaults.json')
+            if persisted.get('at',0)>((entry.get('restoration') or {}).get('at',0)):
+                entry['restoration']=persisted
             result.append(entry)
         return {'schema_version':2,'devices':result,'totals':totals(result,now),'ignored_devices':manager.get('ignored_devices',manager.get('ignored',[])),
                 'sampled_at':now,'error':self.error,'manager':{'state':manager.get('state'),'stale':not manager_fresh,'software':manager.get('software')}}

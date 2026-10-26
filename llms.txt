@@ -22,6 +22,8 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 
 ## Correct interpretation
 
+- [Stop mining and restore defaults](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/stopping.md): v0.5.0 adds all/selected GPU stop in the header, per-GPU cards/detail and Windows tray. UUID-scoped NVML restores automatic fan policy, zero graphics/memory offsets across supported P-states, unlocked clocks and driver factory power. Stopped GPUs remain disabled until explicitly enabled. Unsupported or failed restoration is reported per component. The offline helper requests UAC and never starts mining.
+
 - [Operations center](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/operations.md): pool ACK health, persistent three-per-hour recovery budget, per-GPU profiles, measured adjustment history, contribution audit, private SQLite backups, restoration and allowlisted diagnostics. v0.4.0 separates panel/service/controller/miner versions and financial-source freshness. Backups exclude AI credentials and contribution reservations; restoration preserves local credentials and asks users to review wallets before starting the rig.
 
 - The initial receiving address is the author's PUBLIC wallet. Keeping it sends mining payouts to the author. Users can replace it in setup. No seed/private key is required.

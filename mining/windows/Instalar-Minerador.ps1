@@ -21,10 +21,14 @@ Get-ChildItem -LiteralPath $PSScriptRoot -File | Where-Object {$_.Extension -in 
  if($_.Extension -eq '.cmd'){Set-Content -LiteralPath (Join-Path $destination $_.Name) -Value $content -Encoding ASCII}else{Set-Content -LiteralPath (Join-Path $destination $_.Name) -Value $content -Encoding UTF8}
 }
 $project=([IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..')))
-foreach($name in @('thermal.py','thermal_controller.py','gpu_agent.py','ai_advisor.py','gpu_telemetry.py','rig_config.py','rig_controller.py','rig.py','config.py','contribution.py')){Copy-Item -LiteralPath (Join-Path $project $name) -Destination (Join-Path $destination $name) -Force}
+$runtime=Get-Content -LiteralPath (Join-Path $project 'data\rig-runtime.json') -Raw -Encoding UTF8 | ConvertFrom-Json
+foreach($name in $runtime.files){
+ if($name -notmatch '^[a-z_]+\.py$'){throw 'Nome de modulo de runtime invalido'}
+ Copy-Item -LiteralPath (Join-Path $project $name) -Destination (Join-Path $destination $name) -Force
+}
 $data=Join-Path $destination 'data'
 New-Item -ItemType Directory -Path $data -Force | Out-Null
 Copy-Item -LiteralPath (Join-Path $project 'data\nvidia-gpus.json') -Destination (Join-Path $data 'nvidia-gpus.json') -Force
 $profile=Join-Path $PSScriptRoot '..\..\portable-data\miner-logs\validated-profile.json'
-if(Test-Path -LiteralPath $profile){Copy-Item -LiteralPath $profile -Destination (Join-Path $destination 'logs\validated-profile.json') -Force}
+if((Test-Path -LiteralPath $profile) -and -not(Test-Path -LiteralPath (Join-Path $destination 'logs\validated-profile.json'))){Copy-Item -LiteralPath $profile -Destination (Join-Path $destination 'logs\validated-profile.json')}
 Write-Host ('Instalado em '+$destination+'. Inicie pelo INICIAR-PEARL.cmd. Nada foi iniciado automaticamente.')

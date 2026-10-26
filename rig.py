@@ -79,6 +79,10 @@ class ProcessBackend:
     def __init__(self):
         self.children={}
 
+    def restore_defaults(self,gpu,directory):
+        from gpu_defaults import restore_defaults
+        return restore_defaults(gpu,directory)
+
     @staticmethod
     def _kernel():
         if os.name!="nt": raise RuntimeError("O gerenciador de mineração requer Windows")
@@ -205,7 +209,7 @@ class ProcessBackend:
 
 
 def write_request(state_dir,action,gpu_uuid=None,**fields):
-    if action not in ("reconcile","start","stop","benchmark","shutdown","restart","profile"):
+    if action not in ("reconcile","start","stop","stop_all","benchmark","shutdown","restart","profile"):
         raise ValueError("Ação do rig inválida")
     if gpu_uuid is not None: device_key(gpu_uuid)
     payload={**fields,"id":uuid.uuid4().hex,"action":action,"gpu_uuid":gpu_uuid,"at":time.time()}
@@ -274,7 +278,7 @@ class RigManager:
         atomic_json(self.registry_path,{"schema_version":1,"marker":MARKER,"pid":os.getpid(),"sampled_at":self.clock(),
             "ready":not self.shutting_down,"max_gpus":MAX_GPUS,"devices":self.devices,"ignored_devices":self.ignored,
             "error":self.error,"processed_request_ids":self.processed_ids[-128:],"reference_uuid":self.reference_uuid,
-            "software":component_identity()})
+            "software":component_identity(),"capabilities":['stop_restore_v1']})
 
     def _wait_proxy(self,entry,identity,timeout=15):
         deadline=time.monotonic()+timeout
@@ -315,6 +319,7 @@ class RigManager:
         self.devices[identifier]=entry
         directory=Path(entry["log_dir"])
         directory.mkdir(parents=True,exist_ok=True)
+        atomic_json(directory/'gpu-defaults.json',{'state':'mining_session','at':self.clock(),'gpu_uuid':identifier})
         entry["miner_log"]=str(directory/("mining-"+time.strftime("%Y%m%d-%H%M%S")+"-"+uuid.uuid4().hex[:6]+".log"))
         try:
             proxy_settings,proxy_path=self._sync_proxy_settings(entry,settings)
@@ -350,12 +355,13 @@ class RigManager:
             self.publish()
             return False
 
-    def stop_gpu(self,identifier):
+    def stop_gpu(self,identifier,*,restore=False):
         entry=self.devices.get(identifier)
         if not entry: return True
         if entry.get("external_readonly"):
             entry["error"]="Mineração externa preservada; migração explícita necessária antes de controlar esta GPU"
             return False
+        restore_needed=restore or any(entry.get(role) for role in ('miner','controller','proxy'))
         for role in ("miner","controller","proxy"):
             identity=entry.get(role)
             if identity and not self.backend.is_owned(identity):
@@ -373,6 +379,9 @@ class RigManager:
             if not self.backend.stop(miner):
                 entry.update(state='stop_failed',error='Minerador não confirmou parada; identidade preservada')
                 return False
+            if not self.backend.wait(miner,timeout=12):
+                entry.update(state='stop_failed',error='Minerador ainda ativo; restauração bloqueada')
+                return False
         if controller and self.backend.is_owned(controller):
             if not self.backend.wait(controller,timeout=12):
                 if not self.backend.stop(controller):
@@ -386,6 +395,17 @@ class RigManager:
                 return False
         entry.update(state="stopped",miner_running=False,miner=None,controller=None,proxy=None,
             miner_pid=None,controller_pid=None,proxy_pid=None,stopped_at=self.clock())
+        if restore_needed:
+            entry['restoration']={'state':'restoring','at':self.clock()}
+            self.publish()
+            try:
+                result=self.backend.restore_defaults(entry.get('identity') or {'uuid':identifier},entry['log_dir'])
+            except (OSError,RuntimeError,ValueError) as error:
+                result={'state':'failed','at':self.clock(),'error':str(error)[:250]}
+            entry['restoration']=result
+            atomic_json(Path(entry['log_dir'])/'gpu-defaults.json',result)
+            if result.get('state')=='restored':entry.pop('restore_warning',None)
+            else:entry['restore_warning']='Mineração parada; restauração incompleta. Confira os componentes e tente novamente.'
         return True
 
     def reconcile(self,detected=None,settings=None):
@@ -557,7 +577,15 @@ class RigManager:
                     if gpu_uuid is None: raise ValueError("A ação exige UUID")
                     settings=update_gpu_settings(self.settings(),gpu_uuid,enabled=action=="start")
                     atomic_json(self.settings_path,settings)
-                    if action=="stop": self.stop_gpu(gpu_uuid)
+                    if action=="stop": self.stop_gpu(gpu_uuid,restore=True)
+                elif action=='stop_all':
+                    # Persist every disabled choice before stopping the first board.
+                    settings=self.settings()
+                    for target in self.devices:settings=update_gpu_settings(settings,target,enabled=False)
+                    atomic_json(self.settings_path,settings)
+                    for target in self.devices:
+                        self.devices[target]['enabled']=False
+                        self.stop_gpu(target,restore=True)
                 elif action=='restart':
                     entry=self.devices.get(gpu_uuid,{})
                     if not entry or not entry.get('managed') or entry.get('external_readonly') or entry.get('ownership_unverified') or not entry.get('enabled'):
@@ -662,7 +690,7 @@ class RigManager:
 def main():
     parser=argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--serve",action="store_true")
-    parser.add_argument("--request",choices=("reconcile","start","stop","benchmark","shutdown","restart","profile"))
+    parser.add_argument("--request",choices=("reconcile","start","stop","stop_all","benchmark","shutdown","restart","profile"))
     parser.add_argument('--profile',choices=('performance','balanced','cool'),default='performance')
     parser.add_argument("--gpu-uuid")
     parser.add_argument("--objective",choices=("performance","efficiency"),default="performance")

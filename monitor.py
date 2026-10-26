@@ -603,6 +603,11 @@ class Monitor(tk.Tk):
     def toggle_gpu(self,identifier,enabled):
         from tkinter import messagebox
         try:
+            if not enabled:
+                from stop_mining import request_stop
+                result=request_stop([identifier],STATE_DIR,LOG_DIR,SETTINGS_PATH)
+                if result['requires_uac']:self.status.configure(text='● Parada solicitada · aprove o UAC para restaurar padrões',fg=ORANGE)
+                return
             save_enabled(SETTINGS_PATH,identifier,enabled)
             from rig import write_request
             write_request(STATE_DIR,'reconcile',identifier)
@@ -631,6 +636,18 @@ class Monitor(tk.Tk):
             if not self.rig_service_running():launch_rig_service()
             self.status.configure(text='● Rig solicitado · confira o Windows',fg=ORANGE)
         except (OSError,ValueError,RuntimeError) as error:messagebox.showerror('Iniciar rig',str(error),parent=self)
+
+    def stop_mining(self,all_devices=False):
+        from stop_ui import show_stop
+        existing=getattr(self,'stop_window',None)
+        if existing is not None and existing.winfo_exists():
+            existing.lift()
+            if all_devices:existing.stop_all()
+            return existing
+        devices=((self.last_data or {}).get('rig') or {}).get('devices') or []
+        self.show_panel()
+        self.stop_window=show_stop(self,devices,immediate_all=all_devices)
+        return self.stop_window
 
     def selected_identity(self):
         devices=((self.last_data or {}).get('rig') or {}).get('devices') or []
@@ -865,8 +882,8 @@ class Monitor(tk.Tk):
         self.status.pack(anchor="e", pady=(0, 4))
         buttons = tk.Frame(controls, bg=BG)
         buttons.pack(anchor="e")
-        for text, command in (("Configurar", self.configure_setup), ("Iniciar rig", self.start_rig), ("Benchmark / IA", self.open_gpu_agent), ("Resumo", self.show_summary), ("Console", self.open_console), ("Recolher", self.hide_to_tray), ("Sair", self.close)):
-            tk.Button(buttons, text=text, command=command, bg=PANEL, fg=TEXT, activebackground=BLUE,
+        for text, command in (("Configurar", self.configure_setup), ("Iniciar", self.start_rig), ("Parar", self.stop_mining), ("Benchmark / IA", self.open_gpu_agent), ("Resumo", self.show_summary), ("Console", self.open_console), ("Recolher", self.hide_to_tray), ("Sair", self.close)):
+            tk.Button(buttons, text=text, command=command, bg='#9E3333' if text=='Parar' else PANEL, fg=TEXT, activebackground=BLUE,
                       activeforeground=TEXT, relief="flat", padx=10, pady=4, font=(BODY_FONT, 9)).pack(side="left", padx=(5, 0))
         style = ttk.Style(self)
         style.theme_use("clam")
@@ -978,6 +995,7 @@ class Monitor(tk.Tk):
         self.gpu_selection.pack(side='left',fill='x',expand=True)
         self.gpu_selection.bind('<<ComboboxSelected>>',lambda e:self.select_gpu(self.gpu_ids[self.gpu_selection.current()]) if self.gpu_selection.current()>=0 else None)
         tk.Button(selector,text='Identificação completa',command=self.selected_identity,bg=PANEL,fg=TEXT,relief='flat',font=(BODY_FONT,9)).pack(side='left',padx=5)
+        tk.Button(selector,text='Parar esta GPU',command=lambda:self.toggle_gpu(self.selected_gpu_uuid,False) if getattr(self,'selected_gpu_uuid',None) else None,bg='#9E3333',fg=TEXT,relief='flat',font=(BODY_FONT,9)).pack(side='left',padx=5)
         cards = tk.Frame(parent, bg=BG)
         cards.grid(row=1, column=0, sticky="ew", pady=(5, 4))
         for index, (key, title, color) in enumerate((("hash", "HASHRATE", TEAL), ("temp", "TEMPERATURA", ORANGE), ("power", "POTÊNCIA", BLUE), ("fan", "VENTOINHAS", PINK), ("shares", "SHARES ACEITAS", TEAL))):
@@ -1305,6 +1323,11 @@ class Monitor(tk.Tk):
         if fresh and not miner.get('paused'):
             status=mining_health['label']
             color=TEAL if mining_health['state']=='confirmed' else ORANGE
+        if data['miner_running'] is False:
+            restored=(data.get('restoration') or {}).get('state')
+            if restored=='restored':status,color='Parada · padrões restaurados',TEAL
+            elif restored in ('partial','failed'):status,color='Parada · restauração incompleta',ORANGE
+            elif restored in ('pending','restoring'):status,color='Parando · restaurando padrões',ORANGE
         self.status.configure(text="●  " + status, fg=color)
         hashrate = miner.get("hashrate") if fresh else None
         self.card_values["hash"].configure(text=fmt(hashrate, " TH/s", 1))
@@ -1431,6 +1454,8 @@ class Monitor(tk.Tk):
                     self.open_console()
                 elif action == "exit":
                     self.close()
+                elif action=='stop_all':
+                    self.stop_mining(all_devices=True)
         except queue.Empty:
             pass
         try:

@@ -154,6 +154,7 @@ class WindowsTray:
             try:
                 for identifier, label in ((1, "Abrir painel"), (2, "Resumo"), (3, "Console resumido")):
                     user32.AppendMenuW(menu, 0, identifier, label)
+                user32.AppendMenuW(menu,0,5,'Parar toda mineração e restaurar padrões')
                 user32.AppendMenuW(menu, 0x0800, 0, None)
                 user32.AppendMenuW(menu, 0, 4, "Sair do monitor")
                 user32.SetMenuDefaultItem(menu, 2, 0)
@@ -161,7 +162,7 @@ class WindowsTray:
                 user32.GetCursorPos(ctypes.byref(point))
                 user32.SetForegroundWindow(hwnd)
                 selected = user32.TrackPopupMenu(menu, 0x0100 | 0x0002, point.x, point.y, 0, hwnd, None)
-                action = {1: "open", 2: "summary", 3: "console", 4: "exit"}.get(selected)
+                action = {1: "open", 2: "summary", 3: "console", 4: "exit",5:'stop_all'}.get(selected)
                 if action:
                     self.actions.put(action)
                 user32.PostMessageW(hwnd, 0, 0, 0)

@@ -1,0 +1,9 @@
+{
+  "schema": 1,
+  "files": [
+    "thermal.py", "thermal_controller.py", "gpu_agent.py", "ai_advisor.py",
+    "gpu_telemetry.py", "rig_config.py", "rig_controller.py", "rig.py",
+    "config.py", "contribution.py", "app_version.py", "component_status.py",
+    "mining_health.py", "gpu_profiles.py", "gpu_defaults.py", "stop_mining.py", "stop_ui.py"
+  ]
+}

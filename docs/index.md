@@ -10,6 +10,7 @@
 4. [Vídeo e capturas reais](../media/README.md): demonstração de 44 segundos e origem dos dados.
 5. [Resultado observado da RTX 3070](performance/rtx3070.md): metodologia, agregados e limitações.
 6. [Central de operação](operations.md): saúde, recuperações, perfis, auditoria, backups e diagnóstico.
+7. [Parar e restaurar padrões](stopping.md): todas as GPUs ou seleção individual, UAC e resultado por componente.
 
 ## Entender e contribuir
 

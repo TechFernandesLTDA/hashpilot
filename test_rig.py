@@ -26,6 +26,11 @@ class FakeBackend:
         self.stopped=[]
         self.fail_uuid=None
         self.legacy=[]
+        self.restored=[]
+
+    def restore_defaults(self,gpu,directory):
+        self.restored.append(gpu['uuid'])
+        return {'state':'restored','at':1000,'components':{},'simulated':True}
 
     def start(self,arguments,working_dir,log_path=None):
         argv=list(map(str,arguments))
