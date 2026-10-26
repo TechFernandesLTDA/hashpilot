@@ -29,6 +29,6 @@ Processos externos ou cuja propriedade não pode ser confirmada são preservados
 
 Carteiras, histórico de ganhos, benchmarks e preferências permanecem armazenados. O resultado por GPU fica no arquivo `gpu-defaults.json` do respectivo diretório. Começar outra sessão invalida a confirmação anterior, para que ela não seja apresentada como se ainda descrevesse a nova mineração.
 
-Para retomar, use **Iniciar** no cartão da GPU desejada. O comando do cabeçalho inicia/reconcilia o serviço conforme as GPUs habilitadas; não reativa silenciosamente as que foram paradas.
+Para retomar uma placa, use **Iniciar** no cartão da GPU desejada. A partir da v0.5.1, **Iniciar todas**, no cabeçalho, habilita explicitamente as GPUs detectadas e solicita os respectivos mineradores. O serviço é iniciado com UAC se ainda não estiver ativo. A retomada é bloqueada enquanto houver parada/restauração recente em andamento, para evitar que o reset concorra com uma sessão nova.
 
 O atalho `PARAR-PEARL.cmd` também solicita o novo fluxo de parada. O instalador inclui a lista completa de módulos do serviço em `data/rig-runtime.json`, cuja importação é testada em um diretório isolado do clone.

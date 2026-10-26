@@ -608,15 +608,14 @@ class Monitor(tk.Tk):
                 result=request_stop([identifier],STATE_DIR,LOG_DIR,SETTINGS_PATH)
                 if result['requires_uac']:self.status.configure(text='● Parada solicitada · aprove o UAC para restaurar padrões',fg=ORANGE)
                 return
-            save_enabled(SETTINGS_PATH,identifier,enabled)
-            from rig import write_request
-            write_request(STATE_DIR,'reconcile',identifier)
+            from start_mining import request_start
+            request_start([identifier],STATE_DIR,LOG_DIR,SETTINGS_PATH)
             if enabled and not self.rig_service_running():
                 from onboarding import launch_rig_service
                 launch_rig_service()
             self.status.configure(text='● Preferência salva · aguardando serviço do rig',fg=ORANGE)
             if hasattr(self,'collector'):self.collector.rig_reader.detected_at=0
-        except (OSError,ValueError) as error:messagebox.showerror('Configuração da GPU',str(error),parent=self)
+        except (OSError,ValueError,RuntimeError) as error:messagebox.showerror('Configuração da GPU',str(error),parent=self)
 
     def rig_service_running(self):
         try:
@@ -629,12 +628,18 @@ class Monitor(tk.Tk):
 
     def start_rig(self):
         from onboarding import launch_rig_service
-        from rig import write_request
+        from start_mining import request_start
         from tkinter import messagebox
         try:
-            write_request(STATE_DIR,'reconcile')
+            devices=((self.last_data or {}).get('rig') or {}).get('devices') or []
+            if not devices:
+                from gpu_agent import detect_nvidia_gpus
+                devices=detect_nvidia_gpus(max_devices=6)
+            identifiers=[device['uuid'] for device in devices if device.get('uuid')]
+            if not identifiers:raise ValueError('Nenhuma GPU NVIDIA detectada para iniciar')
+            request_start(identifiers,STATE_DIR,LOG_DIR,SETTINGS_PATH)
             if not self.rig_service_running():launch_rig_service()
-            self.status.configure(text='● Rig solicitado · confira o Windows',fg=ORANGE)
+            self.status.configure(text='● Mineração solicitada · aguardando partida das GPUs',fg=ORANGE)
         except (OSError,ValueError,RuntimeError) as error:messagebox.showerror('Iniciar rig',str(error),parent=self)
 
     def stop_mining(self,all_devices=False):
@@ -882,7 +887,7 @@ class Monitor(tk.Tk):
         self.status.pack(anchor="e", pady=(0, 4))
         buttons = tk.Frame(controls, bg=BG)
         buttons.pack(anchor="e")
-        for text, command in (("Configurar", self.configure_setup), ("Iniciar", self.start_rig), ("Parar", self.stop_mining), ("Benchmark / IA", self.open_gpu_agent), ("Resumo", self.show_summary), ("Console", self.open_console), ("Recolher", self.hide_to_tray), ("Sair", self.close)):
+        for text, command in (("Configurar", self.configure_setup), ("Iniciar todas", self.start_rig), ("Parar", self.stop_mining), ("Benchmark / IA", self.open_gpu_agent), ("Resumo", self.show_summary), ("Console", self.open_console), ("Recolher", self.hide_to_tray), ("Sair", self.close)):
             tk.Button(buttons, text=text, command=command, bg='#9E3333' if text=='Parar' else PANEL, fg=TEXT, activebackground=BLUE,
                       activeforeground=TEXT, relief="flat", padx=10, pady=4, font=(BODY_FONT, 9)).pack(side="left", padx=(5, 0))
         style = ttk.Style(self)
