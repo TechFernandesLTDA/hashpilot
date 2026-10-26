@@ -137,6 +137,8 @@ def run_gpu_setup(parent=None,selected_uuid=None,devices=None,path=SETTINGS_PATH
         saved=True;window.destroy()
     buttons=tk.Frame(window,bg=BG)
     buttons.grid(row=5,column=0,sticky='e',padx=20,pady=12)
+    tk.Button(buttons,text='Segurança do minerador',command=lambda:__import__('defender_setup').show_defender_setup(window),padx=10,pady=7).pack(side='left',padx=6)
+    tk.Button(buttons,text='Atualizações',command=lambda:__import__('app_update').show_update_setup(window),padx=10,pady=7).pack(side='left',padx=6)
     tk.Button(buttons,text='Cancelar',command=window.destroy,padx=14,pady=7).pack(side='left',padx=6)
     tk.Button(buttons,text='Salvar GPUs e carteiras',command=finish,bg=TEAL,fg=TEXT,relief='flat',padx=16,pady=8).pack(side='left')
     if parent:
@@ -203,8 +205,9 @@ def run_setup(parent=None,selected_uuid=None) -> bool:
     check=tk.Checkbutton(window,text='Instalar e iniciar o minerador NVIDIA',variable=mine,bg=BG,fg=TEXT,selectcolor=PANEL,activebackground=BG,activeforeground=TEXT,anchor='w',font=('Segoe UI',-14))
     check.grid(row=8,column=0,sticky='ew',padx=20,pady=(10,3))
     if os.name != 'nt': check.configure(state='disabled')
-    label('O SRBMiner tem SHA256 conferido. O controle NVIDIA solicita elevação do Windows. A carteira de um minerador ativo só muda ao reiniciá-lo.',9,MUTED,10)
-    label('Histórico permanente por carteira • você pode voltar em Configurar a qualquer momento.',10,MUTED,10)
+    label('O hash oficial confirma a origem, não garante segurança. Uma detecção do Defender precisa de análise. Exceção opcional somente com decisão do administrador.',9,MUTED,10)
+    tk.Button(window,text='Segurança do minerador / permissão do Defender',command=lambda:__import__('defender_setup').show_defender_setup(window)).grid(row=10,column=0,sticky='w',padx=24,pady=5)
+    tk.Button(window,text='Atualizações',command=lambda:__import__('app_update').show_update_setup(window)).grid(row=10,column=0,sticky='e',padx=24,pady=5)
     ai_check=tk.Checkbutton(window,text='Ativar sugestões de IA',variable=ai,bg=BG,fg=TEXT,selectcolor=PANEL,activebackground=BG,activeforeground=TEXT,anchor='w',font=('Segoe UI',-14))
     ai_check.grid(row=11,column=0,sticky='w',padx=20,pady=4)
     def choose_ai():

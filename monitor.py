@@ -499,6 +499,29 @@ class Monitor(tk.Tk):
         threading.Thread(target=self.collector.work, daemon=True).start()
         threading.Thread(target=self.finance_collector.work, daemon=True).start()
         self.after(200, self.poll)
+        from app_update import UpdateChecker
+        self.update_checker = UpdateChecker(STATE_DIR)
+        self.after(10000, self.poll_updates)
+
+    def poll_updates(self):
+        if getattr(self,'closing',False):return
+        if self.grab_current() not in (None,self):
+            self.after(1000,self.poll_updates);return
+        self.update_checker.start()
+        try:
+            result=self.update_checker.results.get_nowait()
+            release=result.get('release')
+            from app_update import read_preferences
+            if result['include_prereleases']!=read_preferences(STATE_DIR)['include_prereleases']:
+                release=None;self.update_checker.next_check=0
+            if release and release['version'] not in self.update_checker.offered:
+                self.update_checker.offered.add(release['version'])
+                from tkinter import messagebox
+                if messagebox.askyesno('Atualização disponível',f"HashPilot {release['version']} disponível"+(' (pré-lançamento)' if release['prerelease'] else '')+'. Abrir o assistente de atualização? Nenhuma instalação será feita sem sua confirmação.',parent=self):
+                    from app_update import show_update_setup
+                    show_update_setup(self)
+        except queue.Empty:pass
+        self.after(1000,self.poll_updates)
 
     def hide_to_tray(self):
         if self.tray.registered_ok:
@@ -1409,6 +1432,10 @@ class Monitor(tk.Tk):
         self.after(250, self.poll)
 
     def close(self):
+        if getattr(self,'update_install_busy',False):
+            from tkinter import messagebox
+            messagebox.showinfo('Atualização em andamento','Aguarde a conclusão da instalação antes de sair. A mineração continua independente.',parent=self)
+            return
         if getattr(self, "closing", False):
             return
         self.closing = True

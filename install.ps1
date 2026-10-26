@@ -1,11 +1,11 @@
 # HashPilot Windows bootstrap. Inspect this file before running remote code.
-# Public entrypoint: irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.3.4/install.ps1 | iex
+# Public entrypoint: irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.3.5/install.ps1 | iex
 [CmdletBinding()]
 param(
     [string]$InstallRoot = (Join-Path $env:LOCALAPPDATA 'Programs\HashPilot'),
     [string]$SourcePath,
     [ValidatePattern('^v[0-9]+\.[0-9]+\.[0-9]+$')]
-    [string]$Release = 'v0.3.4',
+    [string]$Release = 'v0.3.5',
     [switch]$NoLaunch,
     [switch]$NoShortcuts
 )
@@ -103,7 +103,7 @@ if ($SourcePath) {
     $verifiedManifest = Confirm-HashPilotRelease -Archive $archive -Sums $sums -Release $Release -Destination $source
     $revision = [string]$verifiedManifest.commit
 }
-foreach ($required in @('monitor.py','onboarding.py','config.py','contribution.py','rig.py','rig_config.py','rig_controller.py','gpu_telemetry.py','ai_advisor.py','ai_setup.py','rig_panel.py','assets\brand\hashpilot.ico','mining\windows\downloads.json')) {
+foreach ($required in @('monitor.py','onboarding.py','config.py','contribution.py','rig.py','rig_config.py','rig_controller.py','gpu_telemetry.py','ai_advisor.py','ai_setup.py','rig_panel.py','defender_setup.py','app_update.py','app_version.py','assets\brand\hashpilot.ico','mining\windows\downloads.json','mining\windows\Permissao-Defender.ps1')) {
     if (-not (Test-Path -LiteralPath (Join-Path $source $required) -PathType Leaf)) { throw ('Incomplete package: ' + $required) }
 }
 function Get-ApplicationFiles {

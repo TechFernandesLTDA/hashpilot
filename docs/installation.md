@@ -3,7 +3,7 @@
 Windows 10/11 de 64 bits, conexão com a internet e driver NVIDIA. Abra o PowerShell e execute:
 
 ```powershell
-irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.3.4/install.ps1 | iex
+irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.3.5/install.ps1 | iex
 ```
 
 O comando baixa e executa o instalador público deste repositório. Você pode [ler o script](../install.ps1) antes de executar. Não é necessário clonar o repositório, instalar Git ou configurar Python manualmente. Se o Windows não tiver `winget`, instale o **App Installer**, da Microsoft Store, e repita o comando.
@@ -49,7 +49,7 @@ A IA pode usar OpenRouter Cloud Free, OpenCode Cloud Free pelo cliente ou Ollama
 
 Versões atuais aceitam uma solicitação de fechamento normal enviada pelo instalador, salvam o histórico e permitem abrir a nova versão automaticamente. Se uma versão antiga não responder, o instalador informa que ela precisa ser fechada pelo menu **Sair**; ele não encerra a mineração à força.
 
-O comando acima instala sempre a v0.3.4. Para atualizar, use o comando da versão publicada desejada na página de releases, depois de conferir suas evidências. Versões anteriores são mantidas e os atalhos passam a apontar para a nova versão. O assistente reabre; feche a versão antiga pelo menu **Sair** antes de abrir a nova quando houver atualização de código.
+O comando acima instala sempre a v0.3.5. A partir desta versão, abra **Configurar → Atualizações** para verificar releases e instalar uma versão nova após confirmação, sem refazer a configuração. O aplicativo também oferece atualizações em segundo plano. O canal inicial acompanha a build: esta versão inclui pré-lançamentos; é possível escolher somente versões estáveis. As versões anteriores são mantidas, os atalhos apontam para a nova e a reabertura espera o fechamento normal da interface antiga. O serviço do rig não é reiniciado por essa atualização. [Funcionamento e limites](update.md). O comando da release desejada continua disponível para atualização manual.
 
 Dados permanentes ficam separados da instalação em `%LOCALAPPDATA%\PearlMonitor`: configurações, `history.sqlite3`, estado do gerenciador e caches. Logs e bancos `gpu-agent.sqlite3` individuais ficam sob `LOG_DIR/gpus/<UUID>/`; bancos anteriores permanecem preservados. Atualizações não removem esses arquivos. No primeiro perfil vazio, o snapshot público do autor pode ser importado; ele é identificado por carteira. Consulte [portabilidade](../PORTABILIDADE.md).
 
@@ -59,6 +59,7 @@ Dados permanentes ficam separados da instalação em `%LOCALAPPDATA%\PearlMonito
 | --- | --- |
 | `winget` não existe | Instale App Installer pela Microsoft Store e reabra o PowerShell. |
 | Download bloqueado | Confira proxy, internet, GitHub e a mensagem do Windows. O instalador não desativa antivírus. |
+| Minerador em quarentena ou exceção desejada | Abra **Configurar → Segurança do minerador**. Leia os limites, solicite análise e, se decidir permitir, use a solicitação opcional com consentimento e confirmação administrativa. [Detalhes](defender.md). |
 | Sensores indisponíveis | Instale o driver NVIDIA adequado e confira `nvidia-smi`. |
 | Sem hashrate no benchmark | Confira a pasta dos logs e aguarde amostras reais do SRBMiner. |
 | IA indisponível | Aguarde o download do modelo e confirme Ollama em `127.0.0.1:11434`. |

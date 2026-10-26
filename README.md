@@ -2,7 +2,7 @@
 
 [English](README.en.md) · [Documentação](docs/index.md) · [Instalação](docs/installation.md) · [Para LLMs](llms.txt)
 
-**[Baixar v0.3.4 — pré-lançamento](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.3.4)** · [Todas as releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verificar SHA-256 e evidências](docs/verification.md)
+**[Baixar v0.3.5 — pré-lançamento](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.3.5)** · [Todas as releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verificar SHA-256 e evidências](docs/verification.md)
 
 ![Tech Fernandes](assets/brand/tech-fernandes_github_banner-readme_escuro_1280x400.png)
 
@@ -29,10 +29,12 @@ O vídeo e estas capturas documentam a **versão v0.1.0, com uma GPU**, em uma j
 No PowerShell do **Windows 10/11 x64**, com `winget` disponível:
 
 ```powershell
-irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.3.4/install.ps1 | iex
+irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.3.5/install.ps1 | iex
 ```
 
 O instalador prepara o mise/Python, instala o aplicativo em `%LOCALAPPDATA%\Programs\HashPilot`, cria atalhos e abre o assistente de configuração. Configurações e histórico existentes são preservados. [Passos, requisitos e solução de problemas](docs/installation.md).
+
+Em **Configurar**, consulte [Atualizações](docs/update.md) para instalar novas releases sem zerar configurações ou histórico, e [Segurança do minerador](docs/defender.md) para entender detecções e solicitar uma exceção local opcional com consentimento e confirmação administrativa. O HashPilot não declara o minerador seguro apenas por ter origem oficial e não altera o Defender automaticamente.
 
 **Carteira padrão: a do autor.** Se você mantiver esse endereço, os pagamentos irão para o autor. Troque pela sua carteira pública no assistente antes de minerar; a configuração pode ser reaberta. O monitor não precisa de seed ou chave privada. A instalação do minerador é uma opção separada: não começa apenas por instalar o painel.
 
@@ -69,7 +71,7 @@ Com uma carteira diferente da do autor, a contribuição opcional e desativável
 
 ## Verificação e evidências
 
-[Verificar a release e reproduzir o pacote](docs/verification.md) · [Protocolo de estabilidade de 24/72 horas](docs/verification.md#protocolo-de-estabilidade-de-24-e-72-horas) · [Notas da v0.3.4](docs/releases/v0.3.4.md). Hashes não substituem assinatura de publicador ou revisão independente.
+[Verificar a release e reproduzir o pacote](docs/verification.md) · [Protocolo de estabilidade de 24/72 horas](docs/verification.md#protocolo-de-estabilidade-de-24-e-72-horas) · [Notas da v0.3.5](docs/releases/v0.3.5.md). Hashes não substituem assinatura de publicador ou revisão independente.
 
 ## Código e dados
 

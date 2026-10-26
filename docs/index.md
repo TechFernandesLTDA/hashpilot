@@ -26,6 +26,8 @@
 | [Contribuição](../CONTRIBUTING.md) | Ambiente, testes e revisão |
 | [Verificação e validação](verification.md) | Releases, diagnóstico, matriz de evidências e protocolo de 24/72 horas |
 | [Segurança](../SECURITY.md) | Relato de vulnerabilidades e conteúdo sensível |
+| [Defender e permissão do administrador](defender.md) | Detecção inconclusiva, análise do arquivo e exceção local opcional e removível |
+| [Atualizações pelo aplicativo](update.md) | Oferta de releases, instalação verificada, preservação dos dados e reabertura normal |
 | [Origem da marca](../assets/brand/ORIGEM.md) | Logos, derivados e tokens oficiais |
 
 ## Fatos essenciais

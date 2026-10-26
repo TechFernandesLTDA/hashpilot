@@ -12,6 +12,9 @@ if(-not (Test-Path -LiteralPath $archive) -or (Get-FileHash -LiteralPath $archiv
 }
 if((Get-FileHash -LiteralPath $archive -Algorithm SHA256).Hash.ToLower() -ne $manifest.srbminer.sha256){throw 'Hash SHA256 divergente; arquivo não será executado'}
 if(-not (Test-Path -LiteralPath (Join-Path $destination 'SRBMiner-Multi-3-8-0\SRBMiner-MULTI.exe'))){Expand-Archive -LiteralPath $archive -DestinationPath $destination -Force}
+$executable=Join-Path $destination 'SRBMiner-Multi-3-8-0\SRBMiner-MULTI.exe'
+if(-not (Test-Path -LiteralPath $executable -PathType Leaf)){throw 'Executavel indisponivel apos extracao. Confira o Historico de protecao do Windows; uma deteccao precisa de analise. No HashPilot, abra Configurar > Seguranca do minerador. Nenhuma excecao foi criada automaticamente.'}
+if((Get-FileHash -LiteralPath $executable -Algorithm SHA256).Hash.ToLowerInvariant() -ne '6eb4e0bc37d65fdf7644ab620737e14f4c7dfa9666acde43d5f38ab1e9094ac1'){throw 'Executavel diferente do hash fixado; instalacao recusada. O hash oficial confirma origem, nao garante seguranca.'}
 Get-ChildItem -LiteralPath $PSScriptRoot -File | Where-Object {$_.Extension -in @('.ps1','.cmd','.txt') -and $_.Name -ne 'Instalar-Minerador.ps1'} | ForEach-Object {
  $content=Get-Content -LiteralPath $_.FullName -Raw
  $content=$content.Replace('C:\Users\renan\AppData\Local\Mining\Pearl',$destination)

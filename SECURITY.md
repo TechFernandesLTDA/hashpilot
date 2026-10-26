@@ -13,6 +13,7 @@ Inclua a revisão afetada, plataforma, comportamento observado e impacto. O proj
 - O snapshot público incluído tem autorização do autor. Isso não autoriza publicar dados de outros usuários.
 - Logs e diagnósticos podem conter carteira, caminhos locais e valores financeiros. Revise anexos antes de enviá-los.
 - Os binários de minerador/carteira vêm de fontes de terceiros identificadas em `mining/windows/downloads.json`; o instalador confere o hash esperado.
+- Uma detecção do Defender exige análise do arquivo; origem oficial não comprova segurança. O [assistente de permissão](docs/defender.md) só solicita exceção após consentimento e confirmação administrativa, limitada ao caminho do executável verificado. Não restaura quarentena nem desliga proteções globais. A exceção por caminho também afeta substituições futuras naquele caminho.
 - A coleta do painel é distinta das ações de instalação, mineração e controle de clocks. O perfil RTX 3070 validado não certifica outros dispositivos.
 - O agente de controle exige ativação explícita e posse exclusiva da GPU; não contorne a detecção de supervisor concorrente. Propostas de Ollama, OpenRouter ou OpenCode continuam sujeitas aos limites locais do motor.
 - O painel acompanha até seis GPUs NVIDIA por UUID. A evidência física disponível cobre uma RTX 3070; testes multiGPU são simulados. Catálogo e perfis por UUID não comprovam estabilidade em hardware não testado.
