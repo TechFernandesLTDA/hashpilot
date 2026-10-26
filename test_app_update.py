@@ -59,6 +59,20 @@ class AppUpdateTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as temporary:
             self.assertEqual(update.current_version(Path(temporary)),(update.VERSION,'código-fonte / desenvolvimento'))
 
+    def test_visible_identity_uses_running_folder_not_activation_pointer(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);app=installed(root/'old-running','v1.0.0')
+            (root/'installation.json').write_text(json.dumps({'release':'v9.0.0','app':'elsewhere'}))
+            identity=update.build_identity(app)
+            self.assertEqual(identity['version'],'v1.0.0')
+            self.assertEqual(identity['revision'],'a'*40)
+
+    def test_invalid_visible_identity_never_claims_a_verified_version(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=installed(Path(temporary));(root/'RELEASE-MANIFEST.json').write_text('null')
+            self.assertEqual(update.build_identity(root)['version'],'não verificada')
+            self.assertIsNone(update.build_identity(root)['revision'])
+
     def test_preferences_are_separate_and_boolean_only(self):
         with tempfile.TemporaryDirectory() as temporary:
             state=Path(temporary);settings=state/'settings.json';settings.write_bytes(b'keep all configured data')

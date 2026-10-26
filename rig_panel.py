@@ -26,6 +26,8 @@ def project_selected(data,identifier):
     for key in ('gpu','miner','miner_running','log_path','log_error','thermal_control','support_contribution'):
         result[key]=selected.get(key)
     result['gpu_error']=(selected.get('gpu') or {}).get('error')
+    result['process_error']=selected.get('process_error') or data.get('process_error')
+    result['miner_state']=selected.get('state')
     result['selected_gpu_uuid']=selected['uuid']
     return result
 

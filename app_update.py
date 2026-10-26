@@ -47,6 +47,17 @@ def current_version(root=ROOT):
     return VERSION,'código-fonte / desenvolvimento'
 
 
+def build_identity(root=ROOT):
+    """Identify the code actually loaded, never the activated shortcut target."""
+    try:
+        version,source=current_version(root)
+        manifest=Path(root)/'RELEASE-MANIFEST.json'
+        revision=json.loads(manifest.read_text(encoding='utf-8-sig'))['commit'] if manifest.exists() else None
+        return {'version':version,'revision':revision,'source':source}
+    except (OSError,ValueError,KeyError,TypeError):
+        return {'version':'não verificada','revision':None,'source':'manifesto inválido ou indisponível'}
+
+
 def state_directory():
     return Path(os.environ['LOCALAPPDATA'])/'PearlMonitor'
 

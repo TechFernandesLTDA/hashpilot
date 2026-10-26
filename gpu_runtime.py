@@ -66,6 +66,7 @@ class RigTelemetry:
                 control_at=numeric(control.get('sampled_at'))
                 control['age_seconds']=now-(control_at or 0);control['stale']=control_at is None or not -5<=control['age_seconds']<=15
             entry={**device,**payload,'gpu':samples.get(identifier), 'thermal_control':control or None,
+                'process_error':managed.get('error') if manager_fresh else None,
                 'state':'manager_unavailable' if managed and not manager_fresh else managed.get('state','legacy_readonly' if legacy else 'disabled' if not device['enabled'] else 'stopped'),
                 'collected_at':now,'support_contribution':{},'manager_stale':bool(managed and not manager_fresh)}
             result.append(entry)

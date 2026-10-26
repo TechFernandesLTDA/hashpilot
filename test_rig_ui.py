@@ -24,6 +24,14 @@ def fixture(count=6,identical=False):
         'gpu':devices[0]['gpu'],'miner':devices[0]['miner'],'miner_running':True,'log_path':None,'thermal_control':None}
 
 class RigModelTests(unittest.TestCase):
+    def test_selected_gpu_preserves_actual_start_failure(self):
+        data=fixture(2)
+        data['rig']['devices'][1].update(process_error='fixture: executable missing',state='error',miner_running=False)
+        projected=project_selected(data,'GPU-fixture-1')
+        self.assertEqual(projected['process_error'],'fixture: executable missing')
+        self.assertEqual(projected['miner_state'],'error')
+        self.assertFalse(projected['miner_running'])
+
     def test_projection_is_device_not_total(self):
         data=fixture(); projected=project_selected(data,'GPU-fixture-3')
         self.assertEqual(projected['miner']['hashrate'],73)

@@ -61,7 +61,7 @@ def build_harness(monitor, temporary, scaling=None):
     root.tray = SimpleNamespace(registered_ok=False, error=None)
     fixture = read_optional(Path(tempfile.gettempdir())/"HashPilot-layout-finance-qa.json")
     latest = fixture.get("snapshot") or read_optional(monitor.STATE_DIR/"latest.json")
-    root.history = SimpleNamespace(path=temporary/"not-opened.sqlite3", session="isolated-layout-qa",
+    root.history = SimpleNamespace(path=temporary/"not-opened.sqlite3", session="isolated-layout-qa",wallet=monitor.WALLET,
         info=latest.get("history", {}).get("counts", {}), last_error=None, last_commit=None,
         jobs=SimpleNamespace(qsize=lambda: 0), preferences=lambda data: None)
     root.finance_state = read_optional(monitor.STATE_DIR/"finance-cache.json")

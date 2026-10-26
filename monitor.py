@@ -29,6 +29,7 @@ from contribution import read_support_status, read_settings as read_support_sett
 from tray import WindowsTray
 from bootstrap import restore_bundled_data
 from rig_panel import RigCards, project_selected, totals, save_enabled, show_identity
+from app_update import build_identity
 
 
 def selected_gpu_context(data, identifier, fallback_wallet):
@@ -37,6 +38,7 @@ def selected_gpu_context(data, identifier, fallback_wallet):
     return (identifier,device.get('wallet') or fallback_wallet) if device else None
 
 APP_NAME = "HashPilot — Tech Fernandes"
+APP_BUILD = build_identity()
 DPI_MODE = {"requested":"PerMonitorV2","enabled":False,"fallback":True}
 ASSET_DIR = Path(__file__).resolve().parent / "assets/brand"
 BODY_FONT, TITLE_FONT = "Segoe UI", "Segoe UI"
@@ -205,7 +207,9 @@ class Collector:
             if self.history and device.get('log_path'):
                 try:self.history.archive_log(Path(device['log_path']),gpu_uuid=device['uuid'],wallet=device['wallet'])
                 except OSError:pass
+        miner_file=Path(os.environ.get('LOCALAPPDATA',''))/'Mining/Pearl/SRBMiner-Multi-3-8-0/SRBMiner-MULTI.exe'
         result={'collected_at':now,'rig':rig,'gpu':None,'gpu_error':rig.get('error'),'miner':parse_log(''),
+            'miner_executable_available':miner_file.is_file(),
             'miner_running':None,'process_error':process_error,'log_error':None,'log_path':None,'thermal_control':None,'support_contribution':{}}
         return project_selected(result,self.selected_uuid)
 
@@ -462,7 +466,7 @@ class Monitor(tk.Tk):
         families = set(tkfont.families(self))
         BODY_FONT = "Plus Jakarta Sans" if "Plus Jakarta Sans" in families else "Segoe UI"
         TITLE_FONT = "Sora" if "Sora" in families else "Segoe UI"
-        self.title(APP_NAME)
+        self.title(APP_NAME+' · '+APP_BUILD['version'])
         self.app_icon = tk.PhotoImage(file=ASSET_DIR / "icon-256.png")
         self.iconphoto(True, self.app_icon)
         self.geometry("1280x800")
@@ -639,7 +643,7 @@ class Monitor(tk.Tk):
             self.summary_window.lift()
             return
         window = self.summary_window = tk.Toplevel(self)
-        window.title("HashPilot · Resumo ao vivo")
+        window.title("HashPilot · Resumo ao vivo · "+APP_BUILD['version'])
         area = work_area(self)
         summary_width, summary_height = min(660, area[2]-area[0]-20), min(700, area[3]-area[1]-44)
         window.geometry(f"{summary_width}x{summary_height}")
@@ -716,7 +720,7 @@ class Monitor(tk.Tk):
             "price": money(model.get("price_brl")),
             "payout_eta": payout.get("eta_label") or "Aguardando dados da pool",
             "payout_remaining": format_prl(payout.get("remaining_prl")),
-            "thermal": thermal_description(data.get("thermal_control"), compact=True),
+            "thermal": 'Inativo · minerador parado' if data.get('miner_running') is False else thermal_description(data.get("thermal_control"), compact=True),
             "history": f"{self.history.info.get('telemetry', (0,))[0]} amostras · {'gravando' if not self.history.last_error else 'aguardando'}",
         }
         if data.get('rig'):
@@ -824,7 +828,7 @@ class Monitor(tk.Tk):
         self.brand_logo_label.pack(side="left",padx=(0,14))
         product = tk.Frame(head, bg=BG)
         product.pack(side="left")
-        self.label(product, "HashPilot", font=(TITLE_FONT, 20, "bold")).pack(anchor="w")
+        self.label(product, "HashPilot "+APP_BUILD['version'], font=(TITLE_FONT, 20, "bold")).pack(anchor="w")
         self.subtitle = self.label(product, "Mineração e recebimentos", fg=MUTED, font=(BODY_FONT, 9))
         self.subtitle.pack(anchor="w")
         controls = tk.Frame(head, bg=BG)
@@ -1186,7 +1190,10 @@ class Monitor(tk.Tk):
         self.finance_pay_summary.configure(text="Pagamento real em PRL · Carteira "+(wallet[:12]+"—"+wallet[-8:] if wallet else "não configurada")+" · Mínimo "+format_prl(threshold)+" · Falta "+format_prl(payout.get("remaining_prl"))+"\n"+str(payout.get("eta_label") or "Estimativa aguardando dados"))
         partial = model.get("periods",{}).get("day",{})
         support_note=' Ajuda opcional de 5% configurada já descontada da projeção.' if (model.get('support_contribution') or {}).get('enabled') else ''
-        self.finance_explanation.configure(text=("Observado parcialmente desde "+timestamp(partial.get("since"))+". " if partial.get("partial") else "")+"Conversões equivalentes à cotação atual; o pagamento permanece em PRL. Projeções: 24 h/dia e condições atuais."+support_note)
+        forecast_note=('Projeções: 24 h/dia e condições atuais.' if model.get('forecast') else
+            'Projeções N/D: rig local parado; saldo e histórico continuam visíveis.' if devices and not any(d.get('miner_running') for d in devices) else
+            'Projeções N/D: faltam dados atuais de hashrate, preço ou rede.')
+        self.finance_explanation.configure(text=("Observado parcialmente desde "+timestamp(partial.get("since"))+". " if partial.get("partial") else "")+"Conversões à cotação atual; pagamento em PRL. "+forecast_note+support_note)
         self.finance_sources.configure(text="Fontes: Kryptex Pool API · CoinGecko (Pearl pearl-2 / Bitcoin). Semana: segunda até agora, São Paulo. Histórico permanente local.")
         graph_wallets=[model['selected_wallet']] if model.get('scope')=='wallet' and model.get('selected_wallet') else list(model.get('wallet_models',{})) or None
         snapshots = portfolio_snapshots(self.finance_state,graph_wallets)
@@ -1249,7 +1256,7 @@ class Monitor(tk.Tk):
         fresh = age is not None and -5 <= age <= 180 and data["miner_running"] is True and not miner.get("paused")
         status, color = "Aguardando mineração", MUTED
         if data["miner_running"] is False:
-            status, color = "Minerador parado", ORANGE
+            status, color = ("Minerador indisponível" if data.get('miner_executable_available') is False else "Minerador parado"), ORANGE
         elif data["miner_running"] is None:
             status, color = "Estado do processo indisponível", ORANGE
         elif "Reconectando" in miner["connection"]:
@@ -1263,7 +1270,8 @@ class Monitor(tk.Tk):
         self.status.configure(text="●  " + status, fg=color)
         hashrate = miner.get("hashrate") if fresh else None
         self.card_values["hash"].configure(text=fmt(hashrate, " TH/s", 1))
-        self.card_notes["hash"].configure(text=("Média 1 min: " + fmt(miner.get("average_1m"), " TH/s", 1)) if fresh else "Hashrate não atualizado")
+        self.card_notes["hash"].configure(text=("Média 1 min: " + fmt(miner.get("average_1m"), " TH/s", 1)) if fresh else
+            'Arquivo ausente ou bloqueado' if data.get('miner_executable_available') is False and data['miner_running'] is False else "Hashrate não atualizado")
         self.card_values["temp"].configure(text=fmt(gpu.get("temperature.gpu"), " °C"))
         self.card_notes["temp"].configure(text="Sensor NVIDIA" if gpu else "Sensor indisponível")
         self.card_values["power"].configure(text=fmt(gpu.get("power.draw"), " W", 1))
@@ -1296,8 +1304,8 @@ class Monitor(tk.Tk):
             for chart in self.overview_charts.values():chart.draw()
         ignored=(data.get('rig') or {}).get('ignored_devices') or []
         efficiency = hashrate/gpu["power.draw"] if hashrate and gpu.get("power.draw") else None
-        thermal_text = thermal_description(data.get("thermal_control"))
-        self.overview_thermal.configure(text="Controle térmico: " + thermal_description(data.get("thermal_control"), compact=True))
+        thermal_text = 'Supervisor inativo · minerador parado' if data['miner_running'] is False else thermal_description(data.get("thermal_control"))
+        self.overview_thermal.configure(text="Controle térmico: " + ('inativo · minerador parado' if data['miner_running'] is False else thermal_description(data.get("thermal_control"), compact=True)))
         if self.winfo_height()<780:
             contribution='Ajuda 5% ativa' if support.get('ready') and support.get('enabled') else 'Ajuda 5% configurada' if support.get('enabled') or support.get('configured_enabled') else 'Sem ajuda adicional'
             self.overview_thermal.configure(text=self.overview_thermal.cget('text')+' · '+contribution)
@@ -1324,6 +1332,8 @@ class Monitor(tk.Tk):
         filename = Path(data["log_path"]).name if data["log_path"] else "nenhum log"
         self.log_title.configure(text="ATIVIDADE DO MINERADOR  ·  " + filename)
         errors = [data.get(key) for key in ("gpu_error", "process_error", "log_error") if data.get(key)]
+        if data.get('miner_executable_available') is False and data['miner_running'] is False:
+            errors=['Minerador indisponível: arquivo ausente ou bloqueado. Abra Configurar > Segurança do minerador.']
         if self.history.last_error:
             errors.append("Histórico aguardando gravação: " + self.history.last_error)
         archived = self.history.info.get("telemetry", (0, None, None))[0]
@@ -1333,7 +1343,7 @@ class Monitor(tk.Tk):
         snapshot["miner"] = {k: v for k, v in miner.items() if k not in ("recent_logs", "rate_points")}
         snapshot["charts"] = {key: chart.sample_info() for key, chart in self.charts.items()}
         snapshot["monitor_status"] = status
-        snapshot["app"] = {"name": APP_NAME, "tray_registered": self.tray.registered_ok,
+        snapshot["app"] = {"name": APP_NAME, **APP_BUILD, "tray_registered": self.tray.registered_ok,
             "tray_error": self.tray.error, "panel_state": self.state(),
             "pid": os.getpid(),
             "summary_open": bool(self.summary_window and self.summary_window.winfo_exists())}
@@ -1469,7 +1479,7 @@ def console_text(snapshot, finance):
     rig=snapshot.get('rig') or {}
     aggregate=rig.get('totals') or {}
     return "\n".join([
-        "HASHPILOT  |  TECH FERNANDES",
+        "HASHPILOT "+str((snapshot.get('app') or {}).get('version') or 'versão não informada')+"  |  TECH FERNANDES",
         "Resumo local do monitor. Ctrl+C fecha somente este console.",
         "="*82,
         (snapshot.get("monitor_status", "Aguardando monitor") if active else "MONITOR SEM ATUALIZACAO - ultimo registro abaixo"),
