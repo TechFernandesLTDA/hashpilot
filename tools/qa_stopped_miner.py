@@ -21,13 +21,15 @@ with tempfile.TemporaryDirectory() as temporary:
         device.update(miner_running=False,state='error',process_error='fixture: file unavailable')
         data['miner_executable_available']=False
         finance={'price_brl':10,'price_usd':2,'unpaid_prl':1,'accumulated_prl':1,'accumulated_brl':10,
-            'periods':{'day':{'prl':1,'brl':10}},'currencies':{'day':{'prl':1,'brl':10,'usd':2,'btc':.00002}},'forecast':None}
+            'periods':{'day':{'prl':1,'brl':10}},'currencies':{'day':{'prl':1,'brl':10,'usd':2,'btc':.00002}},'forecast':None,
+            'payout':{'eta_label':'3 h','remaining_prl':.01}}
         root.apply(data)
         with patch.object(monitor,'financial_model',return_value=finance):root.refresh_finance()
         assert root.status.cget('text').endswith('Minerador indisponível')
         assert root.card_values['hash'].cget('text')=='—'
         assert root.overview_values['today'].cget('text')=='R$ 10,00'
         assert 'rig local parado' in root.finance_explanation.cget('text')
+        assert 'Sem previsão local' in root.payout_eta.cget('text')
         assert 'Segurança do minerador' in root.footer.cget('text')
         assert any(getattr(w,'cget',lambda k:None)('text')=='HashPilot '+monitor.APP_BUILD['version'] for w in descendants(root) if w.winfo_class()=='Label')
         snapshot=json.loads((folder/'latest.json').read_text(encoding='utf-8'))

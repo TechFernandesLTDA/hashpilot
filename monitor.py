@@ -303,6 +303,20 @@ def format_brl(value):
     return "N/D" if value is None else "R$ " + f"{value:,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
 
 
+def payout_for_local_state(model,data):
+    """Do not turn a historical earning rate into a live ETA for a stopped rig."""
+    payout=dict(model.get('payout') or {})
+    devices=((data or {}).get('rig') or {}).get('devices') or []
+    wallet=model.get('selected_wallet') or model.get('wallet')
+    if wallet:devices=[d for d in devices if d.get('wallet')==wallet]
+    remaining=safe_number(payout.get('remaining_prl'))
+    if devices and all(d.get('miner_running') is False for d in devices) and remaining is not None and remaining>0:
+        payout.update(eta_label='Sem previsão local: rig parado e mínimo ainda não atingido',
+            eta_details='O saldo permanece na pool. É necessário mais trabalho creditado para atingir o mínimo; outros workers fora deste rig não são acompanhados.',
+            rate_label='O ritmo histórico não comprova geração atual.')
+    return payout
+
+
 def enable_native_dpi_awareness():
     """Configura somente este processo, antes de criar qualquer janela Tk."""
     global DPI_MODE
@@ -1137,6 +1151,7 @@ class Monitor(tk.Tk):
             model=portfolio_model(self.finance_state,devices,selected_wallet=selected)
         else:
             model = financial_model(self.finance_state, miner.get("average_1m") if fresh else None)
+        model={**model,'payout':payout_for_local_state(model,self.last_data or {})}
         self.last_finance_model = model
         wallet = str(model.get("wallet") or ('' if model.get('scope')=='portfolio' else WALLET) or "")
         if self.wallet_var.get() != wallet:
