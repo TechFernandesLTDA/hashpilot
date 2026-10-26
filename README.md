@@ -2,7 +2,7 @@
 
 [English](README.en.md) · [Documentação](docs/index.md) · [Instalação](docs/installation.md) · [Para LLMs](llms.txt)
 
-**[Baixar v0.4.0 — pré-lançamento](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.4.0)** · [Todas as releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verificar SHA-256 e evidências](docs/verification.md)
+**[Baixar v0.4.1 — pré-lançamento](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.4.1)** · [Todas as releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verificar SHA-256 e evidências](docs/verification.md)
 
 ![Tech Fernandes](assets/brand/tech-fernandes_github_banner-readme_escuro_1280x400.png)
 
@@ -29,7 +29,7 @@ O vídeo e estas capturas documentam a **versão v0.1.0, com uma GPU**, em uma j
 No PowerShell do **Windows 10/11 x64**, com `winget` disponível:
 
 ```powershell
-irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.4.0/install.ps1 | iex
+irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.4.1/install.ps1 | iex
 ```
 
 O instalador prepara o mise/Python, instala o aplicativo em `%LOCALAPPDATA%\Programs\HashPilot`, cria atalhos e abre o assistente de configuração. Configurações e histórico existentes são preservados. [Passos, requisitos e solução de problemas](docs/installation.md).
@@ -71,7 +71,7 @@ Com uma carteira diferente da do autor, a contribuição opcional e desativável
 
 ## Verificação e evidências
 
-[Verificar a release e reproduzir o pacote](docs/verification.md) · [Protocolo de estabilidade de 24/72 horas](docs/verification.md#protocolo-de-estabilidade-de-24-e-72-horas) · [Notas da v0.4.0](docs/releases/v0.4.0.md). Hashes não substituem assinatura de publicador ou revisão independente.
+[Verificar a release e reproduzir o pacote](docs/verification.md) · [Protocolo de estabilidade de 24/72 horas](docs/verification.md#protocolo-de-estabilidade-de-24-e-72-horas) · [Notas da v0.4.1](docs/releases/v0.4.1.md). Hashes não substituem assinatura de publicador ou revisão independente.
 
 ## Código e dados
 

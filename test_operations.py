@@ -137,6 +137,31 @@ class QualityAndVersionTests(unittest.TestCase):
             self.assertEqual(identity(path)['version'],'v0.4.0')
 
 class RigOperationTests(unittest.TestCase):
+    def test_manual_reconnect_at_budget_limit_preserves_running_miner(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);settings=root/'settings.json';atomic_json(settings,{'wallet':AUTHOR_WALLET})
+            backend=FakeBackend();now=__import__('time').time()
+            manager=RigManager(root/'state',root/'logs',settings,root/'miner.exe',backend=backend,detector=lambda:detected(1))
+            manager.reconcile();identifier='GPU-test-0';pid=manager.devices[identifier]['miner_pid']
+            for at in (now-300,now-240,now-120):manager.operations.reserve(identifier,'failure',at)
+            write_request(root/'state','restart',identifier);manager.process_requests()
+            self.assertTrue(backend.inspect(pid));self.assertFalse(backend.stopped)
+            self.assertIn('preservada',manager.error)
+
+    def test_planned_service_restart_does_not_spend_recovery_budget(self):
+        with tempfile.TemporaryDirectory() as temporary:
+            root=Path(temporary);settings=root/'settings.json';atomic_json(settings,{'wallet':AUTHOR_WALLET})
+            backend=FakeBackend();clock=[1000]
+            manager=RigManager(root/'state',root/'logs',settings,root/'miner.exe',backend=backend,detector=lambda:detected(1),clock=lambda:clock[0])
+            manager.reconcile();identifier='GPU-test-0';manager.stop_gpu(identifier);manager.publish()
+            for at in (1100,1160,1280):manager.operations.reserve(identifier,'earlier failures',at)
+            clock[0]=1300
+            reloaded=RigManager(root/'state',root/'logs',settings,root/'miner.exe',backend=backend,detector=lambda:detected(1),clock=lambda:clock[0])
+            reloaded.require_recovery_sensors=True
+            reloaded.reconcile()
+            self.assertEqual(reloaded.devices[identifier]['state'],'running')
+            self.assertEqual(reloaded.operations.budget(identifier,1300)['attempts_last_hour'],3)
+
     def test_stall_reconnect_is_scoped_and_refuses_heat_pause_and_unknown_sensors(self):
         for condition in ('eligible','hot','paused','missing','disabled','external','stale'):
             with self.subTest(condition=condition),tempfile.TemporaryDirectory() as temporary:

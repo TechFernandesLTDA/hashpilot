@@ -1,11 +1,11 @@
 # HashPilot Windows bootstrap. Inspect this file before running remote code.
-# Public entrypoint: irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.4.0/install.ps1 | iex
+# Public entrypoint: irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.4.1/install.ps1 | iex
 [CmdletBinding()]
 param(
     [string]$InstallRoot = (Join-Path $env:LOCALAPPDATA 'Programs\HashPilot'),
     [string]$SourcePath,
     [ValidatePattern('^v[0-9]+\.[0-9]+\.[0-9]+$')]
-    [string]$Release = 'v0.4.0',
+    [string]$Release = 'v0.4.1',
     [switch]$NoLaunch,
     [switch]$NoShortcuts
 )

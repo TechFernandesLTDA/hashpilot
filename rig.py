@@ -445,7 +445,8 @@ class RigManager:
                 self.ignored.append({"uuid":device["uuid"],"name":device["name"],"reason":"Seis registros ocupados; uma sessão externa ou não confirmada foi preservada"})
                 continue
             if device["enabled"] and not entry.get("external_readonly") and not entry.get("ownership_unverified") and entry.get("state")!="running" and self.clock()>=entry.get("retry_after",0):
-                if entry and entry.get('started_at') is not None:
+                recovering=bool(entry.get('error') or entry.get('state') in ('error','recovery_wait','stop_failed'))
+                if entry and entry.get('started_at') is not None and recovering:
                     entry['recovery']=self.operations.budget(device['uuid'],self.clock())
                     sensor=entry.get('last_gpu_sample') or {}
                     if self.require_recovery_sensors and (sensor.get('temperature.gpu') is None or sensor['temperature.gpu']>=70 or sensor.get('error') or not 0<=self.clock()-sensor.get('sampled_at',0)<=15):
@@ -561,6 +562,9 @@ class RigManager:
                     entry=self.devices.get(gpu_uuid,{})
                     if not entry or not entry.get('managed') or entry.get('external_readonly') or entry.get('ownership_unverified') or not entry.get('enabled'):
                         raise ValueError('GPU precisa estar habilitada e sob controle do rig')
+                    budget=self.operations.budget(gpu_uuid,self.clock())
+                    if budget['blocked'] or self.clock()<budget['next_allowed_at']:
+                        raise ValueError('Reconexão adiada pelo orçamento de recuperação; mineração atual preservada')
                     if not self.stop_gpu(gpu_uuid): raise RuntimeError('Parada não confirmada')
                     entry['error']='Reconexão solicitada pelo usuário'
                 elif action=='profile':
