@@ -19,6 +19,9 @@ def detected(count=6,mixed=True):
 
 
 class FakeBackend:
+    def assert_gpu_available(self,miner_path,index):
+        pass
+
     def __init__(self):
         self.next_pid=100
         self.processes={}
@@ -138,10 +141,19 @@ class RigManagerTests(unittest.TestCase):
         miners=[item for item in self.backend.started if "--gpu-id" in item["argv"]]
         self.assertEqual({item["argv"][item["argv"].index("--gpu-id")+1] for item in miners},set("012345"))
         self.assertTrue(all("--gpu-cclock0" not in item["argv"] for item in miners))
+        self.assertTrue(all('--disable-worker-watchdog' in item['argv'] for item in miners))
         for index,entry in enumerate(self.manager.devices.values()):
             self.assertEqual(entry["state"],"running")
             self.assertIn(entry["gpu_uuid"],entry["controller"]["argv"])
             self.assertIn("--miner-log",entry["controller"]["argv"])
+
+    def test_existing_untracked_miner_blocks_launch_without_killing_or_restoring(self):
+        with patch.object(self.backend,'assert_gpu_available',side_effect=RuntimeError('GPU already occupied')):
+            self.manager.reconcile(detected=detected(1))
+        self.assertEqual(self.backend.started,[])
+        self.assertEqual(self.backend.stopped,[])
+        self.assertEqual(self.backend.restored,[])
+        self.assertEqual(self.manager.devices['GPU-test-0']['state'],'error')
 
     def test_disabling_one_gpu_never_stops_another(self):
         self.manager.reconcile()

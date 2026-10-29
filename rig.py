@@ -62,6 +62,8 @@ def normalized_path(value):
 
 
 def windows_argv(command_line):
+    # CommandLineToArgvW("") returns this Python executable, not an empty list.
+    if not isinstance(command_line,str) or not command_line.strip(): return []
     shell=ctypes.WinDLL("shell32",use_last_error=True)
     shell.CommandLineToArgvW.argtypes=[wintypes.LPCWSTR,ctypes.POINTER(ctypes.c_int)]
     shell.CommandLineToArgvW.restype=ctypes.POINTER(wintypes.LPWSTR)
@@ -82,6 +84,24 @@ class ProcessBackend:
     def restore_defaults(self,gpu,directory):
         from gpu_defaults import restore_defaults
         return restore_defaults(gpu,directory)
+
+    def assert_gpu_available(self,miner_path,index):
+        """Fail closed when an orphan or an unreadable miner may own this GPU."""
+        command="[Console]::OutputEncoding=[Text.UTF8Encoding]::new(); @(Get-CimInstance Win32_Process -Filter \"Name='SRBMiner-MULTI.exe'\" -ErrorAction Stop | Select-Object ProcessId,CommandLine) | ConvertTo-Json -Compress"
+        result=subprocess.run(['powershell.exe','-NoProfile','-Command',command],capture_output=True,
+            text=True,encoding='utf-8',errors='replace',timeout=8,creationflags=NO_WINDOW)
+        if result.returncode: raise RuntimeError('Não foi possível verificar mineradores existentes; início bloqueado')
+        rows=json.loads(result.stdout or '[]')
+        if isinstance(rows,dict): rows=[rows]
+        for row in rows:
+            args=windows_argv(row.get('CommandLine'))
+            if not args: raise RuntimeError('Minerador existente sem identidade legível; início bloqueado para evitar duplicação')
+            try:
+                selected=args[args.index('--gpu-id')+1].split(',') if '--gpu-id' in args else None
+                if selected is not None and not all(x.isdigit() for x in selected): selected=None
+            except IndexError: selected=None
+            if selected is None or str(index) in selected:
+                raise RuntimeError(f'Minerador já existente para GPU {index} (PID {row["ProcessId"]}); início bloqueado para evitar duplicação')
 
     @staticmethod
     def _kernel():
@@ -322,6 +342,7 @@ class RigManager:
         atomic_json(directory/'gpu-defaults.json',{'state':'mining_session','at':self.clock(),'gpu_uuid':identifier})
         entry["miner_log"]=str(directory/("mining-"+time.strftime("%Y%m%d-%H%M%S")+"-"+uuid.uuid4().hex[:6]+".log"))
         try:
+            self.backend.assert_gpu_available(self.miner_path,entry['miner_index'])
             proxy_settings,proxy_path=self._sync_proxy_settings(entry,settings)
             if support_configuration(proxy_settings,entry["wallet"])["enabled"]:
                 identity=self.backend.start([self.python_path,self.project_dir/"contribution.py","--wallet",entry["wallet"],
@@ -329,7 +350,7 @@ class RigManager:
                 entry.update(proxy=identity,proxy_pid=identity["pid"])
                 port=self.proxy_ready(entry,identity)
                 entry["pool"]=f"127.0.0.1:{port}"
-            miner_args=[self.miner_path,"--disable-cpu","--disable-msr-tweaks","--disable-gpu-amd","--disable-gpu-intel","--algorithm-gpu","pearlhash",
+            miner_args=[self.miner_path,"--disable-cpu","--disable-msr-tweaks","--disable-worker-watchdog","--disable-gpu-amd","--disable-gpu-intel","--algorithm-gpu","pearlhash",
                 "--gpu-id",str(entry["miner_index"]),"--pool",entry["pool"],"--wallet",entry["wallet"],
                 "--worker",device["worker_name"],"--gpu-off-temperature","83","--log-file",entry["miner_log"]]
             if identifier==self.reference_uuid:
