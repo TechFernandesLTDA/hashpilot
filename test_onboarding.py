@@ -44,3 +44,37 @@ class OnboardingSettingsTests(unittest.TestCase):
             with patch.object(Path,'replace',side_effect=PermissionError('busy')):
                 with self.assertRaises(PermissionError): save_settings(DEFAULT_WALLET,'',path)
             self.assertEqual(read_settings(path),{'existing':True})
+
+
+class AuthorWalletConfirmationTests(unittest.TestCase):
+    def test_author_target_requires_explicit_confirmation(self):
+        from onboarding import confirm_author_wallet
+        with patch('onboarding.messagebox.askyesno',return_value=False) as ask:
+            self.assertFalse(confirm_author_wallet(None,{'wallet':DEFAULT_WALLET},['GPU-a']))
+            self.assertIn(DEFAULT_WALLET,ask.call_args.args[1])
+            self.assertIn('GPU-a',ask.call_args.args[1])
+            self.assertEqual(ask.call_args.kwargs['default'],'no')
+    def test_override_resolves_each_target(self):
+        from onboarding import confirm_author_wallet
+        personal='prl1'+'q'*60
+        settings={'wallet':personal,'gpu_settings':{'GPU-a':{'wallet':DEFAULT_WALLET},'GPU-b':{'wallet':personal}}}
+        with patch('onboarding.messagebox.askyesno',return_value=True) as ask:
+            self.assertTrue(confirm_author_wallet(None,settings,['GPU-a','GPU-b']))
+            self.assertIn('GPU-a',ask.call_args.args[1])
+            self.assertNotIn('GPU-b',ask.call_args.args[1])
+        with patch('onboarding.messagebox.askyesno') as ask:
+            self.assertTrue(confirm_author_wallet(None,settings,['GPU-b']))
+            ask.assert_not_called()
+
+class SetupMiningWalletTests(unittest.TestCase):
+    def test_personal_global_with_author_override_requires_confirmation(self):
+        from onboarding import confirm_setup_mining
+        from test_rig import detected
+        own='prl1'+'q'*60
+        settings={'wallet':own,'gpu_settings':{'GPU-test-0':{'wallet':DEFAULT_WALLET},'GPU-test-1':{'enabled':False,'wallet':DEFAULT_WALLET}}}
+        with patch('onboarding.messagebox.askyesno',return_value=False) as ask:
+            self.assertFalse(confirm_setup_mining(None,own,settings,detected(2)))
+            self.assertIn('GPU-test-0',ask.call_args.args[1])
+            self.assertNotIn('GPU-test-1',ask.call_args.args[1])
+            self.assertIn('\n\n',ask.call_args.args[1])
+            self.assertNotIn('\\n',ask.call_args.args[1])

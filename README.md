@@ -1,20 +1,44 @@
 # HashPilot — Tech Fernandes
 
-[English](README.en.md) · [Documentação](docs/index.md) · [Instalação](docs/installation.md) · [Para LLMs](llms.txt)
+[Site](https://techfernandesltda.github.io/hashpilot/) | [English](README.en.md) · [Documentação](docs/index.md) · [Instalação](docs/installation.md) · [Para LLMs](llms.txt)
 
-**[Baixar v0.5.3 — pré-lançamento](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.5.3)** · [Todas as releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verificar SHA-256 e evidências](docs/verification.md)
+Monitor desktop de mineração Pearl (PRL) para Windows, com telemetria NVIDIA, histórico e acompanhamento de até seis GPUs. **Pré-lançamento:** validado fisicamente em uma RTX 3070; o cenário de seis GPUs é simulado. [Requisitos e instalação](#instalar-no-windows) · [Limites e evidências](#hardware-e-windows).
 
-![Tech Fernandes](assets/brand/tech-fernandes_github_banner-readme_escuro_1280x400.png)
+**Antes de minerar:** a carteira padrão pertence ao autor; pagamentos enviados a ela vão para o autor. Use seu endereço público para receber em sua carteira. A contribuição opcional de até 5% do tempo conectado pode ser desativada. Não informe seed ou chave privada.
 
-Monitor local de mineração Pearl (PRL) para **até seis GPUs NVIDIA**, iguais ou diferentes: telemetria e benchmark por placa, ajuste dinâmico, histórico permanente e rendimentos equivalentes em **PRL, BRL, USD e BTC**. Interface desktop Python/Tkinter para Windows, sem servidor web ou dependências Python adicionais para o monitor.
+**[Baixar v0.5.4 — pré-lançamento](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.5.4)** · [Todas as releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verificar SHA-256 e evidências](docs/verification.md)
+
+<img src="assets/brand/logo-header-source.png" alt="Tech Fernandes" width="280">
+
+
+## Instalar no Windows
+
+No PowerShell do **Windows 10/11 x64**, com `winget` disponível:
+
+```powershell
+irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.5.4/install.ps1 | iex
+```
+
+O instalador prepara o mise/Python, instala o aplicativo em `%LOCALAPPDATA%\Programs\HashPilot`, cria atalhos e abre o assistente de configuração. Configurações e histórico existentes são preservados. [Passos, requisitos e solução de problemas](docs/installation.md).
+
+Em **Configurar**, consulte [Atualizações](docs/update.md) para instalar novas releases sem zerar configurações ou histórico, e [Segurança do minerador](docs/defender.md) para entender detecções e solicitar uma exceção local opcional com consentimento e confirmação administrativa. O HashPilot não declara o minerador seguro apenas por ter origem oficial e não altera o Defender automaticamente.
+
+**Carteira padrão: a do autor.** Se você mantiver esse endereço, os pagamentos irão para o autor. Troque pela sua carteira pública no assistente antes de minerar; a configuração pode ser reaberta. O monitor não precisa de seed ou chave privada. A instalação do minerador é uma opção separada: não começa apenas por instalar o painel.
 
 ## Veja o aplicativo
 
-![Painel atual com até seis GPUs NVIDIA — simulação de interface](media/v0.2.0/six-gpus-simulation.png)
+![Visão geral da interface v0.5.3 com uma RTX 3070](media/current/overview.png)
+
+Captura isolada da v0.5.3, com telemetria real de uma RTX 3070; saldos, previsões, carteira e identificadores foram ocultados para privacidade. [GPU e mineração](media/current/gpu-mining.png) · [Origem e alterações da captura](media/current/README.md).
+
+<details>
+<summary>Historical media / Arquivo de demonstracoes</summary>
+
+![Painel com até seis GPUs NVIDIA — simulação de interface](media/v0.2.0/six-gpus-simulation.png)
 
 Painel multiGPU da v0.2.0: **simulação de seis placas**, com valores fictícios. [Captura com a RTX 3070 real](media/v0.2.0/overview-real-rtx3070.png) · [Operação e limites da validação](docs/multi-gpu.md).
 
-[▶ Demonstração de 44 segundos — vídeo MP4 com legendas em inglês](media/hashpilot-demo.mp4) · [Resultado real da RTX 3070 e metodologia](docs/performance/rtx3070.md)
+[▶ Demonstração histórica v0.1.0 de 44 segundos — vídeo MP4 com legendas em inglês](media/hashpilot-demo.mp4) · [Resultado real da RTX 3070 e metodologia](docs/performance/rtx3070.md)
 
 ![Visão geral do HashPilot: GPU, carteira e próximo pagamento](media/screenshots/overview.png)
 
@@ -24,19 +48,8 @@ Painel multiGPU da v0.2.0: **simulação de seis placas**, com valores fictício
 
 O vídeo e estas capturas documentam a **versão v0.1.0, com uma GPU**, em uma janela isolada alimentada por dados locais reais. A versão atual acrescenta o painel de até seis GPUs. A mídia histórica não representa uma validação física de seis placas. [Origem e reprodução da mídia](media/README.md).
 
-## Instalar no Windows
 
-No PowerShell do **Windows 10/11 x64**, com `winget` disponível:
-
-```powershell
-irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.5.3/install.ps1 | iex
-```
-
-O instalador prepara o mise/Python, instala o aplicativo em `%LOCALAPPDATA%\Programs\HashPilot`, cria atalhos e abre o assistente de configuração. Configurações e histórico existentes são preservados. [Passos, requisitos e solução de problemas](docs/installation.md).
-
-Em **Configurar**, consulte [Atualizações](docs/update.md) para instalar novas releases sem zerar configurações ou histórico, e [Segurança do minerador](docs/defender.md) para entender detecções e solicitar uma exceção local opcional com consentimento e confirmação administrativa. O HashPilot não declara o minerador seguro apenas por ter origem oficial e não altera o Defender automaticamente.
-
-**Carteira padrão: a do autor.** Se você mantiver esse endereço, os pagamentos irão para o autor. Troque pela sua carteira pública no assistente antes de minerar; a configuração pode ser reaberta. O monitor não precisa de seed ou chave privada. A instalação do minerador é uma opção separada: não começa apenas por instalar o painel.
+</details>
 
 ## O que acompanha
 
@@ -59,7 +72,7 @@ O monitor de hardware usa **NVIDIA `nvidia-smi`**. A **RTX 3070 no Windows** é 
 
 O [catálogo NVIDIA](docs/gpu-catalog.md) reúne **158 modelos com fontes primárias**. Isso valida a origem dos dados, não o overclock de cada placa. O [agente local](docs/gpu-agent.md) identifica GPUs pelo driver/UUID, mede uma baseline de 300 s e permite benchmark manual e controle adaptativo explícito. Ollama na CPU é opcional, sem API paga.
 
-O painel identifica **até seis placas por UUID persistente**, mesmo quando são do mesmo modelo. Cada GPU possui opção de habilitar/desabilitar, carteira herdada da configuração global ou endereço próprio, minerador, supervisor e benchmark separados. Placas novas ficam habilitadas na configuração; **abrir o painel não inicia mineração**. O serviço do rig é iniciado explicitamente. Depois de autorizado, reconciliará a seleção e encerrará somente os processos da GPU desabilitada. Dispositivos além do limite de seis são informados e ignorados. [Operação multiGPU](docs/multi-gpu.md).
+O painel identifica **até seis placas por UUID persistente**, mesmo quando são do mesmo modelo. Cada GPU possui opção de habilitar/desabilitar, carteira herdada da configuração global ou endereço próprio, minerador, supervisor e benchmark separados. Placas novas ficam habilitadas na configuração; **abrir o painel não inicia mineração**. O serviço do rig é iniciado explicitamente. Depois de autorizado, reconciliará a seleção e encerrará somente os processos da GPU desabilitada. Dispositivos além do limite de seis são informados e ignorados. O diálogo de confirmação aparece nas ações de início pela interface; com o serviço já ativo, uma GPU recém-detectada pode ser habilitada automaticamente com a carteira configurada. Confira as carteiras antes de conectar uma nova placa. [Operação multiGPU](docs/multi-gpu.md).
 
 Hashrate e potência podem ser somados por GPU. Créditos reais são consultados e deduplicados **por carteira**: duas placas no mesmo endereço não duplicam o saldo, e hashrate não é usado para inventar ganhos individuais. A validação física disponível continua sendo uma RTX 3070; cenários com seis placas usam testes simulados.
 
@@ -71,7 +84,7 @@ Com uma carteira diferente da do autor, a contribuição opcional e desativável
 
 ## Verificação e evidências
 
-[Verificar a release e reproduzir o pacote](docs/verification.md) · [Protocolo de estabilidade de 24/72 horas](docs/verification.md#protocolo-de-estabilidade-de-24-e-72-horas) · [Notas da v0.5.3](docs/releases/v0.5.3.md). Hashes não substituem assinatura de publicador ou revisão independente.
+[Verificar a release e reproduzir o pacote](docs/verification.md) · [Protocolo de estabilidade de 24/72 horas](docs/verification.md#protocolo-de-estabilidade-de-24-e-72-horas) · [Notas da v0.5.4](docs/releases/v0.5.4.md). Hashes não substituem assinatura de publicador ou revisão independente.
 
 ## Código e dados
 
@@ -92,3 +105,5 @@ Dados locais: `%LOCALAPPDATA%\PearlMonitor`.
 O código está sob **GPL-3.0-only**: [LICENSE](LICENSE). A marca e os logos Tech Fernandes não são licenciados sob GPL; veja [NOTICE](NOTICE) e a [origem dos ativos](assets/brand/ORIGEM.md).
 
 AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e Ollama local](docs/ai-providers.md). A política adaptativa funciona sem IA.
+
+[Discussions and Q&A](https://github.com/TechFernandesLTDA/hashpilot/discussions) | [External testing](docs/external-testing.md) | [Adoption and metrics](docs/adoption.md)

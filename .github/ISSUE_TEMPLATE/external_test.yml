@@ -1,0 +1,40 @@
+name: Relato de teste externo / External test report
+description: Compartilhe uma experiência real com o HashPilot / Share a real HashPilot test
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Obrigado por testar! Não publique seed, chave privada, senhas, endereços privados, logs ou diagnósticos sem revisar. Você pode parar na instalação, sem minerar.
+        Thanks for testing! Do not publish seed phrases, private keys, passwords, private addresses, logs or diagnostics without reviewing them. You may stop after installation without mining.
+  - type: textarea
+    id: environment
+    attributes:
+      label: Ambiente / Environment
+      description: Versão do HashPilot e Windows, GPU(s), driver e versão do minerador se instalado / HashPilot and Windows versions, GPU(s), driver and miner version if installed.
+    validations:
+      required: true
+  - type: textarea
+    id: actions
+    attributes:
+      label: O que você tentou? / What did you try?
+      description: Etapas reais e duração observada; indique se foi apenas instalação, simulação ou mineração real / Actual steps and observation duration; specify installation only, simulation, or real mining.
+    validations:
+      required: true
+  - type: textarea
+    id: outcome
+    attributes:
+      label: Resultado observado / Observed result
+      description: O que funcionou, o que falhou, mensagens de erro e comportamento esperado / What worked or failed, errors, and expected behavior.
+    validations:
+      required: true
+  - type: textarea
+    id: safety
+    attributes:
+      label: Segurança e pagamentos / Security and payouts
+      description: Relate qualquer alerta do antivírus e, se aplicável, se os créditos e pagamento foram observados. Não altere a proteção apenas para testar / Report antivirus alerts and, if applicable, whether credits and payout were observed. Do not change protection just to test.
+  - type: textarea
+    id: extra
+    attributes:
+      label: Contexto adicional / Additional context
+      description: Capturas ou diagnóstico revisados para remover dados que não deseja publicar / Screenshots or diagnostics reviewed to remove data you do not wish to publish.
+

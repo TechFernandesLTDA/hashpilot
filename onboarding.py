@@ -65,6 +65,40 @@ def launch_rig_service():
         creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
 
 
+def confirm_author_wallet(parent, settings, identifiers):
+    """Confirm an explicit UI action that sends mining work to the author."""
+    from contribution import AUTHOR_WALLET
+    overrides = settings.get('gpu_settings', {})
+    if not isinstance(overrides, dict):
+        raise ValueError('Configuração das GPUs inválida')
+    default = settings.get('wallet', DEFAULT_WALLET)
+    author_targets = []
+    for identifier in identifiers:
+        entry = overrides.get(identifier, {})
+        if not isinstance(entry, dict):
+            raise ValueError('Configuração da GPU inválida')
+        if (entry.get('wallet') or default) == AUTHOR_WALLET:
+            author_targets.append(identifier)
+    if not author_targets:
+        return True
+    return messagebox.askyesno(
+        'Confirmar carteira do autor',
+        'A mineração das GPUs abaixo será direcionada à carteira do autor, não à sua: \n\n'
+        + '\n'.join(author_targets) + '\n\n' + AUTHOR_WALLET
+        + '\n\nOs pagamentos dessas GPUs irão para o autor. Continuar?', parent=parent, default='no')
+
+
+def confirm_setup_mining(parent, wallet, settings, devices):
+    """Review the enabled GPUs the setup will launch with the proposed global wallet."""
+    from rig_config import resolve_devices
+    planned = dict(settings)
+    planned['wallet'] = wallet.strip()
+    resolved = resolve_devices(devices, planned, LOG_DIR)
+    if not resolved:
+        raise ValueError('Nenhuma GPU NVIDIA detectada para verificar as carteiras antes de iniciar.')
+    targets = [device['uuid'] for device in resolved if device['enabled']]
+    return confirm_author_wallet(parent, planned, targets)
+
 def run_gpu_setup(parent=None,selected_uuid=None,devices=None,path=SETTINGS_PATH):
     """Até seis carteiras/interruptores, sempre associados ao UUID físico."""
     from gpu_agent import detect_nvidia_gpus
@@ -126,6 +160,8 @@ def run_gpu_setup(parent=None,selected_uuid=None,devices=None,path=SETTINGS_PATH
             for identifier,enabled,inherit,address in rows:
                 updated=update_gpu_settings(updated,identifier,enabled=enabled.get(),wallet_override=None if inherit.get() else address.get().strip(),change_wallet=True)
             updated['support_enabled']=support.get()
+            targets=[identifier for identifier,enabled,inherit,address in rows if enabled.get()]
+            if not confirm_author_wallet(window,updated,targets): return
             path.parent.mkdir(parents=True,exist_ok=True)
             temporary=path.with_name(path.name+'.gpu-setup.tmp')
             temporary.write_text(json.dumps(updated,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
@@ -222,6 +258,9 @@ def run_setup(parent=None,selected_uuid=None) -> bool:
     def finish():
         nonlocal saved
         try:
+            if mine.get():
+                from gpu_agent import detect_nvidia_gpus
+                if not confirm_setup_mining(window,wallet.get(),read_settings(),detect_nvidia_gpus(max_devices=6)): return
             save_settings(wallet.get(),logs.get(),support_enabled=support.get(),ai_enabled=ai.get())
             if ai.get() and not read_settings().get("ai"):
                 __import__("ai_setup").show_ai_setup(window)

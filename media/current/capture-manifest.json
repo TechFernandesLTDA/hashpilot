@@ -1,0 +1,11 @@
+{
+  "captured_at": 1793237782.9658353,
+  "version": "v0.5.3",
+  "source": "isolated current UI, local snapshot and 15-minute GPU telemetry history read-only",
+  "privacy": "financial values, wallet, GPU identifiers, payment panel, pool details and logs explicitly hidden; screenshot is not an unaltered full UI",
+  "hardware": "local snapshot; no mining or GPU controls started or changed",
+  "images": [
+    "overview.png",
+    "gpu-mining.png"
+  ]
+}

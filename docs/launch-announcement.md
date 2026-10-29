@@ -1,28 +1,23 @@
-# Texto preparado para divulgação na comunidade Pearl
+﻿# Texto preparado para divulgação
 
-Publicar em um canal que permita compartilhar ferramentas, identificando a autoria. Este texto foi preparado; não foi enviado a uma comunidade pelo aplicativo.
-
-## English
-
-**HashPilot: open-source Windows dashboard for Pearl miners using NVIDIA GPUs**
-
-I built HashPilot at Tech Fernandes to monitor my Pearl mining setup: NVIDIA telemetry, hashrate charts, persistent history, pool payout estimates and PRL/BRL/USD/BTC equivalents. It also includes per-device measurements and optional local Ollama AI running on CPU.
-
-On my RTX 3070, a 15-minute observation measured **78.40 TH/s mean at 159.06 W mean**, with fans at 100% and a configured 240 W power limit. This is one device under its existing thermal supervisor, not a universal preset, A/B improvement or profitability claim. The repository includes methodology and aggregated evidence.
-
-The current interface monitors GPU 0. Generic tuning remains experimental and driver-dependent. The catalogue covers 158 NVIDIA models with source links; that does not mean 158 validated overclocks.
-
-The author wallet is prefilled and can be replaced in setup. With another wallet, the setup suggests an optional **5% mining-time contribution** to help maintain the tool; it can be unchecked before saving or disabled later. It is separate from SRBMiner's own fee. No seed/private key is requested.
-
-Looking for NVIDIA miners willing to test and report reproducible issues. Windows 10/11 x64, GPL-3.0-only.
-
-- Repository and installation: https://github.com/TechFernandesLTDA/hashpilot
-- First release: https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.1.0
-- Demo: https://github.com/TechFernandesLTDA/hashpilot/blob/main/media/hashpilot-demo.mp4
-- Observation: https://github.com/TechFernandesLTDA/hashpilot/blob/main/docs/performance/rtx3070.md
+Não foi publicado. Confira as regras do canal e identifique a autoria antes de compartilhar.
 
 ## Português
 
-Criei o HashPilot na Tech Fernandes para acompanhar mineração Pearl no Windows com GPUs NVIDIA: sensores, gráficos, histórico permanente, estimativa de pagamento e equivalentes em reais, dólares e BTC. O repositório contém uma demonstração de 44 segundos e uma observação documentada da minha RTX 3070. Busco mineradores para testar e relatar problemas reproduzíveis.
+Criei o [HashPilot](https://github.com/TechFernandesLTDA/hashpilot), um painel local de mineração Pearl para Windows e GPUs NVIDIA. Ele acompanha telemetria, histórico e até seis GPUs por UUID. Procuro **cinco pessoas** para testar e relatar sua experiência: pode ser somente a instalação e o painel, sem minerar.
 
-A carteira do autor vem preenchida e pode ser trocada. A ajuda de 5% do tempo, sugerida ao escolher outra carteira, é opcional e pode ser desativada. A interface atual acompanha GPU0; resultados desta unidade e dados do catálogo não validam ajustes universais.
+A validação física documentada é de uma RTX 3070. Cenários de seis placas são simulados; o catálogo de 158 modelos não representa testes físicos ou ajustes validados em todas elas. Na observação de 15 minutos dessa RTX 3070, foram 78,40 TH/s e 159,06 W em média. Os resultados variam e não garantem lucro. [Método e dados](performance/rtx3070.md).
+
+A carteira padrão é do autor e recebe os pagamentos enquanto estiver configurada. Troque pelo seu endereço público se quiser receber. A contribuição de até 5% do tempo conectado com outra carteira é opcional e desativável. Nunca informe seed ou chave privada. Se o antivírus alertar sobre o minerador, registre o alerta sem alterar a proteção apenas para o teste.
+
+[Pré-lançamento e instalação](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Capturas v0.5.3 com dados financeiros ocultos](../media/current/README.md) · [Formulário de teste](https://github.com/TechFernandesLTDA/hashpilot/issues/new?template=external_test.yml)
+
+## English
+
+I built [HashPilot](https://github.com/TechFernandesLTDA/hashpilot), a local Pearl mining dashboard for Windows and NVIDIA GPUs. It tracks telemetry and history for up to six GPUs by UUID. I am looking for **five people** to try it and report their experience: installation and dashboard-only testing is welcome, with no mining required.
+
+Documented physical validation covers one RTX 3070. Six-GPU scenarios are simulated; the 158-model catalog does not mean those devices or tuning settings were physically validated. A 15-minute observation on that RTX 3070 averaged 78.40 TH/s and 159.06 W. Results vary and do not guarantee profit. [Method and data](performance/rtx3070.md).
+
+The default wallet belongs to the author and receives payouts while configured. Enter your own public address to receive payouts yourself. The contribution of up to 5% of connected time with a different wallet is optional and can be disabled. Never enter a seed phrase or private key. If antivirus flags the miner, report the alert without changing protection just to test.
+
+[Prerelease and installation](https://github.com/TechFernandesLTDA/hashpilot/releases) · [v0.5.3 screenshots with financial data hidden](../media/current/README.md) · [Test report](https://github.com/TechFernandesLTDA/hashpilot/issues/new?template=external_test.yml)

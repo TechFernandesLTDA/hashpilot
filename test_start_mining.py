@@ -12,7 +12,11 @@ from start_mining import request_start
 from stop_mining import status_path
 
 class StartMiningTests(unittest.TestCase):
+    def setUp_confirmation(self):
+        patcher=patch('onboarding.messagebox.askyesno',return_value=True)
+        patcher.start();self.addCleanup(patcher.stop)
     def setUp(self):
+        self.setUp_confirmation()
         self.temp=tempfile.TemporaryDirectory();self.addCleanup(self.temp.cleanup);self.root=Path(self.temp.name)
         self.state=self.root/'state';self.logs=self.root/'logs';self.state.mkdir();self.settings=self.state/'settings.json'
         self.ids=['GPU-test-0','GPU-test-1']
@@ -38,6 +42,25 @@ class StartMiningTests(unittest.TestCase):
         self.manager.process_requests();self.manager.reconcile()
         self.assertTrue(all(entry['state']=='running' and entry['miner_pid'] for entry in self.manager.devices.values()))
         self.assertEqual(len(self.backend.started),4)
+    def test_declining_author_wallet_confirmation_does_not_start_or_change_settings(self):
+        import monitor
+        root=SimpleNamespace(last_data={'rig':{'devices':detected(2)}},rig_service_running=lambda:False,status=Mock())
+        before=self.settings.read_bytes()
+        with patch.object(monitor,'STATE_DIR',self.state),patch.object(monitor,'LOG_DIR',self.logs),patch.object(monitor,'SETTINGS_PATH',self.settings),patch('onboarding.messagebox.askyesno',return_value=False),patch('onboarding.launch_rig_service') as launch:
+            monitor.Monitor.start_rig(root)
+        launch.assert_not_called()
+        self.assertEqual(self.settings.read_bytes(),before)
+        self.assertFalse(list((self.state/'rig-requests').glob('*.json')))
+    def test_declining_author_wallet_for_single_gpu_has_no_side_effects(self):
+        import monitor
+        root=SimpleNamespace(rig_service_running=lambda:False,status=Mock())
+        before=self.settings.read_bytes()
+        with patch.object(monitor,'STATE_DIR',self.state),patch.object(monitor,'LOG_DIR',self.logs),patch.object(monitor,'SETTINGS_PATH',self.settings),patch('onboarding.messagebox.askyesno',return_value=False),patch('onboarding.launch_rig_service') as launch:
+            monitor.Monitor.toggle_gpu(root,self.ids[1],True)
+        launch.assert_not_called()
+        self.assertEqual(self.settings.read_bytes(),before)
+        self.assertFalse(list((self.state/'rig-requests').glob('*.json')))
+        self.assertFalse(list(self.logs.rglob('*.json')))
     def test_header_launches_service_only_when_it_is_absent(self):
         import monitor
         root=SimpleNamespace(last_data={'rig':{'devices':detected(2)}},rig_service_running=lambda:False,status=Mock())

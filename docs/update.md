@@ -28,10 +28,10 @@ Voltar à pasta anterior não desfaz uma migração de banco realizada por uma v
 
 Referências: [releases na API pública do GitHub](https://docs.github.com/en/rest/releases/releases), [limites de consulta sem autenticação](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api), [verificação dos pacotes](verification.md).
 
-## Atualiza??o do SRBMiner
+## Atualização do SRBMiner
 
-Em **Configurar ? Atualiza??es ? Atualiza??es do minerador SRBMiner** ou na **Central de opera??o ? Atualizar minerador**, confira vers?o selecionada, vers?o em execu??o e release oficial. O painel consulta automaticamente a cada seis horas; a instala??o exige confirma??o. A ativa??o exige o servi?o atualizado e ativo. GPUs desativadas n?o s?o ligadas pela troca.
+Em **Configurar → Atualizações → Atualizações do minerador SRBMiner** ou na **Central de operação → Atualizar minerador**, confira versão selecionada, versão em execução e release oficial. O painel consulta automaticamente a cada seis horas; a instalação exige confirmação. A ativação exige o serviço atualizado e ativo. GPUs desativadas não são ligadas pela troca.
 
-A vers?o anterior fica dispon?vel para voltar. O servi?o tenta rollback se uma GPU habilitada n?o apresentar hashrate v?lido na nova vers?o em 180 segundos. Se um processo n?o puder ser parado com identidade confirmada, a troca ? bloqueada. Confira Sa?de ap?s um rollback: selecionar a vers?o anterior n?o comprova sozinho que a minera??o retomou.
+A versão anterior fica disponível para voltar. O serviço tenta rollback se uma GPU habilitada não apresentar hashrate válido na nova versão em 180 segundos. Se um processo não puder ser parado com identidade confirmada, a troca é bloqueada. Confira Saúde após um rollback: selecionar a versão anterior não comprova sozinho que a mineração retomou.
 
-Apenas vers?es com hashes catalogados s?o instal?veis. O ZIP oficial e o execut?vel s?o verificados separadamente. N?o h? exce??o autom?tica no antiv?rus: se houver bloqueio, abra a revis?o do Defender e analise a detec??o. Uma exce??o concedida para a vers?o anterior n?o autoriza o arquivo da vers?o nova.
+Apenas versões com hashes catalogados são instaláveis. O ZIP oficial e o executável são verificados separadamente. Não há exceção automática no antivírus: se houver bloqueio, abra a revisão do Defender e analise a detecção. Uma exceção concedida para a versão anterior não autoriza o arquivo da versão nova.

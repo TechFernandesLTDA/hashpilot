@@ -622,6 +622,8 @@ class Monitor(tk.Tk):
                 if result['requires_uac']:self.status.configure(text='● Parada solicitada · aprove o UAC para restaurar padrões',fg=ORANGE)
                 return
             from start_mining import request_start
+            from onboarding import confirm_author_wallet, read_settings
+            if not confirm_author_wallet(self,read_settings(SETTINGS_PATH),[identifier]): return
             request_start([identifier],STATE_DIR,LOG_DIR,SETTINGS_PATH)
             if enabled and not self.rig_service_running():
                 from onboarding import launch_rig_service
@@ -650,6 +652,8 @@ class Monitor(tk.Tk):
                 devices=detect_nvidia_gpus(max_devices=6)
             identifiers=[device['uuid'] for device in devices if device.get('uuid')]
             if not identifiers:raise ValueError('Nenhuma GPU NVIDIA detectada para iniciar')
+            from onboarding import confirm_author_wallet, read_settings
+            if not confirm_author_wallet(self,read_settings(SETTINGS_PATH),identifiers): return
             request_start(identifiers,STATE_DIR,LOG_DIR,SETTINGS_PATH)
             if not self.rig_service_running():launch_rig_service()
             self.status.configure(text='● Mineração solicitada · aguardando partida das GPUs',fg=ORANGE)
