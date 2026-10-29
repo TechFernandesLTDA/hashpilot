@@ -72,10 +72,13 @@ if($env:AUDIT_CASE -eq 'junction'){
         cases={'valid_exe':True,'valid_archive':True,'invalid_exe':False,'invalid_archive':False,
                'missing':False,'read_denied':False,'policy_denied':False,'remove_absent':True,
                'remove_denied':False,'junction':False,'directory_target':False}
-        for case,expected in cases.items():
+        for case,expected,version in [(case,expected,version) for version in ('3.8.0','3.8.1') for case,expected in cases.items()]:
             with self.subTest(case=case),tempfile.TemporaryDirectory() as temporary:
                 root=Path(temporary);script=root/'fixture.ps1'
-                script.write_text(runner,encoding='utf-8-sig')
+                fixture_runner=runner
+                if version=='3.8.1':
+                    fixture_runner=fixture_runner.replace("$UserLocalAppData=$env:AUDIT_APPDATA","$UserLocalAppData=$env:AUDIT_APPDATA\n$Version='3.8.1'").replace('SRBMiner-Multi-3-8-0','SRBMiner-Multi-3-8-1').replace('6eb4e0bc37d65fdf7644ab620737e14f4c7dfa9666acde43d5f38ab1e9094ac1','2f7e60a17fcc65ddd3c7f5821666a6ae11ef6c1f2c95331bb7e46793c032b688').replace('33eef5f8946259290013ce370a746a85f91c2bbcd81fcefa1aad904dd9a912f8','16bd455557bd3698e004d1f6b5d19290b9b59e9f9c8ef9245acafdaeb2413e79')
+                script.write_text(fixture_runner,encoding='utf-8-sig')
                 env={**os.environ,'AUDIT_SCRIPT':str(source),'AUDIT_APPDATA':str(root),'AUDIT_CASE':case}
                 result=subprocess.run(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',str(script)],
                     env=env,capture_output=True,text=True,timeout=15,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))

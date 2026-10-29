@@ -229,7 +229,7 @@ class ProcessBackend:
 
 
 def write_request(state_dir,action,gpu_uuid=None,**fields):
-    if action not in ("reconcile","start","stop","stop_all","benchmark","shutdown","restart","profile"):
+    if action not in ("reconcile","start","stop","stop_all","benchmark","shutdown","restart","profile","miner_update"):
         raise ValueError("Ação do rig inválida")
     if gpu_uuid is not None: device_key(gpu_uuid)
     payload={**fields,"id":uuid.uuid4().hex,"action":action,"gpu_uuid":gpu_uuid,"at":time.time()}
@@ -259,8 +259,13 @@ class RigManager:
         self.miner_map={}
         self.mapping_signature=None
         self.require_recovery_sensors=False
+        self.miner_base=self.miner_path.parent.parent
+        self.miner_update_pending=None
         self.operations=OperationalStore(self.state_dir/'operations.sqlite3')
         self._load_registry()
+        from miner_update import read
+        pending=read(self.state_dir/'miner-update.json')
+        if pending.get('state')=='validating':self.miner_update_pending=pending
 
     def _load_registry(self):
         try:
@@ -298,7 +303,54 @@ class RigManager:
         atomic_json(self.registry_path,{"schema_version":1,"marker":MARKER,"pid":os.getpid(),"sampled_at":self.clock(),
             "ready":not self.shutting_down,"max_gpus":MAX_GPUS,"devices":self.devices,"ignored_devices":self.ignored,
             "error":self.error,"processed_request_ids":self.processed_ids[-128:],"reference_uuid":self.reference_uuid,
-            "software":component_identity(),"capabilities":['stop_restore_v1']})
+            "software":component_identity(),"capabilities":['stop_restore_v1','miner_update_v1']})
+
+    def activate_miner(self,version,request_id=None):
+        from miner_update import executable,selected_version,select
+        if self.miner_update_pending:raise RuntimeError('Uma atualização do minerador ainda está em validação')
+        target=executable(version,self.miner_base)
+        old=selected_version(self.miner_base)
+        executable(old,self.miner_base)  # Confirm the rollback binary before interrupting mining.
+        if normalized_path(target)==normalized_path(self.miner_path):
+            atomic_json(self.state_dir/'miner-update.json',{'state':'installed','version':version,'request_id':request_id,'at':self.clock()})
+            return
+        if any(e.get('external_readonly') or e.get('ownership_unverified') for e in self.devices.values()):
+            raise RuntimeError('Sessão externa ou sem identidade confirmada; atualização bloqueada')
+        # Keep selection and enabled/wallet preferences unchanged until every stop is confirmed.
+        for identifier in self.devices:
+            if not self.stop_gpu(identifier):raise RuntimeError('Parada não confirmada; versão anterior preservada')
+        pending={'state':'validating','version':version,'previous_version':old,'request_id':request_id,'at':self.clock(),'deadline':self.clock()+180}
+        # Journal before the selection switch so a service crash cannot lose validation.
+        atomic_json(self.state_dir/'miner-update.json',pending)
+        self.miner_update_pending=pending
+        select(version,self.miner_base)
+        self.miner_path=target;self.mapping_signature=None
+        for entry in self.devices.values():entry.pop('retry_after',None);entry.pop('error',None)
+
+    def validate_miner_update(self,snapshots):
+        pending=self.miner_update_pending
+        if not pending:return
+        enabled=[key for key,entry in self.devices.items() if entry.get('enabled')]
+        valid=all(key in snapshots and snapshots[key].get('miner_running') is True
+            and not snapshots[key]['miner'].get('paused')
+            and snapshots[key]['miner'].get('version')==pending['version']
+            and (snapshots[key]['miner'].get('hashrate') or 0)>0
+            and finite(snapshots[key]['miner'].get('hashrate_at'))
+            and 0<=self.clock()-snapshots[key]['miner']['hashrate_at']<=180 for key in enabled)
+        if valid:
+            atomic_json(self.state_dir/'miner-update.json',{**pending,'state':'installed','validated_at':self.clock()})
+            self.miner_update_pending=None
+        elif self.clock()>pending['deadline']:
+            from miner_update import executable,select
+            old=executable(pending['previous_version'],self.miner_base)
+            # Refuse a rollback while any new process has unconfirmed ownership/exit.
+            for key in self.devices:
+                if not self.stop_gpu(key):raise RuntimeError('Rollback aguarda confirmação de parada')
+            select(pending['previous_version'],self.miner_base)
+            self.miner_path=old;self.mapping_signature=None
+            for entry in self.devices.values():entry.pop('retry_after',None);entry.pop('error',None)
+            atomic_json(self.state_dir/'miner-update.json',{**pending,'state':'rolled_back','error':'Sem hashrate válido por GPU em 180 s; versão anterior selecionada','at':self.clock()})
+            self.miner_update_pending=None
 
     def _wait_proxy(self,entry,identity,timeout=15):
         deadline=time.monotonic()+timeout
@@ -635,6 +687,12 @@ class RigManager:
                             atomic_json(Path(entry["log_dir"])/"gpu-agent-request.json",{"action":"benchmark","gpu_uuid":target,
                                 "objective":request.get("objective","performance"),"duration_seconds":300,"at":self.clock()})
                 elif action=="shutdown": self.shutting_down=True
+                elif action=='miner_update':
+                    try:self.activate_miner(request.get('version'),identifier)
+                    except (OSError,ValueError,RuntimeError) as error:
+                        if not self.miner_update_pending:
+                            atomic_json(self.state_dir/'miner-update.json',{'state':'failed','request_id':identifier,'at':self.clock(),'error':str(error)[:300]})
+                        raise
                 elif action!="reconcile": raise ValueError("Ação desconhecida")
                 self.processed_ids.append(identifier)
             except (OSError,ValueError,TypeError,RuntimeError) as error:
@@ -691,6 +749,7 @@ class RigManager:
                     devices=self.reconcile(detected=detected)
                     from rig_controller import collect_snapshots
                     snapshots=collect_snapshots(devices,self.devices)
+                    self.validate_miner_update(snapshots)
                     self.observe_health(snapshots)
                     self.publish()
                 except (OSError,RuntimeError,ValueError,subprocess.SubprocessError) as error:

@@ -4,7 +4,7 @@
 
 The setup dialog includes [verified application updates](docs/update.md), preserving existing data, and [miner security guidance](docs/defender.md) with an optional administrator-confirmed exception for one executable path. An official hash is not a safety certification; Defender settings never change automatically.
 
-**[Download v0.5.2 — prerelease](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.5.2)** · [All releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verify SHA-256 and evidence](docs/verification.md)
+**[Download v0.5.3 — prerelease](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.5.3)** · [All releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verify SHA-256 and evidence](docs/verification.md)
 
 [▶ Watch the 44-second demo (MP4, English captions)](media/hashpilot-demo.mp4) · [Measured RTX 3070 results](docs/performance/rtx3070.md)
 
@@ -27,7 +27,7 @@ A Windows desktop monitor for Pearl (PRL) mining with **up to six NVIDIA GPUs**,
 Run in PowerShell on **Windows 10/11 x64**, with `winget` available:
 
 ```powershell
-irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.5.2/install.ps1 | iex
+irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.5.3/install.ps1 | iex
 ```
 
 The installer prepares mise/Python, installs into `%LOCALAPPDATA%\Programs\HashPilot`, creates shortcuts, and opens setup. Existing local settings and history are preserved. See the [installation guide](docs/installation.md) for requirements and troubleshooting.
@@ -82,4 +82,4 @@ AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e O
 
 ## Verification and evidence
 
-[Release verification, deterministic source packaging, diagnostic export and 24/72-hour observation protocol](docs/verification.md). Physical evidence still covers one RTX 3070; multi-GPU tests are simulated. Checksums are not publisher signatures or an independent security audit. [v0.5.2 notes](docs/releases/v0.5.2.md).
+[Release verification, deterministic source packaging, diagnostic export and 24/72-hour observation protocol](docs/verification.md). Physical evidence still covers one RTX 3070; multi-GPU tests are simulated. Checksums are not publisher signatures or an independent security audit. [v0.5.3 notes](docs/releases/v0.5.3.md).

@@ -19,7 +19,8 @@ if(-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrat
  exit
 }
 $script=Join-Path $project 'rig.py'
-$miner=Join-Path $base 'SRBMiner-Multi-3-8-0\SRBMiner-MULTI.exe'
+$miner=(& $Python (Join-Path $project 'miner_update.py') --path).Trim()
+if($LASTEXITCODE -ne 0){throw 'Minerador selecionado nao passou na verificacao; confira a Central de operacao.'}
 if(-not (Test-Path -LiteralPath $script) -or -not (Test-Path -LiteralPath $miner)){throw 'Reinstale o minerador pelo assistente antes de iniciar o rig.'}
 New-Item -ItemType Directory -Path $state,$logs -Force | Out-Null
 $registry=Join-Path $state 'rig-manager.json'

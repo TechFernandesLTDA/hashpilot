@@ -207,7 +207,8 @@ class Collector:
             if self.history and device.get('log_path'):
                 try:self.history.archive_log(Path(device['log_path']),gpu_uuid=device['uuid'],wallet=device['wallet'])
                 except OSError:pass
-        miner_file=Path(os.environ.get('LOCALAPPDATA',''))/'Mining/Pearl/SRBMiner-Multi-3-8-0/SRBMiner-MULTI.exe'
+        from miner_update import active_executable
+        miner_file=active_executable(verify=False)
         result={'collected_at':now,'rig':rig,'gpu':None,'gpu_error':rig.get('error'),'miner':parse_log(''),
             'miner_executable_available':miner_file.is_file(),
             'miner_running':None,'process_error':process_error,'log_error':None,'log_path':None,'thermal_control':None,'support_contribution':{}}
@@ -520,6 +521,8 @@ class Monitor(tk.Tk):
         self.after(1500,self.show_restore_result)
         from app_update import UpdateChecker
         self.update_checker = UpdateChecker(STATE_DIR)
+        from miner_update import MinerUpdateChecker
+        self.miner_update_checker=MinerUpdateChecker(STATE_DIR)
         self.after(10000, self.poll_updates)
 
     def show_restore_result(self):
@@ -552,6 +555,16 @@ class Monitor(tk.Tk):
                 if messagebox.askyesno('Atualização disponível',f"HashPilot {release['version']} disponível"+(' (pré-lançamento)' if release['prerelease'] else '')+'. Abrir o assistente de atualização? Nenhuma instalação será feita sem sua confirmação.',parent=self):
                     from app_update import show_update_setup
                     show_update_setup(self)
+        except queue.Empty:pass
+        self.miner_update_checker.start()
+        try:
+            result=self.miner_update_checker.results.get_nowait()
+            if result.get('newer') and result['version'] not in self.miner_update_checker.offered:
+                self.miner_update_checker.offered.add(result['version'])
+                from tkinter import messagebox
+                if messagebox.askyesno('Atualização do minerador',f"SRBMiner {result['version']} disponível. Abrir o assistente? A instalação depende da sua confirmação e da revisão de compatibilidade do HashPilot.",parent=self):
+                    from miner_update_ui import show_miner_update
+                    show_miner_update(self)
         except queue.Empty:pass
         self.after(1000,self.poll_updates)
 

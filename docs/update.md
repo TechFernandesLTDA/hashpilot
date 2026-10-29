@@ -27,3 +27,11 @@ As pastas anteriores ficam preservadas. Se o fechamento normal exceder o prazo, 
 Voltar à pasta anterior não desfaz uma migração de banco realizada por uma versão nova. Não há promessa de rollback automático de schema. Hashes publicados junto ao pacote protegem contra corrupção e divergências; não substituem assinatura de publicador ou auditoria independente.
 
 Referências: [releases na API pública do GitHub](https://docs.github.com/en/rest/releases/releases), [limites de consulta sem autenticação](https://docs.github.com/en/rest/using-the-rest-api/rate-limits-for-the-rest-api), [verificação dos pacotes](verification.md).
+
+## Atualiza??o do SRBMiner
+
+Em **Configurar ? Atualiza??es ? Atualiza??es do minerador SRBMiner** ou na **Central de opera??o ? Atualizar minerador**, confira vers?o selecionada, vers?o em execu??o e release oficial. O painel consulta automaticamente a cada seis horas; a instala??o exige confirma??o. A ativa??o exige o servi?o atualizado e ativo. GPUs desativadas n?o s?o ligadas pela troca.
+
+A vers?o anterior fica dispon?vel para voltar. O servi?o tenta rollback se uma GPU habilitada n?o apresentar hashrate v?lido na nova vers?o em 180 segundos. Se um processo n?o puder ser parado com identidade confirmada, a troca ? bloqueada. Confira Sa?de ap?s um rollback: selecionar a vers?o anterior n?o comprova sozinho que a minera??o retomou.
+
+Apenas vers?es com hashes catalogados s?o instal?veis. O ZIP oficial e o execut?vel s?o verificados separadamente. N?o h? exce??o autom?tica no antiv?rus: se houver bloqueio, abra a revis?o do Defender e analise a detec??o. Uma exce??o concedida para a vers?o anterior n?o autoriza o arquivo da vers?o nova.

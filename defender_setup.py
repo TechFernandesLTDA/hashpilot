@@ -27,16 +27,18 @@ EXPLANATION = (
 )
 
 
-def launch_exception_request(action):
+def launch_exception_request(action,version=None):
     if action not in ('Add', 'Remove'):
         raise ValueError('Ação de exceção inválida.')
     if os.name != 'nt':
         raise RuntimeError('Este recurso requer Windows.')
+    from miner_update import selected_version,descriptor
+    version=version or selected_version();descriptor(version)
     script = ROOT / 'mining/windows/Permissao-Defender.ps1'
     if not script.is_file():
         raise RuntimeError('Assistente do Defender ausente. Reinstale o HashPilot.')
     return subprocess.Popen(
-        ['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', str(script), '-Action', action],
+        ['powershell.exe', '-NoProfile', '-ExecutionPolicy', 'Bypass', '-File', str(script), '-Version', version, '-Action', action],
         cwd=ROOT, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
 
 
@@ -60,6 +62,9 @@ def show_defender_setup(parent):
         try:os.startfile('windowsdefender://history')
         except OSError:webbrowser.open(HISTORY_URL)
     tk.Button(links,text='Histórico de proteção',command=history).pack(side='left')
+    from miner_update import selected_version,CATALOG
+    miner_choice=tk.StringVar(value=selected_version())
+    tk.OptionMenu(links,miner_choice,*CATALOG).pack(side='left',padx=8)
     consent=tk.BooleanVar(value=False)
     tk.Checkbutton(window,text='Entendo o risco e quero solicitar a exceção para este executável.',
         variable=consent,command=lambda:add.configure(state='normal' if consent.get() else 'disabled'),
@@ -67,7 +72,7 @@ def show_defender_setup(parent):
         activebackground='#0A1628',activeforeground='white',font=('Segoe UI',-14)).grid(row=4,column=0,sticky='w',padx=20,pady=8)
     def request(action):
         if action=='Add' and not consent.get():return
-        try:launch_exception_request(action)
+        try:launch_exception_request(action,miner_choice.get())
         except (OSError,ValueError,RuntimeError) as error:messagebox.showerror('Permissão do Defender',str(error),parent=window)
     buttons=tk.Frame(window,bg='#0A1628');buttons.grid(row=5,column=0,sticky='ew',padx=20,pady=(0,16))
     add=tk.Button(buttons,text='Solicitar exceção (UAC)',state='disabled',command=lambda:request('Add'))
