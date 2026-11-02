@@ -62,6 +62,18 @@ class PackageTests(unittest.TestCase):
                 self.assertFalse(list(Path(folder).rglob('*.exe')))
                 self.assertEqual(update.selected_version(folder),'3.8.0')
 
+    def test_verified_local_package_installs_without_network_and_still_checks_exe(self):
+        binary,data,entry=self.package()
+        with tempfile.TemporaryDirectory() as folder,patch.dict(update.CATALOG,{'3.8.1':entry}):
+            archive=Path(folder)/update.descriptor('3.8.1')['asset'];archive.write_bytes(data)
+            with patch.object(update.urllib.request,'urlopen') as network:
+                target=update.stage('3.8.1',folder,opener=network)
+                self.assertEqual(target.read_bytes(),binary);network.assert_not_called()
+            target.unlink()
+            archive.write_bytes(b'corrupt cached package')
+            with self.assertRaises(ValueError):update.stage('3.8.1',folder)
+            self.assertFalse(target.exists());self.assertEqual(update.selected_version(folder),'3.8.0')
+
     def test_old_or_stale_service_cannot_activate(self):
         with tempfile.TemporaryDirectory() as folder:
             with self.assertRaises(RuntimeError):update.request_activation('3.8.1',folder)

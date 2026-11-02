@@ -103,6 +103,14 @@ def _stage(version,base=None,opener=urllib.request.urlopen):
     if target.is_file():
         try:return executable(version,base)
         except ValueError:raise ValueError('Instalação existente divergente; arquivo preservado para análise')
+    saved_archive=base/item['asset']
+    if saved_archive.resolve()!=saved_archive:raise ValueError('Arquivo redirecionado recusado')
+    if saved_archive.is_file():
+        if saved_archive.stat().st_size>100*1024*1024:raise ValueError('Pacote excedeu o tamanho permitido')
+        data=saved_archive.read_bytes()
+        if hashlib.sha256(data).hexdigest()!=item['archive_sha256']:
+            raise ValueError('SHA-256 do pacote local divergente; arquivo preservado para análise')
+        return _extract_verified(version,base,item,target,data)
     with tempfile.TemporaryDirectory(prefix='hashpilot-miner-') as temporary:
         archive=Path(temporary)/item['asset'];digest=hashlib.sha256();size=0
         request=urllib.request.Request(item['url'],headers={'User-Agent':'HashPilot'})
@@ -112,21 +120,24 @@ def _stage(version,base=None,opener=urllib.request.urlopen):
                 if size>100*1024*1024:raise ValueError('Pacote excedeu o tamanho permitido')
                 digest.update(block);output.write(block)
         if digest.hexdigest()!=item['archive_sha256']:raise ValueError('SHA-256 do pacote divergente; nada instalado')
-        saved_archive=base/item['asset']
-        if saved_archive.resolve()!=saved_archive:raise ValueError('Arquivo redirecionado recusado')
         archive_copy=saved_archive.with_suffix('.download')
         if archive_copy.resolve()!=archive_copy:raise ValueError('Arquivo temporário redirecionado recusado')
-        archive_copy.write_bytes(archive.read_bytes());archive_copy.replace(saved_archive)
-        with zipfile.ZipFile(archive) as package:
-            name=item['folder']+'/SRBMiner-MULTI.exe'
-            members=[entry for entry in package.infolist() if entry.filename==name]
-            if len(members)!=1 or members[0].file_size>100*1024*1024:raise ValueError('Executável único não confirmado no pacote')
-            binary=package.read(members[0])
-        if hashlib.sha256(binary).hexdigest()!=item['exe_sha256']:raise ValueError('SHA-256 do executável divergente')
-        target.parent.mkdir(parents=True,exist_ok=True)
-        partial=target.with_suffix('.download')
-        if partial.resolve()!=partial:raise ValueError('Arquivo temporário redirecionado recusado')
-        partial.write_bytes(binary);partial.replace(target)
+        data=archive.read_bytes()
+        archive_copy.write_bytes(data);archive_copy.replace(saved_archive)
+        return _extract_verified(version,base,item,target,data)
+
+def _extract_verified(version,base,item,target,data):
+    import io
+    with zipfile.ZipFile(io.BytesIO(data)) as package:
+        name=item['folder']+'/SRBMiner-MULTI.exe'
+        members=[entry for entry in package.infolist() if entry.filename==name]
+        if len(members)!=1 or members[0].file_size>100*1024*1024:raise ValueError('Executável único não confirmado no pacote')
+        binary=package.read(members[0])
+    if hashlib.sha256(binary).hexdigest()!=item['exe_sha256']:raise ValueError('SHA-256 do executável divergente')
+    target.parent.mkdir(parents=True,exist_ok=True)
+    partial=target.with_suffix('.download')
+    if partial.resolve()!=partial:raise ValueError('Arquivo temporário redirecionado recusado')
+    partial.write_bytes(binary);partial.replace(target)
     return executable(version,base)
 
 def select(version,base=None):
