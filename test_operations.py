@@ -175,6 +175,12 @@ class RigOperationTests(unittest.TestCase):
                 if condition=='external':manager.devices[identifier]['external_readonly']=True
                 snapshot={'miner':miner,'miner_running':True,'gpu':{'temperature.gpu':80 if condition=='hot' else None if condition=='missing' else 65,'sampled_at':1000 if condition=='stale' else 3000,'error':None}}
                 manager.observe_health({identifier:snapshot})
+                self.assertFalse(backend.stopped)
+                for offset in (5,10):
+                    clock[0]=3000+offset
+                    snapshot['gpu']['sampled_at']=1000 if condition=='stale' else clock[0]
+                    snapshot['miner']['hashrate_at']=clock[0]
+                    manager.observe_health({identifier:snapshot})
                 self.assertEqual(bool(backend.stopped),condition=='eligible')
                 self.assertTrue(backend.inspect(other_pid))
 

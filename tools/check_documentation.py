@@ -10,7 +10,7 @@ errors=[]
 count=0
 documents=[*ROOT.rglob('*.md'),ROOT/'llms.txt']
 for file in documents:
-    if '.git' in file.relative_to(ROOT).parts: continue
+    if any(part in ('.git','dist','build','.venv','venv') for part in file.relative_to(ROOT).parts): continue
     text=file.read_text(encoding='utf-8-sig')
     for url in re.findall(r'\]\(([^\s)]+)',text):
         url=unquote(url.split('#')[0].split('?')[0])

@@ -80,21 +80,26 @@ def parse_gpu_log(text,gpu_uuid,index,now=None,*,allow_local_gpu0=True):
     result={"gpu_uuid":gpu_uuid,"gpu_index":int(index),"log_gpu_index":target,
             "hashrate":None,"hashrate_at":None,"accepted":0,"rejected":0,"hw_errors":0,
             "average_1m":None,"average_15m":None,"started_at":None,"last_share_at":None,
-            "connection":"Aguardando conexão","paused":False,"rate_points":[],
+            "connection":"Aguardando conexão","connection_at":None,"last_job_at":None,"last_log_at":None,"paused":False,"rate_points":[],
             "isolated_log":len(labels)<=1,"recent_logs":"\n".join(lines[-35:])}
     for line in lines:
         stamp=log_timestamp(line)
+        if stamp is None or stamp>stamp_now+5:continue
+        if result['last_log_at'] is None or stamp>=result['last_log_at']:result['last_log_at']=stamp
         label=GPU_LABEL.search(line)
         belongs=label is not None and target is not None and int(label[1])==target
         if "Miner version:" in line:
             result["started_at"]=stamp
             result['version']=line.split('Miner version:',1)[1].strip()
-        if "Connected to " in line:
-            result["connection"]="Conectado à pool"
-        if any(word in line.lower() for word in ("disconnected","connection failed","reconnecting","connection lost")):
-            result["connection"]="Reconectando à pool"
+        if "Job received" in line and (result['last_job_at'] is None or stamp>=result['last_job_at']):
+            result['last_job_at']=stamp
+        if result['connection_at'] is None or stamp>=result['connection_at']:
+            if "Connected to " in line or "Job received" in line:
+                result["connection"],result['connection_at']="Conectado à pool",stamp
+            if any(word in line.lower() for word in ("disconnected","connection failed","reconnecting","connection lost")):
+                result["connection"],result['connection_at']="Reconectando à pool",stamp
         if "share accepted" in line and (belongs or (label is None and len(labels)==1 and target is not None)):
-            result["last_share_at"]=stamp
+            if result['last_share_at'] is None or stamp>=result['last_share_at']:result["last_share_at"]=stamp
         if belongs and "turned off" in line:
             result["paused"]=True
         elif belongs and "turned on" in line:

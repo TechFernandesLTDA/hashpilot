@@ -19,17 +19,17 @@ A revisão do SRBMiner 3.8.1 está [pendente](security-review.md); o Defender co
 
 ## Conferir uma release
 
-Baixe `hashpilot-v0.5.4.zip`, `hashpilot-v0.5.4.manifest.json` e `SHA256SUMS` da mesma [release](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.5.4). Leia o código e as limitações antes de executar. Verifique o hash no PowerShell:
+Baixe `hashpilot-v0.5.5.zip`, `hashpilot-v0.5.5.manifest.json` e `SHA256SUMS` da mesma [release](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.5.5). Leia o código e as limitações antes de executar. Verifique o hash no PowerShell:
 
 ```powershell
-Get-FileHash .\hashpilot-v0.5.4.zip -Algorithm SHA256
+Get-FileHash .\hashpilot-v0.5.5.zip -Algorithm SHA256
 Get-Content .\SHA256SUMS
 ```
 
 Os valores precisam coincidir. Para conferir também cada membro do ZIP usando uma cópia inspecionada do repositório:
 
 ```powershell
-mise exec -- python tools/release_package.py verify .\hashpilot-v0.5.4.zip --checksums .\SHA256SUMS
+mise exec -- python tools/release_package.py verify .\hashpilot-v0.5.5.zip --checksums .\SHA256SUMS
 ```
 
 O manifesto inclui o commit exato e os hashes/tamanhos de todos os arquivos. A lista de hashes não autentica o publicador por uma autoridade externa: alguém com controle da conta poderia substituir pacote e lista. Não contorne alertas do Windows ou desative antivírus.
@@ -39,8 +39,8 @@ O manifesto inclui o commit exato e os hashes/tamanhos de todos os arquivos. A l
 Em um clone confiável, obtenha a tag e confirme que seu commit corresponde ao manifesto. Execute:
 
 ```powershell
-git fetch origin tag v0.5.4
-mise exec -- python tools/release_package.py build --ref v0.5.4 --version v0.5.4 --output dist/reproduced
+git fetch origin tag v0.5.5
+mise exec -- python tools/release_package.py build --ref v0.5.5 --version v0.5.5 --output dist/reproduced
 ```
 
 O empacotador usa somente blobs do commit Git indicado: não inclui `.env`, configurações locais ou modificações não commitadas. O conteúdo público de `portable-data/`, já versionado e autorizado pelo autor, continua incluído. Os membros têm ordem, data e permissões fixas, sem compressão dependente de versão de biblioteca. Compare SHA-256 do ZIP gerado ao publicado. Isso torna o **pacote de código-fonte** reproduzível; não declara build reproduzível de Python, drivers ou SRBMiner.

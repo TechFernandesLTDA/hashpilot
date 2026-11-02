@@ -20,6 +20,7 @@ DEFAULT_VERSION='3.8.0'
 CATALOG={
  '3.8.0':{'archive_sha256':'33eef5f8946259290013ce370a746a85f91c2bbcd81fcefa1aad904dd9a912f8','exe_sha256':'6eb4e0bc37d65fdf7644ab620737e14f4c7dfa9666acde43d5f38ab1e9094ac1'},
  '3.8.1':{'archive_sha256':'16bd455557bd3698e004d1f6b5d19290b9b59e9f9c8ef9245acafdaeb2413e79','exe_sha256':'2f7e60a17fcc65ddd3c7f5821666a6ae11ef6c1f2c95331bb7e46793c032b688'},
+ '3.8.3':{'archive_sha256':'92af8d2db5bc96df62825487e7f384b8ab04e5db26a634e29c2cd86dcbb87d0e','exe_sha256':'1a58995232c96501a8c17139db5404527d9ec0b57863ae03605dd477e181ffdf'},
 }
 
 def base_directory():return Path(os.environ['LOCALAPPDATA'])/'Mining/Pearl'

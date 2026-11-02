@@ -15,14 +15,20 @@ def finite(value):
 def health(miner, running, now=None, *, started_at=None, intervals=()):
     now = time.time() if now is None else now
     stamp = miner.get('hashrate_at')
-    hashing = running is True and not miner.get('paused') and finite(stamp) and 0 <= now-stamp <= 180 and (miner.get('hashrate') or 0)>0
+    beginning=started_at if finite(started_at) else miner.get('started_at')
+    rate=miner.get('hashrate')
+    hashing = (running is True and not miner.get('paused') and finite(stamp) and 0 <= now-stamp <= 180
+               and (not finite(beginning) or stamp>=beginning) and finite(rate) and rate>0)
     last = miner.get('last_share_at')
-    if not finite(last) or last>now: last=None
+    if not finite(last) or last>now or (finite(beginning) and last<beginning): last=None
     gaps=[x for x in intervals if finite(x) and 0<x<=86400]
     threshold=max(900, min(7200, statistics.median(gaps)*6)) if len(gaps)>=3 else 900
-    beginning=started_at if finite(started_at) else miner.get('started_at')
-    age=now-(last if last is not None else beginning) if finite(last if last is not None else beginning) else None
-    connected=miner.get('connection')=='Conectado à pool' or (last is not None and miner.get('connection')!='Reconectando à pool' and now-last<=threshold)
+    age=max(0,now-(last if last is not None else beginning)) if finite(last if last is not None else beginning) else None
+    activity=miner.get('last_job_at')
+    job_current=finite(activity) and 0<=now-activity<=180 and (not finite(beginning) or activity>=beginning)
+    connected=(miner.get('connection')=='Conectado à pool' or job_current or
+               (last is not None and miner.get('connection')!='Reconectando à pool' and now-last<=threshold))
+    if miner.get('connection')=='Reconectando à pool': connected=False
     warning=bool(hashing and age is not None and age>threshold and finite(beginning) and now-beginning>=300)
     if running is not True: state='stopped' if running is False else 'unknown'
     elif miner.get('paused'): state='cooling'
@@ -51,6 +57,10 @@ class OperationalStore:
             db.executescript('''CREATE TABLE IF NOT EXISTS acks(gpu TEXT, stamp REAL, PRIMARY KEY(gpu,stamp));
                 CREATE TABLE IF NOT EXISTS recoveries(id INTEGER PRIMARY KEY,gpu TEXT,stamp REAL,reason TEXT);
                 CREATE INDEX IF NOT EXISTS recovery_gpu_stamp ON recoveries(gpu,stamp);''')
+            db.executescript('''CREATE TABLE IF NOT EXISTS incidents(id INTEGER PRIMARY KEY,gpu TEXT,stamp REAL,kind TEXT,message TEXT);
+                CREATE INDEX IF NOT EXISTS incident_gpu_stamp ON incidents(gpu,stamp);
+                CREATE TABLE IF NOT EXISTS component_attempts(id INTEGER PRIMARY KEY,gpu TEXT,component TEXT,stamp REAL);
+                CREATE INDEX IF NOT EXISTS component_gpu_stamp ON component_attempts(gpu,component,stamp);''')
 
     @contextmanager
     def connect(self):
@@ -65,7 +75,7 @@ class OperationalStore:
         with self.connect() as db:
             if finite(last) and 0<=now-last<=86400:
                 db.execute('INSERT OR IGNORE INTO acks VALUES(?,?)',(identifier,last))
-            stamps=[r[0] for r in db.execute('SELECT stamp FROM acks WHERE gpu=? ORDER BY stamp DESC LIMIT 33',(identifier,))]
+            stamps=[r[0] for r in db.execute('SELECT stamp FROM acks WHERE gpu=? AND stamp<=? ORDER BY stamp DESC LIMIT 33',(identifier,now))]
         if last is None and stamps and finite(started_at) and stamps[0]>=started_at:
             miner={**miner,'last_share_at':stamps[0]}
         gaps=[a-b for a,b in zip(stamps,stamps[1:])]
@@ -73,7 +83,7 @@ class OperationalStore:
 
     def budget(self, identifier, now):
         with self.connect() as db:
-            rows=db.execute('SELECT stamp,reason FROM recoveries WHERE gpu=? AND stamp>? ORDER BY stamp DESC',(identifier,now-3600)).fetchall()
+            rows=db.execute('SELECT stamp,reason FROM recoveries WHERE gpu=? AND stamp>? AND stamp<=? ORDER BY stamp DESC',(identifier,now-3600,now)).fetchall()
         delay=min(900,60*2**max(0,len(rows)-1)) if rows else 0
         next_at=rows[0][0]+delay if rows else now
         blocked=len(rows)>=3
@@ -85,8 +95,30 @@ class OperationalStore:
         # Single service owner, plus transaction protects competing reservations.
         with self.connect() as db:
             db.execute('BEGIN IMMEDIATE')
-            stamps=[r[0] for r in db.execute('SELECT stamp FROM recoveries WHERE gpu=? AND stamp>? ORDER BY stamp DESC',(identifier,now-3600))]
+            stamps=[r[0] for r in db.execute('SELECT stamp FROM recoveries WHERE gpu=? AND stamp>? AND stamp<=? ORDER BY stamp DESC',(identifier,now-3600,now))]
             if len(stamps)>=3 or stamps and now<stamps[0]+min(900,60*2**max(0,len(stamps)-1)):
                 return False
             db.execute('INSERT INTO recoveries(gpu,stamp,reason) VALUES(?,?,?)',(identifier,now,str(reason)[:120]))
         return True
+
+    def reserve_component(self,identifier,component,now,*,delay=60,limit=3):
+        with self.connect() as db:
+            db.execute('BEGIN IMMEDIATE')
+            rows=[r[0] for r in db.execute('SELECT stamp FROM component_attempts WHERE gpu=? AND component=? AND stamp>? AND stamp<=? ORDER BY stamp DESC',
+                                         (identifier,component,now-3600,now))]
+            if len(rows)>=limit or rows and now-rows[0]<delay:return False
+            db.execute('INSERT INTO component_attempts(gpu,component,stamp) VALUES(?,?,?)',(identifier,component,now))
+        return True
+
+    def event(self,identifier,kind,message,now):
+        with self.connect() as db:
+            recent=db.execute('SELECT stamp,kind,message FROM incidents WHERE gpu=? ORDER BY id DESC LIMIT 1',(identifier,)).fetchone()
+            message=str(message)[:300]
+            if not recent or recent[1:]!=(kind,message) or not 0<=now-recent[0]<60:
+                db.execute('INSERT INTO incidents(gpu,stamp,kind,message) VALUES(?,?,?,?)',(identifier,now,kind,message))
+
+    def recent_events(self,identifier,limit=5):
+        with self.connect() as db:
+            return [{'at':at,'kind':kind,'message':message} for at,kind,message in
+                    db.execute('SELECT stamp,kind,message FROM incidents WHERE gpu=? ORDER BY id DESC LIMIT ?',
+                               (identifier,max(1,min(20,int(limit)))))]

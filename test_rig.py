@@ -19,6 +19,8 @@ def detected(count=6,mixed=True):
 
 
 class FakeBackend:
+    def verify_miner(self,path):pass
+
     def assert_gpu_available(self,miner_path,index):
         pass
 

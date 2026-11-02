@@ -23,6 +23,7 @@ from rig_config import MAX_GPUS,device_key,resolve_devices,update_gpu_settings
 from mining_health import OperationalStore,finite
 from component_status import identity as component_identity
 from gpu_profiles import profile
+from mining_continuity import IdleSleepGuard,ContinuityWindow,safe_sensor
 
 MARKER="HashPilotRig-v1"
 REFERENCE_RTX3070_UUID="GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75"
@@ -84,6 +85,11 @@ class ProcessBackend:
     def restore_defaults(self,gpu,directory):
         from gpu_defaults import restore_defaults
         return restore_defaults(gpu,directory)
+
+    def verify_miner(self,path):
+        from miner_update import active_executable
+        target=active_executable(Path(path).parent.parent)
+        if normalized_path(target)!=normalized_path(path):raise ValueError('Minerador selecionado difere do executável solicitado')
 
     def assert_gpu_available(self,miner_path,index):
         """Fail closed when an orphan or an unreadable miner may own this GPU."""
@@ -261,8 +267,11 @@ class RigManager:
         self.require_recovery_sensors=False
         self.miner_base=self.miner_path.parent.parent
         self.miner_update_pending=None
+        self.continuity=ContinuityWindow()
+        self.sleep_guard=IdleSleepGuard()
         self.operations=OperationalStore(self.state_dir/'operations.sqlite3')
         self._load_registry()
+        self.continuity.known={key:dict(entry['identity']) for key,entry in self.devices.items() if isinstance(entry.get('identity'),dict)}
         from miner_update import read
         pending=read(self.state_dir/'miner-update.json')
         if pending.get('state')=='validating':self.miner_update_pending=pending
@@ -303,7 +312,9 @@ class RigManager:
         atomic_json(self.registry_path,{"schema_version":1,"marker":MARKER,"pid":os.getpid(),"sampled_at":self.clock(),
             "ready":not self.shutting_down,"max_gpus":MAX_GPUS,"devices":self.devices,"ignored_devices":self.ignored,
             "error":self.error,"processed_request_ids":self.processed_ids[-128:],"reference_uuid":self.reference_uuid,
-            "software":component_identity(),"capabilities":['stop_restore_v1','miner_update_v1']})
+            "software":component_identity(),"capabilities":['stop_restore_v1','miner_update_v1','continuity_v1'],
+            "continuity":{"idle_sleep_prevented":self.sleep_guard.active,"sleep_guard_error":self.sleep_guard.error,
+                          "resume_grace_until":self.continuity.grace_until}})
 
     def activate_miner(self,version,request_id=None):
         from miner_update import executable,selected_version,select
@@ -394,6 +405,9 @@ class RigManager:
         atomic_json(directory/'gpu-defaults.json',{'state':'mining_session','at':self.clock(),'gpu_uuid':identifier})
         entry["miner_log"]=str(directory/("mining-"+time.strftime("%Y%m%d-%H%M%S")+"-"+uuid.uuid4().hex[:6]+".log"))
         try:
+            launch_stage='binary'
+            self.backend.verify_miner(self.miner_path)
+            launch_stage='process'
             self.backend.assert_gpu_available(self.miner_path,entry['miner_index'])
             proxy_settings,proxy_path=self._sync_proxy_settings(entry,settings)
             if support_configuration(proxy_settings,entry["wallet"])["enabled"]:
@@ -413,20 +427,64 @@ class RigManager:
                 entry["startup_profile"]="Opt-in da RTX 3070 de referência: core1740/offset150/mem5001/fan100/PL240"
             identity=self.backend.start(miner_args,self.miner_path.parent,directory/"miner-console.log")
             entry.update(miner=identity,miner_pid=identity["pid"])
-            controller_args=[self.python_path,self.project_dir/"gpu_agent.py","--control","--miner-pid",str(identity["pid"]),
-                "--uuid",identifier,"--index",str(device["index"]),"--duration","300","--state-dir",directory,
-                "--monitor-state-dir",directory,"--log-dir",directory,"--miner-log",entry["miner_log"],"--miner-index",str(entry["miner_index"])]
-            controller_args.extend(['--profile',device.get('profile','performance'),'--objective',profile(device.get('profile','performance'))['objective']])
-            if settings.get("ai_enabled") is True: controller_args.append("--ollama")
-            identity=self.backend.start(controller_args,self.project_dir,directory/"controller-console.log")
+            identity=self.start_controller(entry,settings)
             entry.update(controller=identity,controller_pid=identity["pid"],state="running",miner_running=True)
+            self.operations.event(identifier,'started','Minerador e controlador iniciados',self.clock())
             self.publish()
             return True
         except (OSError,RuntimeError,ValueError,subprocess.SubprocessError) as error:
             self.stop_gpu(identifier)
             entry.update(state="error",error=str(error)[:300],retry_after=self.clock()+60)
+            if launch_stage=='binary':entry.update(state='blocked_binary',binary_blocked=True)
+            self.operations.event(identifier,'start_failed',entry['error'],self.clock())
             self.publish()
             return False
+
+    def start_controller(self,entry,settings):
+        directory=Path(entry['log_dir']);device=entry['identity']
+        # A previous controller's graceful-stop file must not terminate its replacement.
+        stop_file=directory/'gpu-agent-stop.json'
+        if stop_file.is_file():stop_file.unlink()
+        args=[self.python_path,self.project_dir/'gpu_agent.py','--control','--miner-pid',str(entry['miner_pid']),
+              '--uuid',entry['gpu_uuid'],'--index',str(device['index']),'--duration','300','--state-dir',directory,
+              '--monitor-state-dir',directory,'--log-dir',directory,'--miner-log',entry['miner_log'],
+              '--miner-index',str(entry['miner_index']),'--profile',entry.get('profile','performance'),
+              '--objective',profile(entry.get('profile','performance'))['objective']]
+        if settings.get('ai_enabled') is True:args.append('--ollama')
+        return self.backend.start(args,self.project_dir,directory/'controller-console.log')
+
+    def recover_controller(self,entry,settings):
+        previous=entry.get('controller')
+        if previous:
+            observed=self.backend.inspect(previous['pid'])
+            if observed and observed.get('created_at')==previous.get('created_at'):
+                entry['controller_warning']='Controlador vivo sem identidade confirmada; substituição bloqueada'
+                return
+        if not self.operations.reserve_component(entry['gpu_uuid'],'controller',self.clock()):
+            entry['controller_warning']='Controlador aguarda intervalo de recuperação; minerador preservado'
+            return
+        try:
+            identity=self.start_controller(entry,settings)
+            entry.update(controller=identity,controller_pid=identity['pid'])
+            entry.pop('controller_warning',None)
+            self.operations.event(entry['gpu_uuid'],'controller_recovered','Controlador recuperado sem interromper o minerador',self.clock())
+        except (OSError,RuntimeError,ValueError,subprocess.SubprocessError) as error:
+            entry['controller_warning']=str(error)[:300]
+            self.operations.event(entry['gpu_uuid'],'controller_failed',entry['controller_warning'],self.clock())
+
+    def manual_start(self,identifier):
+        entry=self.devices.get(identifier,{})
+        if entry.get('external_readonly') or entry.get('ownership_unverified'):
+            raise RuntimeError('Sessão externa ou sem identidade confirmada; início manual bloqueado')
+        if entry.get('state')=='running':return
+        self.backend.verify_miner(self.miner_path)
+        if self.require_recovery_sensors and not safe_sensor(entry.get('last_gpu_sample') or {},self.clock()):
+            raise RuntimeError('Início manual aguarda sensor atual abaixo de 70 °C')
+        if not self.operations.reserve_component(identifier,'manual_start',self.clock(),delay=30,limit=120):
+            raise RuntimeError('Aguarde 30 segundos entre tentativas manuais de início')
+        for key in ('error','retry_after','started_at'):entry.pop(key,None)
+        entry['state']='stopped'
+        self.operations.event(identifier,'manual_start','Retomada manual; histórico de recuperações preservado',self.clock())
 
     def stop_gpu(self,identifier,*,restore=False):
         entry=self.devices.get(identifier)
@@ -468,6 +526,7 @@ class RigManager:
                 return False
         entry.update(state="stopped",miner_running=False,miner=None,controller=None,proxy=None,
             miner_pid=None,controller_pid=None,proxy_pid=None,stopped_at=self.clock())
+        self.operations.event(identifier,'stopped','Parada confirmada'+(' com restauração solicitada' if restore else ''),self.clock())
         if restore_needed:
             entry['restoration']={'state':'restoring','at':self.clock()}
             self.publish()
@@ -489,6 +548,7 @@ class RigManager:
         desired=resolve_devices(detected,settings,self.log_dir)
         signature=tuple(sorted((gpu["uuid"],gpu["index"],gpu.get("pci_bus_id")) for gpu in desired))
         if signature!=self.mapping_signature:
+            self.backend.verify_miner(self.miner_path)
             # One NVIDIA, no integrated/other vendors enabled: SRBMiner GPU0 is
             # the known existing single-board route. Rigs require explicit PCI proof.
             if not desired:
@@ -524,6 +584,13 @@ class RigManager:
                     continue
                 entry.update(external_readonly=False,managed=True,state="stopped",miner=None,controller=None)
             changed=entry.get("wallet")!=device["wallet"] or entry.get("index")!=device["index"] or entry.get("miner_index",entry.get("index"))!=device["miner_index"]
+            miner_alive=bool(entry.get('miner') and self.backend.is_owned(entry['miner']))
+            proxy_alive=not entry.get('proxy') or self.backend.is_owned(entry['proxy'])
+            controller_alive=bool(entry.get('controller') and self.backend.is_owned(entry['controller']))
+            if device['enabled'] and not changed and miner_alive and proxy_alive and not controller_alive:
+                self.recover_controller(entry,settings)
+                entry.update(state='running',miner_running=True)
+                continue
             healthy=bool(entry.get("miner") and entry.get("controller") and self.backend.is_owned(entry["miner"]) and self.backend.is_owned(entry["controller"])
                 and (not entry.get("proxy") or self.backend.is_owned(entry["proxy"])))
             if not device["enabled"] or changed or entry.get('state')=='stop_failed' or entry.get("state")=="running" and not healthy:
@@ -534,6 +601,13 @@ class RigManager:
             entry["support_pending_restart"]=settings.get("support_enabled") is True and not entry.get("proxy") and support_configuration({"wallet":device["wallet"],"support_enabled":True},device["wallet"])["enabled"]
         for device in desired:
             entry=self.devices.get(device["uuid"],{})
+            if entry.get('binary_blocked') and device['enabled']:
+                try:self.backend.verify_miner(self.miner_path)
+                except (OSError,RuntimeError,ValueError):continue
+                if self.require_recovery_sensors and not safe_sensor(entry.get('last_gpu_sample') or {},self.clock()):continue
+                for field in ('binary_blocked','retry_after','error','started_at'):entry.pop(field,None)
+                entry['state']='stopped'
+                self.operations.event(device['uuid'],'binary_available','Executável voltou a passar na verificação; retomada liberada',self.clock())
             if not entry and len(self.devices)>=MAX_GPUS:
                 self.ignored.append({"uuid":device["uuid"],"name":device["name"],"reason":"Seis registros ocupados; uma sessão externa ou não confirmada foi preservada"})
                 continue
@@ -648,6 +722,7 @@ class RigManager:
                 if gpu_uuid is not None: device_key(gpu_uuid)
                 if action in ("start","stop"):
                     if gpu_uuid is None: raise ValueError("A ação exige UUID")
+                    if action=='start':self.manual_start(gpu_uuid)
                     settings=update_gpu_settings(self.settings(),gpu_uuid,enabled=action=="start")
                     atomic_json(self.settings_path,settings)
                     if action=="stop": self.stop_gpu(gpu_uuid,restore=True)
@@ -695,6 +770,7 @@ class RigManager:
                         raise
                 elif action!="reconcile": raise ValueError("Ação desconhecida")
                 self.processed_ids.append(identifier)
+                self.error=None
             except (OSError,ValueError,TypeError,RuntimeError) as error:
                 self.error=str(error)[:300]
             finally:
@@ -709,19 +785,29 @@ class RigManager:
             status=self.operations.assess(identifier,snapshot['miner'],snapshot['miner_running'],self.clock(),entry.get('started_at'))
             entry['health']=status
             entry['recovery']=self.operations.budget(identifier,self.clock())
+            entry['incidents']=self.operations.recent_events(identifier)
             sensor=snapshot.get('gpu') or {}
             entry['last_gpu_sample']={key:sensor.get(key) for key in ('temperature.gpu','sampled_at','error')}
             temperature=sensor.get('temperature.gpu')
             # Never turn a thermal pause, missing sensor, external session or manual stop into a restart.
             sensor_at=sensor.get('sampled_at')
-            safe=finite(temperature) and 0<=temperature<70 and not sensor.get('error') and finite(sensor_at) and 0<=self.clock()-sensor_at<=15
+            safe=safe_sensor(sensor,self.clock())
             age=self.clock()-entry.get('started_at',self.clock())
             stalled=(status['state'] in ('connecting','no_hashrate') and age>300) or (
                 status['warning'] and status['seconds_without_share']>2*status['warning_after_seconds'])
+            # A read error or a just-resumed machine is insufficient evidence of a dead miner.
+            stalled=stalled and not snapshot.get('log_error') and self.clock()>=self.continuity.grace_until
+            if stalled:
+                entry.setdefault('stall_first_at',self.clock())
+                entry['stall_observations']=entry.get('stall_observations',0)+1
+            else:
+                entry.pop('stall_first_at',None);entry.pop('stall_observations',None)
+            stalled=stalled and entry.get('stall_observations',0)>=3 and self.clock()-entry.get('stall_first_at',self.clock())>=10
             if safe and stalled and entry.get('enabled') and entry.get('managed') and not entry.get('external_readonly') and not snapshot['miner'].get('paused'):
                 budget=entry['recovery']
                 if not budget['blocked'] and self.clock()>=budget['next_allowed_at']:
                     if self.stop_gpu(identifier):
+                        self.operations.event(identifier,'health_restart',status['label'],self.clock())
                         entry.update(state='error',error='Recuperação automática: '+status['label'],retry_after=self.clock()+2)
 
     def serve(self,adopt_legacy=False,*,migrate_legacy_uuid=None,reference_rtx3070=False,reference_uuid=None):
@@ -743,14 +829,16 @@ class RigManager:
                 try:
                     self.process_requests()
                     if self.shutting_down: break
+                    self.continuity.tick(self.clock())
                     if detected is None or time.monotonic()-last_detection>=30:
-                        detected=list(self.detector())
+                        detected=self.continuity.inventory(list(self.detector()),self.clock())
                         last_detection=time.monotonic()
                     devices=self.reconcile(detected=detected)
                     from rig_controller import collect_snapshots
                     snapshots=collect_snapshots(devices,self.devices)
                     self.validate_miner_update(snapshots)
                     self.observe_health(snapshots)
+                    self.sleep_guard.update(any(entry.get('enabled') and entry.get('miner_running') and entry.get('managed') and not entry.get('external_readonly') for entry in self.devices.values()))
                     self.publish()
                 except (OSError,RuntimeError,ValueError,subprocess.SubprocessError) as error:
                     self.error=str(error)[:300]
@@ -764,7 +852,9 @@ class RigManager:
                     except (OSError,RuntimeError,subprocess.SubprocessError) as error:
                         self.devices[identifier]["error"]=str(error)[:300]
                 self.publish()
-            finally: lease.close()
+            finally:
+                self.sleep_guard.update(False)
+                lease.close()
 
 
 def main():

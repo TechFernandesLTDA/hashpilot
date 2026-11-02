@@ -20,13 +20,15 @@ class PackageTests(unittest.TestCase):
             with self.assertRaises(ValueError):update.active_executable(folder)
 
     def test_official_release_requires_exact_asset_url_and_sha256(self):
-        item=update.descriptor('3.8.1')
-        payload={'tag_name':'3.8.1','assets':[{'name':item['asset'],'browser_download_url':item['url'],'digest':'sha256:'+item['archive_sha256']}]}
         def run(value):return update.latest(opener=lambda *a,**k:io.BytesIO(json.dumps(value).encode()))
-        self.assertTrue(run(payload)['installable'])
-        for field,value in [('digest','sha256:'+'0'*64),('browser_download_url','https://example.org/miner.zip')]:
-            bad=copy.deepcopy(payload);bad['assets'][0][field]=value
-            self.assertFalse(run(bad)['installable'])
+        for version in update.CATALOG:
+            item=update.descriptor(version)
+            payload={'tag_name':version,'assets':[{'name':item['asset'],'browser_download_url':item['url'],'digest':'sha256:'+item['archive_sha256']}]}
+            with self.subTest(version=version):
+                self.assertTrue(run(payload)['installable'])
+                for field,value in [('digest','sha256:'+'0'*64),('browser_download_url','https://example.org/miner.zip')]:
+                    bad=copy.deepcopy(payload);bad['assets'][0][field]=value
+                    self.assertFalse(run(bad)['installable'])
         payload['tag_name']='3.9.0';self.assertFalse(run(payload)['installable'])
 
     def test_rejects_prereleases(self):
