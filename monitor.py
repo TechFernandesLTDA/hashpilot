@@ -25,7 +25,10 @@ from collections import deque
 from finance import FinanceCollector, financial_model, PortfolioFinanceCollector, portfolio_model, portfolio_snapshots
 from history import HistoryStore
 from config import WALLET, POOL, LOG_DIR, STATE_DIR, SETTINGS_PATH
-from contribution import read_support_status, read_settings as read_support_settings
+from contribution import atomic_json, read_support_status, read_settings as read_support_settings
+from file_cache import cached_load, signature as file_signature
+
+
 from tray import WindowsTray
 from bootstrap import restore_bundled_data
 from rig_panel import RigCards, project_selected, totals, save_enabled, show_identity
@@ -47,6 +50,10 @@ TEAL, BLUE, ORANGE, PINK = "#12A98E", "#1C64C8", "#ffbc66", "#E8EDF5"
 NO_WINDOW = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
 STAMP = re.compile(r"^\[(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)\]")
 RATE = re.compile(r"GPU0\s+.*?:\s*([\d.]+)\s+([kMGTPE]?H)/s\s+\[(.*?)\]")
+COUNTERS = re.compile(r"([A-Z]+):([\d.]+)")
+AVERAGE = re.compile(r"Average hashrate: 1m ([\d.]+) TH/s \| 15m ([\d.]+) TH/s")
+RATE_UNITS = {"H": 1e-12, "kH": 1e-9, "MH": 1e-6, "GH": 1e-3, "TH": 1, "PH": 1e3, "EH": 1e6}
+CONNECTION_LOST = ("disconnected", "connection failed", "reconnecting", "connection lost")
 
 
 def run(command: list[str], timeout: float = 3) -> str:
@@ -57,7 +64,19 @@ def run(command: list[str], timeout: float = 3) -> str:
     return result.stdout
 
 
+def miner_process_ids() -> set[int]:
+    """PIDs do SRBMiner pelo Toolhelp32; `tasklist` só se a API do Windows falhar."""
+    try:
+        from process_list import process_ids
+        return process_ids("SRBMiner-MULTI.exe")
+    except OSError:
+        output = run(["tasklist", "/FI", "IMAGENAME eq SRBMiner-MULTI.exe", "/FO", "CSV", "/NH"])
+        return {int(row[1]) for row in csv.reader(output.splitlines())
+                if len(row) > 1 and row[0].lower() == "srbminer-multi.exe" and row[1].isdigit()}
+
+
 def number(value: str) -> float | None:
+
     try:
         return float(value.strip())
     except (ValueError, TypeError):
@@ -98,14 +117,14 @@ def parse_log(text: str, now: float | None = None) -> dict:
     result = {"hashrate": None, "hashrate_at": None, "accepted": 0, "rejected": 0,
               "hw_errors": 0, "average_1m": None, "average_15m": None, "started_at": None,
               "last_share_at": None, "connection": "Aguardando conexão", "paused": False, "rate_points": []}
+    from gpu_telemetry import log_timestamp
     for line in text.splitlines():
-        stamp_match = STAMP.match(line)
-        stamp = dt.datetime.strptime(stamp_match[1], "%Y-%m-%d %H:%M:%S").timestamp() if stamp_match else None
+        stamp = log_timestamp(line)
         if "Miner version:" in line:
             result["started_at"] = stamp
         if "Connected to " in line:
             result["connection"] = "Conectado à pool"
-        if any(word in line.lower() for word in ("disconnected", "connection failed", "reconnecting", "connection lost")):
+        if any(word in line.lower() for word in CONNECTION_LOST):
             result["connection"] = "Reconectando à pool"
         if "share accepted" in line:
             result["last_share_at"] = stamp
@@ -115,15 +134,16 @@ def parse_log(text: str, now: float | None = None) -> dict:
             result["paused"] = False
         match = RATE.search(line)
         if match:
-            multiplier = {"H": 1e-12, "kH": 1e-9, "MH": 1e-6, "GH": 1e-3, "TH": 1, "PH": 1e3, "EH": 1e6}[match[2]]
+            multiplier = RATE_UNITS[match[2]]
             result["hashrate"] = float(match[1]) * multiplier
             result["hashrate_at"] = stamp
-            values = dict(re.findall(r"([A-Z]+):([\d.]+)", match[3]))
+            values = dict(COUNTERS.findall(match[3]))
             for key, log_key in (("accepted", "A"), ("rejected", "R"), ("hw_errors", "HW")):
                 result[key] = int(float(values.get(log_key, 0)))
             if stamp and now - 900 <= stamp <= now + 5:
                 result["rate_points"].append((stamp, result["hashrate"]))
-        average = re.search(r"Average hashrate: 1m ([\d.]+) TH/s \| 15m ([\d.]+) TH/s", line)
+        average = AVERAGE.search(line)
+
         if average:
             result["average_1m"], result["average_15m"] = map(float, average.groups())
     result["recent_logs"] = "\n".join(text.splitlines()[-35:])
@@ -192,18 +212,18 @@ class Collector:
         processes=None
         process_error=None
         try:
-            output=run(['tasklist','/FI','IMAGENAME eq SRBMiner-MULTI.exe','/FO','CSV','/NH'])
-            processes={int(row[1]) for row in csv.reader(output.splitlines()) if len(row)>1 and row[0].lower()=='srbminer-multi.exe' and row[1].isdigit()}
+            processes=miner_process_ids()
         except Exception as error:process_error=str(error)
         try:
             rig=self.rig_reader.sample(processes)
         except Exception as error:
             rig={'schema_version':2,'devices':[],'totals':totals([]),'ignored_devices':[],'error':str(error)}
         now=time.time()
+        support_settings=cached_load(SETTINGS_PATH,read_support_settings)
         for device in rig['devices']:
             directory=Path(device['log_dir'])
             if device.get('state')=='legacy_readonly':directory=LOG_DIR
-            device['support_contribution']=read_support_status(directory,device['wallet'],read_support_settings(SETTINGS_PATH))
+            device['support_contribution']=read_support_status(directory,device['wallet'],support_settings)
             if self.history and device.get('log_path'):
                 try:self.history.archive_log(Path(device['log_path']),gpu_uuid=device['uuid'],wallet=device['wallet'])
                 except OSError:pass
@@ -222,8 +242,7 @@ class Collector:
         except Exception as error:
             result["gpu_error"] = str(error)
         try:
-            processes = run(["tasklist", "/FI", "IMAGENAME eq SRBMiner-MULTI.exe", "/FO", "CSV", "/NH"])
-            result["miner_running"] = "srbminer-multi.exe" in processes.lower()
+            result["miner_running"] = bool(miner_process_ids())
         except Exception as error:
             result["process_error"] = str(error)
         try:
@@ -252,7 +271,7 @@ class Collector:
         result["miner"] = self.log_data.copy()
         result["log_path"] = str(self.log_path) if self.log_path else None
         result["thermal_control"] = read_thermal_status()
-        result["support_contribution"] = read_support_status(LOG_DIR,WALLET,read_support_settings(SETTINGS_PATH))
+        result["support_contribution"] = read_support_status(LOG_DIR,WALLET,cached_load(SETTINGS_PATH,read_support_settings))
         return result
 
     def work(self):
@@ -383,7 +402,24 @@ class Chart(tk.Canvas):
         self.window = window
         self.max_gap, self.show_age = max_gap, show_age
         self.points = deque(maxlen=50000 if window > 900 else 900)
-        self.bind("<Configure>", lambda _: self.draw())
+        self.dirty = False
+        self._layout = None
+        self.bind("<Configure>", lambda _: self.draw(force=True))
+
+    def redraw_if_dirty(self):
+        if self.dirty and self.winfo_viewable():
+            self.draw()
+
+    def _build_static(self, w, h, title_size, axis_size):
+        """Título, grade e rótulos do eixo só são recriados quando tamanho ou fonte mudam."""
+        self.delete("all")
+        left, right, top, bottom = 50, w-18, 44, h-28
+        self.create_text(16, 18, anchor="w", text=self.title, fill=TEXT, font=(BODY_FONT, title_size, "bold"))
+        self.grid_items, self.axis_items = [], []
+        for i in range(4):
+            y = top + (bottom-top)*i/3
+            self.grid_items.append(self.create_line(left, y, right, y, fill=BORDER))
+            self.axis_items.append(self.create_text(left-8, y, text="", anchor="e", fill=MUTED, font=(BODY_FONT, axis_size)))
 
     def add(self, timestamp, value):
         timestamp=safe_number(timestamp)
@@ -426,30 +462,39 @@ class Chart(tk.Canvas):
         return {"point_count": len(self.points), "latest_sample_at": measured[-1][0] if measured else None,
                 "latest_value": measured[-1][1] if measured else None, "gap_limit_seconds": self.max_gap}
 
-    def draw(self):
+    def draw(self, force=False):
+        # Hidden tabs and the tray only mark the chart; it is drawn when it becomes visible.
+        if not force and not self.winfo_viewable():
+            self.dirty = True
+            return
+        self.dirty = False
         title_size = -getattr(self, "title_px", 13)
         axis_size = -getattr(self, "axis_px", 11)
-        self.delete("all")
         w, h = self.winfo_width(), self.winfo_height()
         if w < 40:
             return
-        self.create_text(16, 18, anchor="w", text=self.title, fill=TEXT, font=(BODY_FONT, title_size, "bold"))
+        layout = (w, h, title_size, axis_size, self.title)
+        if layout != self._layout:
+            self._build_static(w, h, title_size, axis_size)
+            self._layout = layout
+        self.delete("dynamic")
         cutoff = time.time() - self.window
         while self.points and self.points[0][0] < cutoff:
             self.points.popleft()
         values = [v for _, v in self.points if v is not None]
         if not values:
-            self.create_text(w/2, h/2, text="Aguardando amostras reais", fill=MUTED, font=(BODY_FONT, title_size))
+            for item in self.grid_items+self.axis_items:
+                self.itemconfigure(item, state="hidden")
+            self.create_text(w/2, h/2, text="Aguardando amostras reais", fill=MUTED, font=(BODY_FONT, title_size), tags="dynamic")
             return
         ymin, ymax = self.fixed or (max(0, min(values) * .85), max(values) * 1.1)
         if ymax <= ymin:
             ymax = ymin + 1
         left, right, top, bottom = 50, w-18, 44, h-28
         for i in range(4):
-            y = top + (bottom-top)*i/3
             value = ymax - (ymax-ymin)*i/3
-            self.create_line(left, y, right, y, fill=BORDER)
-            self.create_text(left-8, y, text=f"{value:.2f}" if abs(ymax) < 2 else f"{value:.0f}", anchor="e", fill=MUTED, font=(BODY_FONT, axis_size))
+            self.itemconfigure(self.grid_items[i], state="normal")
+            self.itemconfigure(self.axis_items[i], state="normal", text=f"{value:.2f}" if abs(ymax) < 2 else f"{value:.0f}")
         now = time.time()
         start = max(cutoff, min(p[0] for p in self.points))
         span = max(60, now-start)
@@ -460,14 +505,14 @@ class Chart(tk.Canvas):
                 y = bottom - (value-ymin)/(ymax-ymin)*(bottom-top)
                 coordinates.extend([x, y])
             if len(coordinates) >= 4:
-                self.create_line(*coordinates, fill=self.color, width=2, tags="series")
+                self.create_line(*coordinates, fill=self.color, width=2, tags=("series", "dynamic"))
             x, y = coordinates[-2:]
-            self.create_oval(x-3, y-3, x+3, y+3, fill=self.color, outline="", tags="series-point")
+            self.create_oval(x-3, y-3, x+3, y+3, fill=self.color, outline="", tags=("series-point", "dynamic"))
         if self.show_age:
             latest = self.sample_info()["latest_sample_at"]
             age = max(0, int(now-latest))
             self.create_text(right, 18, anchor="e", text=f"última amostra há {age} s", fill=MUTED,
-                             font=(BODY_FONT, axis_size), tags="sample-age")
+                             font=(BODY_FONT, axis_size), tags=("sample-age", "dynamic"))
         self.create_text(left, h-12, text=dt.datetime.fromtimestamp(start).strftime("%H:%M:%S"), anchor="w", fill=MUTED, font=(BODY_FONT, axis_size))
         self.create_text(right, h-12, text="agora · " + self.unit, anchor="e", fill=MUTED, font=(BODY_FONT, axis_size))
 
@@ -637,8 +682,12 @@ class Monitor(tk.Tk):
             status=json.loads((STATE_DIR/'rig-manager.json').read_text(encoding='utf-8-sig'))
             pid=int(status.get('pid',0))
             if not status.get('ready') or pid<=0 or not 0<=time.time()-float(status.get('sampled_at',0))<=15:return False
-            output=run(['tasklist','/FI',f'PID eq {pid}','/FO','CSV','/NH'])
-            return any(len(row)>1 and row[1]==str(pid) for row in csv.reader(output.splitlines()))
+            try:
+                from process_list import pid_running
+                return pid_running(pid)
+            except OSError:
+                output=run(['tasklist','/FI',f'PID eq {pid}','/FO','CSV','/NH'])
+                return any(len(row)>1 and row[1]==str(pid) for row in csv.reader(output.splitlines()))
         except (OSError,ValueError,RuntimeError):return False
 
     def start_rig(self):
@@ -1449,19 +1498,25 @@ class Monitor(tk.Tk):
             "restored_points": self.restored_points, "retention": "permanent_no_automatic_deletion"}
         self.last_snapshot = snapshot
         try:
-            (STATE_DIR / "latest.json").write_text(json.dumps(snapshot, ensure_ascii=False, indent=2), encoding="utf-8")
+            # Atomic: the console and the GPU agent read this file every 2 s.
+            atomic_json(STATE_DIR / "latest.json", snapshot, compact=True)
         except OSError:
+
             pass
 
     def poll(self):
         changed = False
-        try:
-            request = json.loads((STATE_DIR / "ui-request.json").read_text(encoding="utf-8"))
-            if request.get("at", 0) > self.last_ui_request and request.get("action") in ("open", "summary", "setup", "exit"):
-                self.last_ui_request = request["at"]
-                self.tray_actions.put(request["action"])
-        except (OSError, ValueError):
-            pass
+        finance_changed = False
+        request_signature = file_signature(STATE_DIR / "ui-request.json")
+        if request_signature is not None and request_signature != getattr(self, "_ui_request_signature", None):
+            try:
+                request = json.loads((STATE_DIR / "ui-request.json").read_text(encoding="utf-8"))
+                self._ui_request_signature = request_signature
+                if request.get("at", 0) > self.last_ui_request and request.get("action") in ("open", "summary", "setup", "exit"):
+                    self.last_ui_request = request["at"]
+                    self.tray_actions.put(request["action"])
+            except (OSError, ValueError):
+                pass
         try:
             while True:
                 action = self.tray_actions.get_nowait()
@@ -1521,13 +1576,25 @@ class Monitor(tk.Tk):
             pass
         try:
             self.finance_state = self.finance_collector.samples.get_nowait()
-            changed = True
+            changed = finance_changed = True
         except queue.Empty:
             pass
         if changed:
-            self.refresh_finance()
+            # Pool data changes every 60 s; telemetry alone refreshes earnings at most every 10 s.
+            if finance_changed or time.monotonic()-getattr(self, "_finance_refreshed_at", 0) >= 10:
+                self.refresh_finance()
+                self._finance_refreshed_at = time.monotonic()
             self.refresh_summary()
-        self.after(250, self.poll)
+        for chart in self.all_charts():
+            chart.redraw_if_dirty()
+        visible = self.state() not in ("withdrawn", "iconic")
+        self.after(250 if visible else 1000, self.poll)
+
+    def all_charts(self):
+        charts = [*getattr(self, "charts", {}).values(), *getattr(self, "overview_charts", {}).values()]
+        if getattr(self, "money_chart", None) is not None:
+            charts.append(self.money_chart)
+        return charts
 
     def close(self):
         if getattr(self,'update_install_busy',False):

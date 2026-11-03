@@ -19,5 +19,6 @@ def collect_snapshots(devices,entries,*,sample_reader=read_gpu_samples,now=None)
             "wallet":entry.get("wallet",device.get("wallet")),"pool":entry.get("pool","prl.kryptex.network:7048"),
             "log_error":payload["log_error"],"rig_managed":bool(entry.get("managed")),"gpu_uuid":identifier}
         snapshots[identifier]=snapshot
-        atomic_json(Path(device["log_dir"])/"latest.json",snapshot)
+        atomic_json(Path(device["log_dir"])/"latest.json",snapshot,compact=True)
+
     return snapshots

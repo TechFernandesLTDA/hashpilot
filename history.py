@@ -10,6 +10,16 @@ import threading
 import time
 import uuid
 import math
+import re
+import datetime as dt
+
+STAMP = re.compile(r"^\[(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)\]")
+RAW_MINER_FIELDS = ("recent_logs", "rate_points")
+
+
+def log_key(path, line):
+    # Same key as earlier versions: existing archives stay deduplicated after an upgrade.
+    return "log:"+hashlib.sha256((str(path)+"\n"+line).encode()).hexdigest()
 
 
 def encode(value):
@@ -34,7 +44,10 @@ class HistoryStore:
         self.ready = threading.Event()
         self.info = {}
         self.info_at = 0
-        self.log_offsets = {}
+        self.offsets_path = self.path.with_name(self.path.stem+"-log-offsets.json")
+        self.log_offsets = self.load_offsets()
+        self.committed_offsets = dict(self.log_offsets)
+        self.offsets_saved_at = 0
         self.worker = threading.Thread(target=self.work, daemon=True, name="history-writer")
         self.worker.start()
         self.submit("event", {"timestamp": time.time(), "key": "session:"+self.session,
@@ -43,8 +56,28 @@ class HistoryStore:
     def connection(self):
         connection = sqlite3.connect(self.path, timeout=.2)
         connection.execute("PRAGMA busy_timeout=200")
-        connection.execute("PRAGMA synchronous=FULL")
+        # WAL+NORMAL: commits survive a killed process; only a power loss may drop the last commits.
+        connection.execute("PRAGMA synchronous=NORMAL")
         return connection
+
+    def load_offsets(self):
+        """Posições já gravadas no banco; arquivo ausente ou inválido apenas reprocessa (sem duplicar)."""
+        try:
+            payload = json.loads(self.offsets_path.read_text(encoding="utf-8"))
+            return {str(path): int(offset) for path, offset in payload.items() if int(offset) >= 0} if isinstance(payload, dict) else {}
+        except (OSError, ValueError, TypeError, AttributeError):
+            return {}
+
+    def save_offsets(self, force=False):
+        if not force and time.monotonic()-self.offsets_saved_at < 10:
+            return
+        temporary = self.offsets_path.with_name(self.offsets_path.name+".tmp")
+        try:
+            temporary.write_text(encode(self.committed_offsets), encoding="utf-8")
+            temporary.replace(self.offsets_path)
+            self.offsets_saved_at = time.monotonic()
+        except OSError:
+            pass
 
     def schema(self, connection):
         connection.execute("PRAGMA journal_mode=WAL")
@@ -105,13 +138,14 @@ class HistoryStore:
     def telemetry(self, data, source="live"):
         # Raw log lines are archived separately once, not copied on every 2 s sample.
         clean = dict(data)
-        miner = {k: v for k, v in data.get("miner", {}).items() if k not in ("recent_logs", "rate_points")}
+        miner = {k: v for k, v in data.get("miner", {}).items() if k not in RAW_MINER_FIELDS}
         clean["miner"] = miner
         self.submit("telemetry", {"data": clean, "source": source})
-        for line in data.get("miner", {}).get("recent_logs", "").splitlines():
-            key = hashlib.sha256(((data.get("log_path") or "")+"\n"+line).encode()).hexdigest()
-            self.submit("event", {"timestamp": data["collected_at"], "key": "log:"+key,
-                                  "kind": "miner_log", "wallet": data.get("wallet"), "data": {"line": line, "path": data.get("log_path")}})
+        events = [{"timestamp": data["collected_at"], "key": log_key(data.get("log_path") or "", line),
+                   "kind": "miner_log", "wallet": data.get("wallet"), "data": {"line": line, "path": data.get("log_path")}}
+                  for line in data.get("miner", {}).get("recent_logs", "").splitlines()]
+        if events:
+            self.submit("events", {"events": events})
 
     def finance(self, state):
         self.submit("finance", json.loads(encode(state)))
@@ -120,7 +154,10 @@ class HistoryStore:
         devices=rig.get('devices',[])
         if len(devices)>6 or len({item['uuid'] for item in devices})!=len(devices):
             raise ValueError('Amostra do rig precisa conter até seis UUIDs únicos')
-        self.submit('rig_telemetry',json.loads(encode(rig)))
+        # Raw lines are archived once by archive_log; copying 35 lines every 2 s per GPU bloated the database.
+        compact={**rig,'devices':[{**device,'miner':{k:v for k,v in (device.get('miner') or {}).items() if k not in RAW_MINER_FIELDS}}
+                                  for device in devices]}
+        self.submit('rig_telemetry',compact)
 
     def preferences(self, data):
         self.submit("preferences", data)
@@ -129,13 +166,18 @@ class HistoryStore:
         self.submit("event", {"timestamp": timestamp, "key": key or uuid.uuid4().hex, "kind": kind, "data": data,'wallet':wallet})
 
     def archive_log(self, path: Path, *, gpu_uuid=None, wallet=None):
-        """Segue o arquivo completo, inclusive rajadas maiores que o tail da UI."""
-        import datetime as dt
-        import re
-        stamp_pattern = re.compile(r"^\[(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)\]")
+        """Segue o arquivo completo, inclusive rajadas maiores que o tail da UI.
+
+        As linhas novas vão num único lote; a posição só é persistida depois do commit.
+        """
+        size = path.stat().st_size
         offset = self.log_offsets.get(str(path), 0)
-        if offset > path.stat().st_size:
+        if offset > size:
             offset = 0
+        if offset == size:
+            return
+        events = []
+        stamps = {}
         with path.open("rb") as handle:
             handle.seek(offset)
             while raw := handle.readline():
@@ -144,12 +186,19 @@ class HistoryStore:
                     handle.seek(-len(raw), 1)
                     break
                 line = raw.decode("utf-8-sig", errors="replace").rstrip()
-                match = stamp_pattern.match(line)
-                try:stamp = dt.datetime.strptime(match[1], "%Y-%m-%d %H:%M:%S").timestamp() if match else time.time()
-                except ValueError:stamp=time.time()
-                key = "log:"+hashlib.sha256((str(path)+"\n"+line).encode()).hexdigest()
-                self.event(stamp, "miner_log", {"line": line, "path": str(path),'gpu_uuid':gpu_uuid}, key,wallet=wallet)
-            self.log_offsets[str(path)] = handle.tell()
+                match = STAMP.match(line)
+                stamp = None
+                if match:
+                    if match[1] not in stamps:
+                        try:stamps[match[1]] = dt.datetime.strptime(match[1], "%Y-%m-%d %H:%M:%S").timestamp()
+                        except ValueError:stamps[match[1]] = None
+                    stamp = stamps[match[1]]
+                events.append({"timestamp": time.time() if stamp is None else stamp, "key": log_key(path, line), "kind": "miner_log",
+                               "data": {"line": line, "path": str(path), 'gpu_uuid': gpu_uuid}, 'wallet': wallet})
+            position = handle.tell()
+        self.log_offsets[str(path)] = position
+        if events:
+            self.submit("events", {"events": events, "offset": [str(path), position]})
 
     def archive_thermal(self, path: Path):
         """Arquiva ajustes do supervisor, inclusive períodos com o painel fechado."""
@@ -204,6 +253,10 @@ class HistoryStore:
         elif kind == "event":
             connection.execute("INSERT OR IGNORE INTO events VALUES(?,?,?,?,?,?)", (
                 payload.get('wallet') or self.wallet, payload["key"], payload["timestamp"], self.session, payload["kind"], encode(payload["data"])))
+        elif kind == "events":
+            connection.executemany("INSERT OR IGNORE INTO events VALUES(?,?,?,?,?,?)", [
+                (item.get('wallet') or self.wallet, item["key"], item["timestamp"], self.session, item["kind"], encode(item["data"]))
+                for item in payload["events"]])
         elif kind == "finance":
             wallet=payload.get('wallet') or self.wallet
             connection.executemany("INSERT OR IGNORE INTO finance_snapshots VALUES(?,?,?)", [
@@ -237,6 +290,10 @@ class HistoryStore:
                     with connection:
                         self.write(connection, *job)
                     self.last_commit, self.last_error = time.time(), None
+                    if job[0] == "events" and job[1].get("offset"):
+                        path, position = job[1]["offset"]
+                        self.committed_offsets[path] = position
+                        self.save_offsets()
                     if time.monotonic()-self.info_at > 15:
                         self.info = self.stats()
                         self.info_at = time.monotonic()
@@ -282,14 +339,15 @@ class HistoryStore:
                         break
             self.jobs.task_done()
             if stop:break
+        self.save_offsets(force=True)
         if connection:
             connection.close()
 
+
     def flush(self, timeout=4):
-        deadline = time.monotonic()+timeout
-        while self.jobs.unfinished_tasks and time.monotonic() < deadline:
-            time.sleep(.01)
-        return not self.jobs.unfinished_tasks
+        with self.jobs.all_tasks_done:
+            return self.jobs.all_tasks_done.wait_for(lambda: not self.jobs.unfinished_tasks, timeout)
+
 
     def close(self):
         with self.enqueue_lock:

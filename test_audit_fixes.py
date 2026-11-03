@@ -152,8 +152,9 @@ class HistoryRegression(unittest.TestCase):
                 charts={'temp':Chart()},restored_points={},last_data={'rig':{'devices':[{'uuid':'GPU-X','wallet':'B'}]}},
                 selected_gpu_uuid=None,_chart_context=None,restore_window_preferences=lambda _:None,
                 tabs=SimpleNamespace(select=lambda *_:None),after=lambda *_:None,poll=lambda:None,
-                refresh_finance=lambda:None,refresh_summary=lambda:None)
+                refresh_finance=lambda:None,refresh_summary=lambda:None,all_charts=lambda:[],state=lambda:'normal')
             fake.history_restore.put({'points':{'temp':[(1,60)]},'preferences':{}})
+
             with patch('monitor.STATE_DIR',Path(temporary)):Monitor.poll(fake)
             self.assertEqual(calls,[])
             self.assertEqual(fake.charts['temp'].points,{})

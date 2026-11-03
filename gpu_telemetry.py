@@ -18,6 +18,16 @@ GPU_LABEL=re.compile(r"\bGPU\s*(?:\[\s*)?(\d+)(?:\s*\])?(?!\d)")
 RATE=re.compile(r"\bGPU\s*(?:\[\s*)?(\d+)(?:\s*\])?\s+.*?:\s*([\d.]+)\s+([kMGTPE]?H)/s\s+\[(.*?)\]")
 AVERAGE=re.compile(r"Average hashrate:\s*1m\s+([\d.]+)\s+([kMGTPE]?H)/s\s*\|\s*15m\s+([\d.]+)\s+([kMGTPE]?H)/s",re.I)
 UNITS={"H":1e-12,"kH":1e-9,"MH":1e-6,"GH":1e-3,"TH":1,"PH":1e3,"EH":1e6}
+COUNTERS=re.compile(r"([A-Z]+):([\d.]+)")
+CACHE_LIMIT=32
+_STAMPS={}
+_PARSED={}
+_TAILS={}
+
+
+def _remember(cache,key,value):
+    if key not in cache and len(cache)>=CACHE_LIMIT:cache.pop(next(iter(cache)))
+    cache[key]=value
 
 
 def read_gpu_samples(devices, command=smi_command, now=None):
@@ -60,10 +70,15 @@ def read_gpu_samples(devices, command=smi_command, now=None):
 def log_timestamp(line):
     match=STAMP.match(line)
     if match:
+        text=match[1]
+        if text in _STAMPS:return _STAMPS[text]
         try:
-            return dt.datetime.strptime(match[1],"%Y-%m-%d %H:%M:%S").timestamp()
+            value=dt.datetime.strptime(text,"%Y-%m-%d %H:%M:%S").timestamp()
         except ValueError:
-            pass
+            value=None
+        if len(_STAMPS)>=4096:_STAMPS.clear()
+        _STAMPS[text]=value
+        return value
     return None
 
 
@@ -72,8 +87,23 @@ def parse_gpu_log(text,gpu_uuid,index,now=None,*,allow_local_gpu0=True):
 
     Em log compartilhado, médias globais e shares sem identificador não podem ser
     atribuídos a uma placa. `Total:` jamais participa de hashrate por GPU.
+    O mesmo texto não é reprocessado: só a janela de 900 s dos pontos é reaplicada.
     """
     stamp_now=time.time() if now is None else float(now)
+    key=(gpu_uuid,int(index),bool(allow_local_gpu0))
+    cached=_PARSED.get(key)
+    # Reuse only while time moves forward and no skipped future-dated line has become current.
+    if cached and cached[0]==text and cached[2]<=stamp_now<cached[3]-5:
+        result=dict(cached[1])
+        result["rate_points"]=[point for point in result["rate_points"] if stamp_now-900<=point[0]<=stamp_now+5]
+        return result
+    result,future=_parse_gpu_log(text,gpu_uuid,index,stamp_now,allow_local_gpu0)
+    _remember(_PARSED,key,(text,{**result,"rate_points":list(result["rate_points"])},stamp_now,float("inf") if future is None else future))
+    return result
+
+
+def _parse_gpu_log(text,gpu_uuid,index,stamp_now,allow_local_gpu0):
+    future=None
     lines=text.splitlines()
     labels={int(match[1]) for line in lines if (match:=GPU_LABEL.search(line))}
     target=int(index) if int(index) in labels else 0 if allow_local_gpu0 and labels=={0} else None
@@ -84,7 +114,10 @@ def parse_gpu_log(text,gpu_uuid,index,now=None,*,allow_local_gpu0=True):
             "isolated_log":len(labels)<=1,"recent_logs":"\n".join(lines[-35:])}
     for line in lines:
         stamp=log_timestamp(line)
-        if stamp is None or stamp>stamp_now+5:continue
+        if stamp is not None and stamp>stamp_now+5:
+            future=stamp if future is None else min(future,stamp)
+            continue
+        if stamp is None:continue
         if result['last_log_at'] is None or stamp>=result['last_log_at']:result['last_log_at']=stamp
         label=GPU_LABEL.search(line)
         belongs=label is not None and target is not None and int(label[1])==target
@@ -113,7 +146,7 @@ def parse_gpu_log(text,gpu_uuid,index,now=None,*,allow_local_gpu0=True):
                 result["rate_points"].append((stamp,rate))
             if stamp is not None and stamp<=stamp_now+5 and rate is not None and rate>=0 and (result["hashrate_at"] is None or stamp>=result["hashrate_at"]):
                 result["hashrate"],result["hashrate_at"]=rate,stamp
-                counters=dict(re.findall(r"([A-Z]+):([\d.]+)",match[4]))
+                counters=dict(COUNTERS.findall(match[4]))
                 for key,code in (("accepted","A"),("rejected","R"),("hw_errors","HW")):
                     value=numeric(counters.get(code))
                     if value is not None and value>=0 and value.is_integer():result[key]=int(value)
@@ -125,22 +158,42 @@ def parse_gpu_log(text,gpu_uuid,index,now=None,*,allow_local_gpu0=True):
                 if first is not None:result["average_1m"]=numeric(first*UNITS[first_unit])
                 if last is not None:result["average_15m"]=numeric(last*UNITS[last_unit])
     result["rate_points"]=sorted(dict(result["rate_points"]).items())
-    return result
+    return result,future
+
 
 
 def read_log_tail(path,limit=200_000):
+    """Lê só os bytes acrescentados desde a última chamada, conferindo a emenda com o que já foi lido."""
     path=Path(path)
     with path.open("rb") as handle:
-        signature=handle.read(2)
         handle.seek(0,2)
         size=handle.tell()
+        cached=_TAILS.get((str(path),limit))
+        if cached and cached["size"]<=size and size-cached["size"]<limit:
+            check=cached["body"][-256:]
+            handle.seek(cached["size"]-len(check))
+            if handle.read(len(check))==check:
+                body=cached["body"]+handle.read(size-cached["size"])
+                start=cached["start"]
+                if len(body)>limit:
+                    cut=len(body)-limit
+                    if cached["signature"] in (b'\xff\xfe',b'\xfe\xff'):cut+=cut%2
+                    body,start=body[cut:],start+cut
+                return _remember_tail(path,limit,cached["signature"],size,start,body)
+        handle.seek(0)
+        signature=handle.read(2)
         start=max(0,size-limit)
         if signature in (b'\xff\xfe',b'\xfe\xff'):start-=start%2
         handle.seek(start)
-        body=handle.read()
+        body=handle.read(size-start)
+    return _remember_tail(path,limit,signature,size,start,body)
+
+
+def _remember_tail(path,limit,signature,size,start,body):
+    _remember(_TAILS,(str(path),limit),{"signature":signature,"size":size,"start":start,"body":body})
     encoding=('utf-16-le' if signature==b'\xff\xfe' else 'utf-16-be') if signature in (b'\xff\xfe',b'\xfe\xff') else 'utf-8-sig'
-    text=body.decode(encoding,errors="replace").lstrip('\ufeff')
-    return text.split("\n",1)[-1] if size>limit else text
+    text=body.decode(encoding,errors="replace").lstrip('﻿')
+    return text.split("\n",1)[-1] if start>0 or size>limit else text
 
 
 def read_device_payload(gpu,log_path,*,miner_running=None,now=None,allow_local_gpu0=True,miner_index=None):

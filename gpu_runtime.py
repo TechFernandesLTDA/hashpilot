@@ -8,13 +8,31 @@ import time
 import tkinter as tk
 from tkinter import ttk
 
-from config import STATE_DIR, LOG_DIR
+from config import STATE_DIR, LOG_DIR, SETTINGS_PATH
 from gpu_agent import GPUAgent, BackgroundAdvisor, detect_nvidia_gpus,numeric
 from ai_advisor import RoutedAdvisor, configuration
 from onboarding import read_settings
 from rig_config import resolve_devices
 from gpu_telemetry import read_gpu_samples, read_device_payload
 from rig_panel import totals
+from file_cache import cached_load, cached_glob, newest
+
+SNAPSHOT_FRESH_SECONDS=5
+
+
+def cached_settings():
+    return cached_load(SETTINGS_PATH,read_settings)
+
+
+def service_snapshot(device,managed,manager_fresh,now):
+    """Snapshot que o serviço acabou de gravar para esta GPU; evita reconsultar driver e log."""
+    if not manager_fresh or not managed.get('miner_log'):return None
+    snapshot=read_json(Path(device['log_dir'])/'latest.json')
+    collected=numeric(snapshot.get('collected_at'))
+    gpu=snapshot.get('gpu')
+    if snapshot.get('gpu_uuid')!=device['uuid'] or collected is None or not 0<=now-collected<=SNAPSHOT_FRESH_SECONDS:return None
+    if not isinstance(gpu,dict) or gpu.get('uuid')!=device['uuid'] or not isinstance(snapshot.get('miner'),dict):return None
+    return snapshot
 
 def read_json(path):
     try:
@@ -26,30 +44,36 @@ class RigTelemetry:
     """One batch sensor query; each process/log belongs to an explicit UUID."""
     def __init__(self):
         self.detected=[];self.detected_at=0;self.error=None
+        self.capabilities={}
+        self.sources={'service':0,'direct':0}
     def sample(self,processes=None):
         now=time.time()
         if now-self.detected_at>=30:
-            try:self.detected=detect_nvidia_gpus(max_devices=6);self.error=None
+            try:self.detected=detect_nvidia_gpus(max_devices=6,cache=self.capabilities);self.error=None
             except Exception as error:self.error=str(error);self.detected=[]
             self.detected_at=now
-        settings=read_settings()
+        settings=cached_settings()
         devices=resolve_devices(self.detected,settings,LOG_DIR)
         manager=read_json(STATE_DIR/'rig-manager.json')
         manager_at=numeric(manager.get('sampled_at',manager.get('updated_at',0)))
         manager_fresh=manager_at is not None and 0<=now-manager_at<=15
         managed_devices=manager.get('devices')
         if not isinstance(managed_devices,dict):managed_devices={}
-        samples=read_gpu_samples(devices)
+        def managed_entry(device):
+            entry=managed_devices.get(device['uuid'],{})
+            return entry if isinstance(entry,dict) else {}
+        snapshots={device['uuid']:service_snapshot(device,managed_entry(device),manager_fresh,now) for device in devices}
+        # One driver query only for cards the running service did not just sample.
+        direct=[device for device in devices if snapshots[device['uuid']] is None]
+        samples=read_gpu_samples(direct) if direct else {}
+        self.sources['service']+=len(devices)-len(direct);self.sources['direct']+=len(direct)
         result=[]
         for device in devices:
-            identifier=device['uuid'];managed=managed_devices.get(identifier,{})
-            if not isinstance(managed,dict):managed={}
-            logs=list(Path(device['log_dir']).glob('mining-*.log'))
-            path=Path(managed['miner_log']) if managed.get('miner_log') else max(logs,key=lambda p:p.stat().st_mtime) if logs else None
+            identifier=device['uuid'];managed=managed_entry(device)
+            path=Path(managed['miner_log']) if managed.get('miner_log') else newest(cached_glob(device['log_dir'],'mining-*.log'))
             legacy=False
             if path is None and device['index']==0:
-                logs=list(LOG_DIR.glob('mining-*.log'))
-                path=max(logs,key=lambda p:p.stat().st_mtime) if logs else None
+                path=newest(cached_glob(LOG_DIR,'mining-*.log'))
                 legacy=path is not None
             pid=managed.get('miner_pid')
             running=(pid in processes) if pid and processes is not None else False if managed and not pid else None
@@ -59,7 +83,15 @@ class RigTelemetry:
                 legacy_control=read_json(LOG_DIR/'thermal-control.json')
                 legacy_pid=legacy_control.get('miner_pid')
                 running=(legacy_pid in processes) if legacy_pid and processes is not None else None
-            payload=read_device_payload(device,path,miner_running=running,now=now,allow_local_gpu0=True)
+            snapshot=snapshots[identifier]
+            if snapshot is not None:
+                miner={**snapshot['miner'],'gpu_index':device['index']}
+                payload={'identity':dict(device),'miner_running':running,'log_path':str(path),
+                         'log_error':snapshot.get('log_error'),'miner':miner}
+                samples[identifier]=snapshot['gpu']
+            else:
+                payload=read_device_payload(device,path,miner_running=running,now=now,allow_local_gpu0=True)
+
             control=read_json(Path(device['state_dir'])/'gpu-agent-control.json')
             if legacy and not control:control=read_json(LOG_DIR/'thermal-control.json')
             if control:
@@ -151,7 +183,7 @@ class GPURuntime:
                             status=agent.observe(gpu,sample,hashrate_ths=miner.get('hashrate') if device.get('miner_running') and not miner.get('paused') else None,
                                 accepted=miner.get('accepted',0),rejected=miner.get('rejected',0),hash_sampled_at=miner.get('hashrate_at'),hw_errors=miner.get('hw_errors',0))
                         plan=agent.recommend(gpu,sample,ollama=False) if sample and not sample.get('error') else {}
-                        ai_settings=read_settings()
+                        ai_settings=cached_settings()
                         try:ai_config=configuration(ai_settings)
                         except ValueError:
                             ai_config={'provider':'unavailable'}

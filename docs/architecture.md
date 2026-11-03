@@ -55,7 +55,10 @@ Leituras locais normalmente ocorrem a cada 2 s. A taxa de hash mantém o horári
 - Windows: `%LOCALAPPDATA%\PearlMonitor` — nome legado mantido para compatibilidade.
 - O produto suporta somente Windows 10/11 x64.
 
-`history.sqlite3` usa WAL e `synchronous=FULL`. A fila de escrita tenta novamente se o banco estiver ocupado; a interface continua responsiva. O fechamento normal aguarda gravações pendentes. Commits concluídos sobrevivem ao encerramento forçado do processo.
+`history.sqlite3` usa WAL e, desde a v0.5.6, `synchronous=NORMAL`. A fila de escrita tenta novamente se o banco estiver ocupado; a interface continua responsiva. O fechamento normal aguarda gravações pendentes. Commits concluídos sobrevivem ao encerramento forçado do processo; numa queda de energia, os últimos commits podem ser perdidos, sem corromper o banco. Linhas do log entram em lotes, e a posição já arquivada de cada log fica em `history-log-offsets.json`, gravada somente depois do commit; sem esse arquivo, o log é relido e a chave por hash evita duplicatas. As linhas brutas do log são arquivadas uma vez em `events`; as amostras de 2 s, inclusive `gpu_telemetry`, não copiam `recent_logs` nem `rate_points`.
+
+Com o serviço do rig ativo, o painel usa o `latest.json` recém-gravado por GPU (até 5 s) em vez de consultar o driver e reprocessar o log; sem esse snapshot, faz a consulta direta. Capacidades fixas da GPU são consultadas uma vez por placa e reaproveitadas por até 10 min.
+
 
 Os registros são separados por carteira e sessão; as tabelas `gpu_devices` e `gpu_telemetry` preservam também a identidade e as observações por UUID. O histórico anterior de uma GPU permanece disponível e sua importação não deve duplicar linhas. Não há expurgo automático. A janela de 15 minutos dos gráficos e o cache financeiro de trabalho de 35 dias não apagam o arquivo permanente. `latest.json` e `finance-latest.json` são resumos, não substitutos do banco.
 
