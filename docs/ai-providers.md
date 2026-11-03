@@ -1,6 +1,6 @@
 # IA para rigs com CPU simples
 
-Abra **Benchmark / IA → Configurar IA**, ou **Configurar → Escolher provedor de IA**. A IA é opcional. Sensores, benchmark, validação de ajustes e proteção térmica são locais e continuam funcionando sem modelo ou conexão.
+Abra **Benchmark / IA → Configurar IA**, ou **Configurações → IA**. A IA é opcional. Sensores, benchmark, validação de ajustes e proteção térmica são locais e continuam funcionando sem modelo ou conexão.
 
 | Opção | Processamento | Cadastro e condições |
 | --- | --- | --- |

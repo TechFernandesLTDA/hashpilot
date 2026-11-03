@@ -577,7 +577,7 @@ class Monitor(tk.Tk):
             if result.get('seen'):return
             from tkinter import messagebox
             if result.get('ok'):
-                messagebox.showinfo('Backup restaurado','Históricos e configurações restaurados. Credenciais locais preservadas. Confira as carteiras em Configurar antes de iniciar o rig.\nBackup anterior: '+str(result.get('rollback','')),parent=self)
+                messagebox.showinfo('Backup restaurado','Históricos e configurações restaurados. Credenciais locais preservadas. Confira as carteiras em Configurações antes de iniciar o rig.\nBackup anterior: '+str(result.get('rollback','')),parent=self)
             else:messagebox.showerror('Restauração não concluída',str(result.get('error','Verifique o backup anterior antes de continuar.')),parent=self)
             result['seen']=True
             __import__('contribution').atomic_json(path,result)
@@ -635,11 +635,9 @@ class Monitor(tk.Tk):
             self.state("normal")
         self.lift()
 
-    def configure_setup(self):
-        from onboarding import run_setup
-        if run_setup(self):
-            self.restart_requested = True
-            self.close()
+    def configure_setup(self, section=None):
+        from settings_ui import show_settings
+        show_settings(self, section)
 
     def open_gpu_agent(self):
         from gpu_runtime import show_gpu_panel
@@ -653,10 +651,22 @@ class Monitor(tk.Tk):
             self.apply(project_selected(self.last_data,identifier))
 
     def configure_gpu(self,identifier):
-        from onboarding import run_setup
-        changed=run_setup(self,selected_uuid=identifier)
-        if changed:
-            self.restart_requested=True;self.close()
+        self.select_gpu(identifier)
+        self.configure_setup('GPUs')
+
+    def show_more_menu(self, anchor):
+        menu = tk.Menu(self, tearoff=0, bg=PANEL, fg=TEXT, activebackground=BLUE, activeforeground=TEXT,
+                       font=(BODY_FONT, 10), bd=0)
+        for text, command in (("Benchmark / IA", self.open_gpu_agent), ("Resumo compacto", self.show_summary),
+                              ("Console", self.open_console)):
+            menu.add_command(label=text, command=command)
+        menu.add_separator()
+        menu.add_command(label="Recolher para a bandeja", command=self.hide_to_tray)
+        menu.add_command(label="Sair do HashPilot", command=self.close)
+        try:
+            menu.tk_popup(anchor.winfo_rootx(), anchor.winfo_rooty()+anchor.winfo_height())
+        finally:
+            menu.grab_release()
 
     def toggle_gpu(self,identifier,enabled):
         from tkinter import messagebox
@@ -953,9 +963,19 @@ class Monitor(tk.Tk):
         self.status.pack(anchor="e", pady=(0, 4))
         buttons = tk.Frame(controls, bg=BG)
         buttons.pack(anchor="e")
-        for text, command in (("Configurar", self.configure_setup), ("Iniciar todas", self.start_rig), ("Parar", self.stop_mining), ("Benchmark / IA", self.open_gpu_agent), ("Resumo", self.show_summary), ("Console", self.open_console), ("Recolher", self.hide_to_tray), ("Sair", self.close)):
-            tk.Button(buttons, text=text, command=command, bg='#9E3333' if text=='Parar' else PANEL, fg=TEXT, activebackground=BLUE,
-                      activeforeground=TEXT, relief="flat", padx=10, pady=4, font=(BODY_FONT, 9)).pack(side="left", padx=(5, 0))
+        # Primary actions stay visible; everything else lives in the "⋯" menu so the header fits narrow windows.
+        for text, command, color in (("Iniciar todas", self.start_rig, TEAL), ("Parar", self.stop_mining, '#9E3333'),
+                                     ("Configurações", self.configure_setup, PANEL), ("⋯", None, PANEL)):
+            button = tk.Button(buttons, text=text, command=command, bg=color, fg=TEXT, activebackground=BLUE,
+                               activeforeground=TEXT, relief="flat", padx=12 if text != "⋯" else 10, pady=4, cursor="hand2",
+                               highlightthickness=2, highlightbackground=BG, highlightcolor=TEAL,
+                               font=(BODY_FONT, 10 if text == "⋯" else 9, "bold"))
+            button.pack(side="left", padx=(5, 0))
+            if text == "⋯":
+                button.configure(command=lambda b=button: self.show_more_menu(b))
+                self.more_button = button
+        self.bind_all("<Control-comma>", lambda _: self.configure_setup())
+
         style = ttk.Style(self)
         style.theme_use("clam")
         style.configure("TNotebook", background=BG, borderwidth=0)
@@ -1369,7 +1389,7 @@ class Monitor(tk.Tk):
         elif support.get('enabled') or support.get('configured_enabled'):
             note='Ajuda pela ferramenta: 5% habilitada · Aplicável ao iniciar pelo novo minerador'
         else:
-            note='Ajuda pela ferramenta: sem contribuição adicional · Altere em Configurar'
+            note='Ajuda pela ferramenta: sem contribuição adicional · Altere em Configurações'
         self.support_status_label.configure(text=note)
         now = time.time()
         gpu, miner = data.get("gpu") or {}, data["miner"]
@@ -1468,7 +1488,7 @@ class Monitor(tk.Tk):
         self.log_title.configure(text="ATIVIDADE DO MINERADOR  ·  " + filename)
         errors = [data.get(key) for key in ("gpu_error", "process_error", "log_error") if data.get(key)]
         if data.get('miner_executable_available') is False and data['miner_running'] is False:
-            errors=['Minerador indisponível: arquivo ausente ou bloqueado. Abra Configurar > Segurança do minerador.']
+            errors=['Minerador indisponível: arquivo ausente ou bloqueado. Abra Configurações > Segurança.']
         if self.history.last_error:
             errors.append("Histórico aguardando gravação: " + self.history.last_error)
         archived = self.history.info.get("telemetry", (0, None, None))[0]

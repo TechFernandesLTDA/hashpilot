@@ -3,7 +3,7 @@ import json
 from pathlib import Path
 import sys
 import tkinter as tk
-from unittest.mock import patch
+from unittest.mock import ANY,patch
 
 sys.path.insert(0,str(Path(__file__).resolve().parents[1]))
 import defender_setup
@@ -27,9 +27,9 @@ def inspect():
         assert str(add.cget('state'))=='disabled'
         add.invoke();launch.assert_not_called()
         consent.invoke();assert str(add.cget('state'))=='normal'
-        add.invoke();launch.assert_called_once_with('Add')
+        add.invoke();launch.assert_called_once_with('Add',ANY)
         consent.invoke();assert str(add.cget('state'))=='disabled'
-        launch.reset_mock();remove.invoke();launch.assert_called_once_with('Remove')
+        launch.reset_mock();remove.invoke();launch.assert_called_once_with('Remove',ANY)
     reports.append({'client':[window.winfo_width(),window.winfo_height()],'errors':inspect_widgets(window),'consent_checks_passed':True})
     window.destroy()
 for width,height in [(1280,720),(1920,1080),(3840,2160)]:

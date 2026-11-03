@@ -1,6 +1,6 @@
 # Central de operação
 
-A partir da v0.4.0, abra **Configurar → Central de operação**. As três abas principais continuam disponíveis; a central reúne as operações menos frequentes.
+Abra **Configurações → Operação** (até a v0.5.7: **Configurar → Central de operação**). As três abas principais continuam disponíveis; a central reúne as operações menos frequentes.
 
 ## Saúde e recuperação
 

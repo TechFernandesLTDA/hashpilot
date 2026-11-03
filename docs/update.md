@@ -2,7 +2,7 @@
 
 O HashPilot consulta as releases públicas de `TechFernandesLTDA/hashpilot` em segundo plano, inicialmente após dez segundos e depois a cada seis horas. A consulta não usa credenciais nem envia carteiras ou dados do rig. Falta de internet ou limite da API não impede a mineração.
 
-Abra **Configurar → Atualizações** para verificar manualmente. Na ausência de preferência salva, o canal acompanha a build instalada: a v0.3.5 é de pré-lançamento e considera outras releases experimentais. A tela informa esse canal. A opção **Incluir pré-lançamentos** pode ser desmarcada para considerar somente estáveis; a escolha salva prevalece nas próximas aberturas. Builds estáveis futuras devem declarar seu canal em `app_version.py`. Rascunhos, tags sem release, versões antigas e pacotes sem os assets obrigatórios são ignorados.
+Abra **Configurações → Atualizações** para verificar manualmente. Na ausência de preferência salva, o canal acompanha a build instalada: a v0.3.5 é de pré-lançamento e considera outras releases experimentais. A tela informa esse canal. A opção **Incluir pré-lançamentos** pode ser desmarcada para considerar somente estáveis; a escolha salva prevalece nas próximas aberturas. Builds estáveis futuras devem declarar seu canal em `app_version.py`. Rascunhos, tags sem release, versões antigas e pacotes sem os assets obrigatórios são ignorados.
 
 A versão em execução vem do `RELEASE-MANIFEST.json` ao lado do aplicativo instalado. Em um clone de desenvolvimento, usa `app_version.py`; o ponteiro `installation.json` não é usado para afirmar qual interface está em execução.
 
@@ -18,7 +18,7 @@ Os históricos, carteiras, opções de ajuda, configurações de GPU, chaves loc
 
 O serviço do rig, seus supervisores e os mineradores continuam executando o código atual. A atualização da interface não aplica silenciosamente código novo ao controle de hardware e não altera exceções do Defender. Uma atualização do serviço exige um procedimento separado, com consentimento e elevação do administrador, e pode interromper a mineração.
 
-Na v0.4.0, **Configurar → Central de operação → Saúde e versões** identifica separadamente os componentes. O botão **Atualizar serviço (UAC)** executa esse procedimento e preserva o opt-in de referência da unidade autorizada. Versões antigas sem identidade publicada aparecem como desconhecidas. O UAC não é desativado nem previamente aprovado pelo programa.
+A seção **Configurações → Operação → Saúde e versões** identifica separadamente os componentes. O botão **Atualizar serviço (UAC)** executa esse procedimento e preserva o opt-in de referência da unidade autorizada. Versões antigas sem identidade publicada aparecem como desconhecidas. O UAC não é desativado nem previamente aprovado pelo programa. Desde a v0.5.8, o botão pede confirmação informando a parada de cerca de 30 a 60 s e acompanha o resultado: mostra quando o serviço novo está ativo ou avisa se ele não voltar em 4 min.
 
 ## Limites e recuperação
 
@@ -30,7 +30,7 @@ Referências: [releases na API pública do GitHub](https://docs.github.com/en/re
 
 ## Atualização do SRBMiner
 
-Em **Configurar → Atualizações → Atualizações do minerador SRBMiner** ou na **Central de operação → Atualizar minerador**, confira versão selecionada, versão em execução e release oficial. O painel consulta automaticamente a cada seis horas; a instalação exige confirmação. A ativação exige o serviço atualizado e ativo. GPUs desativadas não são ligadas pela troca.
+Em **Configurações → Minerador**, confira versão selecionada, versão em execução e release oficial. O painel consulta automaticamente a cada seis horas; a instalação exige confirmação. A ativação exige o serviço atualizado e ativo. GPUs desativadas não são ligadas pela troca.
 
 A versão anterior fica disponível para voltar. O serviço tenta rollback se uma GPU habilitada não apresentar hashrate válido na nova versão em 180 segundos. Se um processo não puder ser parado com identidade confirmada, a troca é bloqueada. Confira Saúde após um rollback: selecionar a versão anterior não comprova sozinho que a mineração retomou.
 
