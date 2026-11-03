@@ -1,0 +1,383 @@
+{
+  "kind": "synthetic INT8 MMA; NOT Pearl hashrate",
+  "sampled_at": 1793655611.9560869,
+  "gpu": "NVIDIA GeForce RTX 3070",
+  "sm_count": 46,
+  "sm": "86",
+  "results": [
+    {
+      "chains": 1,
+      "waves": 1,
+      "blocks": 46,
+      "warps_per_block": 4,
+      "iterations": 2048,
+      "verified_outputs": 23552,
+      "kernel_ms": [
+        0.07024639844894409,
+        0.031231999397277832,
+        0.030105599761009218,
+        0.030105599761009218,
+        0.0302047997713089,
+        0.030105599761009218,
+        0.03020800054073334,
+        0.030195200443267824,
+        0.030108800530433653
+      ],
+      "tmac_s": [
+        21.972711855424684,
+        49.420591117664124,
+        51.26966027094548,
+        51.26966027094548,
+        51.101278064625745,
+        51.26966027094548,
+        51.095863492146556,
+        51.11752362432594,
+        51.26420995880732
+      ],
+      "mean_tmac_s": 47.75346210287009,
+      "median_tmac_s": 51.11752362432594,
+      "median_dense_tops": 102.23504724865188,
+      "correctness": "all outputs exact; warp-uniform signed operands; not a layout or PoW proof test",
+      "telemetry_before": {
+        "clocks.sm": 1815.0,
+        "power.draw": 20.01,
+        "temperature.gpu": 40.0,
+        "utilization.gpu": 53.0
+      },
+      "telemetry_after": {
+        "clocks.sm": 1815.0,
+        "power.draw": 20.01,
+        "temperature.gpu": 40.0,
+        "utilization.gpu": 53.0
+      }
+    },
+    {
+      "chains": 2,
+      "waves": 1,
+      "blocks": 46,
+      "warps_per_block": 4,
+      "iterations": 2048,
+      "verified_outputs": 47104,
+      "kernel_ms": [
+        0.04157440066337585,
+        0.04216000139713287,
+        0.04208639860153198,
+        0.04216960072517395,
+        0.04208639860153198,
+        0.04216000139713287,
+        0.0421887993812561,
+        0.07895039916038513,
+        0.042185598611831666
+      ],
+      "tmac_s": [
+        74.25260965263749,
+        73.22124387334424,
+        73.34929684118019,
+        73.20457606697593,
+        73.34929684118019,
+        73.22124387334424,
+        73.1712632090572,
+        39.100597043579796,
+        73.17681496960427
+      ],
+      "mean_tmac_s": 69.56077137454484,
+      "median_tmac_s": 73.22124387334424,
+      "median_dense_tops": 146.44248774668847,
+      "correctness": "all outputs exact; warp-uniform signed operands; not a layout or PoW proof test",
+      "telemetry_before": {
+        "clocks.sm": 1815.0,
+        "power.draw": 20.01,
+        "temperature.gpu": 40.0,
+        "utilization.gpu": 53.0
+      },
+      "telemetry_after": {
+        "clocks.sm": 1815.0,
+        "power.draw": 20.01,
+        "temperature.gpu": 40.0,
+        "utilization.gpu": 53.0
+      }
+    },
+    {
+      "chains": 4,
+      "waves": 1,
+      "blocks": 46,
+      "warps_per_block": 4,
+      "iterations": 2048,
+      "verified_outputs": 94208,
+      "kernel_ms": [
+        0.07987200021743775,
+        0.0834559977054596,
+        0.08028159737586975,
+        0.08028159737586975,
+        0.08355839848518372,
+        0.08079360127449035,
+        0.08028159737586975,
+        0.1029088020324707,
+        0.08252800107002259
+      ],
+      "tmac_s": [
+        77.29887158443896,
+        73.97929037754591,
+        76.90449230966254,
+        76.90449230966254,
+        73.888628790495,
+        76.41713440924899,
+        76.90449230966254,
+        59.995018560724475,
+        74.81115994511401
+      ],
+      "mean_tmac_s": 74.12262006628389,
+      "median_tmac_s": 76.41713440924899,
+      "median_dense_tops": 152.83426881849797,
+      "correctness": "all outputs exact; warp-uniform signed operands; not a layout or PoW proof test",
+      "telemetry_before": {
+        "clocks.sm": 1815.0,
+        "power.draw": 20.01,
+        "temperature.gpu": 40.0,
+        "utilization.gpu": 53.0
+      },
+      "telemetry_after": {
+        "clocks.sm": 1815.0,
+        "power.draw": 20.01,
+        "temperature.gpu": 40.0,
+        "utilization.gpu": 53.0
+      }
+    },
+    {
+      "chains": 8,
+      "waves": 1,
+      "blocks": 46,
+      "warps_per_block": 4,
+      "iterations": 2048,
+      "verified_outputs": 188416,
+      "kernel_ms": [
+        0.18124799728393554,
+        0.1854464054107666,
+        0.19640320539474487,
+        0.15851520299911498,
+        0.15902719497680665,
+        0.1597440004348755,
+        0.16064319610595704,
+        0.1845247983932495,
+        0.15892479419708253
+      ],
+      "tmac_s": [
+        68.12782022995869,
+        66.58544256303553,
+        62.87082204784827,
+        77.89808638146172,
+        77.64729157048201,
+        77.29887158443896,
+        76.86619337339057,
+        66.91800280244462,
+        77.69732242463826
+      ],
+      "mean_tmac_s": 72.43442810863318,
+      "median_tmac_s": 76.86619337339057,
+      "median_dense_tops": 153.73238674678115,
+      "correctness": "all outputs exact; warp-uniform signed operands; not a layout or PoW proof test",
+      "telemetry_before": {
+        "clocks.sm": 1815.0,
+        "power.draw": 20.01,
+        "temperature.gpu": 40.0,
+        "utilization.gpu": 53.0
+      },
+      "telemetry_after": {
+        "clocks.sm": 1815.0,
+        "power.draw": 33.63,
+        "temperature.gpu": 42.0,
+        "utilization.gpu": 5.0
+      }
+    },
+    {
+      "chains": 1,
+      "waves": 4,
+      "blocks": 184,
+      "warps_per_block": 4,
+      "iterations": 2048,
+      "verified_outputs": 94208,
+      "kernel_ms": [
+        0.07833600044250488,
+        0.07987200021743775,
+        0.07884479761123657,
+        0.078847998380661,
+        0.07875199913978577,
+        0.07874559760093688,
+        0.078847998380661,
+        0.078847998380661,
+        0.10318399667739868
+      ],
+      "tmac_s": [
+        78.81453550250437,
+        77.29887158443896,
+        78.30593361964708,
+        78.30275485489427,
+        78.39820646382636,
+        78.40457976188556,
+        78.30275485489427,
+        78.30275485489427,
+        59.83501014506012
+      ],
+      "mean_tmac_s": 76.21837796022726,
+      "median_tmac_s": 78.30275485489427,
+      "median_dense_tops": 156.60550970978855,
+      "correctness": "all outputs exact; warp-uniform signed operands; not a layout or PoW proof test",
+      "telemetry_before": {
+        "clocks.sm": 1815.0,
+        "power.draw": 33.63,
+        "temperature.gpu": 42.0,
+        "utilization.gpu": 5.0
+      },
+      "telemetry_after": {
+        "clocks.sm": 1815.0,
+        "power.draw": 33.63,
+        "temperature.gpu": 42.0,
+        "utilization.gpu": 5.0
+      }
+    },
+    {
+      "chains": 2,
+      "waves": 4,
+      "blocks": 184,
+      "warps_per_block": 4,
+      "iterations": 2048,
+      "verified_outputs": 188416,
+      "kernel_ms": [
+        0.1524832010269165,
+        0.15626239776611328,
+        0.15646719932556152,
+        0.15544320344924928,
+        0.21227519512176513,
+        0.1525760054588318,
+        0.1529855966567993,
+        0.15306559801101685,
+        0.1529855966567993
+      ],
+      "tmac_s": [
+        80.97961541232539,
+        79.02112825941651,
+        78.91769667524652,
+        79.43757399487403,
+        58.16991933003257,
+        80.93035952059815,
+        80.71368315607509,
+        80.67149729563174,
+        80.71368315607509
+      ],
+      "mean_tmac_s": 77.72835075558612,
+      "median_tmac_s": 80.67149729563174,
+      "median_dense_tops": 161.34299459126348,
+      "correctness": "all outputs exact; warp-uniform signed operands; not a layout or PoW proof test",
+      "telemetry_before": {
+        "clocks.sm": 1815.0,
+        "power.draw": 33.63,
+        "temperature.gpu": 42.0,
+        "utilization.gpu": 5.0
+      },
+      "telemetry_after": {
+        "clocks.sm": 1815.0,
+        "power.draw": 33.63,
+        "temperature.gpu": 42.0,
+        "utilization.gpu": 5.0
+      }
+    },
+    {
+      "chains": 4,
+      "waves": 4,
+      "blocks": 184,
+      "warps_per_block": 4,
+      "iterations": 2048,
+      "verified_outputs": 376832,
+      "kernel_ms": [
+        0.32573440074920657,
+        0.30351359844207765,
+        0.3615744113922119,
+        0.29931519031524656,
+        0.29972479343414304,
+        0.3280895948410034,
+        0.342524790763855,
+        0.29931519031524656,
+        0.369049596786499
+      ],
+      "tmac_s": [
+        75.81656065554554,
+        81.36723388594064,
+        68.30146485452299,
+        82.50854868404595,
+        82.39579271718252,
+        75.27231079659212,
+        72.10007163839441,
+        82.50854868404595,
+        66.91800280244462
+      ],
+      "mean_tmac_s": 76.35428163541275,
+      "median_tmac_s": 75.81656065554554,
+      "median_dense_tops": 151.6331213110911,
+      "correctness": "all outputs exact; warp-uniform signed operands; not a layout or PoW proof test",
+      "telemetry_before": {
+        "clocks.sm": 1815.0,
+        "power.draw": 33.63,
+        "temperature.gpu": 42.0,
+        "utilization.gpu": 5.0
+      },
+      "telemetry_after": {
+        "clocks.sm": 1815.0,
+        "power.draw": 49.26,
+        "temperature.gpu": 43.0,
+        "utilization.gpu": 32.0
+      }
+    },
+    {
+      "chains": 8,
+      "waves": 4,
+      "blocks": 184,
+      "warps_per_block": 4,
+      "iterations": 2048,
+      "verified_outputs": 753664,
+      "kernel_ms": [
+        0.6894591808319092,
+        0.6005760192871094,
+        0.673142385482788,
+        0.697753620147705,
+        0.6045472145080566,
+        0.6044672012329102,
+        0.6285088062286377,
+        0.6361087799072266,
+        0.6598336219787597
+      ],
+      "tmac_s": [
+        71.63893857269827,
+        82.24125226083622,
+        73.37544770498326,
+        70.78734166014695,
+        81.70101973622073,
+        81.71183449367749,
+        78.58620820347302,
+        77.64729157048201,
+        74.85542151653186
+      ],
+      "mean_tmac_s": 76.94941730211664,
+      "median_tmac_s": 77.64729157048201,
+      "median_dense_tops": 155.29458314096402,
+      "correctness": "all outputs exact; warp-uniform signed operands; not a layout or PoW proof test",
+      "telemetry_before": {
+        "clocks.sm": 1815.0,
+        "power.draw": 49.26,
+        "temperature.gpu": 43.0,
+        "utilization.gpu": 32.0
+      },
+      "telemetry_after": {
+        "clocks.sm": 1815.0,
+        "power.draw": 49.26,
+        "temperature.gpu": 43.0,
+        "utilization.gpu": 32.0
+      }
+    }
+  ],
+  "limitations": [
+    "brief runs; no controlled thermal warm-up",
+    "telemetry sampled outside timed kernels",
+    "no GEMM data movement, seed generation, BLAKE3 or proof verification",
+    "uniform operands validate instruction arithmetic, not arbitrary matrix layouts"
+  ]
+}

@@ -1,0 +1,400 @@
+INVESTIGAÇÃO TÉCNICA — PEARL / RTX 3070 / INT8
+Data: 02/11/2026. Hardware local: GA104, 46 SMs, driver 617.14, Windows.
+Escopo: protocolo inteiro atualmente usado pelo SRBMiner; propostas FP são tratadas separadamente.
+
+1. RESULTADO EXECUTIVO
+
+Não encontrei evidência reproduzível de um bloqueio de metade do throughput INT8
+da RTX 3070 que GPU-Unlock ou NV UEFI Unlocker removam. Existem seletores que
+abrangem classes inteiras, mas o nome IMLA4 não identifica automaticamente a
+instrução IMMA INT8 usada pelo minerador. A documentação de engenharia reversa
+e os testes de controle disponíveis apontam INT8 sem ganho relevante.
+
+A oportunidade mais rápida é sustentar frequência efetiva e disponibilidade,
+comparando mineradores em condições iguais. A oportunidade de desenvolvimento
+é um kernel Ampere independente com pipeline de dados/ruído/hash eficiente.
+Não há fundamento para prometer 100–120 TH/s nesta placa com um desbloqueio.
+
+Foi desenvolvido e executado um microbenchmark PTX original, sem dependências
+Python externas, usando o JIT do driver. Não foi instalado nenhum unlocker,
+alterado firmware, aumentado clock/power limit nem executado outro minerador.
+O teste não envia shares nem valida uma prova Pearl completa.
+
+2. REPOSITÓRIOS, VERSÕES E LICENÇAS
+
+Snapshots efetivamente inspecionados (fontes textuais, não execução de scripts):
+
+Zagitta/gpu-unlock:
+  SHA 7eb51bccae0a0b7e599e084d971170e9a1e82d0c, commit de 28/10/2026.
+  VERSION/README indicam 2.0.0; GPL-2.0-only para módulo/empacotamento;
+  firmware e componentes derivados têm avisos próprios. A API não identifica
+  uma licença única, por isso não substituí a leitura dos avisos por esse campo.
+  Arquivos: kernel/gpu_unlock/registers.h, recipes.c, unlock_610.c,
+  docs/How Ampere was unlocked.md. Há receitas para GA104.
+  https://github.com/Zagitta/gpu-unlock/tree/7eb51bccae0a0b7e599e084d971170e9a1e82d0c
+
+physicsdolphin/nv-uefi-unlocker:
+  SHA 9ac687f958ed473e4ffa78d33a83b2ee18b35d38, commit de 02/11/2026.
+  GPL-2.0; README identifica 2.1.8, enquanto Releases contém builds de diagnóstico
+  2.1.9-diag.1/.2/.3. Não confundir build de diagnóstico com versão estável.
+  Inspecionados assets/src/payload.rs, docs/cold-values.md e
+  docs/theoretical-uplift.en.md. Os mapeamentos são conclusões do projeto de
+  engenharia reversa, não uma garantia/documentação pública NVIDIA por SKU.
+  https://github.com/physicsdolphin/nv-uefi-unlocker/tree/9ac687f958ed473e4ffa78d33a83b2ee18b35d38
+
+pepsykolya/FreeForGemPear:
+  SHA 2cf4a41b584fa034285445b78ceff0749380f8f8, commit de 26/10/2026.
+  Release v1.6.3 em 26/10/2026. Licença própria v1.1, NÃO equivalente a GPL/MIT.
+  Host Rust disponível; GPU Library distribuída apenas como binário. O texto
+  impõe restrições à modificação/engenharia reversa e preservação da dev fee.
+  Assim, não reutilizei essa biblioteca no protótipo nem preparei patch de SASS
+  que o repositório não publica. Integrá-lo ao HashPilot requer avaliar termos
+  e execução separada; não copiar biblioteca/código para o núcleo GPL por rotina.
+  Fontes: LICENSE, NOTICE, build.sh, host/build.rs, host/src/{gpu,mining,worker,main}.rs,
+  gpu/pearlgpu.h. O cabeçalho contém comentário antigo k=2048; o host consulta
+  pg_kdim e usa normalmente 8192. Não usei esse comentário como configuração atual.
+  https://github.com/pepsykolya/FreeForGemPear/tree/2cf4a41b584fa034285445b78ceff0749380f8f8
+
+pearl-research-labs/pearl:
+  SHA d7c517d267f10f5bcbbdc366f3e603942f9a5ab5, commit de 28/10/2026;
+  release v1.5.5. Licença raiz ISC, com subprojetos e dependências sob outras
+  licenças, por exemplo CUTLASS BSD-3-Clause e plonky2 MIT/Apache-2.0.
+  Referência inspecionada: zk-pow/src/api/{proof,proof_utils,verify}.rs,
+  zk-pow/src/circuit/pearl_noise.rs, miner/miner-base/src/miner_base/
+  {noise_generation,noisy_gemm,inner_hash}.py, miner/pearl-gemm/csrc/gemm/.
+  kernel_traits.hpp usa SM90 TMA/GMMA: não é um kernel Ampere ao qual basta
+  acrescentar -arch=sm_86. WGMMA/TMA de Hopper não existem no GA104.
+  https://github.com/pearl-research-labs/pearl/tree/d7c517d267f10f5bcbbdc366f3e603942f9a5ab5
+
+Consulta de commits/issues/releases foi preservada em dist/pearl-research-20261102.
+source-manifest.json fixa SHA e SHA-256 dos 141 arquivos textuais obtidos.
+Repositórios ativos não são, por isso, software auditado ou aprovado.
+
+3. FLUXO DO ALGORITMO E UNIDADES
+
+O protocolo INT compromete matrizes inteiras, deriva seeds determinísticas,
+gera ruído de baixo rank, calcula produtos noised e reduz resultados intermediários
+em transcript/jackpot BLAKE3. Candidatos exigem aberturas Merkle e verificação
+consistente com o cabeçalho, seeds, parâmetros e target. O verificador oficial
+e a aceitação da pool são etapas diferentes; aceitação não comprova pagamento.
+
+No FreeForGemPear, o fluxo público é Job::new -> preparação de nonce/seed ->
+gpu::launch/gpu::wait -> fila de provas -> prove_hit -> submissão Stratum.
+Job::cpu_jackpot e Job::verify usam zk-pow. O verificador local recebe um nbits
+relaxado; o caminho chamador também precisa conferir o jackpot contra o target
+da pool. Não interpretar um self-test isolado como validação do target real.
+worker.rs descarta hits da linha de nonce calculada com placeholder e conta
+fila cheia/bad separadamente. Esses descartes devem acompanhar o hashrate.
+
+MMA m16n8k32 executa 16*8*32 = 4096 produtos com acumulação por instrução
+coletiva de warp. A multiplicação e a soma representam 8192 operações na
+convenção TOPS. Cada thread NÃO executa uma matriz inteira independente.
+PTX é ISA virtual; o driver/ptxas produz instruções SASS da GPU.
+https://docs.nvidia.com/cuda/parallel-thread-execution/index.html#warp-level-matrix-instructions-mma
+
+main.rs do FreeForGemPear calcula TH/s = tentativas/s * M * N * K / 10^12.
+Portanto seu TH/s é uma contagem de MACs-equivalentes, não TOPS com MUL+ADD=2,
+nem número literal de chamadas BLAKE3 por segundo. A rotina de contagem exata
+do SRBMiner é fechada e não foi auditada; comparar as telas não basta.
+https://github.com/pepsykolya/FreeForGemPear/blob/2cf4a41b584fa034285445b78ceff0749380f8f8/host/src/main.rs#L580
+
+4. GPU-UNLOCK: MECANISMO E APLICABILIDADE
+
+O código define SS0 com oito campos de 4 bits e SS1 com um. Na interpretação
+documentada, bit 3 habilita override e bits baixos selecionam a redução de
+velocidade; 0x88888888 e 0x8 selecionam a classe full rate em todos esses campos.
+As relações entre nomes de seletores e pipelines não devem ser deduzidas do
+nome IMLA4: o sufixo 4 NÃO significa INT4, e Integer MLA não implica que aquele
+seletor governe o IMMA INT8. O documento Ampere identifica a atribuição IMLA4
+como tal; alguns níveis de redução permanecem não confirmados.
+https://github.com/Zagitta/gpu-unlock/blob/7eb51bccae0a0b7e599e084d971170e9a1e82d0c/kernel/gpu_unlock/registers.h
+https://github.com/Zagitta/gpu-unlock/blob/7eb51bccae0a0b7e599e084d971170e9a1e82d0c/docs/How%20Ampere%20was%20unlocked.md
+
+O método Linux atua antes do driver e usa firmware/alteração temporária de
+permissões para escrever seletores, com reset na sequência. O método UEFI
+atua antes do sistema operacional e depois encadeia seu boot. Não é apenas
+uma opção CUDA, não é uma modificação do kernel do minerador, nem exige em
+si gravar outro VBIOS. WSL2 não substitui a fase pré-driver do Windows.
+
+Controles publicados para RTX 3070 mostram INT8 praticamente igual nas duas
+condições, apesar de aumento em caminhos FP. Há também um relato de hard lock
+em 1/5 boots numa 3070 LHR; isso não mede incidência populacional, mas impede
+chamar o procedimento de isento de risco. Ausência de ganho não demonstra
+que todos os registradores possíveis tenham sido descobertos: significa que
+não temos evidência para recomendar um desbloqueio INT8 nesta placa.
+https://github.com/Zagitta/gpu-unlock/issues/137
+https://github.com/Zagitta/gpu-unlock/discussions/238
+
+Reversão de uma experiência de unlock: retirar o mecanismo de boot opt-in,
+retornar ao boot normal e desligar completamente a alimentação da GPU.
+Um simples reboot quente/FLR não é garantia universal de restabelecer o estado.
+Não foi feito esse experimento. Não recomendo alterar Secure Boot, VBIOS,
+proteções de firmware ou parâmetros elétricos para esta investigação.
+
+FP16/BF16/TF32 não são INT8. FP16/BF16 com acumulação FP32 podem responder
+ao unlock; o conjunto exato depende do die/caminho e há divergências entre
+relatos sobre TF32. INT4 tem mais capacidade aritmética, mas menos precisão.
+Converter os operandos Pearl para FP8/INT4 com perda invalida o protocolo INT.
+
+5. AUDITORIA DE DESEMPENHO DO FREEFORGEMPEAR
+
+O autor relata 69,5 TMAC/s no kernel v1.3.0 a 1560 MHz e K=8192.
+O pico denso calculado é 46 SM * 1024 MAC/SM/ciclo * 1,56 GHz = 73,48224 TMAC/s.
+69,5/73,48224 = 94,58%, consistente com os 94,6% anunciados. Passar de 94,6%
+a 100% daria 5,71% sobre aquele teste, à mesma frequência, não 94,6% de ganho.
+Isso é relato do autor para uma versão/kernel/clock específicos, sem reprodução
+local da metodologia. Não prova que o minerador completo ou outro kernel seja
+94,6% eficiente, nem que os outros custos sejam gratuitos.
+https://github.com/pepsykolya/FreeForGemPear/blob/2cf4a41b584fa034285445b78ceff0749380f8f8/README.md
+
+O host atual escolhe M=128*SM*r, tentando r=16,12,8,4,2 e limitando a_base
+a 768 MiB por job. Para 46 SM e K=8192 resulta M=94208, 736 MiB de a_base;
+o fallback/banner histórico é 47104. Aumentar M pode amortizar custos, mas
+consome RAM, alonga tentativas e afeta troca de job. FFGP_M aceita múltiplos
+de 128 em 1024..1048576; alinhamento do kernel também importa.
+O comentário de device_m relata ganho de apenas 0,20% de r=8 a r=16 na 3070.
+https://github.com/pepsykolya/FreeForGemPear/blob/2cf4a41b584fa034285445b78ceff0749380f8f8/host/src/mining.rs
+
+Commits relevantes além do README:
+  bf287e03b4: primeiro loop SASS gerado.
+  14f59b105b: prefetch B' L2 e mudanças de espera/preparação CPU.
+  85ff19d038 / 7cd1aee042: aumento de M / escolha por SM.
+  1d060d967e: M individual por GPU em rigs mistos.
+  ae3be0af5e: biblioteca Ampere revisada, A' com ldmatrix.trans.
+O último modifica binários e documentação, sem publicar o gerador SASS.
+O release relata +2,2% em TH/W, mas 70,52 -> 70,26 TH/s: melhoria de eficiência,
+não aumento de velocidade. Não apresentar esse commit como +2,2% de hashrate.
+https://github.com/pepsykolya/FreeForGemPear/releases
+
+6. RESULTADOS E LIMITAÇÕES DO AMBIENTE LOCAL
+
+Categoria                 Resultado                                      Interpretação
+Referência do usuário     76 TH/s                                        Não é benchmark controlado.
+Histórico local SRB 3.8.1  238 amostras, 31/10 18:30–01/11 00:29;          Log existente, não novo A/B.
+                          média 78,940; mediana 78,955 TH/s;
+                          média 152,214 W; razão das médias 0,5186 TH/s/W;
+                          delta A +97, R +0, HW +0.
+Probe PTX local final     8 configurações, 9 janelas por configuração;    Sintético, não minerador.
+                          cada janela cronometra 10 kernels por Events.
+                          4 cadeias/4 ondas: média 77,834,
+                          mediana 82,368 TMAC/s = 164,735 TOPS densos.
+Probe PTX local inicial   Melhor mediana 80,671 TMAC/s.                   Demonstra variação entre runs.
+Relato de terceiro        Kernel FFGP 69,5 TMAC/s a 1560 MHz.             Não reproduzido aqui.
+Estimativa teórica        Pico denso 81,254 TMAC/s a 1725 MHz.            Dependente de clock sustentado.
+Hipótese                  Sustentar clock/temperatura aumenta TH/s.      Ainda exige teste real A/B.
+Hipótese sem evidência    Unlock dobraria Pearl INT8 na 3070.             Não sustentada pelas fontes.
+
+O probe final conferiu 1.766.400 valores de saída contra inteiros calculados na
+CPU. Usa tiles uniformes por warp, com valores negativos, zero e positivos;
+não verifica layout de matrizes arbitrárias, geração de seeds, BLAKE3 ou provas.
+O compilador alocou 19/22/30/44 registradores por thread para 1/2/4/8 cadeias.
+O limite de ocupação por recursos/grid é 8,33% ou 33,33% dos 48 warps/SM;
+isso NÃO é medição de ocupação efetiva. Aumentar ocupação por si só não é meta:
+o resultado depende de latência/dependências e disponibilidade de instruções.
+
+As execuções são curtas, sem aquecimento térmico controlado ou clocks fixados,
+e não são um ensaio de estabilidade. Telemetria antes/depois pode estar em
+cache e não representa potência média durante kernels. NÃO calcule TH/W do
+probe dividindo por 20–50 W desses snapshots. Contadores Tensor/SM e SASS final
+não foram perfilados. Não havia nvcc/ncu no PATH nem Toolkit na pasta padrão.
+
+O SRBMiner selecionado é 3.8.1. Não havia processo de mineração no encerramento
+da inspeção. O bloqueio do Defender relatado anteriormente impediu novo A/B.
+Este trabalho não liberou executável, não criou exceção e não mudou o minerador.
+
+7. OPORTUNIDADES POR IMPACTO, RISCO E DIFICULDADE
+
+Ação                            Impacto plausível                  Risco / dificuldade
+Disponibilidade e recuperação    Maior produção por dia se parado   Baixo / médio; sem ganho de kernel.
+Clock efetivo / refrigeração     Alguns % se houver queda de clock  Moderado / baixo; medir throttling.
+Memória mais baixa no FFGP       Eficiência; talvez headroom térmico Moderado / baixo; não transpor ao SRB.
+Power limit maior               Só se PL realmente limitar          Moderado / baixo; 150 W sob PL240
+                                                                    não comprova limitação por PL.
+Undervolt conservador           Eficiência, clock sustentado         Moderado / médio; pode dar prova ruim.
+FFGP_M 23552/47104/70656/94208   Pequeno no kernel já otimizado       Baixo / baixo; RAM e stale tradeoff.
+Pipeline + ruído/hash fusion     Relevante num kernel ingênuo         Moderado / alto; FFGP já relata fusion.
+Prefetch B/L2 e cp.async         Depende da movimentação real         Baixo / alto; perfil obrigatório.
+Tiling, ILP, bancos, registradores Depende de stalls/spills           Baixo / alto; mais regs podem piorar.
+SASS scheduling                 Ganho residual, não 2x garantido     Moderado / muito alto; kernel próprio.
+INT4 decomposto exato           Pouco promissor no caso geral        Alto esforço; medir reconstituição.
+FP16/BF16 exato por blocos       Sem vantagem de pico esperada        Alto esforço; rigor de arredondamento.
+GPU-Unlock para INT8            Nenhum ganho comprovado              Alto risco operacional / alto.
+
+INT4: se a=a0+16*a1 e b=b0+16*b1, há quatro produtos cruzados, além de
+empacotamento, sinais e recombinação. A capacidade INT4 de aproximadamente
+2x não paga automaticamente 4 GEMMs. Int7 também não cabe em um único INT4.
+Estrutura especial pode mudar a análise, mas precisa reproduzir transcript
+e provas; não basta obter produto final aparentemente igual.
+
+Sparsity 2:4: o pico esparso NÃO está disponível para matrizes densas arbitrárias.
+Zerar termos para satisfazer 2:4 muda o resultado. Duplicar o pico do folheto
+sem demonstrar estrutura compatível produz um limite incorreto.
+
+FP16/BF16: valores inteiros pequenos podem ser representados exatamente,
+mas a acumulação FP32 deve permanecer exata em todos os passos. Conversão
+por blocos adiciona custos. Mesmo liberado, o pico MAC dessa classe no GA104
+não supera o caminho INT8 denso; não há um atalho de 2x demonstrado.
+
+O código oficial já mostra reduções com lop3 e shf/rotate em pow_utils.hpp.
+Essas são oportunidades para uma implementação nova, não evidência de que
+SRBMiner/FFGP esqueceram de usá-las. --use_fast_math não otimiza MMA inteira
+e não deve alterar o algoritmo de prova. TMA/WGMMA/tcgen05 exigem outras GPUs.
+
+Não é possível determinar número de registradores, stalls, ocupação ou fração
+BLAKE3 do SRBMiner com seus logs. Proximidade do pico equivalente sugere
+compute/clock como candidatos, mas não substitui Nsight. O histórico mostrava
+~74 C e fan 100%; a causa de clock abaixo do solicitado requer clock-event
+reasons sob carga, não uma conclusão baseada somente na temperatura.
+
+8. LIMITES E METAS
+
+NVIDIA documenta 46 SM, 184 Tensor Cores e 162,6 TOPS INT8 densos a 1725 MHz.
+325,2 TOPS exige sparsity. No modelo denso:
+  pico_TMAC/s = 46 * 1024 * frequência_GHz / 1000 = 47,104 * frequência_GHz.
+  TH/s_FFGP ≈ pico_TMAC/s * eficiência global, se a contagem representar
+  integralmente esse trabalho. Não é prova de limite universal do PoW.
+https://www.nvidia.com/content/PDF/nvidia-ampere-ga-102-gpu-architecture-whitepaper-v2.1.pdf
+
+Meta TH/s     Ganho sobre 76     Clock ideal 100%    Clock a 95% global
+80            +5,26%             1698 MHz            1788 MHz
+85            +11,84%            1805 MHz            1899 MHz
+90            +18,42%            1911 MHz            2011 MHz
+100           +31,58%            2123 MHz            2235 MHz
+120           +57,89%            2548 MHz            2682 MHz
+
+Esses clocks são requisitos do modelo, NÃO ajustes recomendados. O caso 95%
+é ilustrativo, não calibração do SRB. A 1740 MHz, pico denso ~81,961 TMAC/s;
+a 1815 MHz, ~85,494. Assim, 80 é plausível e próximo do histórico; 85 exige
+mais clock sustentado ou eficiência; 90 é meta agressiva; não há evidência
+para 100/120 sustentados com os limites térmicos/operacionais observados.
+
+9. BENCHMARK REPRODUZÍVEL E CÓDIGO
+
+Protótipo executado:
+  tools/experiments/ampere_int8_probe.py
+  Python padrão + nvcuda.dll/libcuda.so.1 + nvidia-smi; não precisa nvcc.
+  Cria PTX 7.1 sm_86, usa cuModuleLoadDataEx, aloca buffer, executa MMA,
+  cronometra por CUDA Events e confere todas as saídas. Memória/contexto são
+  liberados. Recusa mineradores conhecidos visíveis em nvidia-smi, mas WDDM
+  pode omitir processos; parar pelo HashPilot e confirmar continua necessário.
+  Interrompe novos ensaios ao observar >=78 C; não muda ventoinha/clock.
+  Checagem de temperatura entre pontos não é proteção térmica independente.
+
+Windows (na raiz do repositório):
+  mise exec -- python tools/experiments/ampere_int8_probe.py --output dist/int8-probe.json
+Linux, no mesmo checkout e após parar o minerador:
+  python3 tools/experiments/ampere_int8_probe.py --output dist/int8-probe-linux.json
+Reversão: encerrar o processo; o programa não grava ajuste da placa.
+
+Contagem do teste:
+  MACs = blocos * 4 warps * cadeias * 2048 iterações * 16 * 8 * 32.
+  TOPS densos = 2*TMAC/s. Todos os acumuladores são armazenados/conferidos.
+  A alteração experimental é variar cadeias independentes e blocos por SM.
+  O resultado demonstra uma ferramenta funcional, NÃO uma otimização aplicada
+  ao minerador. O diff dos arquivos novos pode ser obtido com:
+  git diff --no-index -- /dev/null tools/experiments/ampere_int8_probe.py
+  (/dev/null é o comando Linux; no Windows use git diff --no-index NUL <arquivo>.)
+
+Para um A/B de mineração confiável, após resolver o bloqueio e verificar SHA:
+  - Fixar minerador/versão, GPU UUID, pool, certificado, dificuldade e política
+    de fee; usar a mesma condição de desktop. Registrar clocks reais, não só lock.
+  - Aquecer 10 minutos; medir 20 minutos por braço, 3 repetições A-B-B-A-A-B;
+    ampliar para 6–24 h para stale/rejeições/estabilidade. Não perfilar esses
+    intervalos com replay Nsight. Contar taxas de forma consistente e descontar
+    janelas fee/pausas ao comparar produção líquida do usuário.
+  - Comparar stock, perfil atual e um candidato de cada vez. Não rodar SRB e
+    FFGP simultaneamente. Desativar ajustes de IA concorrentes durante cada braço.
+  - FFGP: executar --self-test antes; iniciar sem auto-uv. Só depois testar M
+    e undervolt separadamente, preservando sua dev fee. Rejeitar qualquer erro
+    CPU/GPU, HW, transcript ou prova; rollback ao perfil/versão anterior.
+  - Registrar a 1 Hz GPU UUID, temperatura, utilização, potência, clocks,
+    power limit, clock-event reasons, além de log timestamped e contadores.
+  - Usar média/mediana, duração e dispersão das repetições; integrar P(t) para
+    energia. Separar sensores GPU e consumo da tomada. Calcular TH/s/W e shares
+    aceitas por trabalho/dificuldade; não comparar somente contagem bruta de shares.
+
+Comando de telemetria (um comando, rodar em outro terminal):
+  nvidia-smi --query-gpu=timestamp,uuid,temperature.gpu,utilization.gpu,power.draw,power.limit,clocks.sm,clocks.mem --format=csv -l 1
+Interromper com Ctrl+C; não muda configurações. Para arquivo acrescentar > dist/gpu-telemetry.csv.
+
+Nsight, quando instalado, para NOSSO probe (não a biblioteca fechada FFGP):
+  ncu --list-sections
+  ncu --query-metrics
+  ncu --set full --launch-count 1 --target-processes all -o dist/int8-profile python tools/experiments/ampere_int8_probe.py --output dist/int8-profile-run.json
+Conferir nomes de métricas disponíveis antes de escolher contadores tensor,
+SM issue/active, occupancy, L1/L2/DRAM, shared bank conflicts e stalls.
+GetFunctionAttribute/occupancy API do probe só fornecem recursos/limites.
+O perfil de uma única chamada warm-up não é resultado de throughput sustentado.
+Se aparecer ERR_NVGPUCTRPERM, o administrador decide habilitar profiling pelo
+procedimento oficial; este trabalho não altera permissões de driver.
+https://docs.nvidia.com/nsight-compute/ProfilingGuide/index.html
+https://docs.nvidia.com/cuda/ampere-tuning-guide/index.html
+
+Base para próximo kernel GEMM com layouts e validação de matrizes arbitrárias:
+https://github.com/NVIDIA/cuda-samples/blob/master/cpp/3_CUDA_Features/immaTensorCoreGemm/immaTensorCoreGemm.cu
+Essa é a localização conferida na árvore atual; Samples/3_CUDA_Features antigo
+não é o caminho atual. Compilar um arquivo .cu próprio exige CUDA Toolkit e
+MSVC no Windows (ou toolchain Linux), por exemplo nvcc -O3 -arch=sm_86;
+não executei compilação .cu nesta máquina. O probe atual é compilado pelo JIT.
+
+Próximo desenvolvimento específico: GEMM SM86 independente + referência CPU
+para cada tile; depois noise sampler exato e transcript por rank; então BLAKE3
+e verificação zk-pow. Testar padding, índices, sinais e overflow antes de
+conectar Stratum. Só uma prova completa aceita e testes A/B confirmam ganho.
+Reaproveitar referência ISC com avisos, não extrair o kernel fechado.
+
+10. WINDOWS, WSL2, LINUX E PLANO DE EXECUÇÃO
+
+Windows: manter HashPilot e dados atuais; tratar separadamente o bloqueio do
+minerador. Primeiro rodar baseline controlado do SRB. Depois um backend FFGP
+isolado, com parser, stop/default e fee testados antes de oferecê-lo no app.
+FFGP_M e --auto-uv não são opções do SRBMiner. Não há patch válido para
+passar esses argumentos ao backend atual e esperar efeito.
+
+WSL2: útil para desenvolver/testar CUDA; não fornece acesso pré-driver para
+o unlock Linux da GPU controlada pelo Windows. Não instalar driver Linux de
+GPU sobre o driver Windows dentro do WSL. Comparar tempo/telemetria porque
+o ambiente e ferramentas de profiling têm restrições próprias.
+https://docs.nvidia.com/cuda/wsl-user-guide/index.html
+
+Linux nativo: segundo ambiente para benchmark equivalente e Nsight, sem
+supor ganho só pela troca do sistema. Usar mesma versão de minerador e
+parâmetros. Unlock só faria sentido em investigação separada de caminhos FP;
+não é a primeira etapa de otimização Pearl INT8.
+
+Prioridade prática: disponibilidade -> baseline -> clocks efetivos/temperatura
+-> A/B de kernels existentes -> perfil -> alteração de kernel próprio.
+Não investir em ajustes de firmware antes de saber se há margem no pipeline.
+
+11. MUDANÇA DE PROTOCOLO: ACHADO RELEVANTE
+
+PIP-3 está Draft no snapshot 9dacf7fb6c5fdcec95323d45cdd75fe0083499ff
+do repositório pearl-research-labs/pips. Propõe certificados FP versão 3 e
+perfis Hopper/Blackwell; deployment/altura de ativação não está definida ali.
+Há pedido aberto #465 por suporte a RTX 20/30/40 e discussões de perfil INT8.
+Isso NÃO prova que a mineração INT8 já terminou nem garante suporte futuro.
+Importa para o retorno de desenvolvimento e compra de placa exclusivamente
+para Pearl. Reavaliar compatibilidade quando a proposta e ativação forem finais.
+https://github.com/pearl-research-labs/pips/blob/9dacf7fb6c5fdcec95323d45cdd75fe0083499ff/PIPS/pip-0003.md
+https://github.com/pearl-research-labs/pearl/issues/465
+
+PR #473 propõe liberar o GIL ao construir Merkle trees; permanece aberto e
+relata H100+vLLM. Não é ganho medido de Pearl/SRB/3070 e não deve ser aplicado
+como percentual de melhoria nesta máquina.
+https://github.com/pearl-research-labs/pearl/pull/473
+
+12. RESPOSTAS DIRETAS
+
+1) GPU-Unlock não demonstra ganho no caminho INT8 atual. Não encontrei um
+   seletor adicional validado que contorne isso na RTX 3070. Usar FP desbloqueado
+   exige exatidão e não traz vantagem teórica direta sobre INT8 denso.
+2) Não é possível auditar se FFGP explora TODO o potencial: o kernel é fechado.
+   O relato de 94,6% é numericamente coerente e indica pouca margem naquele
+   microbenchmark, sem provar eficiência global perfeita.
+3) Há técnicas concretas de pipeline, ILP, layout, prefetch e fusion; não há
+   instrução secreta/SASS ou flag de compilação demonstrada aqui que dobre Pearl.
+4) Sim: já existe um probe original executado, exato nos casos testados. Ainda
+   não existe novo minerador Pearl nem prova gerada por esse probe.
+5) Para superar 76, usar primeiro disponibilidade e perfil térmico/clock com
+   testes equivalentes: o histórico já documenta ~78,94 TH/s. Buscar 80 antes de
+   prometer 85; 90 exige evidência nova. 100/120 não têm sustentação experimental.
