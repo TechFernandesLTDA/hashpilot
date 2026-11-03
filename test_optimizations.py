@@ -223,6 +223,25 @@ class ServiceSnapshotTests(unittest.TestCase):
             self.assertIsNone(gpu_runtime.service_snapshot(device, {"miner_log": "x"}, True, time.time()))
 
 
+@unittest.skipUnless(os.name == "nt", "PowerShell do Windows")
+class ServiceScriptInterpreterTests(unittest.TestCase):
+    def test_pythonw_from_the_panel_is_replaced_by_console_python(self):
+        """pythonw.exe returns no stdout; the update used to stop the service and then abort the start."""
+        import subprocess
+        root = Path(__file__).resolve().parent/"mining/windows"
+        with tempfile.TemporaryDirectory() as temporary:
+            for name in ("python.exe", "pythonw.exe"):
+                (Path(temporary)/name).write_bytes(b"")
+            for script in ("Iniciar-Rig.ps1", "Atualizar-Rig.ps1"):
+                text = (root/script).read_text(encoding="utf-8")
+                line = next(item for item in text.splitlines() if "-ieq 'pythonw.exe'" in item)
+                self.assertLess(text.index(line), text.index("IsInRole"), script)
+                command = f"$Python='{Path(temporary)/'pythonw.exe'}'; {line}; Write-Output $Python"
+                result = subprocess.run(["powershell.exe", "-NoProfile", "-Command", command],
+                                        capture_output=True, text=True, timeout=30)
+                self.assertEqual(Path(result.stdout.strip()).name, "python.exe", script)
+
+
 class CommandLineCacheTests(unittest.TestCase):
 
     def test_command_line_is_queried_once_per_process_identity(self):
