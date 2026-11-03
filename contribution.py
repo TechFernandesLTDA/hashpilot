@@ -58,12 +58,15 @@ def read_settings(path):
         return None
 
 
-def atomic_json(path,payload,*,durable=False):
+def atomic_json(path,payload,*,durable=False,compact=False):
+    """`compact` serve para snapshots reescritos a cada ciclo; arquivos lidos por pessoas mantêm a indentação."""
     path=Path(path)
     path.parent.mkdir(parents=True,exist_ok=True)
     temporary=path.with_name(path.name+f".{os.getpid()}.tmp")
     with temporary.open('w',encoding='utf-8') as handle:
-        json.dump(payload,handle,ensure_ascii=False,indent=2)
+        if compact:json.dump(payload,handle,ensure_ascii=False,separators=(",",":"))
+        else:json.dump(payload,handle,ensure_ascii=False,indent=2)
+
         if durable:
             handle.flush()
             os.fsync(handle.fileno())

@@ -19,6 +19,8 @@ import uuid
 
 from contribution import ProxyLease,atomic_json,support_configuration
 from gpu_agent import detect_nvidia_gpus
+from file_cache import cached_load
+
 from rig_config import MAX_GPUS,device_key,resolve_devices,update_gpu_settings
 from mining_health import OperationalStore,finite
 from component_status import identity as component_identity
@@ -81,6 +83,8 @@ def windows_argv(command_line):
 class ProcessBackend:
     def __init__(self):
         self.children={}
+        # A process command line is fixed at creation; (pid, creation time, image) identifies it.
+        self.command_lines={}
 
     def restore_defaults(self,gpu,directory):
         from gpu_defaults import restore_defaults
@@ -141,12 +145,18 @@ class ProcessBackend:
         try: metadata=self._metadata(kernel,handle,pid)
         finally: kernel.CloseHandle(handle)
         if metadata and command_line:
-            command=f"$p=Get-CimInstance Win32_Process -Filter 'ProcessId = {pid}'; if($p){{$p.CommandLine}}"
-            command="[Console]::OutputEncoding=[Text.UTF8Encoding]::new(); "+command
-            result=subprocess.run(["powershell.exe","-NoProfile","-Command",command],capture_output=True,text=True,
-                encoding="utf-8",errors="replace",timeout=8,creationflags=NO_WINDOW)
-            if result.returncode: return None
-            metadata["argv"]=windows_argv(result.stdout.strip())
+            key=(pid,metadata["created_at"],normalized_path(metadata["executable"]))
+            if key not in self.command_lines:
+                command=f"$p=Get-CimInstance Win32_Process -Filter 'ProcessId = {pid}'; if($p){{$p.CommandLine}}"
+                command="[Console]::OutputEncoding=[Text.UTF8Encoding]::new(); "+command
+                result=subprocess.run(["powershell.exe","-NoProfile","-Command",command],capture_output=True,text=True,
+                    encoding="utf-8",errors="replace",timeout=8,creationflags=NO_WINDOW)
+                if result.returncode: return None
+                argv=windows_argv(result.stdout.strip())
+                if not argv: return {**metadata,"argv":argv}
+                if len(self.command_lines)>=64: self.command_lines.pop(next(iter(self.command_lines)))
+                self.command_lines[key]=argv
+            metadata["argv"]=list(self.command_lines[key])
         return metadata
 
     def start(self,arguments,working_dir,log_path=None):
@@ -251,7 +261,9 @@ class RigManager:
         self.python_path=Path(python_path or sys.executable)
         self.project_dir=Path(__file__).resolve().parent
         self.backend=backend or ProcessBackend()
-        self.detector=detector or detect_nvidia_gpus
+        self.capabilities={}
+        self.detector=detector or (lambda:detect_nvidia_gpus(cache=self.capabilities))
+
         self.clock=clock
         self.proxy_ready=proxy_ready or self._wait_proxy
         self.registry_path=self.state_dir/"rig-manager.json"
@@ -303,9 +315,11 @@ class RigManager:
             self.error="Registro inválido: nenhuma ação em processos existentes foi autorizada. "+str(error)
 
     def settings(self):
-        payload=json.loads(self.settings_path.read_text(encoding="utf-8-sig"))
-        if not isinstance(payload,dict): raise ValueError("settings.json inválido")
-        return payload
+        def load(path):
+            payload=json.loads(Path(path).read_text(encoding="utf-8-sig"))
+            if not isinstance(payload,dict): raise ValueError("settings.json inválido")
+            return payload
+        return cached_load(self.settings_path,load)
 
     def publish(self):
         if not self.registry_valid: return

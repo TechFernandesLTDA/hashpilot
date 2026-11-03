@@ -1,0 +1,27 @@
+#!/bin/sh
+# Validação local antes do push (o projeto não usa CI). Ativar: git config core.hooksPath .githooks
+# Pular uma vez, conscientemente: git push --no-verify
+set -eu
+cd "$(git rev-parse --show-toplevel)"
+
+echo "pre-push: testes"
+mise exec -- python -m unittest discover --durations 5
+
+echo "pre-push: links e JSONs da documentação"
+mise exec -- python tools/check_documentation.py >/dev/null
+
+echo "pre-push: sintaxe PowerShell"
+powershell.exe -NoProfile -ExecutionPolicy Bypass -File tools/check_powershell.ps1
+
+echo "pre-push: segredos nos commits enviados"
+zero=0000000000000000000000000000000000000000
+while read -r local_ref local_sha remote_ref remote_sha; do
+    [ "$local_sha" = "$zero" ] && continue
+    if [ "$remote_sha" = "$zero" ]; then range="$local_sha --not --remotes"; else range="$remote_sha..$local_sha"; fi
+    if command -v gitleaks >/dev/null 2>&1; then
+        gitleaks git --no-banner --redact --log-opts="$range" .
+    else
+        echo "gitleaks não encontrado; verificação de segredos não executada" >&2
+        exit 1
+    fi
+done

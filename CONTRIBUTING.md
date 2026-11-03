@@ -14,7 +14,14 @@ mise exec -- python -m unittest discover -v
 mise exec -- python monitor.py
 ```
 
-Os testes comuns não precisam instalar ou executar um minerador. Não use o teste unitário como ponto de entrada para alterar clocks. Para mudanças de interface, a QA opt-in usa janelas próprias e diretórios temporários:
+Ative o hook local, que repete antes de cada push os testes, a verificação da documentação, a sintaxe PowerShell e a busca de segredos (gitleaks):
+
+```text
+git config core.hooksPath .githooks
+```
+
+Os testes comuns não precisam instalar ou executar um minerador.
+ Não use o teste unitário como ponto de entrada para alterar clocks. Para mudanças de interface, a QA opt-in usa janelas próprias e diretórios temporários:
 
 ```text
 mise exec -- python test_responsive_ui.py --run --native-dpi

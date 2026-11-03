@@ -62,10 +62,20 @@ def validate_device(gpu):
     return gpu
 
 
+_CATALOG=None
+
+
+def _catalog():
+    global _CATALOG
+    if _CATALOG is None:
+        _CATALOG=json.loads((Path(__file__).resolve().parent/"data/nvidia-gpus.json").read_text(encoding="utf-8"))
+    return _CATALOG
+
+
 def catalog_identity(name, pci_device_id=None):
     """Enriquece identidade; fatos do catálogo nunca viram limites de controle."""
     try:
-        catalog=json.loads((Path(__file__).resolve().parent/"data/nvidia-gpus.json").read_text(encoding="utf-8"))
+        catalog=_catalog()
         normalized=re.sub(r"\s+"," ",str(name)).strip().casefold()
         matches=[item for item in catalog["gpus"] if normalized in
                  {str(value).casefold() for value in [item["name"],*item.get("aliases",[])]}]
@@ -85,9 +95,55 @@ def catalog_identity(name, pci_device_id=None):
         return {}
 
 
-def detect_nvidia_gpus(command=smi_command, max_devices=None):
+TEXT_FIELDS=(("driver_version","driver_version"),("serial","serial"),
+    ("pci.device_id","pci_device_id"),("pci.sub_device_id","pci_subdevice_id"),
+    ("vbios_version","vbios_version"),("compute_cap","compute_capability"))
+NUMERIC_FIELDS=(("power.min_limit","power_min_w"),("power.max_limit","power_max_w"),
+    ("power.default_limit","power_default_w"),("power.limit","power_limit_w"),
+    ("clocks.max.graphics","graphics_max_mhz"),("memory.total","memory_mib"),
+    ("temperature.gpu.tlimit","temperature_limit_c"))
+CAPABILITY_TTL=600
+UNAVAILABLE=("N/A","[N/A]","NOT SUPPORTED","[NOT SUPPORTED]")
+
+
+def _text_value(value):
+    value=str(value).strip()
+    return value if value and value.upper() not in UNAVAILABLE else None
+
+
+def query_capabilities(identifier, command=smi_command):
+    """Uma consulta por placa; um campo não suportado pelo driver cai no modo campo a campo."""
+    fields=[*TEXT_FIELDS,*NUMERIC_FIELDS]
+    result={}
+    try:
+        row=next(csv.reader(command(["-i",identifier,"--query-gpu="+",".join(f for f,_ in fields),
+                                     "--format=csv,noheader,nounits"]).splitlines()),[])
+        if len(row)!=len(fields):raise RuntimeError("Resposta NVIDIA incompleta")
+        for (field,key),value in zip(fields,row):
+            result[key]=_text_value(value) if (field,key) in TEXT_FIELDS else numeric(value)
+    except (OSError,RuntimeError,subprocess.SubprocessError):
+        for field,key in fields:
+            try:
+                value=command(["-i",identifier,"--query-gpu="+field,"--format=csv,noheader,nounits"])
+                result[key]=_text_value(value) if (field,key) in TEXT_FIELDS else numeric(value)
+            except (OSError,RuntimeError,subprocess.SubprocessError):
+                result[key]=None
+    result["supported_graphics_clocks_mhz"]=[]
+    try:
+        clocks=command(["-i",identifier,"--query-supported-clocks=graphics","--format=csv,noheader,nounits"])
+        result["supported_graphics_clocks_mhz"]=sorted({int(value) for line in clocks.splitlines()
+            if (value:=numeric(line)) is not None and value>0 and value.is_integer()})
+    except (OSError,RuntimeError,subprocess.SubprocessError):
+        pass
+    result["capabilities_queried_at"]=time.time()
+    return result
+
+
+def detect_nvidia_gpus(command=smi_command, max_devices=None, cache=None, now=None):
+    """`cache` (dict opcional) guarda capacidades fixas por UUID/PCI e evita reconsultá-las a cada ciclo."""
     if max_devices is not None and int(max_devices)<=0:
         return []
+    now=time.time() if now is None else float(now)
     output = command(["--query-gpu=index,name,uuid,pci.bus_id", "--format=csv,noheader,nounits"])
     devices = []
     for row in csv.reader(output.splitlines()):
@@ -96,31 +152,14 @@ def detect_nvidia_gpus(command=smi_command, max_devices=None):
         index, name, identifier, pci = (value.strip() for value in row)
         if not index.isdigit() or not identifier.startswith("GPU-"):
             continue
-        gpu = {"vendor":"NVIDIA", "index":int(index), "name":name, "uuid":identifier,
-               "pci_bus_id":pci, "capabilities_queried_at":time.time(), "supported_graphics_clocks_mhz":[]}
-        for field,key in (("driver_version","driver_version"),("serial","serial"),
-                          ("pci.device_id","pci_device_id"),("pci.sub_device_id","pci_subdevice_id"),
-                          ("vbios_version","vbios_version"),("compute_cap","compute_capability")):
-            try:
-                value=command(["-i",identifier,"--query-gpu="+field,"--format=csv,noheader,nounits"]).strip()
-                gpu[key]=value if value and value.upper() not in ("N/A","[N/A]","NOT SUPPORTED","[NOT SUPPORTED]") else None
-            except (OSError,RuntimeError,subprocess.SubprocessError):
-                gpu[key]=None
-        for field, key in (("power.min_limit","power_min_w"),("power.max_limit","power_max_w"),
-            ("power.default_limit","power_default_w"),("power.limit","power_limit_w"),
-            ("clocks.max.graphics","graphics_max_mhz"),("memory.total","memory_mib"),
-            ("temperature.gpu.tlimit","temperature_limit_c")):
-            try:
-                value = command(["-i",identifier,"--query-gpu="+field,"--format=csv,noheader,nounits"])
-                gpu[key] = numeric(value)
-            except (OSError, RuntimeError, subprocess.SubprocessError):
-                gpu[key] = None
-        try:
-            clocks = command(["-i",identifier,"--query-supported-clocks=graphics","--format=csv,noheader,nounits"])
-            gpu["supported_graphics_clocks_mhz"] = sorted({int(value) for line in clocks.splitlines()
-                if (value:=numeric(line)) is not None and value > 0 and value.is_integer()})
-        except (OSError, RuntimeError, subprocess.SubprocessError):
-            pass
+        key=(identifier,pci,name)
+        cached=cache.get(key) if cache is not None else None
+        if cached is None or not 0<=now-cached["capabilities_queried_at"]<CAPABILITY_TTL:
+            cached=query_capabilities(identifier,command)
+            cached["capabilities_queried_at"]=now
+            if cache is not None:cache[key]=cached
+        gpu = {"vendor":"NVIDIA", "index":int(index), "name":name, "uuid":identifier, "pci_bus_id":pci,
+               **cached, "supported_graphics_clocks_mhz":list(cached["supported_graphics_clocks_mhz"])}
         gpu.update(catalog_identity(name,gpu.get("pci_device_id")))
         gpu.setdefault("architecture",None)
         devices.append(validate_device(gpu))
