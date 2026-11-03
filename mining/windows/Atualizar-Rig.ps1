@@ -4,6 +4,9 @@ $state=Join-Path $env:LOCALAPPDATA 'PearlMonitor'
 $project=if(Test-Path -LiteralPath (Join-Path $PSScriptRoot 'rig.py')){$PSScriptRoot}else{[IO.Path]::GetFullPath((Join-Path $PSScriptRoot '..\..'))}
 if(-not $Python){Push-Location -LiteralPath $project;try{$Python=(& mise which python).Trim()}finally{Pop-Location}}
 if(-not (Test-Path -LiteralPath $Python)){throw 'Python indisponivel.'}
+# pythonw.exe has no console stdout: reading miner_update.py --path from it returns nothing
+# and the start aborts after the previous service was already stopped. Use the console python.exe.
+if([IO.Path]::GetFileName($Python) -ieq 'pythonw.exe'){$console=Join-Path (Split-Path -Parent $Python) 'python.exe';if(Test-Path -LiteralPath $console){$Python=$console}}
 $principal=[Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
 if(-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)){
     # No process is stopped until the Windows administrator prompt is accepted.
