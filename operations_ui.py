@@ -39,20 +39,45 @@ def trial_rows(directory,identifier,page=0):
         rows=db.execute(query,(identifier,identifier,page*8) if has_adjustments else (identifier,page*8)).fetchall()
     return [{'at':at,'state':state,**json.loads(payload)} for at,state,payload in rows]
 
-def show_operations(parent):
-    window=tk.Toplevel(parent)
-    window.title('HashPilot · Central de operação')
+def console_python():
+    """O painel roda em pythonw.exe; scripts que leem a saída do Python precisam do python.exe ao lado."""
+    executable=Path(sys.executable)
+    console=executable.with_name('python.exe')
+    return str(console) if executable.name.lower()=='pythonw.exe' and console.is_file() else str(executable)
+
+
+def service_update_progress(before,registry,elapsed,timeout=240):
+    """Texto e estado do acompanhamento depois de pedir a atualização do serviço."""
+    pid=registry.get('pid');fresh=0<=time.time()-float(registry.get('sampled_at') or 0)<=15
+    version=(registry.get('software') or {}).get('version','?')
+    if pid and pid!=before.get('pid') and fresh and registry.get('ready'):
+        return 'done',f'Serviço {version} ativo (PID {pid}). A mineração foi retomada pelo serviço novo.'
+    if elapsed>=timeout:
+        return 'failed',('O serviço não voltou em 4 min. Se a mineração estiver parada, use Iniciar todas no painel; '
+                         'se o administrador recusou o pedido, o serviço anterior continua.')
+    if pid==before.get('pid') and fresh:
+        return 'waiting','Aguardando a aprovação do administrador (UAC)… o serviço atual continua minerando.'
+    return 'waiting','Serviço anterior encerrado; iniciando o novo… a mineração volta em instantes.'
+
+
+def show_operations(parent,container=None):
+    from ui_host import open_window,embedded
+    window=open_window(parent,container,'HashPilot · Central de operação')
     window.geometry('980x620')
     window.minsize(760,500)
     window.transient(parent)
-    window.configure(bg='#101821')
+    window.configure(bg='#0A1628')
     root=parent._root()
     style=ttk.Style(window)
-    style.configure('Ops.TFrame',background='#101821')
-    style.configure('Ops.TLabel',background='#101821',foreground='#e7edf3',font=('Segoe UI',10))
-    style.configure('Ops.TNotebook',background='#101821')
-    style.configure('Ops.TNotebook.Tab',padding=(12,8))
-    style.configure('Ops.Treeview',background='#192633',fieldbackground='#192633',foreground='#e7edf3',rowheight=25)
+    style.configure('Ops.TFrame',background='#0A1628')
+    style.configure('Ops.TLabel',background='#0A1628',foreground='#E8EDF5',font=('Segoe UI',10))
+    style.configure('Ops.TNotebook',background='#0A1628',borderwidth=0)
+    style.configure('Ops.TNotebook.Tab',padding=(12,8),background='#10213B',foreground='#E8EDF5')
+    style.map('Ops.TNotebook.Tab',background=[('selected','#23446D')],foreground=[('selected','#12A98E')])
+    style.configure('Ops.Treeview',background='#10213B',fieldbackground='#10213B',foreground='#E8EDF5',rowheight=25)
+    style.configure('Ops.TButton',background='#10213B',foreground='#FFFFFF',padding=(12,6))
+    style.map('Ops.TButton',background=[('active','#23446D')])
+
     book=ttk.Notebook(window);book.pack(fill='both',expand=True,padx=12,pady=12)
     pages={name:ttk.Frame(book,padding=12) for name in ('Saúde e versões','Perfis e ajustes','Ajuda de 5%','Backup e diagnóstico')}
     for name,page in pages.items():book.add(page,text=name)
@@ -66,12 +91,33 @@ def show_operations(parent):
     def error_call(action):
         try: action()
         except Exception as error:messagebox.showerror('HashPilot',str(error),parent=window)
+    service_status=ttk.Label(pages['Saúde e versões'],justify='left',anchor='w',wraplength=880)
     def update_service():
+        if not messagebox.askyesno('Atualizar serviço',
+            'O serviço do rig será encerrado e iniciado de novo com o código desta versão.\n\n'
+            '• A mineração para por cerca de 30 a 60 segundos.\n• O Windows pedirá aprovação do administrador (UAC).\n'
+            '• Se o pedido for recusado, nada é parado.\n\nContinuar?',parent=window):return
+        before=read_json(STATE_DIR/'rig-manager.json')
         script=Path(__file__).resolve().parent/'mining/windows/Atualizar-Rig.ps1'
-        subprocess.Popen(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',str(script),'-Python',sys.executable],creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
-    ttk.Button(buttons,text='Atualizar painel',command=lambda:__import__('app_update').show_update_setup(window)).pack(side='left')
+        subprocess.Popen(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',str(script),'-Python',console_python()],creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+        started=time.monotonic()
+        def follow():
+            if not window.winfo_exists():return
+            state,text=service_update_progress(before,read_json(STATE_DIR/'rig-manager.json'),time.monotonic()-started)
+            service_status.configure(text=text,foreground={'done':'#12A98E','failed':'#ffbc66'}.get(state,'#E8EDF5'))
+            if state=='waiting':window.after(2000,follow)
+        follow()
+    if embedded(window):
+        ttk.Button(buttons,text='Atualizar painel →',command=lambda:window.navigate('Atualizações')).pack(side='left')
+    else:
+        ttk.Button(buttons,text='Atualizar painel',command=lambda:__import__('app_update').show_update_setup(window)).pack(side='left')
     ttk.Button(buttons,text='Atualizar serviço (UAC)',command=update_service).pack(side='left',padx=8)
-    ttk.Button(buttons,text='Atualizar minerador',command=lambda:__import__('miner_update_ui').show_miner_update(window)).pack(side='left')
+    if embedded(window):
+        ttk.Button(buttons,text='Atualizar minerador →',command=lambda:window.navigate('Minerador')).pack(side='left')
+    else:
+        ttk.Button(buttons,text='Atualizar minerador',command=lambda:__import__('miner_update_ui').show_miner_update(window)).pack(side='left')
+    service_status.pack(fill='x',pady=(8,0))
+
     def gpu_id():
         return identifiers[selector.current()] if 0<=selector.current()<len(identifiers) else None
     def reconnect():
@@ -212,7 +258,8 @@ def show_operations(parent):
     def theme(widget):
         for child in widget.winfo_children():
             kind=child.winfo_class()
-            mapping={'TFrame':'Ops.TFrame','TLabel':'Ops.TLabel','TNotebook':'Ops.TNotebook','Treeview':'Ops.Treeview'}
+            mapping={'TFrame':'Ops.TFrame','TLabel':'Ops.TLabel','TNotebook':'Ops.TNotebook','Treeview':'Ops.Treeview','TButton':'Ops.TButton'}
+
             if kind in mapping:child.configure(style=mapping[kind])
             theme(child)
     theme(window)

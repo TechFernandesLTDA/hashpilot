@@ -10,7 +10,7 @@ Em 28/10/2026, o executável oficial 3.8.1 foi colocado em quarentena local como
 
 ## Fluxo no aplicativo
 
-Abra **Configurar → Segurança do minerador**. O recurso também está disponível na configuração das GPUs.
+Abra **Configurações → Segurança**. A seção Minerador também leva até ela.
 
 1. Leia a explicação e, preferencialmente, use **Solicitar análise à Microsoft** para abrir o [portal oficial](https://www.microsoft.com/en-us/wdsi/filesubmission). Abrir o portal não envia nenhum arquivo automaticamente.
 2. **Histórico de proteção** abre a interface do Windows para revisar a ocorrência. Se o protocolo do Windows estiver indisponível, abre a orientação oficial no navegador.

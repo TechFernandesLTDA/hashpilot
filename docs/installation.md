@@ -3,7 +3,7 @@
 Windows 10/11 de 64 bits, conexão com a internet e driver NVIDIA. Abra o PowerShell e execute:
 
 ```powershell
-irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.5.7/install.ps1 | iex
+irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.5.8/install.ps1 | iex
 ```
 
 O comando baixa e executa o instalador público deste repositório. Você pode [ler o script](../install.ps1) antes de executar. Não é necessário clonar o repositório, instalar Git ou configurar Python manualmente. Se o Windows não tiver `winget`, instale o **App Installer**, da Microsoft Store, e repita o comando.
@@ -27,7 +27,7 @@ prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t
 
 **Se mantiver esse endereço, a mineração iniciada pelo assistente usará a carteira do autor.** Substitua pelo seu endereço público para acompanhar e receber na sua própria carteira. O aplicativo nunca solicita seed ou chave privada.
 
-Use **Configurar** para alterar depois. A mudança preserva o banco e separa os dados por carteira. Um minerador externo ou legado continua com a carteira com que foi iniciado; ele precisa de uma parada e novo início próprios para mudar o destino. Nas instâncias que o serviço do rig gerencia, a reconciliação da carteira efetiva ocorre somente na GPU correspondente. Não há apropriação silenciosa de um processo externo.
+Use **Configurações → Carteira e ajuda** para alterar depois. A mudança preserva o banco e separa os dados por carteira. Um minerador externo ou legado continua com a carteira com que foi iniciado; ele precisa de uma parada e novo início próprios para mudar o destino. Nas instâncias que o serviço do rig gerencia, a reconciliação da carteira efetiva ocorre somente na GPU correspondente. Não há apropriação silenciosa de um processo externo.
 
 Em rigs, até seis GPUs podem herdar essa carteira global ou usar um endereço próprio por UUID. Confira a carteira efetiva de cada placa antes de iniciar. O serviço do rig reconcilia mudanças somente nas instâncias que gerencia; um minerador externo não é assumido pela mudança de configuração. [Configuração multiGPU](multi-gpu.md).
 
@@ -49,7 +49,7 @@ A IA pode usar OpenRouter Cloud Free, OpenCode Cloud Free pelo cliente ou Ollama
 
 Versões atuais aceitam uma solicitação de fechamento normal enviada pelo instalador, salvam o histórico e permitem abrir a nova versão automaticamente. Se uma versão antiga não responder, o instalador informa que ela precisa ser fechada pelo menu **Sair**; ele não encerra a mineração à força.
 
-O comando acima instala sempre a v0.5.7. A partir desta versão, abra **Configurar → Atualizações** para verificar releases e instalar uma versão nova após confirmação, sem refazer a configuração. O aplicativo também oferece atualizações em segundo plano. O canal inicial acompanha a build: esta versão inclui pré-lançamentos; é possível escolher somente versões estáveis. As versões anteriores são mantidas, os atalhos apontam para a nova e a reabertura espera o fechamento normal da interface antiga. O serviço do rig não é reiniciado por essa atualização. [Funcionamento e limites](update.md). O comando da release desejada continua disponível para atualização manual.
+O comando acima instala sempre a v0.5.8. A partir desta versão, abra **Configurações → Atualizações** para verificar releases e instalar uma versão nova após confirmação, sem refazer a configuração. O aplicativo também oferece atualizações em segundo plano. O canal inicial acompanha a build: esta versão inclui pré-lançamentos; é possível escolher somente versões estáveis. As versões anteriores são mantidas, os atalhos apontam para a nova e a reabertura espera o fechamento normal da interface antiga. O serviço do rig não é reiniciado por essa atualização. [Funcionamento e limites](update.md). O comando da release desejada continua disponível para atualização manual.
 
 Dados permanentes ficam separados da instalação em `%LOCALAPPDATA%\PearlMonitor`: configurações, `history.sqlite3`, estado do gerenciador e caches. Logs e bancos `gpu-agent.sqlite3` individuais ficam sob `LOG_DIR/gpus/<UUID>/`; bancos anteriores permanecem preservados. Atualizações não removem esses arquivos. No primeiro perfil vazio, o snapshot público do autor pode ser importado; ele é identificado por carteira. Consulte [portabilidade](../PORTABILIDADE.md).
 
@@ -59,7 +59,7 @@ Dados permanentes ficam separados da instalação em `%LOCALAPPDATA%\PearlMonito
 | --- | --- |
 | `winget` não existe | Instale App Installer pela Microsoft Store e reabra o PowerShell. |
 | Download bloqueado | Confira proxy, internet, GitHub e a mensagem do Windows. O instalador não desativa antivírus. |
-| Minerador em quarentena ou exceção desejada | Abra **Configurar → Segurança do minerador**. Leia os limites, solicite análise e, se decidir permitir, use a solicitação opcional com consentimento e confirmação administrativa. [Detalhes](defender.md). |
+| Minerador em quarentena ou exceção desejada | Abra **Configurações → Segurança**. Leia os limites, solicite análise e, se decidir permitir, use a solicitação opcional com consentimento e confirmação administrativa. [Detalhes](defender.md). |
 | Sensores indisponíveis | Instale o driver NVIDIA adequado e confira `nvidia-smi`. |
 | Sem hashrate no benchmark | Confira a pasta dos logs e aguarde amostras reais do SRBMiner. |
 | IA indisponível | Aguarde o download do modelo e confirme Ollama em `127.0.0.1:11434`. |

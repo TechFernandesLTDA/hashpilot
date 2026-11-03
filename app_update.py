@@ -201,15 +201,17 @@ def reopen_after_close(parent,app):
     parent.close()
 
 
-def show_update_setup(parent):
-    window=tk.Toplevel(parent);window.title('Atualizações — HashPilot');window.configure(bg='#0A1628')
+def show_update_setup(parent,container=None):
+    from ui_host import open_window,present,embedded
+    window=open_window(parent,container,'Atualizações — HashPilot');window.configure(bg='#0A1628')
     width=min(720,window.winfo_screenwidth()-60);height=min(460,window.winfo_screenheight()-80)
     window.geometry(f'{width}x{height}');window.minsize(width,height);window.columnconfigure(0,weight=1);window.rowconfigure(4,weight=1)
     def label(text,row,color='#B9C7DC',size=14):
         widget=tk.Label(window,text=text,bg='#0A1628',fg=color,font=('Segoe UI',-size),wraplength=width-40,justify='left',anchor='w')
         widget.grid(row=row,column=0,sticky='ew',padx=20,pady=8);return widget
     label('Atualizar a interface preservando seus dados',0,'#12A98E',22)
-    tk.Button(window,text='Atualizações do minerador SRBMiner…',command=lambda:__import__('miner_update_ui').show_miner_update(window)).grid(row=6,column=0,sticky='w',padx=20,pady=(0,12))
+    if embedded(window):tk.Button(window,text='Atualizações do minerador SRBMiner →',command=lambda:window.navigate('Minerador')).grid(row=6,column=0,sticky='w',padx=20,pady=(0,12))
+    else:tk.Button(window,text='Atualizações do minerador SRBMiner…',command=lambda:__import__('miner_update_ui').show_miner_update(window)).grid(row=6,column=0,sticky='w',padx=20,pady=(0,12))
     try:version,source=current_version();version_text=f'Em execução: {version} · {source}'
     except (OSError,ValueError) as error:version_text=str(error)
     label(version_text+'\nCanal desta versão: '+('pré-lançamento' if RELEASE_CHANNEL=='prerelease' else 'estável'),1)
@@ -275,7 +277,9 @@ def show_update_setup(parent):
         else:window.destroy()
     window.protocol('WM_DELETE_WINDOW',close_window)
     checker.start(force=True);window.after(250,poll)
-    window.transient(parent);window.grab_set();parent.wait_window(window)
+    present(parent,window)
+    return window
+
 
 
 def main():

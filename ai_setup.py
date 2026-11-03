@@ -55,12 +55,12 @@ def referral(provider):
     return value if not any(ord(c)<33 for c in value) and parsed.scheme=='https' and parsed.hostname and not parsed.username and not parsed.password else None
 
 
-def show_ai_setup(parent=None,path=SETTINGS_PATH):
+def show_ai_setup(parent=None,path=SETTINGS_PATH,container=None):
+    from ui_host import open_window,present,embedded
     try:settings=json.loads(Path(path).read_text(encoding='utf-8-sig'))
     except FileNotFoundError:settings={}
     config=configuration(settings)
-    window=tk.Toplevel(parent) if parent else tk.Tk()
-    window.title('Assistente de IA · HashPilot')
+    window=open_window(parent,container,'Assistente de IA · HashPilot')
     bg,panel,fg,muted,teal='#0A1628','#10213B','#FFFFFF','#B9C7DC','#12A98E'
     window.configure(bg=bg)
     width=min(800,window.winfo_screenwidth()-60);height=min(640,window.winfo_screenheight()-100)
@@ -148,8 +148,9 @@ def show_ai_setup(parent=None,path=SETTINGS_PATH):
             except tk.TclError:pass
     window.bind('<Destroy>',cleanup,add='+')
     tk.Button(buttons,text='Testar conexão',command=test).pack(side='left',padx=4)
-    tk.Button(buttons,text='Cancelar',command=window.destroy).pack(side='left',padx=4)
+    tk.Button(buttons,text='Descartar' if embedded(window) else 'Cancelar',command=window.destroy).pack(side='left',padx=4)
     tk.Button(buttons,text='Salvar IA',command=save,bg=teal,fg=fg,relief='flat',padx=16,pady=8).pack(side='left',padx=4)
     poll()
-    if parent:window.transient(parent);window.grab_set();parent.wait_window(window)
-    else:window.mainloop()
+    present(parent,window)
+    return window
+

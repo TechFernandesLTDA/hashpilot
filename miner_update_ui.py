@@ -9,8 +9,10 @@ from config import STATE_DIR
 import miner_update as update
 
 
-def show_miner_update(parent):
-    window=tk.Toplevel(parent);window.title('Atualizar minerador · HashPilot')
+def show_miner_update(parent,container=None):
+    from ui_host import open_window
+    window=open_window(parent,container,'Atualizar minerador · HashPilot')
+
     window.configure(bg='#0A1628');width=min(760,window.winfo_screenwidth()-60);height=min(560,window.winfo_screenheight()-90)
     window.geometry(f'{width}x{height}');window.columnconfigure(0,weight=1);window.rowconfigure(4,weight=1)
     def label(text,row,color='#B9C7DC',size=14):
@@ -22,7 +24,9 @@ def show_miner_update(parent):
     notes=label('Consultando a versão oficial…',3)
     status=label('A ativação reinicia as GPUs gerenciadas. Se não houver hashrate válido em até 3 minutos, o serviço tenta voltar à versão anterior. Não altera o Defender.',4)
     actions=tk.Frame(window,bg='#0A1628');actions.grid(row=5,column=0,sticky='ew',padx=20,pady=16)
-    tk.Button(window,text='Revisar bloqueio no Defender…',command=lambda:__import__('defender_setup').show_defender_setup(window)).grid(row=6,column=0,sticky='w',padx=20,pady=(0,12))
+    if getattr(window,'embedded',False):tk.Button(window,text='Revisar bloqueio no Defender →',command=lambda:window.navigate('Segurança')).grid(row=6,column=0,sticky='w',padx=20,pady=(0,12))
+    else:tk.Button(window,text='Revisar bloqueio no Defender…',command=lambda:__import__('defender_setup').show_defender_setup(window)).grid(row=6,column=0,sticky='w',padx=20,pady=(0,12))
+
     results=queue.Queue();selected=[None];busy=[False];requested=[None];request_at=[0]
     def current():
         registry=update.read(STATE_DIR/'rig-manager.json')

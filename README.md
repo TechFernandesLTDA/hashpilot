@@ -6,7 +6,7 @@ Monitor desktop de mineração Pearl (PRL) para Windows, com telemetria NVIDIA, 
 
 **Antes de minerar:** a carteira padrão pertence ao autor; pagamentos enviados a ela vão para o autor. Use seu endereço público para receber em sua carteira. A contribuição opcional de até 5% do tempo conectado pode ser desativada. Não informe seed ou chave privada.
 
-**[Baixar v0.5.7 — pré-lançamento](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.5.7)** · [Todas as releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verificar SHA-256 e evidências](docs/verification.md)
+**[Baixar v0.5.8 — pré-lançamento](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.5.8)** · [Todas as releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verificar SHA-256 e evidências](docs/verification.md)
 
 <img src="assets/brand/logo-header-source.png" alt="Tech Fernandes" width="280">
 
@@ -16,12 +16,12 @@ Monitor desktop de mineração Pearl (PRL) para Windows, com telemetria NVIDIA, 
 No PowerShell do **Windows 10/11 x64**, com `winget` disponível:
 
 ```powershell
-irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.5.7/install.ps1 | iex
+irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.5.8/install.ps1 | iex
 ```
 
 O instalador prepara o mise/Python, instala o aplicativo em `%LOCALAPPDATA%\Programs\HashPilot`, cria atalhos e abre o assistente de configuração. Configurações e histórico existentes são preservados. [Passos, requisitos e solução de problemas](docs/installation.md).
 
-Em **Configurar**, consulte [Atualizações](docs/update.md) para instalar novas releases sem zerar configurações ou histórico, e [Segurança do minerador](docs/defender.md) para entender detecções e solicitar uma exceção local opcional com consentimento e confirmação administrativa. O HashPilot não declara o minerador seguro apenas por ter origem oficial e não altera o Defender automaticamente.
+Em **Configurações**, consulte [Atualizações](docs/update.md) para instalar novas releases sem zerar configurações ou histórico, e [Segurança do minerador](docs/defender.md) para entender detecções e solicitar uma exceção local opcional com consentimento e confirmação administrativa. O HashPilot não declara o minerador seguro apenas por ter origem oficial e não altera o Defender automaticamente.
 
 **Carteira padrão: a do autor.** Se você mantiver esse endereço, os pagamentos irão para o autor. Troque pela sua carteira pública no assistente antes de minerar; a configuração pode ser reaberta. O monitor não precisa de seed ou chave privada. A instalação do minerador é uma opção separada: não começa apenas por instalar o painel.
 
@@ -84,7 +84,7 @@ Com uma carteira diferente da do autor, a contribuição opcional e desativável
 
 ## Verificação e evidências
 
-[Verificar a release e reproduzir o pacote](docs/verification.md) · [Protocolo de estabilidade de 24/72 horas](docs/verification.md#protocolo-de-estabilidade-de-24-e-72-horas) · [Notas da v0.5.7](docs/releases/v0.5.7.md). Hashes não substituem assinatura de publicador ou revisão independente.
+[Verificar a release e reproduzir o pacote](docs/verification.md) · [Protocolo de estabilidade de 24/72 horas](docs/verification.md#protocolo-de-estabilidade-de-24-e-72-horas) · [Notas da v0.5.8](docs/releases/v0.5.8.md). Hashes não substituem assinatura de publicador ou revisão independente.
 
 ## Código e dados
 

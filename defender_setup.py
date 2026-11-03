@@ -42,9 +42,9 @@ def launch_exception_request(action,version=None):
         cwd=ROOT, creationflags=getattr(subprocess, 'CREATE_NO_WINDOW', 0))
 
 
-def show_defender_setup(parent):
-    window = tk.Toplevel(parent)
-    window.title('Segurança do minerador — HashPilot')
+def show_defender_setup(parent,container=None):
+    from ui_host import open_window,present,embedded
+    window = open_window(parent,container,'Segurança do minerador — HashPilot')
     window.configure(bg='#0A1628')
     width = min(730, window.winfo_screenwidth()-60)
     height = min(610, window.winfo_screenheight()-80)
@@ -78,6 +78,7 @@ def show_defender_setup(parent):
     add=tk.Button(buttons,text='Solicitar exceção (UAC)',state='disabled',command=lambda:request('Add'))
     add.pack(side='left')
     tk.Button(buttons,text='Remover exceção (UAC)',command=lambda:request('Remove')).pack(side='left',padx=8)
-    tk.Button(buttons,text='Fechar',command=window.destroy).pack(side='right')
-    window.transient(parent);window.grab_set()
-    parent.wait_window(window)
+    if not embedded(window):tk.Button(buttons,text='Fechar',command=window.destroy).pack(side='right')
+    present(parent,window)
+    return window
+

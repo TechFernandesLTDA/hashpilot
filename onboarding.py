@@ -99,8 +99,9 @@ def confirm_setup_mining(parent, wallet, settings, devices):
     targets = [device['uuid'] for device in resolved if device['enabled']]
     return confirm_author_wallet(parent, planned, targets)
 
-def run_gpu_setup(parent=None,selected_uuid=None,devices=None,path=SETTINGS_PATH):
+def run_gpu_setup(parent=None,selected_uuid=None,devices=None,path=SETTINGS_PATH,container=None):
     """Até seis carteiras/interruptores, sempre associados ao UUID físico."""
+    from ui_host import open_window,present,embedded
     from gpu_agent import detect_nvidia_gpus
     from rig_config import resolve_devices,update_gpu_settings
     settings=read_settings(path)
@@ -108,8 +109,7 @@ def run_gpu_setup(parent=None,selected_uuid=None,devices=None,path=SETTINGS_PATH
         devices=((getattr(parent,'last_data',None) or {}).get('rig') or {}).get('devices')
     if devices is None: devices=detect_nvidia_gpus(max_devices=6)
     resolved=resolve_devices(devices,settings,LOG_DIR)
-    window=tk.Toplevel(parent) if parent else tk.Tk()
-    window.title('GPUs e carteiras — HashPilot')
+    window=open_window(parent,container,'GPUs e carteiras — HashPilot')
     window.configure(bg=BG)
     width=min(1100,window.winfo_screenwidth()-60)
     height=min(650,window.winfo_screenheight()-80)
@@ -173,14 +173,15 @@ def run_gpu_setup(parent=None,selected_uuid=None,devices=None,path=SETTINGS_PATH
         saved=True;window.destroy()
     buttons=tk.Frame(window,bg=BG)
     buttons.grid(row=5,column=0,sticky='e',padx=20,pady=12)
-    tk.Button(buttons,text='Segurança do minerador',command=lambda:__import__('defender_setup').show_defender_setup(window),padx=10,pady=7).pack(side='left',padx=6)
-    tk.Button(buttons,text='Atualizações',command=lambda:__import__('app_update').show_update_setup(window),padx=10,pady=7).pack(side='left',padx=6)
-    tk.Button(buttons,text='Cancelar',command=window.destroy,padx=14,pady=7).pack(side='left',padx=6)
+    if not embedded(window):
+        tk.Button(buttons,text='Segurança do minerador',command=lambda:__import__('defender_setup').show_defender_setup(window),padx=10,pady=7).pack(side='left',padx=6)
+        tk.Button(buttons,text='Atualizações',command=lambda:__import__('app_update').show_update_setup(window),padx=10,pady=7).pack(side='left',padx=6)
+    tk.Button(buttons,text='Descartar' if embedded(window) else 'Cancelar',command=window.destroy,padx=14,pady=7).pack(side='left',padx=6)
     tk.Button(buttons,text='Salvar GPUs e carteiras',command=finish,bg=TEAL,fg=TEXT,relief='flat',padx=16,pady=8).pack(side='left')
-    if parent:
-        window.transient(parent);window.grab_set();parent.wait_window(window)
-    else: window.mainloop()
+    if embedded(window):return window
+    present(parent,window)
     return saved
+
 
 
 def run_setup(parent=None,selected_uuid=None) -> bool:
