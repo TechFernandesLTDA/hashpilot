@@ -1,0 +1,25 @@
+{
+  "kind": "historical SRBMiner log; not a new controlled benchmark",
+  "version": "3.8.1",
+  "samples": 238,
+  "first": {
+    "time": "2026-10-31 18:30:35",
+    "ths": 78.08,
+    "watts": 152.2,
+    "accepted": 1102,
+    "rejected": 4,
+    "hw": 0
+  },
+  "last": {
+    "time": "2026-11-01 00:29:41",
+    "ths": 78.57,
+    "watts": 152.3,
+    "accepted": 1199,
+    "rejected": 4,
+    "hw": 0
+  },
+  "mean_ths": 78.94,
+  "median_ths": 78.955,
+  "mean_watts": 152.2138655462185,
+  "mean_ths_per_mean_watt": 0.5186124123234391
+}
