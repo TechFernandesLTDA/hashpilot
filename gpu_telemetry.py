@@ -118,10 +118,15 @@ def _parse_gpu_log(text,gpu_uuid,index,stamp_now,allow_local_gpu0):
             future=stamp if future is None else min(future,stamp)
             continue
         if stamp is None:continue
+        if result['started_at'] is not None and stamp<result['started_at']:continue
         if result['last_log_at'] is None or stamp>=result['last_log_at']:result['last_log_at']=stamp
         label=GPU_LABEL.search(line)
         belongs=label is not None and target is not None and int(label[1])==target
         if "Miner version:" in line:
+            # SRBMiner can append a replacement process to the same log file.
+            result.update(hashrate=None,hashrate_at=None,accepted=0,rejected=0,hw_errors=0,
+                          last_share_at=None,average_1m=None,average_15m=None,rate_points=[],paused=False,
+                          connection='Aguardando conexão',connection_at=None,last_job_at=None,pause_at=None)
             result["started_at"]=stamp
             result['version']=line.split('Miner version:',1)[1].strip()
         if "Job received" in line and (result['last_job_at'] is None or stamp>=result['last_job_at']):
@@ -133,10 +138,9 @@ def _parse_gpu_log(text,gpu_uuid,index,stamp_now,allow_local_gpu0):
                 result["connection"],result['connection_at']="Reconectando à pool",stamp
         if "share accepted" in line and (belongs or (label is None and len(labels)==1 and target is not None)):
             if result['last_share_at'] is None or stamp>=result['last_share_at']:result["last_share_at"]=stamp
-        if belongs and "turned off" in line:
-            result["paused"]=True
-        elif belongs and "turned on" in line:
-            result["paused"]=False
+        if belongs and (result.get('pause_at') is None or stamp>=result['pause_at']):
+            if "turned off" in line:result.update(paused=True,pause_at=stamp)
+            elif "turned on" in line:result.update(paused=False,pause_at=stamp)
         match=RATE.search(line)
         if match and target is not None and int(match[1])==target:
             value=numeric(match[2])

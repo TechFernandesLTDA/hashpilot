@@ -155,7 +155,7 @@ class RigManagerTests(unittest.TestCase):
         self.assertEqual(self.backend.started,[])
         self.assertEqual(self.backend.stopped,[])
         self.assertEqual(self.backend.restored,[])
-        self.assertEqual(self.manager.devices['GPU-test-0']['state'],'error')
+        self.assertEqual(self.manager.devices['GPU-test-0']['state'],'start_blocked')
 
     def test_disabling_one_gpu_never_stops_another(self):
         self.manager.reconcile()
@@ -312,7 +312,7 @@ class RigManagerTests(unittest.TestCase):
         self.assertTrue(restarted.registry_valid)
 
     def prepare_legacy_migration(self):
-        gpu={**detected(1)[0],"uuid":REFERENCE_RTX3070_UUID,"power_default_w":240,"supported_graphics_clocks_mhz":[1500,1740,1755]}
+        gpu={**detected(1)[0],"uuid":REFERENCE_RTX3070_UUID,"power_default_w":240,"supported_graphics_clocks_mhz":[1500,1560,1740,1755]}
         self.manager.detector=lambda:[gpu]
         miner=self.backend.start([self.manager.miner_path,"--gpu-id","0","--wallet",AUTHOR_WALLET,
             "--log-file",self.root/"legacy.log"],self.root)
@@ -340,7 +340,7 @@ class RigManagerTests(unittest.TestCase):
         self.manager.reconcile()
         entry=self.manager.devices[gpu["uuid"]]
         args=entry["miner"]["argv"]
-        self.assertEqual(args[args.index("--gpu-cclock0")+1],"1740")
+        self.assertEqual(args[args.index("--gpu-cclock0")+1],"1560")
         self.assertEqual(args[args.index("--gpu-fan0")+1],"100")
         self.assertFalse(entry["external_readonly"])
 
@@ -362,7 +362,7 @@ class RigManagerTests(unittest.TestCase):
         self.assertEqual(len(self.backend.started),3)
         self.assertTrue(self.backend.processes[supervisor["pid"]]["alive"])
 
-    def test_reference_identity_persists_and_recovery_reuses_1740_only_after_fresh_checks(self):
+    def test_reference_identity_persists_and_recovery_reuses_conservative_clock_only_after_fresh_checks(self):
         gpu,miner,controller,supervisor=self.prepare_legacy_migration()
         def completed(identity,timeout=12):
             self.backend.processes[identity["pid"]]["alive"]=False
@@ -377,7 +377,7 @@ class RigManagerTests(unittest.TestCase):
         self.assertEqual(recovered.reference_uuid,REFERENCE_RTX3070_UUID)
         recovered.reconcile()
         args=recovered.devices[gpu["uuid"]]["miner"]["argv"]
-        self.assertEqual(args[args.index("--gpu-cclock0")+1],"1740")
+        self.assertEqual(args[args.index("--gpu-cclock0")+1],"1560")
         self.assertEqual(args[args.index("--gpu-plimit0")+1],"240")
 
     def test_reference_profile_unknown_current_limits_never_starts_or_falls_back_to_stock(self):
@@ -396,7 +396,7 @@ class RigManagerTests(unittest.TestCase):
 
     def test_stopped_reference_can_opt_in_without_legacy_processes(self):
         gpu={**detected(1)[0],"uuid":REFERENCE_RTX3070_UUID,"power_default_w":240,
-             "supported_graphics_clocks_mhz":[1740]}
+             "supported_graphics_clocks_mhz":[1560,1740]}
         self.manager.detector=lambda:[gpu]
         self.manager.shutting_down=True
         self.manager.serve(reference_rtx3070=True,reference_uuid=gpu["uuid"])
