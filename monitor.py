@@ -1160,6 +1160,11 @@ class Monitor(tk.Tk):
         width, height = self.winfo_width(), self.winfo_height()
         if width < 500:
             return
+        # Moving/restoring the native window can repeat Configure at the same size.
+        # Reconfiguring global ttk styles there invalidates the entire widget tree.
+        if getattr(self,'_adapted_size',None)==(width,height):
+            return
+        self._adapted_size=(width,height)
         self.remember_window_state()
         logo_width = 360 if height>=1400 and width>=2800 else 240 if height>=740 and width>=1600 else 180
         if logo_width != self.logo_native_width:

@@ -640,6 +640,7 @@ def validated_plan(gpu, sample, action, best_profile=None, *, mode="adaptive"):
                 plan["blocked"]="Melhor perfil sem clock suportado"
                 return plan
             action="clock_up" if desired>current else "clock_down" if desired<current else "hold"
+            if action=="hold":return plan
         eligible=[clock for clock in clocks if (current<clock<=current+15 if action=="clock_up" else current-15<=clock<current)]
         if eligible:
             plan.update(action=action,clock_mhz=min(eligible) if action=="clock_up" else max(eligible))
@@ -654,6 +655,22 @@ def validated_plan(gpu, sample, action, best_profile=None, *, mode="adaptive"):
             plan["blocked"]="Limite de potência atingido"
         else:
             plan.update(action=action,power_limit_w=target)
+    return plan
+
+
+def control_plan(gpu,sample,objective,selected_profile,soft_limit,advice=None,best_profile=None):
+    """A no-op advisory must not indefinitely veto bounded performance exploration."""
+    temperature=numeric(sample.get('temperature_c'))
+    desired='power_down' if objective=='efficiency' else 'clock_up'
+    if temperature is None or temperature>=soft_limit:
+        return validated_plan(gpu,sample,'clock_down',best_profile)
+    plan=validated_plan(gpu,sample,desired,best_profile)
+    if advice and (selected_profile=='performance' or advice.get('action') in ('hold','clock_down','power_down')):
+        advised=validated_plan(gpu,sample,advice['action'],best_profile)
+        if advised['action']!='hold' or objective!='performance':
+            plan=advised
+        else:
+            plan['advisory_noop']=True
     return plan
 
 
@@ -1138,16 +1155,12 @@ def control(args,state_dir,monitor_state_dir):
                     agent.start_benchmark(gpu,args.duration,objective)
             elif result.get("validated") and fresh:
                 # Explore one device-supported step after a measured baseline.
-                desired="power_down" if objective=="efficiency" else "clock_up"
                 soft=soft_limit
-                if sample["temperature_c"]>=soft:
-                    desired="clock_down"
+                advice=None
                 if answer:
                     advice=answer["advice"]
-                    if advice and sample["temperature_c"]<soft and (selected_profile=='performance' or advice['action'] in ('hold','clock_down','power_down')):
-                        desired=advice["action"]
                     status["ai_status"]=answer["status"]
-                plan=validated_plan(gpu,sample,desired,result.get("best_profile"))
+                plan=control_plan(gpu,sample,objective,selected_profile,soft,advice,result.get('best_profile'))
                 plan.update(gpu_uuid=gpu["uuid"],at=time.time(),reason="Experimento após baseline validado")
                 if plan["action"]!="hold" and (plan["action"] not in ("clock_up","power_up") or sample["temperature_c"]<soft-3):
                     # Refuse a conflicting trial before changing hardware.

@@ -12,6 +12,7 @@ from gpu_agent import (GPUAgent, NvidiaActuator, OllamaAdvisor, detect_nvidia_gp
                        thermal_limits, validated_plan, control, BackgroundAdvisor,
                        select_device,read_miner_data,external_supervisor_active)
 from gpu_agent import process_identity,same_process,requested_control_stop
+from gpu_agent import control_plan
 
 
 def device(identifier="GPU-test-3070"):
@@ -23,6 +24,46 @@ def device(identifier="GPU-test-3070"):
 def sample(stamp=1000,temp=68,clock=1530,power=180):
     return {"temperature_c":temp,"power_w":150,"power_limit_w":power,
             "clock_mhz":clock,"utilization_pct":100,"sampled_at":stamp}
+
+
+class ControlPlanTests(unittest.TestCase):
+    def test_restoring_current_clock_is_a_true_noop(self):
+        plan=validated_plan(device(),sample(),'restore_best',{'clock_mhz':1530})
+        self.assertEqual(plan['action'],'hold')
+        self.assertIsNone(plan['clock_mhz'])
+        self.assertIsNone(plan['power_limit_w'])
+
+    def test_performance_does_not_get_stuck_on_advisory_noops(self):
+        for advice in ({'action':'hold'},{'action':'restore_best'}):
+            with self.subTest(advice=advice):
+                plan=control_plan(device(),sample(),'performance','performance',78,advice,{'clock_mhz':1530})
+                self.assertEqual(plan['action'],'clock_up')
+                self.assertEqual(plan['clock_mhz'],1545)
+                self.assertTrue(plan['advisory_noop'])
+
+    def test_thermal_boundary_overrides_ai_increase(self):
+        plan=control_plan(device(),sample(temp=78),'performance','performance',78,{'action':'clock_up'})
+        self.assertEqual(plan['action'],'clock_down')
+        self.assertEqual(plan['clock_mhz'],1515)
+
+    def test_efficiency_can_keep_a_measured_profile(self):
+        plan=control_plan(device(),sample(),'efficiency','balanced',75,{'action':'hold'})
+        self.assertEqual(plan['action'],'hold')
+
+    def test_conservative_profile_cannot_be_overridden_with_ai_clock_up(self):
+        plan=control_plan(device(),sample(),'efficiency','balanced',75,{'action':'clock_up'})
+        self.assertEqual(plan['action'],'power_down')
+        self.assertEqual(plan['power_limit_w'],175)
+
+    def test_performance_exploration_stops_at_supported_clock_ceiling(self):
+        plan=control_plan(device(),sample(clock=1560),'performance','performance',78,{'action':'hold'})
+        self.assertEqual(plan['action'],'hold')
+        self.assertIsNone(plan['clock_mhz'])
+
+    def test_advice_can_restore_a_real_lower_profile_one_supported_step(self):
+        plan=control_plan(device(),sample(),'performance','performance',78,{'action':'restore_best'},{'clock_mhz':1500})
+        self.assertEqual(plan['action'],'clock_down')
+        self.assertEqual(plan['clock_mhz'],1515)
 
 
 class GPUAgentTests(unittest.TestCase):
