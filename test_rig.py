@@ -6,7 +6,7 @@ import unittest
 from unittest.mock import patch
 
 from contribution import AUTHOR_WALLET,atomic_json
-from rig import RigManager,write_request,parse_miner_device_map,REFERENCE_RTX3070_UUID
+from rig import RigManager,write_request,parse_miner_device_map,REFERENCE_RTX3070_UUID,reference_memory_clock,reference_start_clock
 from rig_config import MAX_GPUS,gpu_paths,resolve_devices,update_gpu_settings
 
 OTHER="prl1"+"q"*40
@@ -75,6 +75,19 @@ class FakeBackend:
 
 
 class RigConfigurationTests(unittest.TestCase):
+    def test_measured_restart_core_requires_explicit_preset_and_driver_support(self):
+        gpu={'supported_graphics_clocks_mhz':[1560,1710,2100]}
+        self.assertEqual(reference_start_clock(gpu,{}),1560)
+        self.assertEqual(reference_start_clock(gpu,{'reference_start_core_mhz':1710}),1710)
+        self.assertEqual(reference_start_clock(gpu,{'reference_start_core_mhz':2100}),1560)
+        self.assertEqual(reference_start_clock({'supported_graphics_clocks_mhz':[1560]},{'reference_start_core_mhz':1710}),1560)
+
+    def test_low_memory_requires_explicit_optin_and_supported_miner(self):
+        for version in ('3-8-0','3-8-3','3-8-4','3-9-0'):
+            path=Path('C:/miners')/('SRBMiner-Multi-'+version)/'SRBMiner-MULTI.exe'
+            self.assertEqual(reference_memory_clock(path,{}),5001)
+            self.assertEqual(reference_memory_clock(path,{'reference_memory_mhz':405}),405 if version in ('3-8-4','3-9-0') else 5001)
+
     def test_srb_gpu_ids_are_resolved_by_unique_pci_not_model_or_nvidia_index(self):
         devices=detected(2,mixed=False)
         devices[0]["pci_bus_id"]="00000000:06:00.0"
@@ -122,6 +135,23 @@ class RigConfigurationTests(unittest.TestCase):
 
 
 class RigManagerTests(unittest.TestCase):
+    def test_reference_low_memory_is_reversible_and_does_not_affect_other_gpus(self):
+        gpu={**detected(1)[0],'uuid':REFERENCE_RTX3070_UUID,'power_default_w':240,'supported_graphics_clocks_mhz':[1560,1740]}
+        other={**detected(2)[1]}
+        self.manager.reference_uuid=REFERENCE_RTX3070_UUID
+        self.manager.miner_path=self.root/'SRBMiner-Multi-3-8-4'/'SRBMiner-MULTI.exe'
+        settings={'wallet':AUTHOR_WALLET,'reference_memory_mhz':405}
+        self.manager.reconcile(detected=[gpu,other],settings=settings)
+        entry=self.manager.devices[gpu['uuid']];args=entry['miner']['argv'];other_pid=self.manager.devices[other['uuid']]['miner_pid']
+        self.assertEqual(args[args.index('--gpu-mclock0')+1],'405')
+        self.assertNotIn('--gpu-mclock0',self.manager.devices[other['uuid']]['miner']['argv'])
+        old=entry['miner_pid'];settings['reference_memory_mhz']=5001
+        self.manager.reconcile(detected=[gpu,other],settings=settings)
+        entry=self.manager.devices[gpu['uuid']];args=entry['miner']['argv']
+        self.assertNotEqual(entry['miner_pid'],old)
+        self.assertEqual(args[args.index('--gpu-mclock0')+1],'5001')
+        self.assertEqual(self.manager.devices[other['uuid']]['miner_pid'],other_pid)
+
     def setUp(self):
         self.temp=tempfile.TemporaryDirectory()
         self.root=Path(self.temp.name)

@@ -52,6 +52,29 @@ class PackageTests(unittest.TestCase):
             self.assertEqual(len(list(Path(folder).rglob('*.exe'))),1)
             update.select('3.8.1',folder);self.assertEqual(update.selected_version(folder),'3.8.1')
 
+    def test_nested_384_layout_extracts_only_the_pinned_member(self):
+        binary=b'verified nested fixture';stream=io.BytesIO()
+        member=update.CATALOG['3.8.4']['archive_member']
+        with zipfile.ZipFile(stream,'w') as z:
+            z.writestr(member,binary)
+            z.writestr('unexpected/SRBMiner-MULTI.exe',b'not the selected executable')
+            z.writestr('../../outside.txt',b'not extracted')
+        data=stream.getvalue()
+        entry={'archive_member':member,'archive_sha256':hashlib.sha256(data).hexdigest(),'exe_sha256':hashlib.sha256(binary).hexdigest()}
+        with tempfile.TemporaryDirectory() as folder,patch.dict(update.CATALOG,{'3.8.4':entry}):
+            target=update.stage('3.8.4',folder,opener=lambda *a,**k:io.BytesIO(data))
+            self.assertEqual(target.read_bytes(),binary)
+            self.assertEqual(len(list(Path(folder).rglob('*.exe'))),1)
+            self.assertFalse((Path(folder)/'outside.txt').exists())
+            self.assertEqual(update.selected_version(folder),'3.8.0')
+
+    def test_nested_package_rejects_a_binary_in_an_unreviewed_location(self):
+        binary=b'fixture';stream=io.BytesIO()
+        with zipfile.ZipFile(stream,'w') as z:z.writestr('other/SRBMiner-MULTI.exe',binary)
+        data=stream.getvalue();entry={**update.CATALOG['3.8.4'],'archive_sha256':hashlib.sha256(data).hexdigest(),'exe_sha256':hashlib.sha256(binary).hexdigest()}
+        with tempfile.TemporaryDirectory() as folder,patch.dict(update.CATALOG,{'3.8.4':entry}),self.assertRaises(ValueError):
+            update.stage('3.8.4',folder,opener=lambda *a,**k:io.BytesIO(data))
+
     def test_bad_archive_or_binary_never_installs_or_selects(self):
         binary,data,entry=self.package()
         for corrupted in ('archive_sha256','exe_sha256'):

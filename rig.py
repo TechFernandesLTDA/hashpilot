@@ -38,6 +38,17 @@ def reference_device_confirmed(gpu):
         and gpu.get("power_default_w")==240 and 1560 in gpu.get("supported_graphics_clocks_mhz",[]))
 
 
+def reference_memory_clock(miner_path,settings):
+    """Explicit author-board opt-in; older miners keep the established memory clock."""
+    version=re.fullmatch(r'SRBMiner-Multi-(\d+)-(\d+)-(\d+)',Path(miner_path).parent.name)
+    return 405 if settings.get('reference_memory_mhz')==405 and version and tuple(map(int,version.groups()))>=(3,8,4) else 5001
+
+
+def reference_start_clock(gpu,settings):
+    # Only the measured author-board restart preset is eligible; no arbitrary OC.
+    return 1710 if settings.get('reference_start_core_mhz')==1710 and 1710 in gpu.get('supported_graphics_clocks_mhz',[]) else 1560
+
+
 def parse_miner_device_map(text,devices):
     """Match SRBMiner IDs to NVIDIA UUIDs by unique PCI bus, never model name."""
     buses={}
@@ -452,9 +463,13 @@ class RigManager:
             if identifier==self.reference_uuid:
                 if not reference_device_confirmed(device):
                     raise RuntimeError("Unidade ou limites atuais da RTX 3070 de referência não confirmados; perfil não aplicado")
-                miner_args.extend(["--gpu-cclock0","1560","--gpu-coffset0","150","--gpu-mclock0","5001",
+                memory=reference_memory_clock(self.miner_path,settings)
+                core=reference_start_clock(device,settings)
+                entry['reference_memory_mhz']=memory
+                entry['reference_core_mhz']=core
+                miner_args.extend(["--gpu-cclock0",str(core),"--gpu-coffset0","150","--gpu-mclock0",str(memory),
                     "--gpu-fan0","100","--gpu-plimit0","240"])
-                entry["startup_profile"]="Opt-in da RTX 3070 de referência: início conservador core1560/offset150/mem5001/fan100/PL240; ajuste posterior pelo controlador"
+                entry["startup_profile"]=f"Opt-in da RTX 3070 de referência: core{core}/offset150/mem{memory}/fan100/PL240; ajuste posterior pelo controlador"
             identity=self.backend.start(miner_args,self.miner_path.parent,directory/"miner-console.log")
             entry.update(miner=identity,miner_pid=identity["pid"])
             identity=self.start_controller(entry,settings)
@@ -653,6 +668,9 @@ class RigManager:
                     continue
                 entry.update(external_readonly=False,managed=True,state="stopped",miner=None,controller=None)
             changed=entry.get("wallet")!=device["wallet"] or entry.get("index")!=device["index"] or entry.get("miner_index",entry.get("index"))!=device["miner_index"]
+            if identifier==self.reference_uuid:
+                changed=changed or entry.get('reference_memory_mhz',5001)!=reference_memory_clock(self.miner_path,settings)
+                changed=changed or entry.get('reference_core_mhz',1560)!=reference_start_clock(device,settings)
             miner_alive=bool(entry.get('miner') and self.backend.is_owned(entry['miner']))
             if device['enabled'] and not changed and not miner_alive and self.reconcile_successor(entry,device):
                 if entry.get('external_readonly'):continue

@@ -21,6 +21,8 @@ CATALOG={
  '3.8.0':{'archive_sha256':'33eef5f8946259290013ce370a746a85f91c2bbcd81fcefa1aad904dd9a912f8','exe_sha256':'6eb4e0bc37d65fdf7644ab620737e14f4c7dfa9666acde43d5f38ab1e9094ac1'},
  '3.8.1':{'archive_sha256':'16bd455557bd3698e004d1f6b5d19290b9b59e9f9c8ef9245acafdaeb2413e79','exe_sha256':'2f7e60a17fcc65ddd3c7f5821666a6ae11ef6c1f2c95331bb7e46793c032b688'},
  '3.8.3':{'archive_sha256':'92af8d2db5bc96df62825487e7f384b8ab04e5db26a634e29c2cd86dcbb87d0e','exe_sha256':'1a58995232c96501a8c17139db5404527d9ec0b57863ae03605dd477e181ffdf'},
+ '3.8.4':{'archive_sha256':'68ec24cbe24e795dd4677e981967563dc7eaea21706289df6b4b0af667789baa','exe_sha256':'5d235cfa8ff75659f5264817a356e689e087eb0f9b94218a80c5a3f25ffd1171',
+          'archive_member':'SRBMiner-Multi-3-8-4/Win/SRBMiner-Multi-3-8-4/SRBMiner-MULTI.exe'},
 }
 
 def base_directory():return Path(os.environ['LOCALAPPDATA'])/'Mining/Pearl'
@@ -129,7 +131,7 @@ def _stage(version,base=None,opener=urllib.request.urlopen):
 def _extract_verified(version,base,item,target,data):
     import io
     with zipfile.ZipFile(io.BytesIO(data)) as package:
-        name=item['folder']+'/SRBMiner-MULTI.exe'
+        name=item.get('archive_member',item['folder']+'/SRBMiner-MULTI.exe')
         members=[entry for entry in package.infolist() if entry.filename==name]
         if len(members)!=1 or members[0].file_size>100*1024*1024:raise ValueError('Executável único não confirmado no pacote')
         binary=package.read(members[0])
