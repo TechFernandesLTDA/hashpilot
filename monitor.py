@@ -513,8 +513,8 @@ class Chart(tk.Canvas):
             age = max(0, int(now-latest))
             self.create_text(right, 18, anchor="e", text=f"última amostra há {age} s", fill=MUTED,
                              font=(BODY_FONT, axis_size), tags=("sample-age", "dynamic"))
-        self.create_text(left, h-12, text=dt.datetime.fromtimestamp(start).strftime("%H:%M:%S"), anchor="w", fill=MUTED, font=(BODY_FONT, axis_size))
-        self.create_text(right, h-12, text="agora · " + self.unit, anchor="e", fill=MUTED, font=(BODY_FONT, axis_size))
+        self.create_text(left, h-12, text=dt.datetime.fromtimestamp(start).strftime("%H:%M:%S"), anchor="w", fill=MUTED, font=(BODY_FONT, axis_size), tags=("time-axis", "dynamic"))
+        self.create_text(right, h-12, text="agora · " + self.unit, anchor="e", fill=MUTED, font=(BODY_FONT, axis_size), tags=("time-axis", "dynamic"))
 
 
 class Monitor(tk.Tk):

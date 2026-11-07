@@ -6,6 +6,8 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 
 ## Read first
 
+- [v0.5.13 chart fix](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/releases/v0.5.13.md): bounded canvas item count during repeated live redraws, readable time axes, preserved history and independent miner lifecycle.
+
 - [VRAM and Pearl optimization analysis](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/vram-pearl-rtx3070.md): measured GPU-wide VRAM versus process RAM, WDDM attribution limits, real batch-size controls in an alternative host, and a proposed benchmark. No gains from filling VRAM or alternative backend integration are claimed.
 
 - [SRBMiner 3.8.4 review and RTX 3070 experiment](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/srbminer-3.8.4.md): official changelog applicability, exact archive verification, failed 405 MHz memory experiment on the author's board, restored 5001 MHz, and measured automatic core tuning. Do not treat advertised efficiency gains as measured gains or infer a universal memory preset.

@@ -1,6 +1,8 @@
 """Regressões de ingestão tardia e lacunas normais do log de hashrate."""
 from collections import deque
 from types import SimpleNamespace
+import time
+import tkinter as tk
 import unittest
 from monitor import Chart
 
@@ -41,6 +43,29 @@ class HashrateChartTests(unittest.TestCase):
         Chart.add(chart, 101, float("nan"))
         Chart.add(chart, float("inf"), 80)
         self.assertEqual(list(chart.points), [(100, 75)])
+
+class ChartRenderingTests(unittest.TestCase):
+    def test_repeated_redraws_keep_canvas_items_bounded(self):
+        root = tk.Tk()
+        root.withdraw()
+        try:
+            chart = Chart(root, "Hashrate", "#00aa88", "TH/s")
+            # Exercise a real Tcl canvas without mapping a window on the desktop.
+            chart.winfo_width = lambda: 600
+            chart.winfo_height = lambda: 300
+            chart.add(time.time()-30, 75)
+            chart.draw(force=True)
+            initial_count = len(chart.find_all())
+            for _ in range(100):
+                chart.draw(force=True)
+            self.assertEqual(len(chart.find_all()), initial_count)
+            self.assertEqual(len(chart.find_withtag("time-axis")), 2)
+            chart.points.clear()
+            chart.draw(force=True)
+            self.assertEqual(len(chart.find_withtag("time-axis")), 0)
+        finally:
+            root.destroy()
+
 
 if __name__ == "__main__":
     unittest.main()
