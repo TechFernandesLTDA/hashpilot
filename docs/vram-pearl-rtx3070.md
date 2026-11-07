@@ -30,4 +30,10 @@ O host é publicado, mas o kernel continua em biblioteca binária e tem licença
 5. Repetir os testes com mesmo núcleo, memória, pool e carteira; medir memória real, TH/s sustentados, watts, temperatura, erros, shares e impacto da taxa do desenvolvedor. Uma taxa menor anunciada ou GEMM sintético melhor não prova rendimento líquido maior.
 6. Se os lotes não melhorarem o resultado, investigar tempo e ocupação dos kernels com um profiler apropriado, numa sessão controlada. Só então considerar um kernel independente ou outro arranjo de execução, sem presumir acesso ao código fechado do SRBMiner.
 
-O alvo é mais trabalho válido por segundo, não 8 GB ocupados. Ganhos dessa estratégia ainda não foram demonstrados nesta máquina. A mineração de produção continua no SRBMiner enquanto o controle de clocks é validado; nenhum teste de concorrência entre dois mineradores foi usado como atalho.
+## Hipótese adicional: espaço de trabalho para provas
+
+Uma implementação nova poderia usar VRAM para preparar ou guardar partes das provas e árvores de compromisso, sobrepondo preparação e busca. É uma hipótese de engenharia, não um recurso comprovado do SRBMiner nem uma modificação já feita no HashPilot. Antes de desenvolvê-la, um trace precisa mostrar pausas relevantes da GPU enquanto o host prepara trabalho ou provas.
+
+Mesmo com memória livre, kernels concorrentes disputam registradores, memória compartilhada, cache e escalonamento. Transferir uma etapa para a GPU pode reduzir a mineração em vez de acelerá-la. A validação deve comparar provas bit a bit com a referência e o tempo total de trabalho útil, preservando os mecanismos de taxa e licença de qualquer minerador usado. O uso de memória livre para esse propósito só se justificaria após demonstrar um gargalo e um ganho.
+
+O alvo é mais trabalho válido por segundo, não 8 GB ocupados. Ganhos dessas estratégias ainda não foram demonstrados nesta máquina. A mineração de produção continua no SRBMiner enquanto o controle de clocks é validado; nenhum teste de concorrência entre dois mineradores foi usado como atalho.
