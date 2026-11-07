@@ -33,3 +33,17 @@ As medições anteriores de 30 minutos em 1710 MHz foram aproximadamente 78,984 
 O SHA-256 do arquivo oficial foi conferido com o digest publicado na API de releases. O executável extraído foi identificado por caminho único e hash próprio fixado no catálogo; arquivos adicionais do ZIP não são executados. Isso verifica identidade e integridade, não substitui uma auditoria de segurança do minerador fechado.
 
 A seleção de versão preserva o minerador anterior. A troca da memória para 5001 MHz reabre somente a GPU de referência; a parada manual restaura offsets, clocks destravados, potência de fábrica e ventilação automática. Nenhuma gravação de VBIOS ou alteração permanente é necessária.
+
+## Resultados locais observados
+
+| Configuração e etapa | Hashrate | Consumo | Observação |
+|---|---:|---:|---|
+| 3.8.4, núcleo 1710 MHz, memória 405 MHz | 34,22 e 33,40 TH/s | 84,9 e 83,4 W | Duas leituras; experimento interrompido precocemente pela perda severa de rendimento. |
+| 3.8.4, núcleo 1710 MHz, memória restaurada a 5001 MHz | média 74,93 TH/s | média 151,83 W | Três amostras após aquecimento; máximo de 71 °C nesse intervalo curto. |
+| Primeiro ajuste automático, 1710 → 1725 MHz, memória 5001 MHz | referência 74,86 → média 75,53 TH/s | aproximadamente 153 W após o ajuste | Duas amostras independentes, 182 segundos de validação, 73 °C, sem rejeições ou erros de hardware nessa etapa. |
+
+O teste de 405 MHz falhou nesta combinação de RTX 3070 e driver 617.14. O ajuste foi desfeito e o opt-in local ficou em 5001 MHz. Isso não prova que todas as placas da série terão o mesmo comportamento, nem identifica sozinho a causa interna da perda de desempenho.
+
+O período anterior em 3.8.3 e a sessão nova não constituem uma comparação de laboratório: não é válido usar os 78,984 TH/s históricos para atribuir ganho ou perda exclusivamente à atualização. A pequena diferença medida pelo ajuste automático de núcleo também não estabelece o máximo absoluto da GPU. O controle continua explorando degraus suportados de até 15 MHz, com validação posterior, margem térmica e reversão quando sua validação falha. O driver não indicava limitação ativa por potência ou temperatura na consulta realizada.
+
+O afinador nativo experimental permanece desligado. O supervisor do HashPilot mantém o controle dinâmico; a memória fixa e o preset de partida foram configurados explicitamente para esta unidade. A evidência pública agregada fica em `VALIDATION-RESULTS.json` na [release v0.5.11](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.5.11), incluindo os resultados negativos.

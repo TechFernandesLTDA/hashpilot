@@ -6,6 +6,8 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 
 ## Read first
 
+- [SRBMiner 3.8.4 review and RTX 3070 experiment](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/srbminer-3.8.4.md): official changelog applicability, exact archive verification, failed 405 MHz memory experiment on the author's board, restored 5001 MHz, and measured automatic core tuning. Do not treat advertised efficiency gains as measured gains or infer a universal memory preset.
+
 - [Verification and evidence](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/verification.md): deterministic source releases, allowlisted diagnostics, passive 24/72-hour protocol; no independent audit or hardware certification claimed.
 
 - [Measured RTX 3070 observation](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/performance/rtx3070.md): 15-minute observation, independent hashrate updates, power, temperature and limitations; not a universal overclock or A/B comparison.
