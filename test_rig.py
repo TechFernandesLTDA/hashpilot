@@ -76,9 +76,10 @@ class FakeBackend:
 
 class RigConfigurationTests(unittest.TestCase):
     def test_measured_restart_core_requires_explicit_preset_and_driver_support(self):
-        gpu={'supported_graphics_clocks_mhz':[1560,1710,2100]}
+        gpu={'supported_graphics_clocks_mhz':[1560,1710,1725,2100]}
         self.assertEqual(reference_start_clock(gpu,{}),1560)
         self.assertEqual(reference_start_clock(gpu,{'reference_start_core_mhz':1710}),1710)
+        self.assertEqual(reference_start_clock(gpu,{'reference_start_core_mhz':1725}),1725)
         self.assertEqual(reference_start_clock(gpu,{'reference_start_core_mhz':2100}),1560)
         self.assertEqual(reference_start_clock({'supported_graphics_clocks_mhz':[1560]},{'reference_start_core_mhz':1710}),1560)
 

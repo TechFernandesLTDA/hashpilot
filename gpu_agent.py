@@ -193,10 +193,36 @@ def normalize_sample(sample, now=None):
 
 
 def thermal_limits(gpu):
-    # 78/83 are conservative product ceilings; a lower driver limit always wins.
+    # 76/83 are conservative product ceilings; a lower driver limit always wins.
     driver = numeric(gpu.get("temperature_limit_c"))
     hard = min(83.0,driver-2) if driver and 50 <= driver <= 110 else 83.0
     return min(76.0, hard-7), hard
+
+
+def thermal_window_summary(rows,now):
+    recent=[row for row in rows if row.get('valid') and now-60<=row['stamp']<=now
+            and numeric(row.get('temperature')) is not None]
+    span=recent[-1]['stamp']-recent[0]['stamp'] if len(recent)>1 else 0
+    gaps=[b['stamp']-a['stamp'] for a,b in zip(recent,recent[1:])]
+    values=[float(row['temperature']) for row in recent]
+    trend=(statistics.mean(values[-5:])-statistics.mean(values[:5])) if len(values)>=10 else None
+    stable=bool(len(values)>=15 and span>=45 and gaps and max(gaps)<=10
+                and max(values)-min(values)<=1 and trend is not None and trend<=0.2)
+    return {'samples':len(values),'span_seconds':span,'peak_c':max(values) if values else None,
+            'rise_c':trend,'stable':stable}
+
+
+def performance_probe_gate(sample,benchmark,selected_profile,soft_limit):
+    window=benchmark.get('thermal_window') or {}
+    measured=benchmark.get('validated') is True and window.get('stable') is True
+    margin=1 if selected_profile=='performance' and measured else 3
+    temperature=numeric(sample.get('temperature_c'))
+    peak=numeric(window.get('peak_c'))
+    allowed=temperature is not None and temperature<soft_limit-margin
+    if margin==1:allowed=allowed and peak is not None and peak<soft_limit-1
+    return {'allowed':bool(allowed),'margin_c':margin,'threshold_c':soft_limit-margin,
+            'reason':'Degrau após estabilidade térmica medida' if allowed else 'Aguardando margem térmica para subir',
+            'thermal_window':window}
 
 
 class OllamaAdvisor:
@@ -414,6 +440,7 @@ class GPUAgent:
             if 0<gap<=15 and previous["temperature"] is not None and current["temperature"] is not None:
                 coverage+=gap
         result["observed_seconds"]=coverage
+        result['thermal_window']=thermal_window_summary(rows,stamp)
         result["invalid_samples"] = sum(not row["valid"] for row in rows)
         result["unstable_samples"] = sum(row["reason"] in ("thermal_or_sensor","stale_sensor","incomplete_sensor","miner_restarted","new_rejected_share","invalid_counters","hardware_error")
             for row in rows if row["stamp"]-session["started"]>=30)
@@ -1162,7 +1189,9 @@ def control(args,state_dir,monitor_state_dir):
                     status["ai_status"]=answer["status"]
                 plan=control_plan(gpu,sample,objective,selected_profile,soft,advice,result.get('best_profile'))
                 plan.update(gpu_uuid=gpu["uuid"],at=time.time(),reason="Experimento após baseline validado")
-                if plan["action"]!="hold" and (plan["action"] not in ("clock_up","power_up") or sample["temperature_c"]<soft-3):
+                gate=performance_probe_gate(sample,result,selected_profile,soft)
+                status['probe_gate']=gate
+                if plan["action"]!="hold" and (plan["action"] not in ("clock_up","power_up") or gate['allowed']):
                     # Refuse a conflicting trial before changing hardware.
                     agent.assert_no_pending_trial(gpu)
                     apply_recorded(sample,plan,miner.get('hashrate'))

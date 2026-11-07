@@ -12,7 +12,7 @@ from gpu_agent import (GPUAgent, NvidiaActuator, OllamaAdvisor, detect_nvidia_gp
                        thermal_limits, validated_plan, control, BackgroundAdvisor,
                        select_device,read_miner_data,external_supervisor_active)
 from gpu_agent import process_identity,same_process,requested_control_stop
-from gpu_agent import control_plan
+from gpu_agent import control_plan,thermal_window_summary,performance_probe_gate
 
 
 def device(identifier="GPU-test-3070"):
@@ -27,6 +27,39 @@ def sample(stamp=1000,temp=68,clock=1530,power=180):
 
 
 class ControlPlanTests(unittest.TestCase):
+    def thermal_rows(self,temp=74):
+        return [{'stamp':t,'temperature':temp,'valid':True} for t in range(940,1001,2)]
+
+    def test_stable_measured_window_allows_last_performance_step(self):
+        window=thermal_window_summary(self.thermal_rows(),1000)
+        gate=performance_probe_gate(sample(temp=74),{'validated':True,'thermal_window':window},'performance',76)
+        self.assertTrue(gate['allowed']);self.assertEqual(gate['margin_c'],1)
+
+    def test_rising_sparse_or_gapped_sensors_keep_conservative_margin(self):
+        rising=self.thermal_rows()
+        for row in rising:
+            if row['stamp']>980:row['temperature']=75
+        for rows in (rising,self.thermal_rows()[-5:],[r for r in self.thermal_rows() if not 960<=r['stamp']<=980]):
+            with self.subTest(rows=len(rows)):
+                window=thermal_window_summary(rows,1000)
+                gate=performance_probe_gate(sample(temp=74),{'validated':True,'thermal_window':window},'performance',76)
+                self.assertFalse(gate['allowed']);self.assertEqual(gate['margin_c'],3)
+
+    def test_unknown_or_unvalidated_thermal_evidence_cannot_reduce_margin(self):
+        for benchmark in ({},{'validated':False,'thermal_window':{'stable':True,'peak_c':74}}):
+            self.assertFalse(performance_probe_gate(sample(temp=74),benchmark,'performance',76)['allowed'])
+
+    def test_balanced_profile_keeps_three_degrees(self):
+        b={'validated':True,'thermal_window':thermal_window_summary(self.thermal_rows(),1000)}
+        gate=performance_probe_gate(sample(temp=74),b,'balanced',76)
+        self.assertEqual(gate['margin_c'],3);self.assertFalse(gate['allowed'])
+
+    def test_current_or_recent_temperature_at_boundary_blocks_probe(self):
+        b={'validated':True,'thermal_window':thermal_window_summary(self.thermal_rows(temp=75),1000)}
+        self.assertFalse(performance_probe_gate(sample(temp=74),b,'performance',76)['allowed'])
+        b['thermal_window']=thermal_window_summary(self.thermal_rows(),1000)
+        self.assertFalse(performance_probe_gate(sample(temp=75),b,'performance',76)['allowed'])
+
     def test_restoring_current_clock_is_a_true_noop(self):
         plan=validated_plan(device(),sample(),'restore_best',{'clock_mhz':1530})
         self.assertEqual(plan['action'],'hold')

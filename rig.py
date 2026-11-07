@@ -46,7 +46,8 @@ def reference_memory_clock(miner_path,settings):
 
 def reference_start_clock(gpu,settings):
     # Only the measured author-board restart preset is eligible; no arbitrary OC.
-    return 1710 if settings.get('reference_start_core_mhz')==1710 and 1710 in gpu.get('supported_graphics_clocks_mhz',[]) else 1560
+    chosen=settings.get('reference_start_core_mhz')
+    return int(chosen) if chosen in (1710,1725) and chosen in gpu.get('supported_graphics_clocks_mhz',[]) else 1560
 
 
 def parse_miner_device_map(text,devices):
