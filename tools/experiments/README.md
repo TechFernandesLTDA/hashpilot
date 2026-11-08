@@ -63,6 +63,15 @@ correto. Isso **tem de ser resolvido lendo o código oficial** (`noisy_gemm`,
 transcript exigir os intermediários, a ideia 2 morre aqui, com matemática
 bonita e inaplicável.
 
+**Atualização (leitura do código oficial, `zk-pow/src/ffi/mine.rs` no commit
+`d7c517d`):** o transcript faz XOR do acumulador **de todo o tile** ao fim de cada
+fatia de `rank` posições de K, e não de cada instrução `mma`. Com `rank = 128` (o
+valor do teste oficial), um nível de Strassen que divide K em 64 + 64 **dentro** da
+fatia preserva exatamente a soma de cada fatia, ou seja, o transcript. O portão do
+protocolo abre, desde que o `rank` do job da pool seja pelo menos 64 (ele vem na
+configuração de cada trabalho; confira antes). O custo das somas extras e da
+correção do +128 continua sendo o que decide se compensa.
+
 ## 3. Reaproveitar o produto sem ruído — **não implementado, de propósito**
 
 A ideia de calcular A·B uma vez e reaproveitá-lo entre tentativas, somando só as

@@ -16,6 +16,14 @@ validação física na RTX 3070.
 | 5 | Interface: três abas, bandeja, configurações (provável `egui`/`eframe`) | Planejada |
 | 6 | Instalador, atualizador e troca do Python | Só depois das fases 1–5 validadas |
 
+### Minerador próprio (projeto separado)
+
+[`hashpilot-miner/`](hashpilot-miner/README.md) começa um minerador Pearl em Rust
+sobre a referência oficial (`zk-pow`, licença ISC, fixada num commit), para o
+aplicativo único. Fase M1 (motor de CPU com paridade contra o `try_mine_one` e o
+`verify_plain_proof` oficiais) **escrita, mas ainda não compilada**. Fica fora do
+workspace para não quebrar o núcleo e a CLI, que estão verificados.
+
 ### O que a fase 1 porta
 
 | Módulo Rust | Origem Python | O que faz |

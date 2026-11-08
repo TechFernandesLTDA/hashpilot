@@ -1,6 +1,8 @@
 [workspace]
 resolver = "3"
 members = ["hashpilot-core", "hashpilot-cli"]
+# O minerador depende do zk-pow oficial (git) e é compilado à parte; ver hashpilot-miner/README.md.
+exclude = ["hashpilot-miner"]
 
 [workspace.package]
 version = "0.1.0"
