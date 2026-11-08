@@ -1,9 +1,19 @@
 # Minerador Pearl do HashPilot em Rust
 
-> **Estado: fase M1 escrita, ainda não compilada.** Nesta sessão o ambiente
-> bloqueou a compilação do código oficial da Pearl (executaria scripts de build de
-> terceiros). O código foi conferido só por leitura contra a API oficial. Compile e
-> rode os testes abaixo antes de confiar em qualquer resultado.
+> **Estado: fase M1 compilada e validada em 08/11/2026** no PC Windows 11 da RTX 3070
+> (Rust 1.99.1 `stable-x86_64-pc-windows-msvc`, Build Tools 2022), **só na CPU**: o
+> motor de GPU ainda não existe. Compilou sem erro e sem aviso, sem mudança no código,
+> contra o `zk-pow`/`pearl-blake3` oficiais no commit `d7c517d`.
+>
+> | Comando | Resultado |
+> |---|---|
+> | `cargo test --release` | `tests/official_parity.rs`: 3 de 3 passaram (bytes idênticos ao `try_mine_one`, jackpot de todos os tiles igual ao laço oficial, provas aceitas pelo `verify_plain_proof` e prova adulterada recusada) |
+> | `cargo run --release -- selftest --attempts 20` | `hits: 20`, `verified: 20`, `rejected: []`, `tampered_rejected: true` (parâmetros do teste oficial, dificuldade permissiva, offline) |
+> | `cargo run --release -- bench-cpu` | 0,045 TMAC/s em 16 threads (referência de CPU; a RTX 3070 faz ~79 TH/s com o SRBMiner) |
+>
+> Nas dependências git não há `build.rs`. No alvo Windows MSVC, o único script de
+> build que compila código é o do `blake3` (rotinas SIMD em C/assembly); os demais
+> só detectam o compilador ou a plataforma.
 
 ## Por que um minerador próprio, e por que não "converter o SRBMiner"
 

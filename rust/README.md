@@ -27,8 +27,10 @@ num módulo já portado vale nos dois lados, com os goldens regerados.
 [`hashpilot-miner/`](hashpilot-miner/README.md) começa um minerador Pearl em Rust
 sobre a referência oficial (`zk-pow`, licença ISC, fixada num commit), para o
 aplicativo único. Fase M1 (motor de CPU com paridade contra o `try_mine_one` e o
-`verify_plain_proof` oficiais) **escrita, mas ainda não compilada**. Fica fora do
-workspace para não quebrar o núcleo e a CLI, que estão verificados.
+`verify_plain_proof` oficiais) **compilada e validada na CPU em 08/11/2026**, no
+Windows da RTX 3070: `cargo test --release` com 3 de 3 testes de paridade oficiais e
+`selftest --attempts 20` com 20 acertos, 20 verificados e prova adulterada recusada.
+Fica fora do workspace até se decidir incluí-la (ver o README do crate).
 
 ### O que a fase 1 porta
 

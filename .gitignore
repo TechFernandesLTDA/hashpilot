@@ -33,3 +33,4 @@ media/qa/
 
 # Port em Rust
 rust/target/
+rust/hashpilot-miner/target/
