@@ -5,6 +5,6 @@
     "gpu_telemetry.py", "rig_config.py", "rig_controller.py", "rig.py",
     "config.py", "contribution.py", "app_version.py", "component_status.py",
     "mining_health.py", "mining_continuity.py", "miner_identity.py", "gpu_profiles.py", "gpu_defaults.py", "stop_mining.py", "stop_ui.py", "start_mining.py", "miner_update.py",
-    "file_cache.py", "process_list.py", "miner_log.py", "fsutil.py", "nvidia_smi.py", "app_logging.py"
+    "file_cache.py", "process_list.py", "miner_log.py", "fsutil.py", "nvidia_smi.py", "app_logging.py", "process_backend.py", "reference_profile.py"
   ]
 }

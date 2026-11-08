@@ -44,3 +44,26 @@ def log_timestamp(line: str) -> float | None:
         _STAMPS.clear()
     _STAMPS[text] = value
     return value
+
+
+def parse_miner_device_map(text,devices):
+    """Match SRBMiner IDs to NVIDIA UUIDs by unique PCI bus, never model name."""
+    buses={}
+    for line in text.splitlines():
+        index=DEVICE_INDEX.search(line)
+        bus=DEVICE_BUS.search(line)
+        if index and bus and "nvidia" in line.lower():
+            buses.setdefault(int(bus[1],16),set()).add(int(index[1]))
+    result={}
+    seen_buses=set()
+    for gpu in devices:
+        pci=re.fullmatch(r"[0-9a-fA-F]{4,8}:([0-9a-fA-F]{2}):[0-9a-fA-F]{2}\.[0-7]",str(gpu.get("pci_bus_id","")))
+        if not pci: raise RuntimeError("Endereço PCI da NVIDIA ausente; seleção do minerador não confirmada")
+        bus=int(pci[1],16)
+        candidates=buses.get(bus,set())
+        if bus in seen_buses or len(candidates)!=1:
+            raise RuntimeError("Mapeamento PCI/ID do SRBMiner ambíguo ou ausente; mineração não iniciada")
+        seen_buses.add(bus)
+        result[gpu["uuid"]]=next(iter(candidates))
+    if len(set(result.values()))!=len(result): raise RuntimeError("Um ID do minerador correspondeu a mais de uma GPU")
+    return result
