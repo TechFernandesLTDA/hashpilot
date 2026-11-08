@@ -1,0 +1,207 @@
+{
+ "cases": [
+  {
+   "input": null,
+   "numeric": null,
+   "payout_number": null,
+   "valuation_numeric": null,
+   "valuation_positive": null
+  },
+  {
+   "input": true,
+   "numeric": null,
+   "payout_number": null,
+   "valuation_numeric": null,
+   "valuation_positive": null
+  },
+  {
+   "input": false,
+   "numeric": null,
+   "payout_number": null,
+   "valuation_numeric": null,
+   "valuation_positive": null
+  },
+  {
+   "input": 0,
+   "numeric": 0.0,
+   "payout_number": 0.0,
+   "valuation_numeric": 0.0,
+   "valuation_positive": null
+  },
+  {
+   "input": 1,
+   "numeric": 1.0,
+   "payout_number": 1.0,
+   "valuation_numeric": 1.0,
+   "valuation_positive": 1.0
+  },
+  {
+   "input": -2,
+   "numeric": -2.0,
+   "payout_number": null,
+   "valuation_numeric": -2.0,
+   "valuation_positive": null
+  },
+  {
+   "input": 1.5,
+   "numeric": 1.5,
+   "payout_number": 1.5,
+   "valuation_numeric": 1.5,
+   "valuation_positive": 1.5
+  },
+  {
+   "input": -0.25,
+   "numeric": -0.25,
+   "payout_number": null,
+   "valuation_numeric": -0.25,
+   "valuation_positive": null
+  },
+  {
+   "input": 1e-07,
+   "numeric": 1e-07,
+   "payout_number": 1e-07,
+   "valuation_numeric": 1e-07,
+   "valuation_positive": 1e-07
+  },
+  {
+   "input": 1e+16,
+   "numeric": 1e+16,
+   "payout_number": 1e+16,
+   "valuation_numeric": 1e+16,
+   "valuation_positive": 1e+16
+  },
+  {
+   "input": "1.5",
+   "numeric": 1.5,
+   "payout_number": 1.5,
+   "valuation_numeric": 1.5,
+   "valuation_positive": 1.5
+  },
+  {
+   "input": " 2 ",
+   "numeric": 2.0,
+   "payout_number": 2.0,
+   "valuation_numeric": 2.0,
+   "valuation_positive": 2.0
+  },
+  {
+   "input": "1e3",
+   "numeric": 1000.0,
+   "payout_number": 1000.0,
+   "valuation_numeric": 1000.0,
+   "valuation_positive": 1000.0
+  },
+  {
+   "input": "-4",
+   "numeric": -4.0,
+   "payout_number": null,
+   "valuation_numeric": -4.0,
+   "valuation_positive": null
+  },
+  {
+   "input": "+3",
+   "numeric": 3.0,
+   "payout_number": 3.0,
+   "valuation_numeric": 3.0,
+   "valuation_positive": 3.0
+  },
+  {
+   "input": ".5",
+   "numeric": 0.5,
+   "payout_number": 0.5,
+   "valuation_numeric": 0.5,
+   "valuation_positive": 0.5
+  },
+  {
+   "input": "5.",
+   "numeric": 5.0,
+   "payout_number": 5.0,
+   "valuation_numeric": 5.0,
+   "valuation_positive": 5.0
+  },
+  {
+   "input": "inf",
+   "numeric": null,
+   "payout_number": null,
+   "valuation_numeric": null,
+   "valuation_positive": null
+  },
+  {
+   "input": "-inf",
+   "numeric": null,
+   "payout_number": null,
+   "valuation_numeric": null,
+   "valuation_positive": null
+  },
+  {
+   "input": "nan",
+   "numeric": null,
+   "payout_number": null,
+   "valuation_numeric": null,
+   "valuation_positive": null
+  },
+  {
+   "input": "Infinity",
+   "numeric": null,
+   "payout_number": null,
+   "valuation_numeric": null,
+   "valuation_positive": null
+  },
+  {
+   "input": "abc",
+   "numeric": null,
+   "payout_number": null,
+   "valuation_numeric": null,
+   "valuation_positive": null
+  },
+  {
+   "input": "",
+   "numeric": null,
+   "payout_number": null,
+   "valuation_numeric": null,
+   "valuation_positive": null
+  },
+  {
+   "input": "0x10",
+   "numeric": null,
+   "payout_number": null,
+   "valuation_numeric": null,
+   "valuation_positive": null
+  },
+  {
+   "input": "1_000",
+   "numeric": 1000.0,
+   "payout_number": 1000.0,
+   "valuation_numeric": 1000.0,
+   "valuation_positive": 1000.0
+  },
+  {
+   "input": "1__0",
+   "numeric": null,
+   "payout_number": null,
+   "valuation_numeric": null,
+   "valuation_positive": null
+  },
+  {
+   "input": "_1",
+   "numeric": null,
+   "payout_number": null,
+   "valuation_numeric": null,
+   "valuation_positive": null
+  },
+  {
+   "input": [],
+   "numeric": null,
+   "payout_number": null,
+   "valuation_numeric": null,
+   "valuation_positive": null
+  },
+  {
+   "input": {},
+   "numeric": null,
+   "payout_number": null,
+   "valuation_numeric": null,
+   "valuation_positive": null
+  }
+ ]
+}

@@ -1,0 +1,251 @@
+{
+ "cases": [
+  {
+   "platform": "win32",
+   "environ": {
+    "LOCALAPPDATA": "C:/Users/u/AppData/Local",
+    "HASHPILOT_TEST_STATE_DIR": "/tmp/x"
+   },
+   "ok": "C:/Users/u/AppData/Local/PearlMonitor"
+  },
+  {
+   "platform": "linux",
+   "environ": {
+    "HASHPILOT_TEST_STATE_DIR": "/tmp/x"
+   },
+   "ok": "/tmp/x/PearlMonitor"
+  },
+  {
+   "platform": "linux",
+   "environ": {},
+   "error": "O HashPilot está disponível somente para Windows 10/11 de 64 bits."
+  },
+  {
+   "platform": "darwin",
+   "environ": {
+    "LOCALAPPDATA": "/a"
+   },
+   "error": "O HashPilot está disponível somente para Windows 10/11 de 64 bits."
+  }
+ ],
+ "log_dir": [
+  {
+   "settings": {
+    "log_dir": ""
+   },
+   "result": "/s/Local/Mining/Pearl/logs"
+  },
+  {
+   "settings": {},
+   "result": "/s/Local/Mining/Pearl/logs"
+  },
+  {
+   "settings": {
+    "log_dir": "/plain/logs"
+   },
+   "result": "/plain/logs"
+  },
+  {
+   "settings": {
+    "log_dir": "$HP_GOLDEN/logs"
+   },
+   "result": "/x/y/logs"
+  },
+  {
+   "settings": {
+    "log_dir": "${HP_GOLDEN}/a"
+   },
+   "result": "/x/y/a"
+  },
+  {
+   "settings": {
+    "log_dir": "$HP_MISSING/b"
+   },
+   "result": "$HP_MISSING/b"
+  },
+  {
+   "settings": {
+    "log_dir": "${HP_MISSING}/c"
+   },
+   "result": "${HP_MISSING}/c"
+  },
+  {
+   "settings": {
+    "log_dir": "$HP_GOLDEN$HP_OTHER"
+   },
+   "result": "/x/yz"
+  },
+  {
+   "settings": {
+    "log_dir": "pre-$/x"
+   },
+   "result": "pre-$/x"
+  },
+  {
+   "settings": {
+    "log_dir": "${unterminated"
+   },
+   "result": "${unterminated"
+  },
+  {
+   "settings": {
+    "log_dir": "$$HP_GOLDEN"
+   },
+   "result": "$/x/y"
+  },
+  {
+   "settings": {
+    "log_dir": "a$"
+   },
+   "result": "a$"
+  }
+ ],
+ "env": {
+  "HP_GOLDEN": "/x/y",
+  "HP_OTHER": "z"
+ },
+ "expandvars_nt": [
+  {
+   "input": "plain",
+   "result": "plain"
+  },
+  {
+   "input": "%HP_GOLDEN%\\logs",
+   "result": "/x/y\\logs"
+  },
+  {
+   "input": "%HP_MISSING%\\x",
+   "result": "%HP_MISSING%\\x"
+  },
+  {
+   "input": "%%literal",
+   "result": "%literal"
+  },
+  {
+   "input": "'%HP_GOLDEN%' fica",
+   "result": "'%HP_GOLDEN%' fica"
+  },
+  {
+   "input": "'aberta %HP_GOLDEN%",
+   "result": "'aberta %HP_GOLDEN%"
+  },
+  {
+   "input": "$HP_GOLDEN\\a",
+   "result": "/x/y\\a"
+  },
+  {
+   "input": "${HP_GOLDEN}\\b",
+   "result": "/x/y\\b"
+  },
+  {
+   "input": "${HP_MISSING}\\c",
+   "result": "${HP_MISSING}\\c"
+  },
+  {
+   "input": "$$x",
+   "result": "$x"
+  },
+  {
+   "input": "%aberto",
+   "result": "%aberto"
+  },
+  {
+   "input": "${aberto",
+   "result": "${aberto"
+  },
+  {
+   "input": "$",
+   "result": "$"
+  },
+  {
+   "input": "a$b-c$",
+   "result": "a$b-c$"
+  },
+  {
+   "input": "$HP_GOLDEN-sufixo",
+   "result": "$HP_GOLDEN-sufixo"
+  },
+  {
+   "input": "x%HP_GOLDEN%y%HP_OTHER%z",
+   "result": "x/x/yyzz"
+  }
+ ],
+ "expandvars_posix": [
+  {
+   "input": "plain",
+   "result": "plain"
+  },
+  {
+   "input": "%HP_GOLDEN%\\logs",
+   "result": "%HP_GOLDEN%\\logs"
+  },
+  {
+   "input": "%HP_MISSING%\\x",
+   "result": "%HP_MISSING%\\x"
+  },
+  {
+   "input": "%%literal",
+   "result": "%%literal"
+  },
+  {
+   "input": "'%HP_GOLDEN%' fica",
+   "result": "'%HP_GOLDEN%' fica"
+  },
+  {
+   "input": "'aberta %HP_GOLDEN%",
+   "result": "'aberta %HP_GOLDEN%"
+  },
+  {
+   "input": "$HP_GOLDEN\\a",
+   "result": "/x/y\\a"
+  },
+  {
+   "input": "${HP_GOLDEN}\\b",
+   "result": "/x/y\\b"
+  },
+  {
+   "input": "${HP_MISSING}\\c",
+   "result": "${HP_MISSING}\\c"
+  },
+  {
+   "input": "$$x",
+   "result": "$$x"
+  },
+  {
+   "input": "%aberto",
+   "result": "%aberto"
+  },
+  {
+   "input": "${aberto",
+   "result": "${aberto"
+  },
+  {
+   "input": "$",
+   "result": "$"
+  },
+  {
+   "input": "a$b-c$",
+   "result": "a$b-c$"
+  },
+  {
+   "input": "$HP_GOLDEN-sufixo",
+   "result": "/x/y-sufixo"
+  },
+  {
+   "input": "x%HP_GOLDEN%y%HP_OTHER%z",
+   "result": "x%HP_GOLDEN%y%HP_OTHER%z"
+  },
+  {
+   "input": "$HP_GOLDEN$HP_OTHER",
+   "result": "/x/yz"
+  },
+  {
+   "input": "${}",
+   "result": "${}"
+  },
+  {
+   "input": "$1x",
+   "result": "$1x"
+  }
+ ]
+}

@@ -1,0 +1,948 @@
+{
+ "cases": [
+  {
+   "name": "empty_state",
+   "state": {},
+   "forecast": null,
+   "price_brl": null,
+   "result": {
+    "threshold_prl": null,
+    "threshold_brl": null,
+    "threshold_source": "mínimo geral da pool",
+    "total_prl": null,
+    "confirmed_prl": null,
+    "unconfirmed_prl": null,
+    "remaining_prl": null,
+    "remaining_confirmed_prl": null,
+    "remaining_brl": null,
+    "progress_pct": null,
+    "confirmed_progress_pct": null,
+    "rate_prl_day": null,
+    "rate_label": "Ritmo ainda não estimável",
+    "maturation_seconds": null,
+    "maturation_label": "não disponível",
+    "maturation_blocks": null,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": null,
+    "stale": true,
+    "eta_min_seconds": null,
+    "eta_max_seconds": null,
+    "generation_seconds": null,
+    "state_label": "Saldo ainda não atualizado",
+    "eta_label": "Estimativa indisponível: aguarde a atualização da pool",
+    "eta_details": "A pool paga automaticamente após atingir o mínimo confirmado. Depois do envio, a carteira depende da confirmação e sincronização da rede."
+   }
+  },
+  {
+   "name": "stale_without_fetched_at",
+   "state": {
+    "sources": {
+     "balance": {
+      "data": {
+       "threshold": 1,
+       "total": 0.2,
+       "confirmed": 0.1
+      }
+     }
+    }
+   },
+   "forecast": null,
+   "price_brl": 0.5,
+   "result": {
+    "threshold_prl": 1.0,
+    "threshold_brl": 0.5,
+    "threshold_source": "carteira",
+    "total_prl": 0.2,
+    "confirmed_prl": 0.1,
+    "unconfirmed_prl": null,
+    "remaining_prl": 0.8,
+    "remaining_confirmed_prl": 0.9,
+    "remaining_brl": 0.4,
+    "progress_pct": 20.0,
+    "confirmed_progress_pct": 10.0,
+    "rate_prl_day": null,
+    "rate_label": "Ritmo ainda não estimável",
+    "maturation_seconds": null,
+    "maturation_label": "não disponível",
+    "maturation_blocks": null,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": null,
+    "stale": true,
+    "eta_min_seconds": null,
+    "eta_max_seconds": null,
+    "generation_seconds": null,
+    "state_label": "Saldo ainda não atualizado",
+    "eta_label": "Estimativa indisponível: aguarde a atualização da pool",
+    "eta_details": "A pool paga automaticamente após atingir o mínimo confirmado. Depois do envio, a carteira depende da confirmação e sincronização da rede."
+   }
+  },
+  {
+   "name": "observed_rate_with_maturation",
+   "state": {
+    "snapshots": [
+     {
+      "timestamp": 1799997600.0,
+      "total_prl": 1.0
+     },
+     {
+      "timestamp": 1799999700.0,
+      "total_prl": 1.35
+     },
+     {
+      "timestamp": 1800000060.0,
+      "total_prl": 9.0
+     },
+     {
+      "timestamp": 1799992800.0,
+      "total_prl": 0.1
+     },
+     "lixo"
+    ],
+    "sources": {
+     "balance": {
+      "fetched_at": 1799999990.0,
+      "data": {
+       "threshold": 2,
+       "total": 1.35,
+       "confirmed": 1.0,
+       "unconfirmed": 0.35,
+       "maturation_time": 5400
+      }
+     },
+     "network": {
+      "data": {
+       "minpay": 2,
+       "blocks_for_maturation": 100,
+       "block_time": 60
+      }
+     },
+     "payout_history": {
+      "data": {
+       "results": [
+        {
+         "date": 1799991000.0,
+         "received": 1.2,
+         "txid": "abc",
+         "status": "paid"
+        },
+        {
+         "date": 1799995000.0,
+         "received": "0.8",
+         "txid": 12345,
+         "status": null
+        },
+        {
+         "date": 1799995000.0,
+         "received": 9,
+         "txid": "tie-later",
+         "status": "paid"
+        },
+        {
+         "date": 1800000999.0,
+         "received": 5,
+         "txid": "future"
+        },
+        "lixo",
+        {
+         "date": "x"
+        }
+       ]
+      }
+     }
+    }
+   },
+   "forecast": null,
+   "price_brl": 0.5,
+   "result": {
+    "threshold_prl": 2.0,
+    "threshold_brl": 1.0,
+    "threshold_source": "carteira",
+    "total_prl": 1.35,
+    "confirmed_prl": 1.0,
+    "unconfirmed_prl": 0.35,
+    "remaining_prl": 0.6499999999999999,
+    "remaining_confirmed_prl": 1.0,
+    "remaining_brl": 0.32499999999999996,
+    "progress_pct": 67.5,
+    "confirmed_progress_pct": 50.0,
+    "rate_prl_day": 14.400000000000004,
+    "rate_label": "Ritmo observado na pool nos últimos 35 min",
+    "maturation_seconds": 5400.0,
+    "maturation_label": "1 h 30 min",
+    "maturation_blocks": 100.0,
+    "payout_cycle_seconds": 3600,
+    "last_payment": {
+     "date": 1799995000.0,
+     "timestamp": 1799995000.0,
+     "amount_prl": 0.8,
+     "amount": 0.8,
+     "txid": "12345",
+     "status": "None"
+    },
+    "source_at": 1799999990.0,
+    "stale": false,
+    "eta_min_seconds": 9299.999999999998,
+    "eta_max_seconds": 12899.999999999998,
+    "generation_seconds": 3899.999999999998,
+    "state_label": "Acumulando até o mínimo de pagamento",
+    "eta_label": "Estimativa de envio: 2 h 35 min a 3 h 35 min",
+    "eta_details": "Faltam cerca de 1 h 5 min para gerar o mínimo, se o ritmo continuar. Foi incluída uma maturação típica de 1 h 30 min, mais até aproximadamente 1 h de espera pelo ciclo. Não é um cronômetro da pool; dificuldade, créditos pendentes e confirmação/sincronização da carteira podem mudar o prazo."
+   }
+  },
+  {
+   "name": "observed_rate_maturation_from_network",
+   "state": {
+    "snapshots": [
+     {
+      "timestamp": 1799997600.0,
+      "total_prl": 1.0
+     },
+     {
+      "timestamp": 1799999700.0,
+      "total_prl": 1.35
+     },
+     {
+      "timestamp": 1800000060.0,
+      "total_prl": 9.0
+     },
+     {
+      "timestamp": 1799992800.0,
+      "total_prl": 0.1
+     },
+     "lixo"
+    ],
+    "sources": {
+     "balance": {
+      "fetched_at": 1799999990.0,
+      "data": {
+       "threshold": 2,
+       "total": 1.35,
+       "confirmed": 1.0
+      }
+     },
+     "network": {
+      "data": {
+       "minpay": 2,
+       "blocks_for_maturation": 100,
+       "block_time": 60
+      }
+     }
+    }
+   },
+   "forecast": null,
+   "price_brl": "0.5",
+   "result": {
+    "threshold_prl": 2.0,
+    "threshold_brl": 1.0,
+    "threshold_source": "carteira",
+    "total_prl": 1.35,
+    "confirmed_prl": 1.0,
+    "unconfirmed_prl": null,
+    "remaining_prl": 0.6499999999999999,
+    "remaining_confirmed_prl": 1.0,
+    "remaining_brl": 0.32499999999999996,
+    "progress_pct": 67.5,
+    "confirmed_progress_pct": 50.0,
+    "rate_prl_day": 14.400000000000004,
+    "rate_label": "Ritmo observado na pool nos últimos 35 min",
+    "maturation_seconds": 6000.0,
+    "maturation_label": "1 h 40 min",
+    "maturation_blocks": 100.0,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": 1799999990.0,
+    "stale": false,
+    "eta_min_seconds": 9899.999999999998,
+    "eta_max_seconds": 13499.999999999998,
+    "generation_seconds": 3899.999999999998,
+    "state_label": "Acumulando até o mínimo de pagamento",
+    "eta_label": "Estimativa de envio: 2 h 45 min a 3 h 45 min",
+    "eta_details": "Faltam cerca de 1 h 5 min para gerar o mínimo, se o ritmo continuar. Foi incluída uma maturação típica de 1 h 40 min, mais até aproximadamente 1 h de espera pelo ciclo. Não é um cronômetro da pool; dificuldade, créditos pendentes e confirmação/sincronização da carteira podem mudar o prazo."
+   }
+  },
+  {
+   "name": "forecast_rate_without_any_maturation",
+   "state": {
+    "sources": {
+     "balance": {
+      "fetched_at": 1799999990.0,
+      "data": {
+       "threshold": 2,
+       "total": 1.0,
+       "confirmed": 1.0
+      }
+     }
+    }
+   },
+   "forecast": {
+    "prl_day": 0.5
+   },
+   "price_brl": null,
+   "result": {
+    "threshold_prl": 2.0,
+    "threshold_brl": null,
+    "threshold_source": "carteira",
+    "total_prl": 1.0,
+    "confirmed_prl": 1.0,
+    "unconfirmed_prl": null,
+    "remaining_prl": 1.0,
+    "remaining_confirmed_prl": 1.0,
+    "remaining_brl": null,
+    "progress_pct": 50.0,
+    "confirmed_progress_pct": 50.0,
+    "rate_prl_day": 0.5,
+    "rate_label": "Estimativa pela rede e pelo hashrate atual",
+    "maturation_seconds": null,
+    "maturation_label": "não disponível",
+    "maturation_blocks": null,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": 1799999990.0,
+    "stale": false,
+    "eta_min_seconds": null,
+    "eta_max_seconds": null,
+    "generation_seconds": 172800.0,
+    "state_label": "Acumulando até o mínimo de pagamento",
+    "eta_label": "Para gerar o mínimo: cerca de 2 d; confirmação sem prazo disponível",
+    "eta_details": "O prazo de geração usa o ritmo atual. Sem uma duração de maturação informada pela pool/rede, ainda não é possível estimar o envio completo. Após confirmar, há o ciclo horário e a confirmação/sincronização da carteira."
+   }
+  },
+  {
+   "name": "forecast_zero_is_no_rate",
+   "state": {
+    "sources": {
+     "balance": {
+      "fetched_at": 1799999990.0,
+      "data": {
+       "threshold": 2,
+       "total": 1.0,
+       "confirmed": 1.0
+      }
+     }
+    }
+   },
+   "forecast": {
+    "prl_day": 0
+   },
+   "price_brl": null,
+   "result": {
+    "threshold_prl": 2.0,
+    "threshold_brl": null,
+    "threshold_source": "carteira",
+    "total_prl": 1.0,
+    "confirmed_prl": 1.0,
+    "unconfirmed_prl": null,
+    "remaining_prl": 1.0,
+    "remaining_confirmed_prl": 1.0,
+    "remaining_brl": null,
+    "progress_pct": 50.0,
+    "confirmed_progress_pct": 50.0,
+    "rate_prl_day": null,
+    "rate_label": "Ritmo ainda não estimável",
+    "maturation_seconds": null,
+    "maturation_label": "não disponível",
+    "maturation_blocks": null,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": 1799999990.0,
+    "stale": false,
+    "eta_min_seconds": null,
+    "eta_max_seconds": null,
+    "generation_seconds": null,
+    "state_label": "Acumulando até o mínimo de pagamento",
+    "eta_label": "Sem ritmo suficiente para estimar o prazo",
+    "eta_details": "Ainda faltam créditos para o mínimo. A estimativa aparece quando houver ritmo observado suficiente ou hashrate/rede atuais. A confirmação dos créditos e o ciclo de pagamento são etapas adicionais."
+   }
+  },
+  {
+   "name": "confirmed_reached",
+   "state": {
+    "sources": {
+     "balance": {
+      "fetched_at": 1799999990.0,
+      "data": {
+       "threshold": 2,
+       "total": 2.5,
+       "confirmed": 2.0
+      }
+     },
+     "network": {
+      "data": {
+       "minpay": 2,
+       "blocks_for_maturation": 100,
+       "block_time": 60
+      }
+     }
+    }
+   },
+   "forecast": null,
+   "price_brl": 0.5,
+   "result": {
+    "threshold_prl": 2.0,
+    "threshold_brl": 1.0,
+    "threshold_source": "carteira",
+    "total_prl": 2.5,
+    "confirmed_prl": 2.0,
+    "unconfirmed_prl": null,
+    "remaining_prl": 0.0,
+    "remaining_confirmed_prl": 0.0,
+    "remaining_brl": 0.0,
+    "progress_pct": 100.0,
+    "confirmed_progress_pct": 100.0,
+    "rate_prl_day": null,
+    "rate_label": "Ritmo ainda não estimável",
+    "maturation_seconds": 6000.0,
+    "maturation_label": "1 h 40 min",
+    "maturation_blocks": 100.0,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": 1799999990.0,
+    "stale": false,
+    "eta_min_seconds": 0,
+    "eta_max_seconds": 3600,
+    "generation_seconds": null,
+    "state_label": "Mínimo confirmado atingido; aguardando envio",
+    "eta_label": "Próximo ciclo automático: aproximadamente até 1 h",
+    "eta_details": "O mínimo já está confirmado. A pool processa pagamentos uma vez por hora, sem publicar o instante exato da próxima rodada. Após o envio, aguarde confirmação/sincronização da carteira."
+   }
+  },
+  {
+   "name": "generated_waiting_confirmation",
+   "state": {
+    "sources": {
+     "balance": {
+      "fetched_at": 1799999990.0,
+      "data": {
+       "threshold": 2,
+       "total": 2.1,
+       "confirmed": 1.5,
+       "maturation_time": 3000
+      }
+     }
+    }
+   },
+   "forecast": null,
+   "price_brl": 0.5,
+   "result": {
+    "threshold_prl": 2.0,
+    "threshold_brl": 1.0,
+    "threshold_source": "carteira",
+    "total_prl": 2.1,
+    "confirmed_prl": 1.5,
+    "unconfirmed_prl": null,
+    "remaining_prl": 0.0,
+    "remaining_confirmed_prl": 0.5,
+    "remaining_brl": 0.0,
+    "progress_pct": 100.0,
+    "confirmed_progress_pct": 75.0,
+    "rate_prl_day": null,
+    "rate_label": "Ritmo ainda não estimável",
+    "maturation_seconds": 3000.0,
+    "maturation_label": "50 min",
+    "maturation_blocks": null,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": 1799999990.0,
+    "stale": false,
+    "eta_min_seconds": 0,
+    "eta_max_seconds": 6600.0,
+    "generation_seconds": null,
+    "state_label": "Mínimo gerado; aguardando confirmação",
+    "eta_label": "Janela estimada: agora até cerca de 1 h 50 min",
+    "eta_details": "O total inclui créditos pendentes e ainda não habilita o envio. A maturação indicada pela pool é uma duração típica, não o tempo restante individual de cada crédito. A janela pode variar; após confirmar, há o próximo ciclo de pagamento e a confirmação da transação."
+   }
+  },
+  {
+   "name": "generated_without_maturation",
+   "state": {
+    "sources": {
+     "balance": {
+      "fetched_at": 1799999990.0,
+      "data": {
+       "threshold": 2,
+       "total": 2.1,
+       "confirmed": 1.5
+      }
+     }
+    }
+   },
+   "forecast": null,
+   "price_brl": null,
+   "result": {
+    "threshold_prl": 2.0,
+    "threshold_brl": null,
+    "threshold_source": "carteira",
+    "total_prl": 2.1,
+    "confirmed_prl": 1.5,
+    "unconfirmed_prl": null,
+    "remaining_prl": 0.0,
+    "remaining_confirmed_prl": 0.5,
+    "remaining_brl": null,
+    "progress_pct": 100.0,
+    "confirmed_progress_pct": 75.0,
+    "rate_prl_day": null,
+    "rate_label": "Ritmo ainda não estimável",
+    "maturation_seconds": null,
+    "maturation_label": "não disponível",
+    "maturation_blocks": null,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": 1799999990.0,
+    "stale": false,
+    "eta_min_seconds": 0,
+    "eta_max_seconds": null,
+    "generation_seconds": null,
+    "state_label": "Mínimo gerado; aguardando confirmação",
+    "eta_label": "Aguardando confirmação; prazo exato não disponível",
+    "eta_details": "O total inclui créditos pendentes e ainda não habilita o envio. A maturação indicada pela pool é uma duração típica, não o tempo restante individual de cada crédito. A janela pode variar; após confirmar, há o próximo ciclo de pagamento e a confirmação da transação."
+   }
+  },
+  {
+   "name": "threshold_zero_uses_minpay",
+   "state": {
+    "sources": {
+     "balance": {
+      "fetched_at": 1799999990.0,
+      "data": {
+       "threshold": 0,
+       "total": 0.5,
+       "confirmed": 0.5
+      }
+     },
+     "network": {
+      "data": {
+       "minpay": 2,
+       "blocks_for_maturation": 100,
+       "block_time": 60
+      }
+     }
+    }
+   },
+   "forecast": null,
+   "price_brl": null,
+   "result": {
+    "threshold_prl": 2.0,
+    "threshold_brl": null,
+    "threshold_source": "mínimo geral da pool",
+    "total_prl": 0.5,
+    "confirmed_prl": 0.5,
+    "unconfirmed_prl": null,
+    "remaining_prl": 1.5,
+    "remaining_confirmed_prl": 1.5,
+    "remaining_brl": null,
+    "progress_pct": 25.0,
+    "confirmed_progress_pct": 25.0,
+    "rate_prl_day": null,
+    "rate_label": "Ritmo ainda não estimável",
+    "maturation_seconds": 6000.0,
+    "maturation_label": "1 h 40 min",
+    "maturation_blocks": 100.0,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": 1799999990.0,
+    "stale": false,
+    "eta_min_seconds": null,
+    "eta_max_seconds": null,
+    "generation_seconds": null,
+    "state_label": "Acumulando até o mínimo de pagamento",
+    "eta_label": "Sem ritmo suficiente para estimar o prazo",
+    "eta_details": "Ainda faltam créditos para o mínimo. A estimativa aparece quando houver ritmo observado suficiente ou hashrate/rede atuais. A confirmação dos créditos e o ciclo de pagamento são etapas adicionais."
+   }
+  },
+  {
+   "name": "balance_error_marks_stale",
+   "state": {
+    "errors": {
+     "balance": "timeout"
+    },
+    "sources": {
+     "balance": {
+      "fetched_at": 1799999990.0,
+      "data": {
+       "threshold": 2,
+       "total": 1,
+       "confirmed": 1
+      }
+     }
+    }
+   },
+   "forecast": null,
+   "price_brl": null,
+   "result": {
+    "threshold_prl": 2.0,
+    "threshold_brl": null,
+    "threshold_source": "carteira",
+    "total_prl": 1.0,
+    "confirmed_prl": 1.0,
+    "unconfirmed_prl": null,
+    "remaining_prl": 1.0,
+    "remaining_confirmed_prl": 1.0,
+    "remaining_brl": null,
+    "progress_pct": 50.0,
+    "confirmed_progress_pct": 50.0,
+    "rate_prl_day": null,
+    "rate_label": "Ritmo ainda não estimável",
+    "maturation_seconds": null,
+    "maturation_label": "não disponível",
+    "maturation_blocks": null,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": 1799999990.0,
+    "stale": true,
+    "eta_min_seconds": null,
+    "eta_max_seconds": null,
+    "generation_seconds": null,
+    "state_label": "Saldo ainda não atualizado",
+    "eta_label": "Estimativa indisponível: aguarde a atualização da pool",
+    "eta_details": "A pool paga automaticamente após atingir o mínimo confirmado. Depois do envio, a carteira depende da confirmação e sincronização da rede."
+   }
+  },
+  {
+   "name": "no_rate_no_forecast",
+   "state": {
+    "sources": {
+     "balance": {
+      "fetched_at": 1799999990.0,
+      "data": {
+       "threshold": 2,
+       "total": 1.0,
+       "confirmed": 0.9
+      }
+     }
+    }
+   },
+   "forecast": null,
+   "price_brl": null,
+   "result": {
+    "threshold_prl": 2.0,
+    "threshold_brl": null,
+    "threshold_source": "carteira",
+    "total_prl": 1.0,
+    "confirmed_prl": 0.9,
+    "unconfirmed_prl": null,
+    "remaining_prl": 1.0,
+    "remaining_confirmed_prl": 1.1,
+    "remaining_brl": null,
+    "progress_pct": 50.0,
+    "confirmed_progress_pct": 45.0,
+    "rate_prl_day": null,
+    "rate_label": "Ritmo ainda não estimável",
+    "maturation_seconds": null,
+    "maturation_label": "não disponível",
+    "maturation_blocks": null,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": 1799999990.0,
+    "stale": false,
+    "eta_min_seconds": null,
+    "eta_max_seconds": null,
+    "generation_seconds": null,
+    "state_label": "Acumulando até o mínimo de pagamento",
+    "eta_label": "Sem ritmo suficiente para estimar o prazo",
+    "eta_details": "Ainda faltam créditos para o mínimo. A estimativa aparece quando houver ritmo observado suficiente ou hashrate/rede atuais. A confirmação dos créditos e o ciclo de pagamento são etapas adicionais."
+   }
+  },
+  {
+   "name": "slow_rate_beyond_one_year",
+   "state": {
+    "sources": {
+     "balance": {
+      "fetched_at": 1799999990.0,
+      "data": {
+       "threshold": 2000,
+       "total": 1.0,
+       "confirmed": 1.0,
+       "maturation_time": 60
+      }
+     }
+    }
+   },
+   "forecast": {
+    "prl_day": 0.001
+   },
+   "price_brl": null,
+   "result": {
+    "threshold_prl": 2000.0,
+    "threshold_brl": null,
+    "threshold_source": "carteira",
+    "total_prl": 1.0,
+    "confirmed_prl": 1.0,
+    "unconfirmed_prl": null,
+    "remaining_prl": 1999.0,
+    "remaining_confirmed_prl": 1999.0,
+    "remaining_brl": null,
+    "progress_pct": 0.05,
+    "confirmed_progress_pct": 0.05,
+    "rate_prl_day": 0.001,
+    "rate_label": "Estimativa pela rede e pelo hashrate atual",
+    "maturation_seconds": 60.0,
+    "maturation_label": "1 min",
+    "maturation_blocks": null,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": 1799999990.0,
+    "stale": false,
+    "eta_min_seconds": 172713600060.0,
+    "eta_max_seconds": 172713603660.0,
+    "generation_seconds": 172713600000.0,
+    "state_label": "Acumulando até o mínimo de pagamento",
+    "eta_label": "Estimativa de envio: mais de 1 ano a mais de 1 ano",
+    "eta_details": "Faltam cerca de mais de 1 ano para gerar o mínimo, se o ritmo continuar. Foi incluída uma maturação típica de 1 min, mais até aproximadamente 1 h de espera pelo ciclo. Não é um cronômetro da pool; dificuldade, créditos pendentes e confirmação/sincronização da carteira podem mudar o prazo."
+   }
+  },
+  {
+   "name": "future_fetch_marks_stale",
+   "state": {
+    "sources": {
+     "balance": {
+      "fetched_at": 1800000060.0,
+      "data": {
+       "threshold": 2,
+       "total": 1,
+       "confirmed": 1
+      }
+     }
+    }
+   },
+   "forecast": null,
+   "price_brl": null,
+   "result": {
+    "threshold_prl": 2.0,
+    "threshold_brl": null,
+    "threshold_source": "carteira",
+    "total_prl": 1.0,
+    "confirmed_prl": 1.0,
+    "unconfirmed_prl": null,
+    "remaining_prl": 1.0,
+    "remaining_confirmed_prl": 1.0,
+    "remaining_brl": null,
+    "progress_pct": 50.0,
+    "confirmed_progress_pct": 50.0,
+    "rate_prl_day": null,
+    "rate_label": "Ritmo ainda não estimável",
+    "maturation_seconds": null,
+    "maturation_label": "não disponível",
+    "maturation_blocks": null,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": 1800000060.0,
+    "stale": true,
+    "eta_min_seconds": null,
+    "eta_max_seconds": null,
+    "generation_seconds": null,
+    "state_label": "Saldo ainda não atualizado",
+    "eta_label": "Estimativa indisponível: aguarde a atualização da pool",
+    "eta_details": "A pool paga automaticamente após atingir o mínimo confirmado. Depois do envio, a carteira depende da confirmação e sincronização da rede."
+   }
+  },
+  {
+   "name": "string_and_bool_values",
+   "state": {
+    "sources": {
+     "balance": {
+      "fetched_at": 1799999990.0,
+      "data": {
+       "threshold": "2",
+       "total": "1.5",
+       "confirmed": true,
+       "unconfirmed": "x"
+      }
+     }
+    }
+   },
+   "forecast": {
+    "prl_day": "0.25"
+   },
+   "price_brl": "abc",
+   "result": {
+    "threshold_prl": 2.0,
+    "threshold_brl": null,
+    "threshold_source": "carteira",
+    "total_prl": 1.5,
+    "confirmed_prl": null,
+    "unconfirmed_prl": null,
+    "remaining_prl": 0.5,
+    "remaining_confirmed_prl": null,
+    "remaining_brl": null,
+    "progress_pct": 75.0,
+    "confirmed_progress_pct": null,
+    "rate_prl_day": 0.25,
+    "rate_label": "Estimativa pela rede e pelo hashrate atual",
+    "maturation_seconds": null,
+    "maturation_label": "não disponível",
+    "maturation_blocks": null,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": 1799999990.0,
+    "stale": false,
+    "eta_min_seconds": null,
+    "eta_max_seconds": null,
+    "generation_seconds": null,
+    "state_label": "Consultando saldo da pool",
+    "eta_label": "Aguardando dados da pool",
+    "eta_details": "A pool paga automaticamente após atingir o mínimo confirmado. Depois do envio, a carteira depende da confirmação e sincronização da rede."
+   }
+  },
+  {
+   "name": "real:fresh",
+   "fixture": "portable-data/finance-cache.json",
+   "now": 1792893948.6257758,
+   "forecast": {
+    "prl_day": 0.8588433410170172,
+    "brl_day": 7.9099471707667295,
+    "brl_7days": 55.36963019536711,
+    "brl_30days": 237.2984151230019,
+    "hashrate_ths": 76.66,
+    "pool_fee": 0.03,
+    "dev_fee": 0.02,
+    "network_at": 1792893918.6257882
+   },
+   "price_brl": 9.21,
+   "result": {
+    "threshold_prl": 1.0,
+    "threshold_brl": 9.21,
+    "threshold_source": "carteira",
+    "total_prl": 0.16056088856933956,
+    "confirmed_prl": 0.0,
+    "unconfirmed_prl": 0.16056088856933956,
+    "remaining_prl": 0.8394391114306604,
+    "remaining_confirmed_prl": 1.0,
+    "remaining_brl": 7.731234216276383,
+    "progress_pct": 16.056088856933957,
+    "confirmed_progress_pct": 0.0,
+    "rate_prl_day": 0.8164203920539967,
+    "rate_label": "Ritmo observado na pool nos últimos 59 min",
+    "maturation_seconds": 19400.0,
+    "maturation_label": "5 h 24 min",
+    "maturation_blocks": 100.0,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": 1792893918.6257758,
+    "stale": false,
+    "eta_min_seconds": 108236.02116446425,
+    "eta_max_seconds": 111836.02116446425,
+    "generation_seconds": 88836.02116446425,
+    "state_label": "Acumulando até o mínimo de pagamento",
+    "eta_label": "Estimativa de envio: 1 d 6 h 4 min a 1 d 7 h 4 min",
+    "eta_details": "Faltam cerca de 1 d 41 min para gerar o mínimo, se o ritmo continuar. Foi incluída uma maturação típica de 5 h 24 min, mais até aproximadamente 1 h de espera pelo ciclo. Não é um cronômetro da pool; dificuldade, créditos pendentes e confirmação/sincronização da carteira podem mudar o prazo."
+   }
+  },
+  {
+   "name": "real:stale",
+   "fixture": "portable-data/finance-cache.json",
+   "now": 1792897518.6257758,
+   "forecast": {
+    "prl_day": 0.8588433410170172,
+    "brl_day": 7.9099471707667295,
+    "brl_7days": 55.36963019536711,
+    "brl_30days": 237.2984151230019,
+    "hashrate_ths": 76.66,
+    "pool_fee": 0.03,
+    "dev_fee": 0.02,
+    "network_at": 1792893918.6257882
+   },
+   "price_brl": 9.21,
+   "result": {
+    "threshold_prl": 1.0,
+    "threshold_brl": 9.21,
+    "threshold_source": "carteira",
+    "total_prl": 0.16056088856933956,
+    "confirmed_prl": 0.0,
+    "unconfirmed_prl": 0.16056088856933956,
+    "remaining_prl": 0.8394391114306604,
+    "remaining_confirmed_prl": 1.0,
+    "remaining_brl": 7.731234216276383,
+    "progress_pct": 16.056088856933957,
+    "confirmed_progress_pct": 0.0,
+    "rate_prl_day": 0.8588433410170172,
+    "rate_label": "Estimativa pela rede e pelo hashrate atual",
+    "maturation_seconds": 19400.0,
+    "maturation_label": "5 h 24 min",
+    "maturation_blocks": 100.0,
+    "payout_cycle_seconds": 3600,
+    "last_payment": null,
+    "source_at": 1792893918.6257758,
+    "stale": true,
+    "eta_min_seconds": null,
+    "eta_max_seconds": null,
+    "generation_seconds": null,
+    "state_label": "Saldo ainda não atualizado",
+    "eta_label": "Estimativa indisponível: aguarde a atualização da pool",
+    "eta_details": "A pool paga automaticamente após atingir o mínimo confirmado. Depois do envio, a carteira depende da confirmação e sincronização da rede."
+   }
+  }
+ ],
+ "durations": [
+  {
+   "input": null,
+   "result": "não disponível"
+  },
+  {
+   "input": -5,
+   "result": "não disponível"
+  },
+  {
+   "input": 0,
+   "result": "0 min"
+  },
+  {
+   "input": 1,
+   "result": "1 min"
+  },
+  {
+   "input": 59,
+   "result": "1 min"
+  },
+  {
+   "input": 60,
+   "result": "1 min"
+  },
+  {
+   "input": 61,
+   "result": "2 min"
+  },
+  {
+   "input": 3599,
+   "result": "1 h"
+  },
+  {
+   "input": 3600,
+   "result": "1 h"
+  },
+  {
+   "input": 3661,
+   "result": "1 h 2 min"
+  },
+  {
+   "input": 86399,
+   "result": "1 d"
+  },
+  {
+   "input": 86400,
+   "result": "1 d"
+  },
+  {
+   "input": 31536059,
+   "result": "365 d 1 min"
+  },
+  {
+   "input": 31622400,
+   "result": "mais de 1 ano"
+  },
+  {
+   "input": "120",
+   "result": "2 min"
+  },
+  {
+   "input": true,
+   "result": "não disponível"
+  },
+  {
+   "input": 1000000000.0,
+   "result": "mais de 1 ano"
+  }
+ ],
+ "now": 1800000000.0
+}

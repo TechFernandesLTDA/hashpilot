@@ -1,0 +1,775 @@
+{
+ "cases": [
+  {
+   "name": "recovery_after_60s_cold",
+   "policy": {},
+   "steps": [
+    {
+     "temp": 74,
+     "now": 0,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 0/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 2,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 2/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 4,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 4/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 6,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 6/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 8,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 8/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 10,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 10/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 12,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 12/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 14,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 14/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 16,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 16/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 18,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 18/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 20,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 20/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 22,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 22/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 24,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 24/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 26,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 26/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 28,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 28/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 30,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 30/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 32,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 32/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 34,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 34/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 36,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 36/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 38,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 38/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 40,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 40/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 42,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 42/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 44,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 44/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 46,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 46/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 48,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 48/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 50,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 50/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 52,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 52/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 54,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 54/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 56,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 56/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 58,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 58/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 60,
+     "clock_mhz": 1755,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 62,
+     "clock_mhz": 1755,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 18 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 64,
+     "clock_mhz": 1755,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 16 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 66,
+     "clock_mhz": 1755,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 14 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 68,
+     "clock_mhz": 1755,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 12 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 70,
+     "clock_mhz": 1755,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 10 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 72,
+     "clock_mhz": 1755,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 8 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 74,
+     "clock_mhz": 1755,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 6 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 76,
+     "clock_mhz": 1755,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 4 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 78,
+     "clock_mhz": 1755,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 2 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 80,
+     "clock_mhz": 1770,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 82,
+     "clock_mhz": 1770,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 18 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 84,
+     "clock_mhz": 1770,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 16 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 86,
+     "clock_mhz": 1770,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 14 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 88,
+     "clock_mhz": 1770,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 12 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 90,
+     "clock_mhz": 1770,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 10 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 92,
+     "clock_mhz": 1770,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 8 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 94,
+     "clock_mhz": 1770,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 6 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 96,
+     "clock_mhz": 1770,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 4 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 98,
+     "clock_mhz": 1770,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; aguardando 2 s de cooldown",
+     "mode": "recovering"
+    },
+    {
+     "temp": 74,
+     "now": 100,
+     "clock_mhz": 1785,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s",
+     "mode": "recovering"
+    }
+   ]
+  },
+  {
+   "name": "cooling_bands_with_cooldown",
+   "policy": {},
+   "steps": [
+    {
+     "temp": 78,
+     "now": 0,
+     "clock_mhz": 1725,
+     "reason": "A partir de 78 °C: reduzir 15 MHz a cada 6 s",
+     "mode": "cooling"
+    },
+    {
+     "temp": 78,
+     "now": 2,
+     "clock_mhz": 1725,
+     "reason": "A partir de 78 °C: reduzir 15 MHz a cada 6 s; aguardando 4 s de cooldown",
+     "mode": "cooling"
+    },
+    {
+     "temp": 78,
+     "now": 6,
+     "clock_mhz": 1710,
+     "reason": "A partir de 78 °C: reduzir 15 MHz a cada 6 s",
+     "mode": "cooling"
+    },
+    {
+     "temp": 80,
+     "now": 8,
+     "clock_mhz": 1710,
+     "reason": "A partir de 80 °C: reduzir 60 MHz a cada 4 s; aguardando 2 s de cooldown",
+     "mode": "cooling"
+    },
+    {
+     "temp": 80,
+     "now": 10,
+     "clock_mhz": 1650,
+     "reason": "A partir de 80 °C: reduzir 60 MHz a cada 4 s",
+     "mode": "cooling"
+    },
+    {
+     "temp": 80,
+     "now": 12,
+     "clock_mhz": 1650,
+     "reason": "A partir de 80 °C: reduzir 60 MHz a cada 4 s; aguardando 2 s de cooldown",
+     "mode": "cooling"
+    },
+    {
+     "temp": 79,
+     "now": 14,
+     "clock_mhz": 1650,
+     "reason": "A partir de 78 °C: reduzir 15 MHz a cada 6 s; aguardando 2 s de cooldown",
+     "mode": "cooling"
+    },
+    {
+     "temp": 81,
+     "now": 20,
+     "clock_mhz": 1590,
+     "reason": "A partir de 80 °C: reduzir 60 MHz a cada 4 s",
+     "mode": "cooling"
+    }
+   ]
+  },
+  {
+   "name": "fast_heating_anticipates",
+   "policy": {},
+   "steps": [
+    {
+     "temp": 70,
+     "now": 0,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 0/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 72,
+     "now": 2,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 2/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74.5,
+     "now": 4,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 4/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 77.5,
+     "now": 6,
+     "clock_mhz": 1710,
+     "reason": "Aquecimento rápido (1.50 °C/s): antecipar redução de 30 MHz",
+     "mode": "anticipating"
+    },
+    {
+     "temp": 77.9,
+     "now": 8,
+     "clock_mhz": 1710,
+     "reason": "Temperatura na banda estável; mantendo clock",
+     "mode": "hold"
+    },
+    {
+     "temp": 76,
+     "now": 10,
+     "clock_mhz": 1710,
+     "reason": "Temperatura na banda estável; mantendo clock",
+     "mode": "hold"
+    }
+   ]
+  },
+  {
+   "name": "emergency_overrides_cooldown",
+   "policy": {},
+   "steps": [
+    {
+     "temp": 80,
+     "now": 0,
+     "clock_mhz": 1680,
+     "reason": "A partir de 80 °C: reduzir 60 MHz a cada 4 s",
+     "mode": "cooling"
+    },
+    {
+     "temp": 83,
+     "now": 1,
+     "clock_mhz": 1500,
+     "reason": "Emergência térmica a partir de 83 °C: clock mínimo",
+     "mode": "emergency"
+    },
+    {
+     "temp": 85,
+     "now": 2,
+     "clock_mhz": 1500,
+     "reason": "Emergência térmica a partir de 83 °C: clock mínimo",
+     "mode": "emergency"
+    },
+    {
+     "temp": 83,
+     "now": 2.5,
+     "clock_mhz": 1500,
+     "reason": "Emergência térmica a partir de 83 °C: clock mínimo",
+     "mode": "emergency"
+    },
+    {
+     "temp": 60,
+     "now": 3,
+     "clock_mhz": 1500,
+     "reason": "Resfriando: 0/60 s estáveis até 75 °C",
+     "mode": "hold"
+    }
+   ]
+  },
+  {
+   "name": "limits_reached",
+   "policy": {
+    "min_clock": 1500,
+    "max_clock": 1500,
+    "initial_clock": 1500
+   },
+   "steps": [
+    {
+     "temp": 81,
+     "now": 0,
+     "clock_mhz": 1500,
+     "reason": "A partir de 80 °C: reduzir 60 MHz a cada 4 s; limite de clock atingido",
+     "mode": "cooling"
+    },
+    {
+     "temp": 81,
+     "now": 10,
+     "clock_mhz": 1500,
+     "reason": "A partir de 80 °C: reduzir 60 MHz a cada 4 s; limite de clock atingido",
+     "mode": "cooling"
+    },
+    {
+     "temp": 70,
+     "now": 20,
+     "clock_mhz": 1500,
+     "reason": "Resfriando: 0/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 70,
+     "now": 100,
+     "clock_mhz": 1500,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; limite de clock atingido",
+     "mode": "recovering"
+    },
+    {
+     "temp": 70,
+     "now": 130,
+     "clock_mhz": 1500,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s; limite de clock atingido",
+     "mode": "recovering"
+    }
+   ]
+  },
+  {
+   "name": "initial_clock_is_clamped",
+   "policy": {
+    "min_clock": 1600,
+    "max_clock": 1700,
+    "initial_clock": 1800
+   },
+   "steps": [
+    {
+     "temp": 70,
+     "now": 0,
+     "clock_mhz": 1700,
+     "reason": "Resfriando: 0/60 s estáveis até 75 °C",
+     "mode": "hold"
+    }
+   ]
+  },
+  {
+   "name": "invalid_inputs",
+   "policy": {},
+   "steps": [
+    {
+     "temp": 151,
+     "now": 0,
+     "error": "Temperatura inválida ou fora da faixa de sensor"
+    },
+    {
+     "temp": -1,
+     "now": 0,
+     "error": "Temperatura inválida ou fora da faixa de sensor"
+    },
+    {
+     "temp": 70,
+     "now": -1,
+     "error": "Timestamp monotônico inválido"
+    },
+    {
+     "temp": 70,
+     "now": 10,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 0/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 70,
+     "now": 5,
+     "error": "Timestamp monotônico inválido"
+    },
+    {
+     "temp": 70,
+     "now": 10,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 0/60 s estáveis até 75 °C",
+     "mode": "hold"
+    }
+   ]
+  },
+  {
+   "name": "constructor_min_gt_max",
+   "policy": {
+    "min_clock": 1800,
+    "max_clock": 1700
+   },
+   "constructor_error": "Clock mínimo não pode exceder o máximo",
+   "steps": []
+  },
+  {
+   "name": "constructor_non_positive",
+   "policy": {
+    "min_clock": 0
+   },
+   "constructor_error": "Clocks precisam ser inteiros positivos em MHz",
+   "steps": []
+  },
+  {
+   "name": "fractional_times_round_half_even",
+   "policy": {},
+   "steps": [
+    {
+     "temp": 78,
+     "now": 0,
+     "clock_mhz": 1725,
+     "reason": "A partir de 78 °C: reduzir 15 MHz a cada 6 s",
+     "mode": "cooling"
+    },
+    {
+     "temp": 78,
+     "now": 1.5,
+     "clock_mhz": 1725,
+     "reason": "A partir de 78 °C: reduzir 15 MHz a cada 6 s; aguardando 4 s de cooldown",
+     "mode": "cooling"
+    },
+    {
+     "temp": 78,
+     "now": 3.5,
+     "clock_mhz": 1725,
+     "reason": "A partir de 78 °C: reduzir 15 MHz a cada 6 s; aguardando 2 s de cooldown",
+     "mode": "cooling"
+    },
+    {
+     "temp": 74,
+     "now": 10,
+     "clock_mhz": 1725,
+     "reason": "Resfriando: 0/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 40.5,
+     "clock_mhz": 1725,
+     "reason": "Resfriando: 30/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 74,
+     "now": 70.5,
+     "clock_mhz": 1740,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s",
+     "mode": "recovering"
+    }
+   ]
+  },
+  {
+   "name": "anticipation_slope_boundary",
+   "policy": {},
+   "steps": [
+    {
+     "temp": 75,
+     "now": 0,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 0/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 77,
+     "now": 5,
+     "clock_mhz": 1710,
+     "reason": "Aquecimento rápido (0.40 °C/s): antecipar redução de 30 MHz",
+     "mode": "anticipating"
+    },
+    {
+     "temp": 60,
+     "now": 10,
+     "clock_mhz": 1710,
+     "reason": "Resfriando: 0/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 76.6,
+     "now": 11,
+     "clock_mhz": 1710,
+     "reason": "Temperatura na banda estável; mantendo clock",
+     "mode": "hold"
+    },
+    {
+     "temp": 77.0,
+     "now": 12,
+     "clock_mhz": 1680,
+     "reason": "Aquecimento rápido (0.40 °C/s): antecipar redução de 30 MHz",
+     "mode": "anticipating"
+    }
+   ]
+  },
+  {
+   "name": "band_edges",
+   "policy": {},
+   "steps": [
+    {
+     "temp": 75,
+     "now": 0,
+     "clock_mhz": 1740,
+     "reason": "Resfriando: 0/60 s estáveis até 75 °C",
+     "mode": "hold"
+    },
+    {
+     "temp": 75,
+     "now": 60,
+     "clock_mhz": 1755,
+     "reason": "Até 75 °C por 60 s: recuperar 15 MHz a cada 20 s",
+     "mode": "recovering"
+    },
+    {
+     "temp": 78,
+     "now": 61,
+     "clock_mhz": 1755,
+     "reason": "A partir de 78 °C: reduzir 15 MHz a cada 6 s; aguardando 5 s de cooldown",
+     "mode": "cooling"
+    },
+    {
+     "temp": 80,
+     "now": 70,
+     "clock_mhz": 1695,
+     "reason": "A partir de 80 °C: reduzir 60 MHz a cada 4 s",
+     "mode": "cooling"
+    },
+    {
+     "temp": 83,
+     "now": 80,
+     "clock_mhz": 1500,
+     "reason": "Emergência térmica a partir de 83 °C: clock mínimo",
+     "mode": "emergency"
+    }
+   ]
+  }
+ ],
+ "constants": {
+  "EMERGENCY_C": 83,
+  "FAST_COOLING_C": 80,
+  "COOLING_C": 78,
+  "ANTICIPATE_C": 77,
+  "RECOVERY_C": 75,
+  "MINER_OFF_TEMPERATURE_C": 83
+ }
+}
