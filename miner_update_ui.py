@@ -27,19 +27,25 @@ def show_miner_update(parent,container=None):
     if getattr(window,'embedded',False):tk.Button(window,text='Revisar bloqueio no Defender →',command=lambda:window.navigate('Segurança')).grid(row=6,column=0,sticky='w',padx=20,pady=(0,12))
     else:tk.Button(window,text='Revisar bloqueio no Defender…',command=lambda:__import__('defender_setup').show_defender_setup(window)).grid(row=6,column=0,sticky='w',padx=20,pady=(0,12))
 
-    results=queue.Queue();selected=[None];busy=[False];requested=[None];request_at=[0]
+    results=queue.Queue();selected=[None];busy=[False];activating=[False];requested=[None];request_at=[0.0]
     def current():
-        registry=update.read(STATE_DIR/'rig-manager.json')
         versions=set()
-        for entry in registry.get('devices',{}).values():
-            path=entry.get('miner_log')
-            if path:
-                from component_status import miner_version
-                value=miner_version(path)
-                if value:versions.add(value)
-        chosen=update.selected_version()
+        try:
+            registry=update.read(STATE_DIR/'rig-manager.json')
+            devices=registry.get('devices',{})
+            for entry in (devices.values() if isinstance(devices,dict) else ()):
+                path=entry.get('miner_log') if isinstance(entry,dict) else None
+                if path:
+                    from component_status import miner_version
+                    value=miner_version(path)
+                    if value:versions.add(value)
+        except (OSError,ValueError):pass
+        try:chosen=update.selected_version()
+        except (OSError,ValueError):chosen=update.DEFAULT_VERSION
         version.configure(text=f"Selecionado: {chosen} · Em execução: {', '.join(sorted(versions)) or 'nenhum confirmado'}")
         return chosen
+    def idle():
+        busy[0]=False;activating[0]=False;refresh.configure(state='normal');rollback.configure(state='normal')
     def work(function):
         def run():
             try:results.put(('ok',function()))
@@ -48,11 +54,14 @@ def show_miner_update(parent,container=None):
     def check():
         if busy[0]:return
         busy[0]=True;install.configure(state='disabled');refresh.configure(state='disabled')
-        value=current();work(lambda:('check',update.latest(value)))
+        try:value=current()
+        except Exception as error:
+            idle();notes.configure(text=f'Não foi possível ler a versão local: {str(error)[:200]}');return
+        work(lambda:('check',update.latest(value)))
     def activate(target):
         if busy[0] or not target:return
         if not messagebox.askyesno('Atualizar minerador',f'Instalar e ativar SRBMiner {target}?\n\nHaverá uma breve interrupção nas GPUs gerenciadas. As GPUs desativadas continuarão desativadas. Carteiras e históricos permanecem intactos. Nenhuma exceção no Defender será criada.',parent=window):return
-        busy[0]=True;install.configure(state='disabled');refresh.configure(state='disabled');rollback.configure(state='disabled')
+        busy[0]=True;activating[0]=True;install.configure(state='disabled');refresh.configure(state='disabled');rollback.configure(state='disabled')
         status.configure(text='Baixando e verificando o pacote oficial. A mineração atual continua durante esta etapa…')
         def prepare():
             update.stage(target)
@@ -68,10 +77,17 @@ def show_miner_update(parent,container=None):
     tk.Button(actions,text='Notas oficiais',command=lambda:webbrowser.open(update.RELEASES_URL)).pack(side='right')
     def poll():
         if not window.winfo_exists():return
+        try:step()
+        except Exception as error:
+            # Um estado inesperado não pode deixar a janela presa como "ocupada".
+            requested[0]=None;idle();status.configure(text=f'Falha ao acompanhar a atualização: {str(error)[:200]}')
+        finally:
+            if window.winfo_exists():window.after(500,poll)
+    def step():
         try:
             kind,payload=results.get_nowait()
             if kind=='error':
-                busy[0]=False;status.configure(text=payload);refresh.configure(state='normal');rollback.configure(state='normal')
+                idle();status.configure(text=payload)
             elif payload[0]=='check':
                 data=payload[1];busy[0]=False;refresh.configure(state='normal')
                 selected[0]=data['version'] if data['newer'] and data['installable'] else None
@@ -86,16 +102,16 @@ def show_miner_update(parent,container=None):
                 labels={'validating':'Minerador iniciado; validando hashrate por GPU…','installed':'Atualização validada pelo serviço.','rolled_back':'A versão nova não passou na validação. Versão anterior selecionada; confira a retomada em Saúde.','failed':'Atualização não concluída.'}
                 status.configure(text=labels.get(state.get('state'),'Aguardando serviço…')+(' '+state['error'] if state.get('error') else ''))
                 if state.get('state') in ('installed','rolled_back','failed'):
-                    requested[0]=None;busy[0]=False;refresh.configure(state='normal');rollback.configure(state='normal');current()
+                    requested[0]=None;idle();current()
                 elif time.time()-request_at[0]>240:
-                    requested[0]=None;busy[0]=False;refresh.configure(state='normal');rollback.configure(state='normal')
+                    requested[0]=None;idle()
                     status.configure(text='Validação sem conclusão. Confira o serviço em Saúde e versões; o histórico foi preservado.')
             elif time.time()-request_at[0]>150:
-                requested[0]=None;busy[0]=False;refresh.configure(state='normal');rollback.configure(state='normal')
+                requested[0]=None;idle()
                 status.configure(text='Serviço não confirmou o pedido. Confira Saúde e versões antes de tentar novamente.')
-        window.after(500,poll)
     def close():
-        if busy[0]:messagebox.showinfo('Atualização em andamento','Aguarde a conclusão e a validação pelo serviço.',parent=window)
+        # Só a ativação (download + troca do minerador) impede fechar; consultar a versão não.
+        if activating[0]:messagebox.showinfo('Atualização em andamento','Aguarde a conclusão e a validação pelo serviço.',parent=window)
         else:window.destroy()
     window.protocol('WM_DELETE_WINDOW',close);window.transient(parent)
     current();check();window.after(500,poll)

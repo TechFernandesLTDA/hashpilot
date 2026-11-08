@@ -127,6 +127,10 @@ def _parse_gpu_log(text,gpu_uuid,index,stamp_now,allow_local_gpu0):
                 result["rate_points"].append((stamp,rate))
             if stamp is not None and stamp<=stamp_now+5 and rate is not None and rate>=0 and (result["hashrate_at"] is None or stamp>=result["hashrate_at"]):
                 result["hashrate"],result["hashrate_at"]=rate,stamp
+                # O SRBMiner pode retomar depois de "turned off" sem registrar "turned on";
+                # hashrate positivo desta GPU após a pausa prova a retomada.
+                if rate>0 and result.get('paused') and (result.get('pause_at') is None or stamp>result['pause_at']):
+                    result.update(paused=False,pause_at=stamp)
                 counters=dict(COUNTERS.findall(match[4]))
                 for key,code in (("accepted","A"),("rejected","R"),("hw_errors","HW")):
                     value=numeric(counters.get(code))

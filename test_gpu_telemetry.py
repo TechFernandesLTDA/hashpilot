@@ -74,6 +74,18 @@ class RigTelemetryTests(unittest.TestCase):
         self.assertFalse(one["paused"])
         self.assertEqual(one["last_share_at"]-zero["last_share_at"],1)
 
+    def test_positive_hashrate_after_pause_clears_it_without_turned_on(self):
+        # Caso real (SRBMiner 3.8.4, 07/11/2026): "turned off" 10 s após iniciar e retomada sem "turned on".
+        now=dt.datetime(2026,10,24,23,0,40).timestamp()
+        paused="[2026-10-24 23:00:03] GPU0 turned off - waiting to cool down [temperature > 83]"
+        still=parse_gpu_log(paused+"\n"+line(0,0,stamp="2026-10-24 23:00:10"),"GPU-test-0",0,now=now)
+        self.assertTrue(still["paused"])
+        resumed=parse_gpu_log(paused+"\n"+line(0,75,stamp="2026-10-24 23:00:30"),"GPU-test-0",0,now=now)
+        self.assertFalse(resumed["paused"])
+        self.assertEqual(resumed["hashrate"],75)
+        stale=parse_gpu_log(line(0,75,stamp="2026-10-24 23:00:01")+"\n"+paused,"GPU-test-0",0,now=now)
+        self.assertTrue(stale["paused"])
+
     def test_late_log_line_keeps_newest_live_hash(self):
         now=dt.datetime(2026,10,24,23,0,10).timestamp()
         text=line(0,81,stamp="2026-10-24 23:00:09")+"\n"+line(0,80,stamp="2026-10-24 23:00:01")

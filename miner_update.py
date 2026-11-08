@@ -38,7 +38,8 @@ def read(path):
     try:
         data=json.loads(Path(path).read_text(encoding='utf-8-sig'))
         return data if isinstance(data,dict) else {}
-    except FileNotFoundError:return {}
+    # Arquivo ausente, em branco ou meio gravado por outro processo vale como estado vazio.
+    except (OSError,ValueError):return {}
 
 def selected_version(base=None):
     record=read(Path(base or base_directory())/'miner-install.json')
