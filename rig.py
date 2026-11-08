@@ -28,6 +28,7 @@ from gpu_profiles import profile
 from mining_continuity import IdleSleepGuard,ContinuityWindow,safe_sensor
 from miner_identity import match_successor
 from miner_log import DEVICE_BUS,DEVICE_INDEX
+from thermal import MINER_OFF_TEMPERATURE_C
 
 MARKER="HashPilotRig-v1"
 REFERENCE_RTX3070_UUID="GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75"
@@ -461,7 +462,7 @@ class RigManager:
                 entry["pool"]=f"127.0.0.1:{port}"
             miner_args=[self.miner_path,"--disable-cpu","--disable-msr-tweaks","--disable-worker-watchdog","--disable-gpu-amd","--disable-gpu-intel","--algorithm-gpu","pearlhash",
                 "--gpu-id",str(entry["miner_index"]),"--pool",entry["pool"],"--wallet",entry["wallet"],
-                "--worker",device["worker_name"],"--gpu-off-temperature","83","--log-file",entry["miner_log"]]
+                "--worker",device["worker_name"],"--gpu-off-temperature",str(MINER_OFF_TEMPERATURE_C),"--log-file",entry["miner_log"]]
             if identifier==self.reference_uuid:
                 if not reference_device_confirmed(device):
                     raise RuntimeError("Unidade ou limites atuais da RTX 3070 de referência não confirmados; perfil não aplicado")

@@ -5,6 +5,7 @@ isoladas em NvidiaActuator, desativado por padrão e protegido por posse exclusi
 """
 from __future__ import annotations
 from ai_advisor import RoutedAdvisor
+from thermal import EMERGENCY_C
 
 import argparse
 from contextlib import contextmanager
@@ -195,7 +196,8 @@ def normalize_sample(sample, now=None):
 def thermal_limits(gpu):
     # 76/83 are conservative product ceilings; a lower driver limit always wins.
     driver = numeric(gpu.get("temperature_limit_c"))
-    hard = min(83.0,driver-2) if driver and 50 <= driver <= 110 else 83.0
+    ceiling = float(EMERGENCY_C)
+    hard = min(ceiling,driver-2) if driver and 50 <= driver <= 110 else ceiling
     return min(76.0, hard-7), hard
 
 
