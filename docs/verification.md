@@ -45,7 +45,7 @@ mise exec -- python tools/release_package.py build --ref v0.5.13 --version v0.5.
 
 O empacotador usa somente blobs do commit Git indicado: não inclui `.env`, configurações locais ou modificações não commitadas. O conteúdo público de `portable-data/`, já versionado e autorizado pelo autor, continua incluído. Os membros têm ordem, data e permissões fixas, sem compressão dependente de versão de biblioteca. Compare SHA-256 do ZIP gerado ao publicado. Isso torna o **pacote de código-fonte** reproduzível; não declara build reproduzível de Python, drivers ou SRBMiner.
 
-Antes de publicar: execute a suíte de testes, `tools/check_documentation.py`, análise sintática PowerShell e verificação de segredos. Anexe resultados identificando commit, sistema e eventuais skips; não reutilize resultados de outra revisão como se fossem atuais.
+Antes de publicar: execute a suíte de testes, `tools/check_style.py`, `tools/check_documentation.py`, análise sintática PowerShell e verificação de segredos. Fora do Windows, `tools/run_tests.py` roda a suíte com os testes dependentes de APIs do Windows pulados; isso não substitui a execução no Windows antes de uma release. Anexe resultados identificando commit, sistema e eventuais skips; não reutilize resultados de outra revisão como se fossem atuais.
 
 ## Diagnóstico que pode ser revisado para compartilhar
 

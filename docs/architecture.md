@@ -25,6 +25,7 @@ flowchart LR
 |---|---|
 | `install.ps1` | Instalação Windows, Python gerenciado pelo mise, versão do aplicativo e atalhos |
 | `monitor.py` | Aplicação Tk, três abas, coleta local, resumo e console |
+| `monitor_layout.py` / `monitor_chart.py` / `monitor_format.py` / `monitor_sensors.py` / `monitor_theme.py` | Construção das abas GPU e Rendimentos, gráfico, formatação (ausente = N/D), leituras do modo legado e cores |
 | `onboarding.py` | Assistente de configuração, carteira e escolha explícita das opções de instalação/mineração |
 | `Abrir-Monitor.ps1` | Lançador relativo Windows, com `-Resumo` e `-Console` |
 
@@ -42,8 +43,15 @@ flowchart LR
 | `thermal_controller.py` | Aplicação real das decisões NVIDIA no perfil suportado |
 | `gpu_agent.py` | Detecção por UUID, benchmark persistente, supervisor NVIDIA explícito e consultor Ollama opcional |
 | `gpu_telemetry.py` | Consulta NVIDIA em lote e parser de log atribuído a uma única GPU |
+| `miner_log.py` | Formato do log do SRBMiner (carimbo, hashrate, médias, contadores, mapa PCI); contrato testado com log real em `test_miner_log.py` |
+| `nvidia_smi.py` | Localização única do `nvidia-smi` (PATH e System32) |
 | `rig_config.py` | Seleção de até seis UUIDs, habilitação e herança de carteira |
 | `rig.py` / `rig_controller.py` | Ciclo de vida dos processos por GPU, fila de pedidos e snapshots isolados |
+| `process_backend.py` | Criação, identidade (PID, criação, executável) e encerramento seguro de processos no Windows |
+| `reference_profile.py` | Opt-in da RTX 3070 de referência do autor (UUID fixo); separado do fluxo genérico |
+| `fsutil.py` | Escrita atômica de JSON (`atomic_json`) |
+| `app_logging.py` | Diagnóstico local rotativo: `hashpilot.log` (painel) e `rig-service.log` (serviço), com traceback |
+| `data_contracts.py` | Contratos `TypedDict` conferidos por `mypy` nos módulos de dados |
 | `rig_panel.py` | Seleção e informações individuais das GPUs na interface |
 | `data/nvidia-gpus.json` | 158 modelos com proveniência NVIDIA; não contém presets universais de overclock |
 | `tray.py` | Ícone e menu nativos Windows, com eventos enviados à thread Tk |
@@ -94,7 +102,9 @@ A opção visível e desativável de contribuição usa proxy TCP para alternar 
 
 ## Testes
 
-`mise exec -- python -m unittest discover -v` cobre gráficos, finanças, conversões, pagamentos, política térmica, restauração e durabilidade. QA de interface e maximização é opt-in: `test_responsive_ui.py --run` e `test_windowing.py --run`. Usam janelas próprias e dados temporários, sem iniciar mineração.
+`mise exec -- python -m unittest discover -v` (ou `python tools/run_tests.py` em qualquer sistema: estado temporário isolado e testes dependentes de APIs do Windows pulados com motivo) cobre gráficos, finanças, conversões, pagamentos, política térmica, restauração e durabilidade. QA de interface e maximização é opt-in: `test_responsive_ui.py --run` e `test_windowing.py --run`. Usam janelas próprias e dados temporários, sem iniciar mineração.
+
+`python tools/check_style.py` roda `ruff` (erros reais em todo o repositório e formatação dos módulos novos) e `mypy` estrito nos módulos de `mypy.ini`; são ferramentas opcionais de desenvolvimento, chamadas pelo `pre-push`.
 
 Os relatórios devem distinguir monitor físico, área útil, cliente real, DPI e simulação 4K. [Como contribuir](../CONTRIBUTING.md).
 
