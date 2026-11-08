@@ -4,7 +4,6 @@ Não importa config, não lê settings/chaves, não executa subprocessos e não 
 """
 from __future__ import annotations
 import argparse
-import datetime as dt
 import json
 import math
 import os

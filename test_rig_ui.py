@@ -1,5 +1,4 @@
 """Fixtures explicitamente simuladas; GUI opt-in, sem coletores ou comandos GPU."""
-import copy
 import json
 from pathlib import Path
 import tempfile

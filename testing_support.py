@@ -4,6 +4,7 @@ O produto é exclusivo do Windows. Fora dele (`tools/run_tests.py`), esses
 testes aparecem como pulados com o motivo, em vez de falhas ou erros de import.
 No Windows, nada muda: todos executam.
 """
+
 import sys
 import unittest
 

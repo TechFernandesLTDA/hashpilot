@@ -7,6 +7,7 @@ recebem plataforma e ambiente: assim a regra "somente Windows" fica num ponto
 (usada por `tools/run_tests.py`) permite importar o módulo, sempre com um
 diretório temporário — nunca para executar o produto.
 """
+
 from __future__ import annotations
 import json
 import os

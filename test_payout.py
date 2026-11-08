@@ -1,5 +1,4 @@
 """Regras de pagamento: mínimo confirmado, estimativas honestas e carteira pública."""
-import copy
 import unittest
 from payout import payout_model
 

@@ -9,14 +9,12 @@ from thermal import EMERGENCY_C
 from nvidia_smi import nvidia_smi_path
 
 import argparse
-from contextlib import contextmanager
 import csv
 import json
 import math
 import os
 from pathlib import Path
 import re
-import shutil
 import sqlite3
 import statistics
 import subprocess
@@ -24,7 +22,7 @@ import threading
 import time
 from urllib.error import URLError
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from urllib.request import Request
 import uuid
 
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)

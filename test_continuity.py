@@ -8,7 +8,7 @@ from contribution import AUTHOR_WALLET,atomic_json
 from gpu_telemetry import parse_gpu_log
 from mining_continuity import ContinuityWindow,IdleSleepGuard
 from mining_health import health,OperationalStore
-from rig import RigManager,write_request
+from rig import RigManager
 from test_rig import FakeBackend,detected
 
 

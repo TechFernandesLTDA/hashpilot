@@ -674,9 +674,7 @@ class RigManager:
             entry['incidents']=self.operations.recent_events(identifier)
             sensor=snapshot.get('gpu') or {}
             entry['last_gpu_sample']={key:sensor.get(key) for key in ('temperature.gpu','sampled_at','error')}
-            temperature=sensor.get('temperature.gpu')
             # Never turn a thermal pause, missing sensor, external session or manual stop into a restart.
-            sensor_at=sensor.get('sampled_at')
             safe=safe_sensor(sensor,self.clock())
             age=self.clock()-entry.get('started_at',self.clock())
             stalled=(status['state'] in ('connecting','no_hashrate') and age>300) or (

@@ -1,4 +1,5 @@
 """Coerência entre o catálogo do minerador (Python) e os scripts PowerShell."""
+
 import json
 import re
 import unittest

@@ -25,7 +25,10 @@ class LegacyPanelParserTests(unittest.TestCase):
     def test_bracketed_label_and_gh_units_are_no_longer_ignored(self):
         now = time.time()
         stamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now - 5))
-        result = parse_log(f"[{stamp}] GPU[0] X: 500 GH/s [A:1 R:0 HW:0]\n[{stamp}] Average hashrate: 1m 0.5 TH/s | 15m 500 GH/s", now=now)
+        result = parse_log(
+            f"[{stamp}] GPU[0] X: 500 GH/s [A:1 R:0 HW:0]\n[{stamp}] Average hashrate: 1m 0.5 TH/s | 15m 500 GH/s",
+            now=now,
+        )
         self.assertAlmostEqual(result["hashrate"], 0.5)
         self.assertAlmostEqual(result["average_15m"], 0.5)
 

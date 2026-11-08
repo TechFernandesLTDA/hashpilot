@@ -5,6 +5,7 @@ guarda o traceback que a interface resume em uma linha. Sem `configure`, nada
 é escrito (NullHandler), o que mantém testes e imports silenciosos.
 Não registra carteira completa, chaves ou conteúdo de settings.json.
 """
+
 from __future__ import annotations
 
 import logging

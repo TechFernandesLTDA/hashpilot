@@ -1,6 +1,5 @@
 """Regression for SRBMiner self-restart, lost session metadata and thermal pause loops."""
 import copy
-from pathlib import Path
 import unittest
 from unittest.mock import patch
 from gpu_telemetry import parse_gpu_log

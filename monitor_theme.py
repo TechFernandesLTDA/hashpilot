@@ -1,4 +1,5 @@
 """Identidade visual do painel (cores e fontes) compartilhada pelos módulos de interface."""
+
 from pathlib import Path
 
 ASSET_DIR = Path(__file__).resolve().parent / "assets/brand"

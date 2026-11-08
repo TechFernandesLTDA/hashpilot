@@ -9,9 +9,9 @@ from unittest.mock import patch
 from types import SimpleNamespace
 
 from gpu_agent import (GPUAgent, NvidiaActuator, OllamaAdvisor, detect_nvidia_gpus,
-                       thermal_limits, validated_plan, control, BackgroundAdvisor,
+                       validated_plan, control, BackgroundAdvisor,
                        select_device,read_miner_data,external_supervisor_active)
-from gpu_agent import process_identity,same_process,requested_control_stop
+from gpu_agent import same_process,requested_control_stop
 from gpu_agent import control_plan,thermal_window_summary,performance_probe_gate
 from testing_support import windows_only
 

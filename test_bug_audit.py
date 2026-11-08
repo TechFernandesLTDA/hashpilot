@@ -1,15 +1,11 @@
 """Reproductions from the October audit; no live GPU, paid API or real credentials."""
 from collections import deque
 from contextlib import closing
-import copy
 import datetime as dt
 import json
-import os
 from pathlib import Path
 import sqlite3
 import tempfile
-import threading
-import time
 from types import SimpleNamespace
 import unittest
 from unittest.mock import patch
@@ -17,7 +13,7 @@ from unittest.mock import patch
 from ai_advisor import configuration,telemetry_context,RoutedAdvisor,RequestBudget,request_json
 from ai_setup import prepare_ai
 from contribution import AUTHOR_WALLET
-from finance import financial_model,normalize_finance_state,FinanceCollector
+from finance import financial_model,FinanceCollector
 from gpu_agent import BackgroundAdvisor,OllamaAdvisor,GPUAgent,numeric,read_sample
 from gpu_telemetry import parse_gpu_log,read_log_tail
 from history import HistoryStore

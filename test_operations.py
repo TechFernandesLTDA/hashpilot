@@ -1,6 +1,5 @@
 """Regressões de ACK, reinício limitado, backup WAL e confidencialidade."""
 from contextlib import closing
-import hashlib
 import json
 from pathlib import Path
 import sqlite3

@@ -7,6 +7,7 @@ pulados explicitamente (`windows_only`). Nada aqui inicia minerador ou altera GP
 
 Uso: python tools/run_tests.py [-v] [padrão ou módulo...]
 """
+
 from __future__ import annotations
 import os
 from pathlib import Path
@@ -26,7 +27,11 @@ def main(argv: list[str]) -> int:
         if sys.platform != "win32":
             os.environ.setdefault("HASHPILOT_TEST_STATE_DIR", state)
         loader = unittest.TestLoader()
-        suite = loader.loadTestsFromNames(names) if names else loader.discover(str(ROOT), pattern="test_*.py", top_level_dir=str(ROOT))
+        suite = (
+            loader.loadTestsFromNames(names)
+            if names
+            else loader.discover(str(ROOT), pattern="test_*.py", top_level_dir=str(ROOT))
+        )
         result = unittest.TextTestRunner(verbosity=verbosity).run(suite)
     return 0 if result.wasSuccessful() else 1
 

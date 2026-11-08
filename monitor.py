@@ -19,7 +19,7 @@ import tkinter.font as tkfont
 import sys
 import math
 from tkinter import ttk
-from finance import FinanceCollector, financial_model, PortfolioFinanceCollector, portfolio_model, portfolio_snapshots
+from finance import financial_model, PortfolioFinanceCollector, portfolio_model, portfolio_snapshots
 from history import HistoryStore, log_key
 from miner_log import COUNTERS, RATE, log_timestamp
 from app_logging import configure as configure_logging, get_logger
@@ -31,7 +31,7 @@ from file_cache import cached_load, signature as file_signature
 
 from tray import WindowsTray
 from bootstrap import restore_bundled_data
-from rig_panel import RigCards, project_selected, totals, save_enabled, show_identity
+from rig_panel import RigCards, project_selected, totals, show_identity
 from app_update import build_identity
 from monitor_theme import ASSET_DIR, BODY_FONT, TITLE_FONT, BG, PANEL, BORDER, TEXT, MUTED, TEAL, BLUE, ORANGE, PINK  # noqa: F401
 from monitor_format import fmt, safe_number, format_prl, format_brl, payout_for_local_state, thermal_description  # noqa: F401
@@ -1018,7 +1018,6 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
             errors=['Minerador indisponível: arquivo ausente ou bloqueado. Abra Configurações > Segurança.']
         if self.history.last_error:
             errors.append("Histórico aguardando gravação: " + self.history.last_error)
-        archived = self.history.info.get("telemetry", (0, None, None))[0]
         self.footer.configure(text=" | ".join(errors) if errors else f"Histórico permanente · gráficos mostram 15 min · atualização {dt.datetime.fromtimestamp(data['collected_at']).strftime('%H:%M:%S')}")
         STATE_DIR.mkdir(parents=True, exist_ok=True)
         snapshot = {k: v for k, v in data.items() if k != "miner"}

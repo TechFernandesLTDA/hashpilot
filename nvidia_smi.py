@@ -1,4 +1,5 @@
 """Localização única do `nvidia-smi` (PATH e, no Windows, System32)."""
+
 from __future__ import annotations
 
 import os

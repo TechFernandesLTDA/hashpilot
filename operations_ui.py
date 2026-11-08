@@ -16,7 +16,7 @@ from config import STATE_DIR,LOG_DIR
 from component_status import identity,miner_version
 from gpu_profiles import PROFILES
 from mining_health import health
-from contribution import read_support_status,read_settings
+from contribution import read_settings
 from fsutil import atomic_json
 from rig import write_request,ProcessBackend
 from contribution_audit import audit,audit_text
@@ -253,7 +253,6 @@ def show_operations(parent,container=None):
         reason=entry.get('error') or entry.get('controller_warning') or registry.get('error') or ('Último registro: '+str(recovery['last_reason']) if recovery.get('last_reason') else 'sem falha registrada')
         info.configure(text=f"Painel: {identity()['version']}\nServiço: {software.get('version','não informada pela versão antiga')} · {'atual' if service_fresh else 'sem heartbeat atual'}{' · atualização pendente' if pending else ''}\nControlador: {(controller.get('software') or {}).get('version','não informada')}\nMinerador: {miner.get('version') or miner_version(entry.get('miner_log')) or (version[1] if version else 'versão não disponível no log')} · pacote selecionado: {__import__('miner_update').selected_version()}\n\n{status['label']}{' · informação antiga' if not service_fresh else ''}\nConexão: {'sim' if status.get('connected') else 'não confirmada'} · GPU calculando: {'sim' if status.get('hashing') else 'não confirmado'}\nÚltima share aceita: {stamp(status.get('last_accepted_at'))}\nAlerta após {status.get('warning_after_seconds',900)/60:.0f} min · {status.get('basis','')}\n\nRecuperações: {recovery.get('attempts_last_hour',0)} / 3 na última hora\nPróxima tentativa permitida: {stamp(recovery.get('next_allowed_at'))}\nMotivo: {reason}\nSuspensão por inatividade: {'evitada durante mineração' if (registry.get('continuity') or {}).get('idle_sleep_prevented') else 'sem bloqueio confirmado'}\nPerfil ativo: {PROFILES.get(controller.get('profile'),{}).get('label','não informado')}\nCarteira configurada: {entry.get('wallet','não disponível')}\n\nACK confirma uma share aceita pela pool; crédito e pagamento são etapas distintas.")
         support=audit(Path(entry.get('log_dir',LOG_DIR)),entry.get('wallet',''),read_settings(STATE_DIR/'settings.json')) if entry else {}
-        shares=support.get('share_responses') or {}
         support_label.configure(text=audit_text(entry,support))
         window.after(2000,refresh)
     def theme(widget):

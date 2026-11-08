@@ -3,6 +3,7 @@
 Só descrevem formas já existentes; não mudam serialização nem validação.
 Campos ausentes/None continuam significando "não disponível", nunca zero.
 """
+
 from __future__ import annotations
 
 from typing import Any, TypedDict
@@ -19,6 +20,7 @@ class GpuPaths(TypedDict):
 
 class DetectedGpu(TypedDict, total=False):
     """Saída de `gpu_agent.detect_nvidia_gpus` usada pelo rig (campos extras são preservados)."""
+
     uuid: str
     index: int
     name: str
@@ -30,6 +32,7 @@ class DetectedGpu(TypedDict, total=False):
 
 class RigDevice(GpuPaths, total=False):
     """GPU resolvida por `rig_config.resolve_devices`: detecção + caminhos + configuração."""
+
     uuid: str
     index: int
     name: str

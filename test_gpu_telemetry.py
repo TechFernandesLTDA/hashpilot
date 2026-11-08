@@ -4,7 +4,7 @@ from pathlib import Path
 import tempfile
 import unittest
 
-from gpu_telemetry import FIELDS,parse_gpu_log,read_gpu_samples,read_device_payload
+from gpu_telemetry import parse_gpu_log,read_gpu_samples,read_device_payload
 
 
 def device(index):

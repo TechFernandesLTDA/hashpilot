@@ -4,6 +4,7 @@ Antes vivia em `contribution.py`, o que obrigava quinze módulos a importar o
 proxy de contribuição só para salvar arquivos; `contribution.atomic_json`
 continua disponível como reexportação.
 """
+
 from __future__ import annotations
 
 import json
@@ -34,4 +35,4 @@ def atomic_json(path: str | os.PathLike[str], payload: object, *, durable: bool 
         except PermissionError:
             if attempt == 20:
                 raise
-            time.sleep(.05)
+            time.sleep(0.05)

@@ -16,7 +16,6 @@ from pathlib import Path
 import queue
 import tempfile
 import tkinter as tk
-import tkinter.font as tkfont
 from types import SimpleNamespace
 from unittest.mock import patch
 

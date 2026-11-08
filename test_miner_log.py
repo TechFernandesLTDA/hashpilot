@@ -4,6 +4,7 @@ A fixture é um log público e autorizado do autor (`portable-data/`, SRBMiner
 3.8.0, RTX 3070 física). Não há log público da 3.8.4 no repositório: ao
 publicar um, acrescente-o a LOGS com os valores esperados da última amostra.
 """
+
 import time
 import unittest
 from pathlib import Path
@@ -14,8 +15,10 @@ from rig import parse_miner_device_map
 
 ROOT = Path(__file__).resolve().parent
 LOGS = {
-    "3.8.0": (ROOT / "portable-data/miner-logs/maximum-20261024-200354.log",
-              {"hashrate": 76.08, "accepted": 8, "rejected": 0, "hw_errors": 0, "average_1m": 76.22, "average_15m": 74.10}),
+    "3.8.0": (
+        ROOT / "portable-data/miner-logs/maximum-20261024-200354.log",
+        {"hashrate": 76.08, "accepted": 8, "rejected": 0, "hw_errors": 0, "average_1m": 76.22, "average_15m": 74.10},
+    ),
 }
 
 
@@ -40,7 +43,9 @@ class RealLogContractTests(unittest.TestCase):
         for line in rates:
             self.assertIsNotNone(STAMP.match(line), line)
             self.assertIsNotNone(RATE.search(line), line)
-        self.assertTrue(all(RATE.search(line) is None for line in lines if line.split("] ", 1)[-1].startswith("Total:")))
+        self.assertTrue(
+            all(RATE.search(line) is None for line in lines if line.split("] ", 1)[-1].startswith("Total:"))
+        )
         self.assertTrue(any(AVERAGE.search(line) for line in lines))
 
     def test_real_device_listing_maps_bus(self):
@@ -55,8 +60,7 @@ class FormatVariantTests(unittest.TestCase):
     def test_bracketed_labels_and_other_units(self):
         now = time.time()
         stamp = time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(now - 10))
-        text = (f"[{stamp}] GPU[0] RTX: 80.5 GH/s [A:3 R:1 HW:0]\n"
-                f"[{stamp}] Average hashrate: 1m 81 GH/s | 15m 0.08 TH/s")
+        text = f"[{stamp}] GPU[0] RTX: 80.5 GH/s [A:3 R:1 HW:0]\n[{stamp}] Average hashrate: 1m 81 GH/s | 15m 0.08 TH/s"
         result = parse_gpu_log(text, "GPU-x", 0, now=now)
         self.assertAlmostEqual(result["hashrate"], 0.0805)
         self.assertAlmostEqual(result["average_1m"], 0.081)

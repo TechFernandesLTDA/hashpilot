@@ -7,6 +7,9 @@ cd "$(git rev-parse --show-toplevel)"
 echo "pre-push: testes"
 mise exec -- python -m unittest discover --durations 5
 
+echo "pre-push: lint, formatação dos módulos novos e tipos (ruff/mypy, se instalados)"
+mise exec -- python tools/check_style.py
+
 echo "pre-push: links e JSONs da documentação"
 mise exec -- python tools/check_documentation.py >/dev/null
 
