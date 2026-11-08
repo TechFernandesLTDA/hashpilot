@@ -283,6 +283,13 @@ pub fn parse_gpu_log(
                     if rate >= 0.0 && not_before(state.hashrate_at, stamp) {
                         state.hashrate = Some(rate);
                         state.hashrate_at = Some(stamp);
+                        // O SRBMiner pode retomar depois de "turned off" sem registrar "turned on";
+                        // hashrate positivo desta GPU após a pausa prova a retomada.
+                        if rate > 0.0 && state.paused && state.pause_at.is_none_or(|at| stamp > at)
+                        {
+                            state.paused = false;
+                            state.pause_at = Some(stamp);
+                        }
                         let counters: HashMap<&str, &str> = COUNTERS
                             .captures_iter(&captures[4])
                             .map(|pair| {
@@ -406,6 +413,27 @@ mod tests {
             Some(0.0),
             "hora local com UTC+1"
         );
+    }
+
+    #[test]
+    fn positive_hashrate_after_pause_clears_it_without_turned_on() {
+        // Caso real (SRBMiner 3.8.4, 07/11/2026), espelho de test_gpu_telemetry.py.
+        let paused =
+            "[1970-01-01 00:00:03] GPU0 turned off - waiting to cool down [temperature > 83]";
+        let rate = |value: &str, stamp: &str| {
+            format!(
+                "[1970-01-01 00:00:{stamp}] GPU0 RTX: {value} TH/s [T:65C P:150W A:10 R:0 HW:0]"
+            )
+        };
+        let parse = |text: String| parse_gpu_log(&text, None, 0, 40.0, true, StampZone::UTC).0;
+        let still = parse(format!("{paused}\n{}", rate("0", "10")));
+        assert!(still.paused);
+        let resumed = parse(format!("{paused}\n{}", rate("75", "30")));
+        assert!(!resumed.paused);
+        assert_eq!(resumed.pause_at, Some(30.0));
+        assert_eq!(resumed.hashrate, Some(75.0));
+        let stale = parse(format!("{}\n{paused}", rate("75", "01")));
+        assert!(stale.paused);
     }
 
     #[test]
