@@ -38,6 +38,17 @@ minerador de verdade, o INT32 também é usado pelo BLAKE3 e há pressão de
 carga/armazenamento que este probe não tem — o ganho real é menor que o medido
 aqui. Rode também o `ampere_int8_probe.py` como linha de base.
 
+**Resultado na RTX 3070 (teste real, 08/11/2026; driver 621.14, sem minerador, clocks de fábrica): portão fechado.** Todas as saídas conferiram com a referência inteira da CPU.
+
+| Medição (`median_total_tmac_s`) | 1 onda | 4 ondas |
+|---|---|---|
+| `mma` | 76,9 | 82,4 |
+| `dp4a` | 13,0 | 18,6 |
+| `both` | 76,3 | 75,6 |
+| `ampere_int8_probe.py` (melhor cadeia) | 77,2 | 82,5 |
+
+`both` ficou abaixo de `mma` nas duas cargas: a DP4A atrapalha o MMA, e a ideia foi abandonada. O pico de ~82,5 TMAC/s confirma que o SRBMiner, a ~78,5 TH/s, já opera perto de 95% do teto desta placa.
+
 ## 2. Viabilidade do Strassen de 1 nível em INT8 — `strassen_int8_feasibility.py`
 
 Roda em **qualquer sistema** (só CPU, biblioteca padrão). Já executado:

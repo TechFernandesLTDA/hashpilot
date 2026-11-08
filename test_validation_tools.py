@@ -45,6 +45,10 @@ class GitIsolationTests(unittest.TestCase):
             name = subprocess.run(['git', 'config', '--local', '--get', 'user.name'], cwd=decoy,
                                   capture_output=True, text=True)
             self.assertEqual(name.stdout.strip(), '')
+            # O `git init` herdado também marcava o repositório como bare (visto em 08/11/2026).
+            bare = subprocess.run(['git', 'config', '--local', '--get', 'core.bare'], cwd=decoy,
+                                  capture_output=True, text=True)
+            self.assertEqual(bare.stdout.strip(), 'false')
 
 
 class ReleaseTests(unittest.TestCase):
