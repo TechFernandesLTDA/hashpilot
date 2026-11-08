@@ -1,6 +1,8 @@
-﻿param([string]$Wallet='prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t', [string]$Python)
+﻿param([string]$Wallet='', [string]$Python)
 $ErrorActionPreference='Stop'
 Set-Location -LiteralPath $PSScriptRoot
+. (Join-Path $PSScriptRoot 'Referencia-Comum.ps1')
+if(-not $Wallet){$Wallet=Get-ReferenceWallet}
 if($Wallet -notmatch '^prl1[ac-hj-np-z02-9]{30,100}$'){throw 'Endereco publico Pearl invalido'}
 $principal=[Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
 if(-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)){
@@ -17,7 +19,7 @@ if(-not (Test-Path -LiteralPath $Python)){throw 'Python do mise indisponivel'}
 $controller=Join-Path $PSScriptRoot 'thermal_controller.py'
 if(-not (Test-Path -LiteralPath $controller)){throw 'Controlador termico nao instalado'}
 $clock=1740
-$miner=Join-Path $PSScriptRoot 'SRBMiner-Multi-3-8-0\SRBMiner-MULTI.exe'
+$miner=Get-ReferenceMinerPath
 $logDir=Join-Path $PSScriptRoot 'logs'
 $log=Join-Path $logDir ('mining-'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'.log')
 $minerProcess=$null

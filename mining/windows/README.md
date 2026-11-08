@@ -16,11 +16,13 @@ O [catálogo de 158 modelos](../../docs/gpu-catalog.md) documenta fontes primár
 
 `Iniciar-Referencia-RTX3070.ps1` e `Parar-Referencia-RTX3070.ps1` preservam o fluxo histórico específico da unidade do autor e seu `thermal_controller.py`. Não são iniciadores genéricos. Uma mineração já ativa não é migrada ou reiniciada apenas por atualizar o aplicativo.
 
+Os scripts históricos (`Iniciar-Referencia`, `Parar-Referencia`, `Restaurar-GPU`, `Maximo`, `Turbo` e `Desempenho`) usam `Referencia-Comum.ps1`: o minerador é o mesmo selecionado no aplicativo (`miner-install.json`, padrão 3.8.0), a carteira vem de `%LOCALAPPDATA%\PearlMonitor\settings.json` (sem configuração, a do autor, com aviso) e os que alteram clocks recusam GPUs que não sejam a RTX 3070. `test_reference_scripts.py` confere a coerência com o catálogo do minerador.
+
 Perfil histórico medido: core 1740 MHz, offset +150 MHz, memória 5001 MHz, ventoinhas 100%, limite de fábrica 240 W; consumo aproximado 158 W, hashrate 76–79 TH/s e temperatura 74–75 °C. Esses resultados não garantem estabilidade em outra unidade ou ambiente. A pausa histórica em 78 °C foi substituída pelo supervisor adaptativo; consulte [controle térmico](../../CONTROLE-TERMICO.md) e `portable-data/miner-logs/validated-profile.json` na raiz do repositório.
 
 ## Downloads e dados
 
-Os binários de terceiros não são versionados. `downloads.json` registra URLs oficiais e hashes esperados. O monitor não precisa de seed, chave privada ou arquivos internos da Pearl Wallet; não publique esses dados.
+Os binários de terceiros não são versionados. `downloads.json` registra URLs oficiais, a pasta e os hashes esperados do ZIP e do executável; a versão base do SRBMiner é a mesma de `miner_update.DEFAULT_VERSION`. O monitor não precisa de seed, chave privada ou arquivos internos da Pearl Wallet; não publique esses dados.
 
 O produto e os scripts de mineração e controle são exclusivos para Windows. Código sob [GPL-3.0-only](../../LICENSE); marca e componentes de terceiros seguem seus avisos em [NOTICE](../../NOTICE).
 
