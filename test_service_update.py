@@ -6,8 +6,10 @@ import subprocess
 import sys
 import tempfile
 import unittest
+from testing_support import windows_only
 
 class ServiceUpdateTests(unittest.TestCase):
+    @windows_only("powershell.exe")
     def test_guarded_service_handoff_never_forces_a_process_or_changes_real_appdata(self):
         source=(Path(__file__).parent/'mining/windows/Atualizar-Rig.ps1').read_text(encoding='utf-8')
         # Mock the privilege context only in this isolated fixture. Production

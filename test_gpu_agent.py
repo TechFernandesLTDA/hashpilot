@@ -13,6 +13,7 @@ from gpu_agent import (GPUAgent, NvidiaActuator, OllamaAdvisor, detect_nvidia_gp
                        select_device,read_miner_data,external_supervisor_active)
 from gpu_agent import process_identity,same_process,requested_control_stop
 from gpu_agent import control_plan,thermal_window_summary,performance_probe_gate
+from testing_support import windows_only
 
 
 def device(identifier="GPU-test-3070"):
@@ -446,6 +447,7 @@ class OllamaAndActuatorTests(unittest.TestCase):
                 self.assertFalse(external_supervisor_active(temporary,gpu_uuid="GPU-test-5",gpu_index=5))
                 self.assertTrue(external_supervisor_active(temporary,gpu_uuid="GPU-test-0",gpu_index=0))
 
+    @windows_only("ctypes.WinDLL")
     def test_control_baseline_does_not_tune_and_cleanup_restores_driver(self):
         with tempfile.TemporaryDirectory() as temporary:
             gpu=device()
@@ -467,6 +469,7 @@ class OllamaAndActuatorTests(unittest.TestCase):
             self.assertEqual(status["writes"],0)
             self.assertFalse((Path(temporary)/"gpu-control-owner.json").exists())
 
+    @windows_only("ctypes.WinDLL")
     def test_control_refuses_existing_thermal_supervisor_before_any_write(self):
         with tempfile.TemporaryDirectory() as temporary:
             args=SimpleNamespace(duration=300,gpu=0,miner_pid=123,ollama=False,objective="performance",samples=1)
@@ -478,6 +481,7 @@ class OllamaAndActuatorTests(unittest.TestCase):
                     control(args,temporary,temporary)
                 command.assert_not_called()
 
+    @windows_only("ctypes.WinDLL")
     def test_control_restarts_incomplete_baseline_without_tuning(self):
         with tempfile.TemporaryDirectory() as temporary:
             calls=[]
@@ -502,6 +506,7 @@ class OllamaAndActuatorTests(unittest.TestCase):
             self.assertEqual(status["mode"],"insufficient_data")
             self.assertEqual(status["writes"],0)
 
+    @windows_only("ctypes.WinDLL")
     def test_controller_restart_with_persisted_trial_survives_next_adjustment(self):
         with tempfile.TemporaryDirectory() as temporary:
             gpu=device();agent=GPUAgent(temporary)

@@ -4,6 +4,7 @@ import unittest
 from unittest.mock import patch
 
 from rig import ProcessBackend,windows_argv
+from testing_support import windows_only
 
 
 class DuplicateGuardTests(unittest.TestCase):
@@ -15,14 +16,17 @@ class DuplicateGuardTests(unittest.TestCase):
     def test_empty_commandline_never_becomes_python_identity(self):
         for value in ('',' ',None): self.assertEqual(windows_argv(value),[])
 
+    @windows_only("ctypes.WinDLL")
     def test_same_gpu_or_multiple_selection_is_blocked(self):
         for command in ('miner.exe --gpu-id 0','miner.exe --gpu-id 1,0'):
             with self.assertRaises(RuntimeError): self.check([{'ProcessId':42,'CommandLine':command}])
 
+    @windows_only("ctypes.WinDLL")
     def test_missing_unreadable_or_invalid_selection_is_blocked(self):
         for command in (None,'','miner.exe','miner.exe --gpu-id','miner.exe --gpu-id invalid'):
             with self.assertRaises(RuntimeError): self.check([{'ProcessId':42,'CommandLine':command}])
 
+    @windows_only("ctypes.WinDLL")
     def test_other_gpu_is_preserved_and_does_not_block(self):
         self.check([{'ProcessId':42,'CommandLine':'miner.exe --gpu-id 1,2'}])
 

@@ -9,6 +9,7 @@ from unittest.mock import patch
 
 import defender_setup
 import miner_update
+from testing_support import windows_only
 
 
 class DefenderPermissionTests(unittest.TestCase):
@@ -17,6 +18,7 @@ class DefenderPermissionTests(unittest.TestCase):
             with self.assertRaises(ValueError):defender_setup.launch_exception_request('DisableAntivirus')
             launch.assert_not_called()
 
+    @windows_only("elevação do Windows")
     def test_requests_are_explicit_and_use_fixed_script(self):
         with patch.object(defender_setup.subprocess, 'Popen') as launch:
             defender_setup.launch_exception_request('Remove')
@@ -24,6 +26,7 @@ class DefenderPermissionTests(unittest.TestCase):
             self.assertEqual(arguments[-2:],['-Action','Remove'])
             self.assertEqual(Path(arguments[5]).name,'Permissao-Defender.ps1')
 
+    @windows_only("powershell.exe")
     def test_real_script_functions_fail_closed_and_only_touch_one_path(self):
         source=Path(__file__).parent/'mining/windows/Permissao-Defender.ps1'
         runner=r'''

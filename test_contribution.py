@@ -6,6 +6,7 @@ import tempfile
 import threading
 import time
 import unittest
+from testing_support import windows_only
 
 from contribution import (AUTHOR_WALLET, ContributionLedger, LocalStratumProxy,
     read_support_status, rewrite_message, support_configuration, ProxyLease)
@@ -22,6 +23,7 @@ def wait_for(predicate,timeout=3):
 
 
 class ContributionTests(unittest.TestCase):
+    @windows_only("proxy de contribuição")
     def test_proxy_instance_lease_refuses_concurrent_owner_and_recovers_stale_metadata(self):
         with tempfile.TemporaryDirectory() as temporary:
             path=Path(temporary)/"owner.json"
@@ -155,6 +157,7 @@ class FakePool:
 
 
 class ProxyIntegrationTests(unittest.TestCase):
+    @windows_only("proxy de contribuição")
     def test_pearl_named_wallet_worker_and_large_plain_proof_forwarded_unchanged(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary)
@@ -191,6 +194,7 @@ class ProxyIntegrationTests(unittest.TestCase):
                 thread.join(3)
                 pool.close()
 
+    @windows_only("proxy de contribuição")
     def test_author_phase_unknown_auth_closes_without_forwarding_wallet(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary)
@@ -217,6 +221,7 @@ class ProxyIntegrationTests(unittest.TestCase):
                 thread.join(3)
                 pool.close()
 
+    @windows_only("proxy de contribuição")
     def test_real_local_tcp_auth_submit_switch_disable_and_cleanup(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary)

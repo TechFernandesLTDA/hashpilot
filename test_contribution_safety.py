@@ -10,6 +10,7 @@ from unittest.mock import patch
 
 from contribution import AUTHOR_WALLET, ContributionLedger, LocalStratumProxy, rewrite_message
 from test_contribution import FakePool, USER, wait_for
+from testing_support import windows_only
 
 
 class ContributionSafety(unittest.TestCase):
@@ -29,6 +30,7 @@ class ContributionSafety(unittest.TestCase):
                 with self.assertRaises(OSError):proxy.serve_connection(None,None)
                 send.assert_not_called()
 
+    @windows_only("proxy de contribuição")
     def test_real_clock_scaled_tcp_cycle_routes_user_author_user_and_records_acks(self):
         with tempfile.TemporaryDirectory() as temporary, patch('contribution.PRIMARY_SECONDS',1.9), patch('contribution.SUPPORT_SECONDS',.1):
             root=Path(temporary);settings=root/'settings.json'
@@ -62,6 +64,7 @@ class ContributionSafety(unittest.TestCase):
                 if client:client.close()
                 thread.join(2);pool.close()
 
+    @windows_only("proxy de contribuição")
     def test_rejected_author_auth_falls_back_to_user_without_reusing_quota(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary);settings=root/'settings.json'
@@ -169,6 +172,7 @@ class ContributionSafety(unittest.TestCase):
                 proxy.close();client.close();pool.close();thread.join(2)
             self.assertEqual(proxy.ledger.seconds,0,'TCP idle time was counted as user mining time')
 
+    @windows_only("proxy de contribuição")
     def test_author_session_cannot_survive_a_full_cycle_clock_jump(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary)

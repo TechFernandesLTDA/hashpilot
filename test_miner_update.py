@@ -10,6 +10,7 @@ import zipfile
 import miner_update as update
 from contribution import atomic_json
 import test_rig as fixture
+from testing_support import windows_only
 
 
 class PackageTests(unittest.TestCase):
@@ -42,6 +43,7 @@ class PackageTests(unittest.TestCase):
         data=stream.getvalue();entry={'archive_sha256':hashlib.sha256(data).hexdigest(),'exe_sha256':hashlib.sha256(binary).hexdigest()}
         return binary,data,entry
 
+    @windows_only("proxy de contribuição")
     def test_stage_extracts_only_verified_binary_and_selection_is_explicit(self):
         binary,data,entry=self.package()
         with tempfile.TemporaryDirectory() as folder,patch.dict(update.CATALOG,{'3.8.1':entry}):
@@ -52,6 +54,7 @@ class PackageTests(unittest.TestCase):
             self.assertEqual(len(list(Path(folder).rglob('*.exe'))),1)
             update.select('3.8.1',folder);self.assertEqual(update.selected_version(folder),'3.8.1')
 
+    @windows_only("proxy de contribuição")
     def test_nested_384_layout_extracts_only_the_pinned_member(self):
         binary=b'verified nested fixture';stream=io.BytesIO()
         member=update.CATALOG['3.8.4']['archive_member']
@@ -68,6 +71,7 @@ class PackageTests(unittest.TestCase):
             self.assertFalse((Path(folder)/'outside.txt').exists())
             self.assertEqual(update.selected_version(folder),'3.8.0')
 
+    @windows_only("proxy de contribuição")
     def test_nested_package_rejects_a_binary_in_an_unreviewed_location(self):
         binary=b'fixture';stream=io.BytesIO()
         with zipfile.ZipFile(stream,'w') as z:z.writestr('other/SRBMiner-MULTI.exe',binary)
@@ -75,6 +79,7 @@ class PackageTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder,patch.dict(update.CATALOG,{'3.8.4':entry}),self.assertRaises(ValueError):
             update.stage('3.8.4',folder,opener=lambda *a,**k:io.BytesIO(data))
 
+    @windows_only("proxy de contribuição")
     def test_bad_archive_or_binary_never_installs_or_selects(self):
         binary,data,entry=self.package()
         for corrupted in ('archive_sha256','exe_sha256'):
@@ -85,6 +90,7 @@ class PackageTests(unittest.TestCase):
                 self.assertFalse(list(Path(folder).rglob('*.exe')))
                 self.assertEqual(update.selected_version(folder),'3.8.0')
 
+    @windows_only("proxy de contribuição")
     def test_verified_local_package_installs_without_network_and_still_checks_exe(self):
         binary,data,entry=self.package()
         with tempfile.TemporaryDirectory() as folder,patch.dict(update.CATALOG,{'3.8.1':entry}):

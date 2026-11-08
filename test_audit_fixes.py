@@ -15,6 +15,7 @@ from unittest.mock import patch
 from gpu_agent import NvidiaActuator, process_state
 from history import HistoryStore
 from monitor import Monitor, selected_gpu_context
+from testing_support import windows_only
 
 
 class LockRegression(unittest.TestCase):
@@ -199,6 +200,7 @@ Invoke-Expression $sourceText.Substring($start,$end-$start)
         return subprocess.run(['powershell.exe','-NoProfile','-Command',command],
                               env=env,capture_output=True,timeout=20,creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
 
+    @windows_only("powershell.exe")
     def test_partial_version_is_preserved_and_new_version_activated(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary);source=root/'source';source.mkdir()
@@ -219,6 +221,7 @@ Invoke-Expression $sourceText.Substring($start,$end-$start)
             self.assertFalse((new/'.env').exists())
             self.assertFalse((new/'settings.json').exists())
 
+    @windows_only("powershell.exe")
     def test_promotion_failure_preserves_previous_metadata(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary);source=root/'source';source.mkdir()
@@ -231,6 +234,7 @@ Invoke-Expression $sourceText.Substring($start,$end-$start)
             self.assertEqual(json.loads((installed/'installation.json').read_text(encoding='utf-8'))['app'],'previous')
             self.assertEqual((old/'monitor.py').read_text(encoding='utf-8'),'partial')
 
+    @windows_only("powershell.exe")
     def test_complete_version_is_reused_but_same_size_hash_mismatch_is_repaired(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary);source=root/'source';source.mkdir()
@@ -249,6 +253,7 @@ Invoke-Expression $sourceText.Substring($start,$end-$start)
             self.assertEqual((old/'monitor.py').read_text(encoding='utf-8'),'evil')
             self.assertEqual((repaired/'monitor.py').read_text(encoding='utf-8'),'good')
 
+    @windows_only("powershell.exe")
     def test_unexpected_python_file_forces_new_destination(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary);source=root/'source';source.mkdir()
