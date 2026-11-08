@@ -2,7 +2,7 @@
 
 Fontes primárias: [release 3.8.6](https://github.com/doktor83/SRBMiner-Multi/releases/tag/3.8.6), [release 3.8.5](https://github.com/doktor83/SRBMiner-Multi/releases/tag/3.8.5) e [parâmetros](https://github.com/doktor83/SRBMiner-Multi/blob/master/Parameters) no commit `659c275` (07/11/2026). As duas releases saíram depois da [revisão da 3.8.4](srbminer-3.8.4.md).
 
-**Estado: incluída no catálogo verificado, ainda não recomendada.** Os hashes foram conferidos contra o pacote oficial (ver [Inclusão no catálogo](#inclusão-no-catálogo)). A versão padrão do instalador continua a 3.8.0, e a 3.8.6 só vira a recomendada depois do [A/B na RTX 3070](#plano-de-teste-na-rtx-3070).
+**Estado: incluída no catálogo verificado, não recomendada.** Os hashes foram conferidos contra o pacote oficial (ver [Inclusão no catálogo](#inclusão-no-catálogo)). A versão padrão do instalador continua a 3.8.0. O [A/B na RTX 3070](#resultado-do-ab-na-rtx-3070-teste-real-08112026) de 08/11/2026 não mostrou ganho de eficiência e teve rejeições: a 3.8.4 continua a versão ativa.
 
 ## O que mudou
 
@@ -70,4 +70,27 @@ A 3.8.6 só vira a versão recomendada depois de um A/B na placa:
   - pelo menos três amostras após o aquecimento.
 - **Critério:** a melhora prometida é de eficiência. Watts menores com o mesmo TH/s já contam como ganho, porque dão folga térmica ao supervisor para subir o núcleo. Se houver perda de TH/s, rejeições ou instabilidade, volte à 3.8.4 pela seleção de versão (o pacote anterior é preservado).
 
-Até lá, nenhum número de ganho deve ser publicado para a 3.8.6.
+## Resultado do A/B na RTX 3070 (teste real, 08/11/2026)
+
+**Conclusão: a 3.8.6 não trouxe ganho de eficiência nesta placa e teve rejeições. A 3.8.4 continua ativa; a 3.8.6 não é recomendada.** A 3.8.6 segue no catálogo e instalada, para um novo teste.
+
+Placa de referência (UUID `GPU-bafb0ad5…fc75`), driver 621.14, pool `prl.kryptex.network:7048`, mesma carteira, rig na `main` em `eb9c946`. A versão foi trocada pela ativação do serviço do rig (`miner_update.request_activation`), que preservou o outro pacote.
+
+### O preset fixo do plano não se sustenta
+
+A primeira tentativa usou o preset do plano: núcleo de 1725 MHz, memória a 5001 MHz, ventoinha a 100% e PL 240, sem o controle por temperatura. Às 20:25:28 o minerador iniciou; às 20:25:36 a placa já estava em 82 °C e o teste foi interrompido. É o mesmo comportamento que causava o laço de cortes em 83 °C. Por isso não dá para comparar as versões com o núcleo fixo em 1725 MHz.
+
+### Condições usadas
+
+As duas versões rodaram em sequência, com o controle por temperatura-alvo em 78 °C, a memória em 810 MHz (o melhor clock escolhido pelo explorador; empate de hashrate com 5001 e 6801 a menos potência) e a ventoinha ajustada pelo minerador. Com a temperatura igualada, ganho de eficiência apareceria como mais TH/s ou menos watts. As amostras são as linhas do log do SRBMiner depois do aquecimento (temperatura estável em 76–78 °C).
+
+| Versão | Amostras estáveis (TH/s) | Potência | TH/s/W | Temperatura | Clock efetivo | Aceitas / rejeitadas / HW |
+|---|---|---|---|---|---|---|
+| 3.8.4 | 78,32 · 78,44 · 78,37 (média 78,38) | 167,0–167,8 W (≈167,5) | ≈0,468 | 76 °C | 1695 MHz | 3 / 0 / 0 em ~10 min |
+| 3.8.6 | 78,68 · 78,98 · 78,69 (média 78,78) | 171,0–172,4 W (≈171,9) | ≈0,458 | 77–78 °C | 1710 MHz | 3 / 2 (*stale share*) / 0 em ~10 min |
+
+- **Hashrate:** +0,5% na 3.8.6, explicado pelo controle ter subido o núcleo um degrau (1695 → 1710 MHz).
+- **Eficiência:** cerca de 2% pior na 3.8.6 (≈4,4 W a mais), o contrário do que o changelog promete.
+- **Rejeições:** 2 de 5 shares da 3.8.6 foram *stale* (solução enviada depois da troca de trabalho); a 3.8.4 não teve nenhuma. A amostra é pequena, mas pelo critério acima já basta para voltar à 3.8.4.
+
+Limites honestos: cerca de 10 minutos por versão, uma sessão, sem repetição em ordem inversa. A diferença de potência está perto do ruído térmico; a de rejeições, não, mas tem poucas shares. Um novo A/B mais longo (≥ 30 min por versão, ordem alternada) pode reabrir a decisão.
