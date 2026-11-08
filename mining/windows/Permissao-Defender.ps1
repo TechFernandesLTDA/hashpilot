@@ -1,6 +1,6 @@
 # Optional, administrator-confirmed exclusion for one pinned miner executable.
 [CmdletBinding()]
-param([ValidateSet('Add','Remove')][string]$Action='Add',[string]$UserLocalAppData=$env:LOCALAPPDATA,[ValidateSet('3.8.0','3.8.1','3.8.3','3.8.4')][string]$Version='3.8.0')
+param([ValidateSet('Add','Remove')][string]$Action='Add',[string]$UserLocalAppData=$env:LOCALAPPDATA,[ValidateSet('3.8.0','3.8.1','3.8.3','3.8.4','3.8.6')][string]$Version='3.8.0')
 $ErrorActionPreference='Stop'
 $UserLocalAppData=[IO.Path]::GetFullPath($UserLocalAppData)
 if($UserLocalAppData -notmatch '^[A-Za-z]:\\' -or $UserLocalAppData.Contains('"')){throw 'AppData local invalido.'}
@@ -18,14 +18,14 @@ function Assert-NoReparsePoint([string]$Path) {
 
 function Get-MinerVersion {
     if(-not $Version){return '3.8.0'}
-    if($Version -notin @('3.8.0','3.8.1','3.8.3','3.8.4')){throw 'Versao nao permitida'}
+    if($Version -notin @('3.8.0','3.8.1','3.8.3','3.8.4','3.8.6')){throw 'Versao nao permitida'}
     return $Version
 }
 
 function Get-VerifiedMinerTarget {
     $Version=Get-MinerVersion
-    $exeHash=if($Version -eq '3.8.4'){'5d235cfa8ff75659f5264817a356e689e087eb0f9b94218a80c5a3f25ffd1171'}elseif($Version -eq '3.8.3'){'1a58995232c96501a8c17139db5404527d9ec0b57863ae03605dd477e181ffdf'}elseif($Version -eq '3.8.1'){'2f7e60a17fcc65ddd3c7f5821666a6ae11ef6c1f2c95331bb7e46793c032b688'}else{'6eb4e0bc37d65fdf7644ab620737e14f4c7dfa9666acde43d5f38ab1e9094ac1'}
-    $archiveHash=if($Version -eq '3.8.4'){'68ec24cbe24e795dd4677e981967563dc7eaea21706289df6b4b0af667789baa'}elseif($Version -eq '3.8.3'){'92af8d2db5bc96df62825487e7f384b8ab04e5db26a634e29c2cd86dcbb87d0e'}elseif($Version -eq '3.8.1'){'16bd455557bd3698e004d1f6b5d19290b9b59e9f9c8ef9245acafdaeb2413e79'}else{'33eef5f8946259290013ce370a746a85f91c2bbcd81fcefa1aad904dd9a912f8'}
+    $exeHash=if($Version -eq '3.8.6'){'d072fc7012fe1d56f27253d7e41931afd0e3df349fbcc947f2243151baa6ab29'}elseif($Version -eq '3.8.4'){'5d235cfa8ff75659f5264817a356e689e087eb0f9b94218a80c5a3f25ffd1171'}elseif($Version -eq '3.8.3'){'1a58995232c96501a8c17139db5404527d9ec0b57863ae03605dd477e181ffdf'}elseif($Version -eq '3.8.1'){'2f7e60a17fcc65ddd3c7f5821666a6ae11ef6c1f2c95331bb7e46793c032b688'}else{'6eb4e0bc37d65fdf7644ab620737e14f4c7dfa9666acde43d5f38ab1e9094ac1'}
+    $archiveHash=if($Version -eq '3.8.6'){'d44aa90bf857e526805c95e153b8c089c2188dae5ba0c4fad83d516168fb424b'}elseif($Version -eq '3.8.4'){'68ec24cbe24e795dd4677e981967563dc7eaea21706289df6b4b0af667789baa'}elseif($Version -eq '3.8.3'){'92af8d2db5bc96df62825487e7f384b8ab04e5db26a634e29c2cd86dcbb87d0e'}elseif($Version -eq '3.8.1'){'16bd455557bd3698e004d1f6b5d19290b9b59e9f9c8ef9245acafdaeb2413e79'}else{'33eef5f8946259290013ce370a746a85f91c2bbcd81fcefa1aad904dd9a912f8'}
     $folder='SRBMiner-Multi-'+(Get-MinerVersion).Replace('.','-')
     $base=[IO.Path]::GetFullPath((Join-Path $UserLocalAppData 'Mining\Pearl'))
     $target=Join-Path $base ($folder+'\SRBMiner-MULTI.exe')
