@@ -54,6 +54,14 @@ def thermal_description(control, compact=False):
              'manual_baseline':'Benchmark solicitado','validating':'Validando ajuste','accepted':'Ajuste validado',
              'rollback':'Revertendo ajuste','insufficient_data':'Aguardando medições válidas'}
     mode = modes.get(control.get("mode"), str(control.get("mode", "Aguardando")))
+    target = control.get("target_control") if control.get("mode") == "target" else None
+    if isinstance(target, dict):
+        fan = target.get("fan_pct")
+        mode = f"Alvo {target.get('target_c', 0):.0f} °C" + (f" · ventoinha {fan:.0f}%" if isinstance(fan, (int, float)) else "")
+        if target.get("ceiling_mhz"):
+            mode += f" · teto {target['ceiling_mhz']:.0f} MHz"
+        if not compact and target.get("reason") and not control.get("reason"):
+            control = {**control, "reason": target["reason"]}
     clock = control.get("current_clock_mhz",(control.get('sample') or {}).get('clock_mhz',"—"))
     desired = control.get("desired_clock_mhz",(control.get('proposal') or {}).get('clock_mhz'))
     clock_text = f"{clock} → {desired} MHz" if desired is not None and desired != clock else f"{clock} MHz"

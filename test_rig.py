@@ -80,6 +80,9 @@ class RigConfigurationTests(unittest.TestCase):
         gpu={'supported_graphics_clocks_mhz':[1560,1710,1725,2100]}
         self.assertEqual(reference_start_clock(gpu,{}),1560)
         self.assertEqual(reference_start_clock(gpu,{'reference_start_core_mhz':1710}),1710)
+        # Temperatura-alvo ligada: partida conservadora, o controlador sobe depois (laço de 07/11/2026).
+        self.assertEqual(reference_start_clock(gpu,{'reference_start_core_mhz':1710,'target_temperature_c':78}),1560)
+        self.assertEqual(reference_start_clock(gpu,{'reference_start_core_mhz':1710,'target_temperature_c':True}),1710)
         self.assertEqual(reference_start_clock(gpu,{'reference_start_core_mhz':1725}),1725)
         self.assertEqual(reference_start_clock(gpu,{'reference_start_core_mhz':2100}),1560)
         self.assertEqual(reference_start_clock({'supported_graphics_clocks_mhz':[1560]},{'reference_start_core_mhz':1710}),1560)
