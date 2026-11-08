@@ -2,7 +2,7 @@
 
 Fontes primárias: [release 3.8.6](https://github.com/doktor83/SRBMiner-Multi/releases/tag/3.8.6), [release 3.8.5](https://github.com/doktor83/SRBMiner-Multi/releases/tag/3.8.5) e [parâmetros](https://github.com/doktor83/SRBMiner-Multi/blob/master/Parameters) no commit `659c275` (07/11/2026). As duas releases saíram depois da [revisão da 3.8.4](srbminer-3.8.4.md).
 
-**Estado: revisada, ainda não incluída no catálogo.** Falta o SHA-256 do executável, que só se obtém abrindo o pacote. Veja [O que falta para instalar](#o-que-falta-para-instalar).
+**Estado: incluída no catálogo verificado, ainda não recomendada.** Os hashes foram conferidos contra o pacote oficial (ver [Inclusão no catálogo](#inclusão-no-catálogo)). A versão padrão do instalador continua a 3.8.0, e a 3.8.6 só vira a recomendada depois do [A/B na RTX 3070](#plano-de-teste-na-rtx-3070).
 
 ## O que mudou
 
@@ -23,28 +23,34 @@ Isso confirma a decisão da 3.8.4: **o afinador nativo fica desligado**. Ligar o
 
 ## Hashes publicados
 
-| Pacote | SHA-256 exibido pelo GitHub | MD5 do texto da release |
-|---|---|---|
-| `SRBMiner-Multi-3-8-6-win64.zip` | `d44aa90bf857e526805c95e153b8c089c2188dae5ba0c4fad83d516168fb424b` | `7fa435946e7d9b3229307ee61a97290d` |
-| `SRBMiner-Multi-3-8-5-win64.zip` | `10395ce7190af40d1a5ac524962f03e0a74af173a0c715645bea254af6545982` | `1f1509095ad8500d81ce05994b629123` |
+| Pacote | SHA-256 exibido pelo GitHub | MD5 do texto da release | Conferência |
+|---|---|---|---|
+| `SRBMiner-Multi-3-8-6-win64.zip` | `d44aa90bf857e526805c95e153b8c089c2188dae5ba0c4fad83d516168fb424b` | `7fa435946e7d9b3229307ee61a97290d` | Os dois conferem com o pacote baixado em 08/11/2026 |
+| `SRBMiner-Multi-3-8-5-win64.zip` | `10395ce7190af40d1a5ac524962f03e0a74af173a0c715645bea254af6545982` | `1f1509095ad8500d81ce05994b629123` | Não baixado: a 3.8.5 não entra no catálogo |
 
-São dois canais independentes: o digest que o GitHub calcula e o MD5 que o autor escreve na release. Os valores acima foram lidos da página da release e ainda não foram conferidos contra o pacote baixado, porque esta revisão foi feita num ambiente sem acesso aos downloads. A conferência é o primeiro passo abaixo.
+São dois canais independentes: o digest que o GitHub calcula e o MD5 que o autor escreve na release. Um pacote só entra no catálogo quando os dois conferem.
 
-## O que falta para instalar
+## Inclusão no catálogo
 
-O catálogo (`miner_update.CATALOG`) fixa três coisas: o SHA-256 do ZIP, o SHA-256 do executável e o caminho exato do executável dentro do pacote. A 3.8.4 mudou o layout (`.../Win/...`), então o caminho não pode ser presumido. No Windows, na raiz do repositório:
+O pacote oficial de 08/11/2026 (28.669.814 bytes) foi baixado da release e inspecionado sem extrair nem executar nada:
 
-```text
-mise exec -- python tools/inspect_miner_release.py 3.8.6 --archive-sha256 d44aa90bf857e526805c95e153b8c089c2188dae5ba0c4fad83d516168fb424b --md5 7fa435946e7d9b3229307ee61a97290d
-```
+| Campo | Valor |
+|---|---|
+| SHA-256 do ZIP | `d44aa90bf857e526805c95e153b8c089c2188dae5ba0c4fad83d516168fb424b` |
+| SHA-256 do `SRBMiner-MULTI.exe` (28.849.664 bytes) | `d072fc7012fe1d56f27253d7e41931afd0e3df349fbcc947f2243151baa6ab29` |
+| Caminho no pacote | `SRBMiner-Multi-3-8-6/SRBMiner-MULTI.exe` |
 
-A ferramenta baixa o ZIP oficial e recusa se o SHA-256 ou o MD5 divergirem. Localiza o único `SRBMiner-MULTI.exe` e calcula o hash dele **sem extrair nem executar nada**. A saída traz a linha pronta do catálogo. Com ela, a inclusão segue o padrão da 3.8.4:
+A 3.8.4 tinha mudado o executável para `.../Win/...`; a 3.8.6 voltou ao caminho padrão, então a entrada não precisa de `archive_member`. O executável é o único `SRBMiner-MULTI.exe` do pacote. O preparo real do atualizador (`miner_update._stage`, com o pacote local numa pasta temporária, sem executar nada) aceitou o pacote e conferiu os dois hashes; o teste foi feito em Linux, sem GPU.
+
+A inclusão segue o padrão da 3.8.4:
 
 - entrada em `miner_update.CATALOG`;
 - versão e hashes em `Permissao-Defender.ps1`;
 - versão em `Referencia-Comum.ps1`.
 
-`test_reference_scripts.py` confere a coerência dos três. A versão padrão do instalador continua a 3.8.0; a 3.8.6 é selecionada pela atualização do minerador no aplicativo, que preserva a versão anterior.
+`test_reference_scripts.py` confere a coerência dos três. A 3.8.6 é selecionada pela atualização do minerador no aplicativo, que preserva a versão anterior para o retorno.
+
+Para as próximas releases, `tools/inspect_miner_release.py <versão> --archive-sha256 <hex> --md5 <hex>` faz o mesmo levantamento e imprime a linha pronta do catálogo.
 
 ## Plano de teste na RTX 3070
 
