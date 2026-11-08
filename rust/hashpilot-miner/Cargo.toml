@@ -1,0 +1,35 @@
+[package]
+name = "hashpilot-miner"
+description = "Minerador Pearl do HashPilot (fase M1): motor de CPU sobre a referência oficial zk-pow, com paridade e verificação oficiais. Sem rede e sem GPU nesta fase."
+version = "0.1.0"
+edition = "2024"
+rust-version = "1.85"
+license = "GPL-3.0-only"
+repository = "https://github.com/TechFernandesLTDA/hashpilot"
+
+# Projeto separado do workspace de rust/: depende do código oficial da Pearl e só é
+# compilado quando se quer o minerador (ver README.md desta pasta).
+[workspace]
+
+[dependencies]
+# Referência oficial da Pearl (ISC), fixada no commit inspecionado em
+# docs/pearl-rtx3070-investigacao-2026-11-02.txt. Trocar o `rev` exige revisar o diff
+# do protocolo e rodar a paridade de novo.
+zk-pow = { git = "https://github.com/pearl-research-labs/pearl", rev = "d7c517d267f10f5bcbbdc366f3e603942f9a5ab5" }
+pearl-blake3 = { git = "https://github.com/pearl-research-labs/pearl", rev = "d7c517d267f10f5bcbbdc366f3e603942f9a5ab5" }
+primitive-types = "0.12.1"
+rand = "0.9"
+rand_chacha = "0.9"
+anyhow = "1"
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+
+[dev-dependencies]
+bincode = "1.3.3"
+
+[lints.rust]
+unsafe_code = "forbid"
+
+[[bin]]
+name = "hashpilot-miner"
+path = "src/main.rs"

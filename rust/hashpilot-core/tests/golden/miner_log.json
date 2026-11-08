@@ -1,0 +1,1071 @@
+{
+ "cases": [
+  {
+   "name": "real:maximum-20261024-200354.log",
+   "fixture": "portable-data/miner-logs/maximum-20261024-200354.log",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1792872897.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 76.08,
+    "hashrate_at": 1792872896.0,
+    "accepted": 8,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": 76.22,
+    "average_15m": 74.1,
+    "started_at": 1792872235.0,
+    "last_share_at": 1792872848.0,
+    "connection": "Conectado à pool",
+    "connection_at": 1792872238.0,
+    "last_job_at": null,
+    "last_log_at": 1792872896.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1792872265.0,
+      69.55
+     ],
+     [
+      1792872295.0,
+      72.64
+     ],
+     [
+      1792872325.0,
+      71.55
+     ],
+     [
+      1792872355.0,
+      72.4
+     ],
+     [
+      1792872385.0,
+      0.0
+     ],
+     [
+      1792872415.0,
+      70.9
+     ],
+     [
+      1792872445.0,
+      73.84
+     ],
+     [
+      1792872475.0,
+      72.56
+     ],
+     [
+      1792872505.0,
+      74.4
+     ],
+     [
+      1792872535.0,
+      75.33
+     ],
+     [
+      1792872625.0,
+      76.83
+     ],
+     [
+      1792872715.0,
+      75.21
+     ],
+     [
+      1792872806.0,
+      76.1
+     ],
+     [
+      1792872896.0,
+      76.08
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-10-24 20:08:06] GPU0[t0] share accepted [  211ms] [pearlhash][0]\n[2026-10-24 20:08:25] [A0][pearlhash]\n[2026-10-24 20:08:25] GPU0 RTX 3070: 74.40 TH/s [T:70C FAN:100% P:151.9W EFF:0.490 CC:1710 MC:5001 A:5 R:0 HW:0]\n[2026-10-24 20:08:25] Total: 74.40 TH/s [P:151.9W EFF:0.490 A:5 R:0 HW:0]\n[2026-10-24 20:08:25] Average hashrate: 1m 73.48 TH/s | 15m 70.87 TH/s | 1h 70.87 TH/s | 6h 70.87 TH/s\n[2026-10-24 20:08:55] [A0][pearlhash]\n[2026-10-24 20:08:55] GPU0 RTX 3070: 75.33 TH/s [T:70C FAN:100% P:152.0W EFF:0.496 CC:1710 MC:5001 A:5 R:0 HW:0]\n[2026-10-24 20:08:55] Total: 75.33 TH/s [P:152.0W EFF:0.496 A:5 R:0 HW:0]\n[2026-10-24 20:08:55] Average hashrate: 1m 74.88 TH/s | 15m 71.32 TH/s | 1h 71.32 TH/s | 6h 71.32 TH/s\n[2026-10-24 20:09:19] GPU0[t0] share accepted [  212ms] [pearlhash][0]\n[2026-10-24 20:09:55] Uptime: 0d 00:05:57\n[2026-10-24 20:09:55] [A0][pearlhash]\n[2026-10-24 20:09:55] Pool: prl.kryptex.network:7048\n[2026-10-24 20:09:55] Connection: 0d 00:05:57\n[2026-10-24 20:09:55] Latency: ~212 ms\n[2026-10-24 20:09:55] Diff: 2097152\n[2026-10-24 20:09:55] Last job: 39 sec ago\n[2026-10-24 20:10:25] [A0][pearlhash]\n[2026-10-24 20:10:25] GPU0 RTX 3070: 76.83 TH/s [T:73C FAN:100% P:157.6W EFF:0.487 CC:1740 MC:5001 A:6 R:0 HW:0]\n[2026-10-24 20:10:25] Total: 76.83 TH/s [P:157.6W EFF:0.487 A:6 R:0 HW:0]\n[2026-10-24 20:10:25] Average hashrate: 1m 76.81 TH/s | 15m 72.49 TH/s | 1h 72.49 TH/s | 6h 72.49 TH/s\n[2026-10-24 20:11:55] [A0][pearlhash]\n[2026-10-24 20:11:55] GPU0 RTX 3070: 75.21 TH/s [T:71C FAN:100% P:153.2W EFF:0.491 CC:1710 MC:5001 A:6 R:0 HW:0]\n[2026-10-24 20:11:55] Total: 75.21 TH/s [P:153.2W EFF:0.491 A:6 R:0 HW:0]\n[2026-10-24 20:11:55] Average hashrate: 1m 75.72 TH/s | 15m 73.25 TH/s | 1h 73.25 TH/s | 6h 73.25 TH/s\n[2026-10-24 20:13:26] [A0][pearlhash]\n[2026-10-24 20:13:26] GPU0 RTX 3070: 76.10 TH/s [T:74C FAN:100% P:158.0W EFF:0.482 CC:1740 MC:5001 A:6 R:0 HW:0]\n[2026-10-24 20:13:26] Total: 76.10 TH/s [P:158.0W EFF:0.482 A:6 R:0 HW:0]\n[2026-10-24 20:13:26] Average hashrate: 1m 76.28 TH/s | 15m 73.74 TH/s | 1h 73.74 TH/s | 6h 73.74 TH/s\n[2026-10-24 20:14:07] GPU0[t0] share accepted [  214ms] [pearlhash][0]\n[2026-10-24 20:14:08] GPU0[t0] share accepted [  211ms] [pearlhash][0]\n[2026-10-24 20:14:56] [A0][pearlhash]\n[2026-10-24 20:14:56] GPU0 RTX 3070: 76.08 TH/s [T:74C FAN:100% P:157.0W EFF:0.485 CC:1740 MC:5001 A:8 R:0 HW:0]\n[2026-10-24 20:14:56] Total: 76.08 TH/s [P:157.0W EFF:0.485 A:8 R:0 HW:0]\n[2026-10-24 20:14:56] Average hashrate: 1m 76.22 TH/s | 15m 74.10 TH/s | 1h 74.10 TH/s | 6h 74.10 TH/s",
+    "pause_at": 1792872388.0,
+    "version": "3.8.0"
+   },
+   "future": null
+  },
+  {
+   "name": "real:mining-20261024-195544.log",
+   "fixture": "portable-data/miner-logs/mining-20261024-195544.log",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1792872047.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 70.17,
+    "hashrate_at": 1792872046.0,
+    "accepted": 2,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": 70.26,
+    "average_15m": 67.63,
+    "started_at": 1792871745.0,
+    "last_share_at": 1792871961.0,
+    "connection": "Conectado à pool",
+    "connection_at": 1792871749.0,
+    "last_job_at": null,
+    "last_log_at": 1792872046.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1792871776.0,
+      61.97
+     ],
+     [
+      1792871806.0,
+      65.07
+     ],
+     [
+      1792871836.0,
+      65.65
+     ],
+     [
+      1792871866.0,
+      65.59
+     ],
+     [
+      1792871896.0,
+      65.79
+     ],
+     [
+      1792871926.0,
+      70.14
+     ],
+     [
+      1792871956.0,
+      70.28
+     ],
+     [
+      1792871986.0,
+      70.77
+     ],
+     [
+      1792872016.0,
+      70.35
+     ],
+     [
+      1792872046.0,
+      70.17
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-10-24 19:56:46] Total: 65.07 TH/s [P:123.5W EFF:0.527 A:1 R:0 HW:0]\n[2026-10-24 19:56:46] Average hashrate: 1m 63.60 TH/s | 15m 63.60 TH/s | 1h 63.60 TH/s | 6h 63.60 TH/s\n[2026-10-24 19:57:16] [A0][pearlhash]\n[2026-10-24 19:57:16] GPU0 RTX 3070: 65.65 TH/s [T:63C FAN:70% P:121.4W EFF:0.541 CC:1500 MC:6801 A:1 R:0 HW:0]\n[2026-10-24 19:57:16] Total: 65.65 TH/s [P:121.4W EFF:0.541 A:1 R:0 HW:0]\n[2026-10-24 19:57:16] Average hashrate: 1m 65.36 TH/s | 15m 64.31 TH/s | 1h 64.31 TH/s | 6h 64.31 TH/s\n[2026-10-24 19:57:46] [A0][pearlhash]\n[2026-10-24 19:57:46] GPU0 RTX 3070: 65.59 TH/s [T:63C FAN:71% P:121.6W EFF:0.539 CC:1500 MC:6801 A:1 R:0 HW:0]\n[2026-10-24 19:57:46] Total: 65.59 TH/s [P:121.6W EFF:0.539 A:1 R:0 HW:0]\n[2026-10-24 19:57:46] Average hashrate: 1m 65.62 TH/s | 15m 64.64 TH/s | 1h 64.64 TH/s | 6h 64.64 TH/s\n[2026-10-24 19:58:16] [A0][pearlhash]\n[2026-10-24 19:58:16] GPU0 RTX 3070: 65.79 TH/s [T:63C FAN:71% P:122.2W EFF:0.538 CC:1500 MC:6801 A:1 R:0 HW:0]\n[2026-10-24 19:58:16] Total: 65.79 TH/s [P:122.2W EFF:0.538 A:1 R:0 HW:0]\n[2026-10-24 19:58:16] Average hashrate: 1m 65.69 TH/s | 15m 64.87 TH/s | 1h 64.87 TH/s | 6h 64.87 TH/s\n[2026-10-24 19:58:46] [A0][pearlhash]\n[2026-10-24 19:58:46] GPU0 RTX 3070: 70.14 TH/s [T:71C FAN:81% P:149.5W EFF:0.469 CC:1605 MC:6801 A:1 R:0 HW:0]\n[2026-10-24 19:58:46] Total: 70.14 TH/s [P:149.5W EFF:0.469 A:1 R:0 HW:0]\n[2026-10-24 19:58:46] Average hashrate: 1m 67.96 TH/s | 15m 65.76 TH/s | 1h 65.76 TH/s | 6h 65.76 TH/s\n[2026-10-24 19:59:16] [A0][pearlhash]\n[2026-10-24 19:59:16] GPU0 RTX 3070: 70.28 TH/s [T:71C FAN:82% P:149.5W EFF:0.470 CC:1590 MC:6801 A:1 R:0 HW:0]\n[2026-10-24 19:59:16] Total: 70.28 TH/s [P:149.5W EFF:0.470 A:1 R:0 HW:0]\n[2026-10-24 19:59:16] Average hashrate: 1m 70.21 TH/s | 15m 66.42 TH/s | 1h 66.42 TH/s | 6h 66.42 TH/s\n[2026-10-24 19:59:21] GPU0[t0] share accepted [  232ms] [pearlhash][0]\n[2026-10-24 19:59:46] [A0][pearlhash]\n[2026-10-24 19:59:46] GPU0 RTX 3070: 70.77 TH/s [T:71C FAN:83% P:149.6W EFF:0.473 CC:1590 MC:6801 A:2 R:0 HW:0]\n[2026-10-24 19:59:46] Total: 70.77 TH/s [P:149.6W EFF:0.473 A:2 R:0 HW:0]\n[2026-10-24 19:59:46] Average hashrate: 1m 70.52 TH/s | 15m 66.97 TH/s | 1h 66.97 TH/s | 6h 66.97 TH/s\n[2026-10-24 20:00:16] [A0][pearlhash]\n[2026-10-24 20:00:16] GPU0 RTX 3070: 70.35 TH/s [T:71C FAN:83% P:149.7W EFF:0.470 CC:1590 MC:6801 A:2 R:0 HW:0]\n[2026-10-24 20:00:16] Total: 70.35 TH/s [P:149.7W EFF:0.470 A:2 R:0 HW:0]\n[2026-10-24 20:00:16] Average hashrate: 1m 70.56 TH/s | 15m 67.35 TH/s | 1h 67.35 TH/s | 6h 67.35 TH/s\n[2026-10-24 20:00:46] [A0][pearlhash]\n[2026-10-24 20:00:46] GPU0 RTX 3070: 70.17 TH/s [T:71C FAN:84% P:149.5W EFF:0.469 CC:1605 MC:6801 A:2 R:0 HW:0]\n[2026-10-24 20:00:46] Total: 70.17 TH/s [P:149.5W EFF:0.469 A:2 R:0 HW:0]\n[2026-10-24 20:00:46] Average hashrate: 1m 70.26 TH/s | 15m 67.63 TH/s | 1h 67.63 TH/s | 6h 67.63 TH/s",
+    "pause_at": null,
+    "version": "3.8.0"
+   },
+   "future": null
+  },
+  {
+   "name": "real:mining-20261024-201554.log",
+   "fixture": "portable-data/miner-logs/mining-20261024-201554.log",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1792872986.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 73.43,
+    "hashrate_at": 1792872985.0,
+    "accepted": 0,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": 73.43,
+    "average_15m": 73.43,
+    "started_at": 1792872955.0,
+    "last_share_at": null,
+    "connection": "Conectado à pool",
+    "connection_at": 1792872959.0,
+    "last_job_at": null,
+    "last_log_at": 1792872985.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1792872985.0,
+      73.43
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-10-24 20:15:55] Found 1 GPU device/s on platform 0\n[2026-10-24 20:15:55] OpenCL backend inited\n[2026-10-24 20:15:55] Cuda backend inited\n[2026-10-24 20:15:55] A0 --busy-wait-recheck value is 0.05\n[2026-10-24 20:15:55] GPU0: nvidia_geforce_rtx_3070                                                [ampere        ][   8 GB][CU:      46][BUS: 06]\n[2026-10-24 20:15:55] GPU sensors: enabled\n[2026-10-24 20:15:55] Algorithm/s: pearlhash [2.00% fee]\n[2026-10-24 20:15:55] Gpu mining: enabled\n[2026-10-24 20:15:55] Cpu mining: disabled\n[2026-10-24 20:15:55] Watchdog: enabled\n[2026-10-24 20:15:55] Starting init of worker threads\n[2026-10-24 20:15:55] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] is SM_86\n[2026-10-24 20:15:55] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] driver version: 13.04\n[2026-10-24 20:15:55] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] reported total memory: 8191 MB\n[2026-10-24 20:15:55] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] memory bus width: 256 bit\n[2026-10-24 20:15:55] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] reported free memory: 6129 MB\n[2026-10-24 20:15:55] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] max buffer size: 7781 MB\n[2026-10-24 20:15:55] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] is CMP: FALSE\n[2026-10-24 20:15:55] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] CC:1740 COFF:150 MC:5001 PL:240 FAN:100\n[2026-10-24 20:15:55] GPU0 |A0|pearlhash           |\n[2026-10-24 20:15:55] NVIDIA NVML[13.617.14] initialised successfully! [1 devices]\n[2026-10-24 20:15:55] Finished init of worker threads\n[2026-10-24 20:15:55] HTTP API disabled\n[2026-10-24 20:15:55] GPU0 PL0: 240W\n[2026-10-24 20:15:55] GPU0 CC0: 1740MHZ\n[2026-10-24 20:15:56] GPU0 CO0: 150MHZ\n[2026-10-24 20:15:56] GPU0 MC0: 5001MHZ\n[2026-10-24 20:15:56] GPU0 FS0: 100%\n[2026-10-24 20:15:59] Connected to prl.kryptex.network:7048 [0]\n[2026-10-24 20:15:59] GPU temperature protection monitor thread started\n[2026-10-24 20:15:59] GPU sensors thread started\n[2026-10-24 20:16:25] [A0][pearlhash]\n[2026-10-24 20:16:25] GPU0 RTX 3070: 73.43 TH/s [T:73C FAN:100% P:156.8W EFF:0.468 CC:1740 MC:5001 A:0 R:0 HW:0]\n[2026-10-24 20:16:25] Total: 73.43 TH/s [P:156.8W EFF:0.468 A:0 R:0 HW:0]\n[2026-10-24 20:16:25] Average hashrate: 1m 73.43 TH/s | 15m 73.43 TH/s | 1h 73.43 TH/s | 6h 73.43 TH/s",
+    "pause_at": null,
+    "version": "3.8.0"
+   },
+   "future": null
+  },
+  {
+   "name": "real:mining-20261024-201647.log",
+   "fixture": "portable-data/miner-logs/mining-20261024-201647.log",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1792875344.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 76.62,
+    "hashrate_at": 1792875290.0,
+    "accepted": 15,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": 76.52,
+    "average_15m": 77.62,
+    "started_at": 1792873008.0,
+    "last_share_at": 1792875343.0,
+    "connection": "Conectado à pool",
+    "connection_at": 1792873012.0,
+    "last_job_at": null,
+    "last_log_at": 1792875343.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1792874479.0,
+      76.82
+     ],
+     [
+      1792874570.0,
+      80.64
+     ],
+     [
+      1792874660.0,
+      80.29
+     ],
+     [
+      1792874750.0,
+      80.69
+     ],
+     [
+      1792874840.0,
+      80.43
+     ],
+     [
+      1792874930.0,
+      79.63
+     ],
+     [
+      1792875020.0,
+      79.95
+     ],
+     [
+      1792875110.0,
+      76.64
+     ],
+     [
+      1792875200.0,
+      76.24
+     ],
+     [
+      1792875290.0,
+      76.62
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-10-24 20:48:29] GPU0[t0] share accepted [  217ms] [pearlhash][0]\n[2026-10-24 20:48:33] GPU0[t0] share accepted [  215ms] [pearlhash][0]\n[2026-10-24 20:48:50] [A0][pearlhash]\n[2026-10-24 20:48:50] GPU0 RTX 3070: 79.63 TH/s [T:76C FAN:100% P:163.2W EFF:0.488 CC:1740 MC:5001 A:10 R:0 HW:0]\n[2026-10-24 20:48:50] Total: 79.63 TH/s [P:163.2W EFF:0.488 A:10 R:0 HW:0]\n[2026-10-24 20:48:50] Average hashrate: 1m 65.29 TH/s | 15m 77.34 TH/s | 1h 76.99 TH/s | 6h 76.99 TH/s\n[2026-10-24 20:49:38] GPU0[t0] share accepted [  216ms] [pearlhash][0]\n[2026-10-24 20:50:19] GPU0[t0] share accepted [  217ms] [pearlhash][0]\n[2026-10-24 20:50:20] [A0][pearlhash]\n[2026-10-24 20:50:20] GPU0 RTX 3070: 79.95 TH/s [T:77C FAN:100% P:164.2W EFF:0.487 CC:1740 MC:5001 A:12 R:0 HW:0]\n[2026-10-24 20:50:20] Total: 79.95 TH/s [P:164.2W EFF:0.487 A:12 R:0 HW:0]\n[2026-10-24 20:50:20] Average hashrate: 1m 80.08 TH/s | 15m 77.59 TH/s | 1h 77.09 TH/s | 6h 77.09 TH/s\n[2026-10-24 20:51:22] GPU0[t0] share accepted [  216ms] [pearlhash][0]\n[2026-10-24 20:51:50] [A0][pearlhash]\n[2026-10-24 20:51:50] GPU0 RTX 3070: 76.64 TH/s [T:75C FAN:100% P:159.6W EFF:0.480 CC:1740 MC:5001 A:13 R:0 HW:0]\n[2026-10-24 20:51:50] Total: 76.64 TH/s [P:159.6W EFF:0.480 A:13 R:0 HW:0]\n[2026-10-24 20:51:50] Average hashrate: 1m 76.55 TH/s | 15m 77.62 TH/s | 1h 77.08 TH/s | 6h 77.08 TH/s\n[2026-10-24 20:52:50] Uptime: 0d 00:35:59\n[2026-10-24 20:52:50] [A0][pearlhash]\n[2026-10-24 20:52:50] Pool: prl.kryptex.network:7048\n[2026-10-24 20:52:50] Connection: 0d 00:35:58\n[2026-10-24 20:52:50] Latency: ~217 ms\n[2026-10-24 20:52:50] Diff: 4194304\n[2026-10-24 20:52:50] Last job: 8 sec ago\n[2026-10-24 20:53:10] GPU0[t0] share accepted [  218ms] [pearlhash][0]\n[2026-10-24 20:53:20] [A0][pearlhash]\n[2026-10-24 20:53:20] GPU0 RTX 3070: 76.24 TH/s [T:75C FAN:100% P:159.6W EFF:0.478 CC:1740 MC:5001 A:14 R:0 HW:0]\n[2026-10-24 20:53:20] Total: 76.24 TH/s [P:159.6W EFF:0.478 A:14 R:0 HW:0]\n[2026-10-24 20:53:20] Average hashrate: 1m 76.29 TH/s | 15m 77.65 TH/s | 1h 77.07 TH/s | 6h 77.07 TH/s\n[2026-10-24 20:53:50] GPU0[t0] share accepted [  215ms] [pearlhash][0]\n[2026-10-24 20:54:50] [A0][pearlhash]\n[2026-10-24 20:54:50] GPU0 RTX 3070: 76.62 TH/s [T:75C FAN:100% P:159.6W EFF:0.480 CC:1740 MC:5001 A:15 R:0 HW:0]\n[2026-10-24 20:54:50] Total: 76.62 TH/s [P:159.6W EFF:0.480 A:15 R:0 HW:0]\n[2026-10-24 20:54:50] Average hashrate: 1m 76.52 TH/s | 15m 77.62 TH/s | 1h 77.05 TH/s | 6h 77.05 TH/s\n[2026-10-24 20:55:43] GPU0[t0] share accepted [  217ms] [pearlhash][0]",
+    "pause_at": 1792874892.0,
+    "version": "3.8.0"
+   },
+   "future": null
+  },
+  {
+   "name": "real:mining-20261024-205622.log",
+   "fixture": "portable-data/miner-logs/mining-20261024-205622.log",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1792883075.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 75.83,
+    "hashrate_at": 1792883074.0,
+    "accepted": 70,
+    "rejected": 1,
+    "hw_errors": 0,
+    "average_1m": 76.66,
+    "average_15m": 76.61,
+    "started_at": 1792875384.0,
+    "last_share_at": 1792883071.0,
+    "connection": "Conectado à pool",
+    "connection_at": 1792875388.0,
+    "last_job_at": null,
+    "last_log_at": 1792883074.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1792882263.0,
+      75.75
+     ],
+     [
+      1792882353.0,
+      77.48
+     ],
+     [
+      1792882443.0,
+      77.03
+     ],
+     [
+      1792882533.0,
+      77.26
+     ],
+     [
+      1792882623.0,
+      77.14
+     ],
+     [
+      1792882713.0,
+      75.24
+     ],
+     [
+      1792882803.0,
+      76.95
+     ],
+     [
+      1792882893.0,
+      77.07
+     ],
+     [
+      1792882984.0,
+      76.91
+     ],
+     [
+      1792883074.0,
+      75.83
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-10-24 22:58:33] [A0][pearlhash]\n[2026-10-24 22:58:33] GPU0 RTX 3070: 75.24 TH/s [T:75C FAN:100% P:166.1W EFF:0.453 CC:1740 MC:5001 A:63 R:0 HW:0]\n[2026-10-24 22:58:33] Total: 75.24 TH/s [P:166.1W EFF:0.453 A:63 R:0 HW:0]\n[2026-10-24 22:58:33] Average hashrate: 1m 73.38 TH/s | 15m 77.09 TH/s | 1h 77.24 TH/s | 6h 78.26 TH/s\n[2026-10-24 22:59:08] GPU0[t0] share accepted [  215ms] [pearlhash][0]\n[2026-10-24 22:59:20] GPU0[t0] share rejected [stale share] [pearlhash][0]\n[2026-10-24 22:59:27] GPU0[t0] share accepted [  214ms] [pearlhash][0]\n[2026-10-24 23:00:03] [A0][pearlhash]\n[2026-10-24 23:00:03] GPU0 RTX 3070: 76.95 TH/s [T:75C FAN:100% P:159.0W EFF:0.484 CC:1740 MC:5001 A:65 R:1 HW:0]\n[2026-10-24 23:00:03] Total: 76.95 TH/s [P:159.0W EFF:0.484 A:65 R:1 HW:0]\n[2026-10-24 23:00:03] Average hashrate: 1m 77.22 TH/s | 15m 77.19 TH/s | 1h 77.16 TH/s | 6h 78.24 TH/s\n[2026-10-24 23:01:33] [A0][pearlhash]\n[2026-10-24 23:01:33] GPU0 RTX 3070: 77.07 TH/s [T:74C FAN:100% P:159.7W EFF:0.483 CC:1725 MC:5001 A:65 R:1 HW:0]\n[2026-10-24 23:01:33] Total: 77.07 TH/s [P:159.7W EFF:0.483 A:65 R:1 HW:0]\n[2026-10-24 23:01:33] Average hashrate: 1m 77.12 TH/s | 15m 76.87 TH/s | 1h 77.11 TH/s | 6h 78.23 TH/s\n[2026-10-24 23:02:01] GPU0[t0] share accepted [  213ms] [pearlhash][0]\n[2026-10-24 23:02:18] GPU0[t0] share accepted [  214ms] [pearlhash][0]\n[2026-10-24 23:02:34] Uptime: 0d 02:06:06\n[2026-10-24 23:02:34] [A0][pearlhash]\n[2026-10-24 23:02:34] Pool: prl.kryptex.network:7048\n[2026-10-24 23:02:34] Connection: 0d 02:06:06\n[2026-10-24 23:02:34] Latency: ~214 ms\n[2026-10-24 23:02:34] Diff: 2097152\n[2026-10-24 23:02:34] Last job: 23 sec ago\n[2026-10-24 23:03:04] [A0][pearlhash]\n[2026-10-24 23:03:04] GPU0 RTX 3070: 76.91 TH/s [T:76C FAN:100% P:163.8W EFF:0.470 CC:1755 MC:5001 A:67 R:1 HW:0]\n[2026-10-24 23:03:04] Total: 76.91 TH/s [P:163.8W EFF:0.470 A:67 R:1 HW:0]\n[2026-10-24 23:03:04] Average hashrate: 1m 76.67 TH/s | 15m 76.65 TH/s | 1h 77.13 TH/s | 6h 78.21 TH/s\n[2026-10-24 23:03:19] GPU0[t0] share accepted [  218ms] [pearlhash][0]\n[2026-10-24 23:03:37] GPU0[t0] share accepted [  214ms] [pearlhash][0]\n[2026-10-24 23:04:31] GPU0[t0] share accepted [  216ms] [pearlhash][0]\n[2026-10-24 23:04:34] [A0][pearlhash]\n[2026-10-24 23:04:34] GPU0 RTX 3070: 75.83 TH/s [T:74C FAN:100% P:153.6W EFF:0.494 CC:1725 MC:5001 A:70 R:1 HW:0]\n[2026-10-24 23:04:34] Total: 75.83 TH/s [P:153.6W EFF:0.494 A:70 R:1 HW:0]\n[2026-10-24 23:04:34] Average hashrate: 1m 76.66 TH/s | 15m 76.61 TH/s | 1h 77.12 TH/s | 6h 78.19 TH/s",
+    "pause_at": null,
+    "version": "3.8.0"
+   },
+   "future": null
+  },
+  {
+   "name": "real:performance-20261024-200100.log",
+   "fixture": "portable-data/miner-logs/performance-20261024-200100.log",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1792872213.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 59.62,
+    "hashrate_at": 1792872212.0,
+    "accepted": 1,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": 59.95,
+    "average_15m": 59.46,
+    "started_at": 1792872062.0,
+    "last_share_at": 1792872095.0,
+    "connection": "Conectado à pool",
+    "connection_at": 1792872065.0,
+    "last_job_at": null,
+    "last_log_at": 1792872212.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1792872092.0,
+      58.04
+     ],
+     [
+      1792872122.0,
+      59.58
+     ],
+     [
+      1792872152.0,
+      59.69
+     ],
+     [
+      1792872182.0,
+      60.28
+     ],
+     [
+      1792872212.0,
+      59.62
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-10-24 20:01:02] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] memory bus width: 256 bit\n[2026-10-24 20:01:02] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] reported free memory: 6146 MB\n[2026-10-24 20:01:02] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] max buffer size: 7781 MB\n[2026-10-24 20:01:02] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] is CMP: FALSE\n[2026-10-24 20:01:02] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] CC:1650 MC:810\n[2026-10-24 20:01:02] GPU0 |A0|pearlhash           |\n[2026-10-24 20:01:02] NVIDIA NVML[13.617.14] initialised successfully! [1 devices]\n[2026-10-24 20:01:02] Finished init of worker threads\n[2026-10-24 20:01:02] HTTP API disabled\n[2026-10-24 20:01:02] GPU0 CC0: 1650MHZ\n[2026-10-24 20:01:02] GPU0 MC0: 810MHZ\n[2026-10-24 20:01:05] GPU temperature protection monitor thread started\n[2026-10-24 20:01:05] GPU sensors thread started\n[2026-10-24 20:01:05] Connected to prl.kryptex.network:7048 [0]\n[2026-10-24 20:01:32] [A0][pearlhash]\n[2026-10-24 20:01:32] GPU0 RTX 3070: 58.04 TH/s [T:66C FAN:74% P:125.7W EFF:0.462 CC:1650 MC:810 A:0 R:0 HW:0]\n[2026-10-24 20:01:32] Total: 58.04 TH/s [P:125.7W EFF:0.462 A:0 R:0 HW:0]\n[2026-10-24 20:01:32] Average hashrate: 1m 58.04 TH/s | 15m 58.04 TH/s | 1h 58.04 TH/s | 6h 58.04 TH/s\n[2026-10-24 20:01:35] GPU0[t0] share accepted [  426ms] [pearlhash][0]\n[2026-10-24 20:02:02] [A0][pearlhash]\n[2026-10-24 20:02:02] GPU0 RTX 3070: 59.58 TH/s [T:65C FAN:76% P:126.1W EFF:0.472 CC:1650 MC:810 A:1 R:0 HW:0]\n[2026-10-24 20:02:02] Total: 59.58 TH/s [P:126.1W EFF:0.472 A:1 R:0 HW:0]\n[2026-10-24 20:02:02] Average hashrate: 1m 58.84 TH/s | 15m 58.84 TH/s | 1h 58.84 TH/s | 6h 58.84 TH/s\n[2026-10-24 20:02:32] [A0][pearlhash]\n[2026-10-24 20:02:32] GPU0 RTX 3070: 59.69 TH/s [T:66C FAN:76% P:126.4W EFF:0.472 CC:1650 MC:810 A:1 R:0 HW:0]\n[2026-10-24 20:02:32] Total: 59.69 TH/s [P:126.4W EFF:0.472 A:1 R:0 HW:0]\n[2026-10-24 20:02:32] Average hashrate: 1m 59.64 TH/s | 15m 59.13 TH/s | 1h 59.13 TH/s | 6h 59.13 TH/s\n[2026-10-24 20:03:02] [A0][pearlhash]\n[2026-10-24 20:03:02] GPU0 RTX 3070: 60.28 TH/s [T:78C FAN:80% P:144.8W EFF:0.416 CC:1800 MC:810 A:1 R:0 HW:0]\n[2026-10-24 20:03:02] Total: 60.28 TH/s [P:144.8W EFF:0.416 A:1 R:0 HW:0]\n[2026-10-24 20:03:02] Average hashrate: 1m 59.99 TH/s | 15m 59.42 TH/s | 1h 59.42 TH/s | 6h 59.42 TH/s\n[2026-10-24 20:03:32] [A0][pearlhash]\n[2026-10-24 20:03:32] GPU0 RTX 3070: 59.62 TH/s [T:65C FAN:89% P:126.8W EFF:0.470 CC:1650 MC:810 A:1 R:0 HW:0]\n[2026-10-24 20:03:32] Total: 59.62 TH/s [P:126.8W EFF:0.470 A:1 R:0 HW:0]\n[2026-10-24 20:03:32] Average hashrate: 1m 59.95 TH/s | 15m 59.46 TH/s | 1h 59.46 TH/s | 6h 59.46 TH/s",
+    "pause_at": null,
+    "version": "3.8.0"
+   },
+   "future": null
+  },
+  {
+   "name": "real:reset.log",
+   "fixture": "portable-data/miner-logs/reset.log",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1792875379.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": null,
+    "hashrate_at": null,
+    "accepted": 0,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": 1792875372.0,
+    "last_share_at": null,
+    "connection": "Reconectando à pool",
+    "connection_at": 1792875378.0,
+    "last_job_at": null,
+    "last_log_at": 1792875378.0,
+    "paused": false,
+    "rate_points": [],
+    "isolated_log": true,
+    "recent_logs": "[2026-10-24 20:56:12] Miner version: 3.8.0\n[2026-10-24 20:56:12] OS: windows\n[2026-10-24 20:56:12] Windows version: 10.0 build 26300\n[2026-10-24 20:56:12] Platform 0: NVIDIA Corporation\n[2026-10-24 20:56:12] Found 1 OpenCL platform/s\n[2026-10-24 20:56:12] Default OpenCL platform set to 0\n[2026-10-24 20:56:12] Found 1 GPU device/s on platform 0\n[2026-10-24 20:56:12] OpenCL backend inited\n[2026-10-24 20:56:12] Cuda backend inited\n[2026-10-24 20:56:13] A0 --busy-wait-recheck value is 0.05\n[2026-10-24 20:56:13] GPU0: nvidia_geforce_rtx_3070                                                [ampere        ][   8 GB][CU:      46][BUS: 06]\n[2026-10-24 20:56:13] GPU sensors: enabled\n[2026-10-24 20:56:13] Algorithm/s: pearlhash [2.00% fee]\n[2026-10-24 20:56:13] Gpu mining: enabled\n[2026-10-24 20:56:13] Cpu mining: disabled\n[2026-10-24 20:56:13] Watchdog: enabled\n[2026-10-24 20:56:13] Starting init of worker threads\n[2026-10-24 20:56:13] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] is SM_86\n[2026-10-24 20:56:13] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] driver version: 13.04\n[2026-10-24 20:56:13] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] reported total memory: 8191 MB\n[2026-10-24 20:56:13] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] memory bus width: 256 bit\n[2026-10-24 20:56:13] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] reported free memory: 5953 MB\n[2026-10-24 20:56:13] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] max buffer size: 7781 MB\n[2026-10-24 20:56:13] GPU0 [nvidia_geforce_rtx_3070] [BUS:06] is CMP: FALSE\n[2026-10-24 20:56:13] GPU0 |A0|pearlhash           |\n[2026-10-24 20:56:13] NVIDIA NVML[13.617.14] initialised successfully! [1 devices]\n[2026-10-24 20:56:13] Finished init of worker threads\n[2026-10-24 20:56:13] HTTP API disabled\n[2026-10-24 20:56:13] GPU temperature protection monitor thread started\n[2026-10-24 20:56:13] GPU sensors thread started\n[2026-10-24 20:56:18] Couldn't connect to pool 127.0.0.1:1\n[2026-10-24 20:56:18] Reconnecting to 127.0.0.1:1 in 5 seconds [0]",
+    "pause_at": null,
+    "version": "3.8.0"
+   },
+   "future": null
+  },
+  {
+   "name": "bracket_label_and_gh_units",
+   "text": "[2026-11-03 10:00:00] Miner version: 3.8.4\n[2026-11-03 10:00:01] Connected to prl.kryptex.network:7048 [0]\n[2026-11-03 10:00:30] GPU[0] RTX: 80.5 GH/s [A:3 R:1 HW:0]\n[2026-11-03 10:00:30] Average hashrate: 1m 81 GH/s | 15m 0.08 TH/s\n",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1793700060.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 0.0805,
+    "hashrate_at": 1793700030.0,
+    "accepted": 3,
+    "rejected": 1,
+    "hw_errors": 0,
+    "average_1m": 0.081,
+    "average_15m": 0.08,
+    "started_at": 1793700000.0,
+    "last_share_at": null,
+    "connection": "Conectado à pool",
+    "connection_at": 1793700001.0,
+    "last_job_at": null,
+    "last_log_at": 1793700030.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1793700030.0,
+      0.0805
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-11-03 10:00:00] Miner version: 3.8.4\n[2026-11-03 10:00:01] Connected to prl.kryptex.network:7048 [0]\n[2026-11-03 10:00:30] GPU[0] RTX: 80.5 GH/s [A:3 R:1 HW:0]\n[2026-11-03 10:00:30] Average hashrate: 1m 81 GH/s | 15m 0.08 TH/s",
+    "pause_at": null,
+    "version": "3.8.4"
+   },
+   "future": null
+  },
+  {
+   "name": "shared_log_selects_index_1",
+   "text": "[2026-11-03 10:00:00] Miner version: 3.8.0\n[2026-11-03 10:00:10] GPU0 RTX 3070: 70.00 TH/s [T:60C A:5 R:0 HW:0]\n[2026-11-03 10:00:10] GPU1 RTX 3080: 90.00 TH/s [T:61C A:7 R:1 HW:2]\n[2026-11-03 10:00:11] GPU1[t0] share accepted\n[2026-11-03 10:00:11] GPU0[t0] share accepted\n[2026-11-03 10:00:12] Average hashrate: 1m 160 TH/s | 15m 150 TH/s\n[2026-11-03 10:00:12] Total: 160.00 TH/s [A:12 R:1 HW:2]\n",
+   "index": 1,
+   "allow_local_gpu0": false,
+   "now": 1793700060.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 1,
+    "log_gpu_index": 1,
+    "hashrate": 90.0,
+    "hashrate_at": 1793700010.0,
+    "accepted": 7,
+    "rejected": 1,
+    "hw_errors": 2,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": 1793700000.0,
+    "last_share_at": 1793700011.0,
+    "connection": "Aguardando conexão",
+    "connection_at": null,
+    "last_job_at": null,
+    "last_log_at": 1793700012.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1793700010.0,
+      90.0
+     ]
+    ],
+    "isolated_log": false,
+    "recent_logs": "[2026-11-03 10:00:00] Miner version: 3.8.0\n[2026-11-03 10:00:10] GPU0 RTX 3070: 70.00 TH/s [T:60C A:5 R:0 HW:0]\n[2026-11-03 10:00:10] GPU1 RTX 3080: 90.00 TH/s [T:61C A:7 R:1 HW:2]\n[2026-11-03 10:00:11] GPU1[t0] share accepted\n[2026-11-03 10:00:11] GPU0[t0] share accepted\n[2026-11-03 10:00:12] Average hashrate: 1m 160 TH/s | 15m 150 TH/s\n[2026-11-03 10:00:12] Total: 160.00 TH/s [A:12 R:1 HW:2]",
+    "pause_at": null,
+    "version": "3.8.0"
+   },
+   "future": null
+  },
+  {
+   "name": "index_absent_from_shared_log",
+   "text": "[2026-11-03 10:00:10] GPU0 X: 70.00 TH/s [A:5 R:0 HW:0]\n[2026-11-03 10:00:10] GPU1 Y: 90.00 TH/s [A:7 R:1 HW:2]\n",
+   "index": 2,
+   "allow_local_gpu0": true,
+   "now": 1793700060.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 2,
+    "log_gpu_index": null,
+    "hashrate": null,
+    "hashrate_at": null,
+    "accepted": 0,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": null,
+    "connection": "Aguardando conexão",
+    "connection_at": null,
+    "last_job_at": null,
+    "last_log_at": 1793700010.0,
+    "paused": false,
+    "rate_points": [],
+    "isolated_log": false,
+    "recent_logs": "[2026-11-03 10:00:10] GPU0 X: 70.00 TH/s [A:5 R:0 HW:0]\n[2026-11-03 10:00:10] GPU1 Y: 90.00 TH/s [A:7 R:1 HW:2]"
+   },
+   "future": null
+  },
+  {
+   "name": "isolated_gpu0_log_for_other_index",
+   "text": "[2026-11-03 10:00:10] GPU0 X: 70.00 TH/s [A:5 R:0 HW:0]\n[2026-11-03 10:00:12] GPU0[t0] share accepted\n",
+   "index": 3,
+   "allow_local_gpu0": true,
+   "now": 1793700060.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 3,
+    "log_gpu_index": 0,
+    "hashrate": 70.0,
+    "hashrate_at": 1793700010.0,
+    "accepted": 5,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": 1793700012.0,
+    "connection": "Aguardando conexão",
+    "connection_at": null,
+    "last_job_at": null,
+    "last_log_at": 1793700012.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1793700010.0,
+      70.0
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-11-03 10:00:10] GPU0 X: 70.00 TH/s [A:5 R:0 HW:0]\n[2026-11-03 10:00:12] GPU0[t0] share accepted"
+   },
+   "future": null
+  },
+  {
+   "name": "future_line_is_skipped_and_reported",
+   "text": "[2026-11-03 10:00:10] GPU0 X: 70.00 TH/s [A:5 R:0 HW:0]\n[2026-11-03 10:05:00] GPU0 X: 99.00 TH/s [A:9 R:0 HW:0]\n[2026-11-03 10:04:00] GPU0 X: 98.00 TH/s [A:8 R:0 HW:0]\n",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1793700060.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 70.0,
+    "hashrate_at": 1793700010.0,
+    "accepted": 5,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": null,
+    "connection": "Aguardando conexão",
+    "connection_at": null,
+    "last_job_at": null,
+    "last_log_at": 1793700010.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1793700010.0,
+      70.0
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-11-03 10:00:10] GPU0 X: 70.00 TH/s [A:5 R:0 HW:0]\n[2026-11-03 10:05:00] GPU0 X: 99.00 TH/s [A:9 R:0 HW:0]\n[2026-11-03 10:04:00] GPU0 X: 98.00 TH/s [A:8 R:0 HW:0]"
+   },
+   "future": 1793700240.0
+  },
+  {
+   "name": "restart_resets_state",
+   "text": "[2026-11-03 09:00:00] Miner version: 3.8.3\n[2026-11-03 09:00:10] GPU0 X: 60.00 TH/s [A:50 R:2 HW:1]\n[2026-11-03 09:00:20] GPU0 turned off\n[2026-11-03 10:00:00] Miner version: 3.8.4\n[2026-11-03 10:00:30] Job received [job]\n",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1793700060.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": null,
+    "hashrate_at": null,
+    "accepted": 0,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": 1793700000.0,
+    "last_share_at": null,
+    "connection": "Conectado à pool",
+    "connection_at": 1793700030.0,
+    "last_job_at": 1793700030.0,
+    "last_log_at": 1793700030.0,
+    "paused": false,
+    "rate_points": [],
+    "isolated_log": true,
+    "recent_logs": "[2026-11-03 09:00:00] Miner version: 3.8.3\n[2026-11-03 09:00:10] GPU0 X: 60.00 TH/s [A:50 R:2 HW:1]\n[2026-11-03 09:00:20] GPU0 turned off\n[2026-11-03 10:00:00] Miner version: 3.8.4\n[2026-11-03 10:00:30] Job received [job]",
+    "pause_at": null,
+    "version": "3.8.4"
+   },
+   "future": null
+  },
+  {
+   "name": "pause_toggle_and_reconnect",
+   "text": "[2026-11-03 10:00:00] Connected to pool\n[2026-11-03 10:00:05] Reconnecting to pool\n[2026-11-03 10:00:06] GPU0 turned off\n[2026-11-03 10:00:20] GPU0 turned on\n[2026-11-03 10:00:30] GPU0 turned off\n[2026-11-03 10:00:40] Connection lost\n",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1793700060.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": null,
+    "hashrate_at": null,
+    "accepted": 0,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": null,
+    "connection": "Reconectando à pool",
+    "connection_at": 1793700040.0,
+    "last_job_at": null,
+    "last_log_at": 1793700040.0,
+    "paused": true,
+    "rate_points": [],
+    "isolated_log": true,
+    "recent_logs": "[2026-11-03 10:00:00] Connected to pool\n[2026-11-03 10:00:05] Reconnecting to pool\n[2026-11-03 10:00:06] GPU0 turned off\n[2026-11-03 10:00:20] GPU0 turned on\n[2026-11-03 10:00:30] GPU0 turned off\n[2026-11-03 10:00:40] Connection lost",
+    "pause_at": 1793700030.0
+   },
+   "future": null
+  },
+  {
+   "name": "out_of_order_rate_keeps_newest",
+   "text": "[2026-11-03 10:00:30] GPU0 X: 75.00 TH/s [A:9 R:0 HW:0]\n[2026-11-03 10:00:20] GPU0 X: 74.00 TH/s [A:8 R:0 HW:0]\n[2026-11-03 10:00:30] GPU0 X: 76.00 TH/s [A:10 R:0 HW:0]\n",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1793700060.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 76.0,
+    "hashrate_at": 1793700030.0,
+    "accepted": 10,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": null,
+    "connection": "Aguardando conexão",
+    "connection_at": null,
+    "last_job_at": null,
+    "last_log_at": 1793700030.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1793700020.0,
+      74.0
+     ],
+     [
+      1793700030.0,
+      76.0
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-11-03 10:00:30] GPU0 X: 75.00 TH/s [A:9 R:0 HW:0]\n[2026-11-03 10:00:20] GPU0 X: 74.00 TH/s [A:8 R:0 HW:0]\n[2026-11-03 10:00:30] GPU0 X: 76.00 TH/s [A:10 R:0 HW:0]"
+   },
+   "future": null
+  },
+  {
+   "name": "non_integer_and_negative_counters",
+   "text": "[2026-11-03 10:00:30] GPU0 X: 75.00 TH/s [A:1.5 R:2 HW:0]\n",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1793700060.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 75.0,
+    "hashrate_at": 1793700030.0,
+    "accepted": 0,
+    "rejected": 2,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": null,
+    "connection": "Aguardando conexão",
+    "connection_at": null,
+    "last_job_at": null,
+    "last_log_at": 1793700030.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1793700030.0,
+      75.0
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-11-03 10:00:30] GPU0 X: 75.00 TH/s [A:1.5 R:2 HW:0]"
+   },
+   "future": null
+  },
+  {
+   "name": "invalid_and_missing_stamps",
+   "text": "[2026-99-03 10:00:30] GPU0 X: 75.00 TH/s [A:1 R:0 HW:0]\nGPU0 X: 74.00 TH/s [A:2 R:0 HW:0]\n[2026-11-03 10:00:31] GPU0 X: 73.00 TH/s [A:3 R:0 HW:0]\n",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1793700060.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 73.0,
+    "hashrate_at": 1793700031.0,
+    "accepted": 3,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": null,
+    "connection": "Aguardando conexão",
+    "connection_at": null,
+    "last_job_at": null,
+    "last_log_at": 1793700031.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1793700031.0,
+      73.0
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-99-03 10:00:30] GPU0 X: 75.00 TH/s [A:1 R:0 HW:0]\nGPU0 X: 74.00 TH/s [A:2 R:0 HW:0]\n[2026-11-03 10:00:31] GPU0 X: 73.00 TH/s [A:3 R:0 HW:0]"
+   },
+   "future": null
+  },
+  {
+   "name": "crlf_and_form_feed_line_breaks",
+   "text": "[2026-11-03 10:00:30] GPU0 X: 75.00 TH/s [A:1 R:0 HW:0]\r\n[2026-11-03 10:00:31] GPU0[t0] share accepted\f[2026-11-03 10:00:32] Average hashrate: 1m 75 TH/s | 15m 70 TH/s\r",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1793700060.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 75.0,
+    "hashrate_at": 1793700030.0,
+    "accepted": 1,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": 75.0,
+    "average_15m": 70.0,
+    "started_at": null,
+    "last_share_at": 1793700031.0,
+    "connection": "Aguardando conexão",
+    "connection_at": null,
+    "last_job_at": null,
+    "last_log_at": 1793700032.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1793700030.0,
+      75.0
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-11-03 10:00:30] GPU0 X: 75.00 TH/s [A:1 R:0 HW:0]\n[2026-11-03 10:00:31] GPU0[t0] share accepted\n[2026-11-03 10:00:32] Average hashrate: 1m 75 TH/s | 15m 70 TH/s"
+   },
+   "future": null
+  },
+  {
+   "name": "unknown_unit_is_missing_not_zero",
+   "text": "[2026-11-03 10:00:30] GPU0 X: 75.00 ZH/s [A:1 R:0 HW:0]\n",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1793700060.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": null,
+    "hashrate_at": null,
+    "accepted": 0,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": null,
+    "connection": "Aguardando conexão",
+    "connection_at": null,
+    "last_job_at": null,
+    "last_log_at": 1793700030.0,
+    "paused": false,
+    "rate_points": [],
+    "isolated_log": true,
+    "recent_logs": "[2026-11-03 10:00:30] GPU0 X: 75.00 ZH/s [A:1 R:0 HW:0]"
+   },
+   "future": null
+  },
+  {
+   "name": "old_points_leave_the_900s_window",
+   "text": "[2026-11-03 09:30:00] GPU0 X: 70.00 TH/s [A:1 R:0 HW:0]\n[2026-11-03 09:50:00] GPU0 X: 71.00 TH/s [A:2 R:0 HW:0]\n[2026-11-03 10:00:00] GPU0 X: 72.00 TH/s [A:3 R:0 HW:0]\n",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1793700060.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 72.0,
+    "hashrate_at": 1793700000.0,
+    "accepted": 3,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": null,
+    "connection": "Aguardando conexão",
+    "connection_at": null,
+    "last_job_at": null,
+    "last_log_at": 1793700000.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1793699400.0,
+      71.0
+     ],
+     [
+      1793700000.0,
+      72.0
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-11-03 09:30:00] GPU0 X: 70.00 TH/s [A:1 R:0 HW:0]\n[2026-11-03 09:50:00] GPU0 X: 71.00 TH/s [A:2 R:0 HW:0]\n[2026-11-03 10:00:00] GPU0 X: 72.00 TH/s [A:3 R:0 HW:0]"
+   },
+   "future": null
+  },
+  {
+   "name": "empty_log",
+   "text": "",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1793700060.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": null,
+    "hashrate": null,
+    "hashrate_at": null,
+    "accepted": 0,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": null,
+    "connection": "Aguardando conexão",
+    "connection_at": null,
+    "last_job_at": null,
+    "last_log_at": null,
+    "paused": false,
+    "rate_points": [],
+    "isolated_log": true,
+    "recent_logs": ""
+   },
+   "future": null
+  },
+  {
+   "name": "future_window_boundaries",
+   "text": "[2026-11-03 10:01:05] GPU0 X: 70.00 TH/s [A:1 R:0 HW:0]\n[2026-11-03 10:01:06] GPU0 X: 71.00 TH/s [A:2 R:0 HW:0]\n[2026-11-03 10:01:20] GPU0 X: 72.00 TH/s [A:3 R:0 HW:0]\n",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1793700060.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 70.0,
+    "hashrate_at": 1793700065.0,
+    "accepted": 1,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": null,
+    "connection": "Aguardando conexão",
+    "connection_at": null,
+    "last_job_at": null,
+    "last_log_at": 1793700065.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1793700065.0,
+      70.0
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-11-03 10:01:05] GPU0 X: 70.00 TH/s [A:1 R:0 HW:0]\n[2026-11-03 10:01:06] GPU0 X: 71.00 TH/s [A:2 R:0 HW:0]\n[2026-11-03 10:01:20] GPU0 X: 72.00 TH/s [A:3 R:0 HW:0]"
+   },
+   "future": 1793700066.0
+  },
+  {
+   "name": "chart_window_boundary",
+   "text": "[2026-11-03 09:46:00] GPU0 X: 70.00 TH/s [A:1 R:0 HW:0]\n[2026-11-03 09:45:59] GPU0 X: 69.00 TH/s [A:1 R:0 HW:0]\n",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1793700060.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 70.0,
+    "hashrate_at": 1793699160.0,
+    "accepted": 1,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": null,
+    "connection": "Aguardando conexão",
+    "connection_at": null,
+    "last_job_at": null,
+    "last_log_at": 1793699160.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1793699160.0,
+      70.0
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-11-03 09:46:00] GPU0 X: 70.00 TH/s [A:1 R:0 HW:0]\n[2026-11-03 09:45:59] GPU0 X: 69.00 TH/s [A:1 R:0 HW:0]"
+   },
+   "future": null
+  }
+ ],
+ "stamps": [
+  {
+   "text": "2026-11-03 10:00:00",
+   "epoch_utc": 1793700000.0
+  },
+  {
+   "text": "2026-99-25 00:00:00",
+   "epoch_utc": null
+  },
+  {
+   "text": "2026-02-29 00:00:00",
+   "epoch_utc": null
+  },
+  {
+   "text": "2028-02-29 23:59:59",
+   "epoch_utc": 1835481599.0
+  },
+  {
+   "text": "1970-01-01 00:00:00",
+   "epoch_utc": 0.0
+  },
+  {
+   "text": "2026-11-03 24:00:00",
+   "epoch_utc": null
+  }
+ ],
+ "device_map": [
+  {
+   "ok": {
+    "GPU-a": 0
+   },
+   "text": "[2026] GPU0: nvidia_geforce_rtx_3070 [BUS: 06]",
+   "devices": [
+    {
+     "uuid": "GPU-a",
+     "pci_bus_id": "00000000:06:00.0"
+    }
+   ]
+  },
+  {
+   "ok": {
+    "GPU-a": 1,
+    "GPU-b": 3
+   },
+   "text": "GPU3: nvidia_geforce_rtx_3070 [BUS: 06]\nGPU1: nvidia_geforce_rtx_3070 [BUS: 0A]",
+   "devices": [
+    {
+     "uuid": "GPU-a",
+     "pci_bus_id": "00000000:0A:00.0"
+    },
+    {
+     "uuid": "GPU-b",
+     "pci_bus_id": "00000000:06:00.0"
+    }
+   ]
+  },
+  {
+   "error": "Mapeamento PCI/ID do SRBMiner ambíguo ou ausente; mineração não iniciada",
+   "text": "GPU0: amd_radeon [BUS: 06]",
+   "devices": [
+    {
+     "uuid": "GPU-a",
+     "pci_bus_id": "00000000:06:00.0"
+    }
+   ]
+  },
+  {
+   "error": "Mapeamento PCI/ID do SRBMiner ambíguo ou ausente; mineração não iniciada",
+   "text": "GPU0: nvidia_x [BUS: 06]\nGPU1: nvidia_y [BUS: 06]",
+   "devices": [
+    {
+     "uuid": "GPU-a",
+     "pci_bus_id": "00000000:06:00.0"
+    }
+   ]
+  },
+  {
+   "error": "Endereço PCI da NVIDIA ausente; seleção do minerador não confirmada",
+   "text": "GPU0: nvidia_x [BUS: 06]",
+   "devices": [
+    {
+     "uuid": "GPU-a",
+     "pci_bus_id": "sem-pci"
+    }
+   ]
+  }
+ ]
+}

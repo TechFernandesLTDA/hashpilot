@@ -10,6 +10,13 @@ mise exec -- python -m unittest discover --durations 5
 echo "pre-push: lint, formatação dos módulos novos e tipos (ruff/mypy, se instalados)"
 mise exec -- python tools/check_style.py
 
+echo "pre-push: port em Rust (fmt, clippy e paridade com o Python; se cargo estiver instalado)"
+if command -v cargo >/dev/null 2>&1; then
+    (cd rust && cargo fmt --check && cargo clippy -q --all-targets -- -D warnings && cargo test -q)
+else
+    echo "cargo não encontrado; port em Rust não verificado" >&2
+fi
+
 echo "pre-push: links e JSONs da documentação"
 mise exec -- python tools/check_documentation.py >/dev/null
 

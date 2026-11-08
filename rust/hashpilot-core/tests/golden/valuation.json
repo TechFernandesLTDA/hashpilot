@@ -1,0 +1,739 @@
+{
+ "cases": [
+  {
+   "prl": null,
+   "prices": [
+    null,
+    null,
+    null,
+    null
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": null,
+   "prices": [
+    0.5,
+    0.1,
+    null,
+    null
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": null,
+   "prices": [
+    0.5,
+    0.1,
+    60000,
+    null
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": null,
+   "prices": [
+    0.5,
+    null,
+    null,
+    300000
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": null,
+   "prices": [
+    "0.5",
+    "x",
+    60000,
+    300000
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": null,
+   "prices": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": null,
+   "prices": [
+    -1,
+    0.1,
+    60000,
+    300000
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": 0,
+   "prices": [
+    null,
+    null,
+    null,
+    null
+   ],
+   "result": {
+    "prl": 0.0,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": 0,
+   "prices": [
+    0.5,
+    0.1,
+    null,
+    null
+   ],
+   "result": {
+    "prl": 0.0,
+    "brl": 0.0,
+    "usd": 0.0,
+    "btc": null
+   }
+  },
+  {
+   "prl": 0,
+   "prices": [
+    0.5,
+    0.1,
+    60000,
+    null
+   ],
+   "result": {
+    "prl": 0.0,
+    "brl": 0.0,
+    "usd": 0.0,
+    "btc": 0.0
+   }
+  },
+  {
+   "prl": 0,
+   "prices": [
+    0.5,
+    null,
+    null,
+    300000
+   ],
+   "result": {
+    "prl": 0.0,
+    "brl": 0.0,
+    "usd": null,
+    "btc": 0.0
+   }
+  },
+  {
+   "prl": 0,
+   "prices": [
+    "0.5",
+    "x",
+    60000,
+    300000
+   ],
+   "result": {
+    "prl": 0.0,
+    "brl": 0.0,
+    "usd": null,
+    "btc": 0.0
+   }
+  },
+  {
+   "prl": 0,
+   "prices": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "result": {
+    "prl": 0.0,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": 0,
+   "prices": [
+    -1,
+    0.1,
+    60000,
+    300000
+   ],
+   "result": {
+    "prl": 0.0,
+    "brl": null,
+    "usd": 0.0,
+    "btc": 0.0
+   }
+  },
+  {
+   "prl": 2.5,
+   "prices": [
+    null,
+    null,
+    null,
+    null
+   ],
+   "result": {
+    "prl": 2.5,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": 2.5,
+   "prices": [
+    0.5,
+    0.1,
+    null,
+    null
+   ],
+   "result": {
+    "prl": 2.5,
+    "brl": 1.25,
+    "usd": 0.25,
+    "btc": null
+   }
+  },
+  {
+   "prl": 2.5,
+   "prices": [
+    0.5,
+    0.1,
+    60000,
+    null
+   ],
+   "result": {
+    "prl": 2.5,
+    "brl": 1.25,
+    "usd": 0.25,
+    "btc": 4.166666666666667e-06
+   }
+  },
+  {
+   "prl": 2.5,
+   "prices": [
+    0.5,
+    null,
+    null,
+    300000
+   ],
+   "result": {
+    "prl": 2.5,
+    "brl": 1.25,
+    "usd": null,
+    "btc": 4.166666666666667e-06
+   }
+  },
+  {
+   "prl": 2.5,
+   "prices": [
+    "0.5",
+    "x",
+    60000,
+    300000
+   ],
+   "result": {
+    "prl": 2.5,
+    "brl": 1.25,
+    "usd": null,
+    "btc": 4.166666666666667e-06
+   }
+  },
+  {
+   "prl": 2.5,
+   "prices": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "result": {
+    "prl": 2.5,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": 2.5,
+   "prices": [
+    -1,
+    0.1,
+    60000,
+    300000
+   ],
+   "result": {
+    "prl": 2.5,
+    "brl": null,
+    "usd": 0.25,
+    "btc": 4.166666666666667e-06
+   }
+  },
+  {
+   "prl": "3",
+   "prices": [
+    null,
+    null,
+    null,
+    null
+   ],
+   "result": {
+    "prl": 3.0,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": "3",
+   "prices": [
+    0.5,
+    0.1,
+    null,
+    null
+   ],
+   "result": {
+    "prl": 3.0,
+    "brl": 1.5,
+    "usd": 0.30000000000000004,
+    "btc": null
+   }
+  },
+  {
+   "prl": "3",
+   "prices": [
+    0.5,
+    0.1,
+    60000,
+    null
+   ],
+   "result": {
+    "prl": 3.0,
+    "brl": 1.5,
+    "usd": 0.30000000000000004,
+    "btc": 5e-06
+   }
+  },
+  {
+   "prl": "3",
+   "prices": [
+    0.5,
+    null,
+    null,
+    300000
+   ],
+   "result": {
+    "prl": 3.0,
+    "brl": 1.5,
+    "usd": null,
+    "btc": 5e-06
+   }
+  },
+  {
+   "prl": "3",
+   "prices": [
+    "0.5",
+    "x",
+    60000,
+    300000
+   ],
+   "result": {
+    "prl": 3.0,
+    "brl": 1.5,
+    "usd": null,
+    "btc": 5e-06
+   }
+  },
+  {
+   "prl": "3",
+   "prices": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "result": {
+    "prl": 3.0,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": "3",
+   "prices": [
+    -1,
+    0.1,
+    60000,
+    300000
+   ],
+   "result": {
+    "prl": 3.0,
+    "brl": null,
+    "usd": 0.30000000000000004,
+    "btc": 5e-06
+   }
+  },
+  {
+   "prl": -1,
+   "prices": [
+    null,
+    null,
+    null,
+    null
+   ],
+   "result": {
+    "prl": -1.0,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": -1,
+   "prices": [
+    0.5,
+    0.1,
+    null,
+    null
+   ],
+   "result": {
+    "prl": -1.0,
+    "brl": -0.5,
+    "usd": -0.1,
+    "btc": null
+   }
+  },
+  {
+   "prl": -1,
+   "prices": [
+    0.5,
+    0.1,
+    60000,
+    null
+   ],
+   "result": {
+    "prl": -1.0,
+    "brl": -0.5,
+    "usd": -0.1,
+    "btc": -1.6666666666666667e-06
+   }
+  },
+  {
+   "prl": -1,
+   "prices": [
+    0.5,
+    null,
+    null,
+    300000
+   ],
+   "result": {
+    "prl": -1.0,
+    "brl": -0.5,
+    "usd": null,
+    "btc": -1.6666666666666667e-06
+   }
+  },
+  {
+   "prl": -1,
+   "prices": [
+    "0.5",
+    "x",
+    60000,
+    300000
+   ],
+   "result": {
+    "prl": -1.0,
+    "brl": -0.5,
+    "usd": null,
+    "btc": -1.6666666666666667e-06
+   }
+  },
+  {
+   "prl": -1,
+   "prices": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "result": {
+    "prl": -1.0,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": -1,
+   "prices": [
+    -1,
+    0.1,
+    60000,
+    300000
+   ],
+   "result": {
+    "prl": -1.0,
+    "brl": null,
+    "usd": -0.1,
+    "btc": -1.6666666666666667e-06
+   }
+  },
+  {
+   "prl": true,
+   "prices": [
+    null,
+    null,
+    null,
+    null
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": true,
+   "prices": [
+    0.5,
+    0.1,
+    null,
+    null
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": true,
+   "prices": [
+    0.5,
+    0.1,
+    60000,
+    null
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": true,
+   "prices": [
+    0.5,
+    null,
+    null,
+    300000
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": true,
+   "prices": [
+    "0.5",
+    "x",
+    60000,
+    300000
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": true,
+   "prices": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": true,
+   "prices": [
+    -1,
+    0.1,
+    60000,
+    300000
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": "inf",
+   "prices": [
+    null,
+    null,
+    null,
+    null
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": "inf",
+   "prices": [
+    0.5,
+    0.1,
+    null,
+    null
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": "inf",
+   "prices": [
+    0.5,
+    0.1,
+    60000,
+    null
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": "inf",
+   "prices": [
+    0.5,
+    null,
+    null,
+    300000
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": "inf",
+   "prices": [
+    "0.5",
+    "x",
+    60000,
+    300000
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": "inf",
+   "prices": [
+    0,
+    0,
+    0,
+    0
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  },
+  {
+   "prl": "inf",
+   "prices": [
+    -1,
+    0.1,
+    60000,
+    300000
+   ],
+   "result": {
+    "prl": null,
+    "brl": null,
+    "usd": null,
+    "btc": null
+   }
+  }
+ ]
+}

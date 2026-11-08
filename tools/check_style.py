@@ -30,11 +30,11 @@ FORMATTED = [
     "test_miner_log.py",
     "test_monitor_log.py",
     "test_monitor_shutdown.py",
-    "test_inspect_miner_release.py",
     "test_reference_scripts.py",
+    "test_rust_parity_goldens.py",
+    "tools/rust_parity/generate_goldens.py",
     "tools/check_powershell_structure.py",
     "tools/check_style.py",
-    "tools/inspect_miner_release.py",
     "tools/run_tests.py",
 ]
 

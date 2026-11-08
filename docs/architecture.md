@@ -106,6 +106,8 @@ A opção visível e desativável de contribuição usa proxy TCP para alternar 
 
 `python tools/check_style.py` roda `ruff` (erros reais em todo o repositório e formatação dos módulos novos) e `mypy` estrito nos módulos de `mypy.ini`; são ferramentas opcionais de desenvolvimento, chamadas pelo `pre-push`.
 
+`rust/` contém a reescrita em Rust, em andamento (fase 1: núcleo de lógica pura e CLI somente leitura). Ela não substitui o aplicativo Python; a equivalência é conferida contra respostas geradas pelo próprio Python. Toda melhoria nova é feita em Rust; o Python recebe só correções e dados de que o produto atual precisa. [Plano e paridade](../rust/README.md).
+
 Os relatórios devem distinguir monitor físico, área útil, cliente real, DPI e simulação 4K. [Como contribuir](../CONTRIBUTING.md).
 
 AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e Ollama local](ai-providers.md). A política adaptativa funciona sem IA.

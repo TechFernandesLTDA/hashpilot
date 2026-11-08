@@ -1,0 +1,17 @@
+[package]
+name = "hashpilot-core"
+description = "Núcleo de lógica pura do HashPilot: parser do log do SRBMiner, política térmica, pagamentos e configuração do rig."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+chrono.workspace = true
+regex.workspace = true
+serde.workspace = true
+serde_json.workspace = true
+
+[lints]
+workspace = true

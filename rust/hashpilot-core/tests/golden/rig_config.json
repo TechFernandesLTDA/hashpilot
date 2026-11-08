@@ -1,0 +1,1104 @@
+{
+ "cases": [
+  {
+   "name": "single_default",
+   "detected": [
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "GPU-abc",
+     "name": "NVIDIA GeForce RTX 3070",
+     "pci_bus_id": "00000000:06:00.0",
+     "memory_total_mb": 8192
+    }
+   ],
+   "settings": {},
+   "ok": [
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "GPU-abc",
+     "name": "NVIDIA GeForce RTX 3070",
+     "pci_bus_id": "00000000:06:00.0",
+     "memory_total_mb": 8192,
+     "log_dir": "<ROOT>/gpus/GPU-abc",
+     "state_dir": "<ROOT>/gpus/GPU-abc",
+     "latest_path": "<ROOT>/gpus/GPU-abc/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-abc/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-abc/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-abc/gpu-agent-request.json",
+     "enabled": true,
+     "profile": "performance",
+     "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+     "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": true,
+     "device_key": "GPU-abc",
+     "worker_name": "HashPilot_abc",
+     "configuration_error": null
+    }
+   ]
+  },
+  {
+   "name": "seven_detected_keeps_six_sorted",
+   "detected": [
+    {
+     "vendor": "NVIDIA",
+     "index": 6,
+     "uuid": "GPU-00000006-aaaa",
+     "name": "NVIDIA GeForce RTX 3076"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 5,
+     "uuid": "GPU-00000005-aaaa",
+     "name": "NVIDIA GeForce RTX 3075"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 4,
+     "uuid": "GPU-00000004-aaaa",
+     "name": "NVIDIA GeForce RTX 3074"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 3,
+     "uuid": "GPU-00000003-aaaa",
+     "name": "NVIDIA GeForce RTX 3073"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 2,
+     "uuid": "GPU-00000002-aaaa",
+     "name": "NVIDIA GeForce RTX 3072"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 1,
+     "uuid": "GPU-00000001-aaaa",
+     "name": "NVIDIA GeForce RTX 3071"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "GPU-00000000-aaaa",
+     "name": "NVIDIA GeForce RTX 3070"
+    }
+   ],
+   "settings": {
+    "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+   },
+   "ok": [
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "GPU-00000000-aaaa",
+     "name": "NVIDIA GeForce RTX 3070",
+     "log_dir": "<ROOT>/gpus/GPU-00000000-aaaa",
+     "state_dir": "<ROOT>/gpus/GPU-00000000-aaaa",
+     "latest_path": "<ROOT>/gpus/GPU-00000000-aaaa/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-00000000-aaaa/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-00000000-aaaa/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-00000000-aaaa/gpu-agent-request.json",
+     "enabled": true,
+     "profile": "performance",
+     "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "effective_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": false,
+     "device_key": "GPU-00000000-aaaa",
+     "worker_name": "HashPilot_00000000-aaaa",
+     "configuration_error": null
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 1,
+     "uuid": "GPU-00000001-aaaa",
+     "name": "NVIDIA GeForce RTX 3071",
+     "log_dir": "<ROOT>/gpus/GPU-00000001-aaaa",
+     "state_dir": "<ROOT>/gpus/GPU-00000001-aaaa",
+     "latest_path": "<ROOT>/gpus/GPU-00000001-aaaa/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-00000001-aaaa/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-00000001-aaaa/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-00000001-aaaa/gpu-agent-request.json",
+     "enabled": true,
+     "profile": "performance",
+     "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "effective_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": false,
+     "device_key": "GPU-00000001-aaaa",
+     "worker_name": "HashPilot_00000001-aaaa",
+     "configuration_error": null
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 2,
+     "uuid": "GPU-00000002-aaaa",
+     "name": "NVIDIA GeForce RTX 3072",
+     "log_dir": "<ROOT>/gpus/GPU-00000002-aaaa",
+     "state_dir": "<ROOT>/gpus/GPU-00000002-aaaa",
+     "latest_path": "<ROOT>/gpus/GPU-00000002-aaaa/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-00000002-aaaa/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-00000002-aaaa/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-00000002-aaaa/gpu-agent-request.json",
+     "enabled": true,
+     "profile": "performance",
+     "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "effective_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": false,
+     "device_key": "GPU-00000002-aaaa",
+     "worker_name": "HashPilot_00000002-aaaa",
+     "configuration_error": null
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 3,
+     "uuid": "GPU-00000003-aaaa",
+     "name": "NVIDIA GeForce RTX 3073",
+     "log_dir": "<ROOT>/gpus/GPU-00000003-aaaa",
+     "state_dir": "<ROOT>/gpus/GPU-00000003-aaaa",
+     "latest_path": "<ROOT>/gpus/GPU-00000003-aaaa/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-00000003-aaaa/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-00000003-aaaa/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-00000003-aaaa/gpu-agent-request.json",
+     "enabled": true,
+     "profile": "performance",
+     "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "effective_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": false,
+     "device_key": "GPU-00000003-aaaa",
+     "worker_name": "HashPilot_00000003-aaaa",
+     "configuration_error": null
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 4,
+     "uuid": "GPU-00000004-aaaa",
+     "name": "NVIDIA GeForce RTX 3074",
+     "log_dir": "<ROOT>/gpus/GPU-00000004-aaaa",
+     "state_dir": "<ROOT>/gpus/GPU-00000004-aaaa",
+     "latest_path": "<ROOT>/gpus/GPU-00000004-aaaa/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-00000004-aaaa/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-00000004-aaaa/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-00000004-aaaa/gpu-agent-request.json",
+     "enabled": true,
+     "profile": "performance",
+     "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "effective_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": false,
+     "device_key": "GPU-00000004-aaaa",
+     "worker_name": "HashPilot_00000004-aaaa",
+     "configuration_error": null
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 5,
+     "uuid": "GPU-00000005-aaaa",
+     "name": "NVIDIA GeForce RTX 3075",
+     "log_dir": "<ROOT>/gpus/GPU-00000005-aaaa",
+     "state_dir": "<ROOT>/gpus/GPU-00000005-aaaa",
+     "latest_path": "<ROOT>/gpus/GPU-00000005-aaaa/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-00000005-aaaa/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-00000005-aaaa/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-00000005-aaaa/gpu-agent-request.json",
+     "enabled": true,
+     "profile": "performance",
+     "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "effective_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": false,
+     "device_key": "GPU-00000005-aaaa",
+     "worker_name": "HashPilot_00000005-aaaa",
+     "configuration_error": null
+    }
+   ]
+  },
+  {
+   "name": "duplicates_and_non_nvidia",
+   "detected": [
+    {
+     "vendor": "NVIDIA",
+     "index": 1,
+     "uuid": "GPU-x",
+     "name": "NVIDIA GeForce RTX 3071"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "GPU-x",
+     "name": "NVIDIA GeForce RTX 3070"
+    },
+    {
+     "vendor": "AMD",
+     "index": 0,
+     "uuid": "GPU-amd"
+    },
+    "lixo"
+   ],
+   "settings": {},
+   "ok": [
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "GPU-x",
+     "name": "NVIDIA GeForce RTX 3070",
+     "log_dir": "<ROOT>/gpus/GPU-x",
+     "state_dir": "<ROOT>/gpus/GPU-x",
+     "latest_path": "<ROOT>/gpus/GPU-x/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-x/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-x/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-x/gpu-agent-request.json",
+     "enabled": true,
+     "profile": "performance",
+     "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+     "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": true,
+     "device_key": "GPU-x",
+     "worker_name": "HashPilot_x",
+     "configuration_error": null
+    }
+   ]
+  },
+  {
+   "name": "overrides",
+   "detected": [
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "GPU-o0",
+     "name": "NVIDIA GeForce RTX 3070"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 1,
+     "uuid": "GPU-o1",
+     "name": "NVIDIA GeForce RTX 3071"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 2,
+     "uuid": "GPU-o2",
+     "name": "NVIDIA GeForce RTX 3072"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 3,
+     "uuid": "GPU-o3",
+     "name": "NVIDIA GeForce RTX 3073"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 4,
+     "uuid": "GPU-o4",
+     "name": "NVIDIA GeForce RTX 3074"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 5,
+     "uuid": "GPU-o5",
+     "name": "NVIDIA GeForce RTX 3075"
+    }
+   ],
+   "settings": {
+    "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "gpu_settings": {
+     "GPU-o0": {
+      "enabled": false
+     },
+     "GPU-o1": {
+      "enabled": "sim"
+     },
+     "GPU-o2": {
+      "wallet": "prl1pppppppppppppppppppppppppppppppppppppppp"
+     },
+     "GPU-o3": {
+      "wallet": ""
+     },
+     "GPU-o4": {
+      "wallet": "bc1xyz",
+      "profile": "cool"
+     },
+     "GPU-o5": "lixo"
+    }
+   },
+   "ok": [
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "GPU-o0",
+     "name": "NVIDIA GeForce RTX 3070",
+     "log_dir": "<ROOT>/gpus/GPU-o0",
+     "state_dir": "<ROOT>/gpus/GPU-o0",
+     "latest_path": "<ROOT>/gpus/GPU-o0/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-o0/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-o0/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-o0/gpu-agent-request.json",
+     "enabled": false,
+     "profile": "performance",
+     "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "effective_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": false,
+     "device_key": "GPU-o0",
+     "worker_name": "HashPilot_o0",
+     "configuration_error": null
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 1,
+     "uuid": "GPU-o1",
+     "name": "NVIDIA GeForce RTX 3071",
+     "log_dir": "<ROOT>/gpus/GPU-o1",
+     "state_dir": "<ROOT>/gpus/GPU-o1",
+     "latest_path": "<ROOT>/gpus/GPU-o1/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-o1/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-o1/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-o1/gpu-agent-request.json",
+     "enabled": false,
+     "profile": "performance",
+     "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "effective_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": false,
+     "device_key": "GPU-o1",
+     "worker_name": "HashPilot_o1",
+     "configuration_error": "enabled precisa ser booleano; dispositivo desabilitado"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 2,
+     "uuid": "GPU-o2",
+     "name": "NVIDIA GeForce RTX 3072",
+     "log_dir": "<ROOT>/gpus/GPU-o2",
+     "state_dir": "<ROOT>/gpus/GPU-o2",
+     "latest_path": "<ROOT>/gpus/GPU-o2/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-o2/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-o2/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-o2/gpu-agent-request.json",
+     "enabled": true,
+     "profile": "performance",
+     "wallet": "prl1pppppppppppppppppppppppppppppppppppppppp",
+     "effective_wallet": "prl1pppppppppppppppppppppppppppppppppppppppp",
+     "wallet_override": "prl1pppppppppppppppppppppppppppppppppppppppp",
+     "uses_default_wallet": false,
+     "uses_author_wallet": false,
+     "device_key": "GPU-o2",
+     "worker_name": "HashPilot_o2",
+     "configuration_error": null
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 3,
+     "uuid": "GPU-o3",
+     "name": "NVIDIA GeForce RTX 3073",
+     "log_dir": "<ROOT>/gpus/GPU-o3",
+     "state_dir": "<ROOT>/gpus/GPU-o3",
+     "latest_path": "<ROOT>/gpus/GPU-o3/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-o3/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-o3/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-o3/gpu-agent-request.json",
+     "enabled": true,
+     "profile": "performance",
+     "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "effective_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": false,
+     "device_key": "GPU-o3",
+     "worker_name": "HashPilot_o3",
+     "configuration_error": null
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 4,
+     "uuid": "GPU-o4",
+     "name": "NVIDIA GeForce RTX 3074",
+     "log_dir": "<ROOT>/gpus/GPU-o4",
+     "state_dir": "<ROOT>/gpus/GPU-o4",
+     "latest_path": "<ROOT>/gpus/GPU-o4/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-o4/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-o4/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-o4/gpu-agent-request.json",
+     "enabled": false,
+     "profile": "cool",
+     "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "effective_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": false,
+     "device_key": "GPU-o4",
+     "worker_name": "HashPilot_o4",
+     "configuration_error": "Carteira desta GPU inválida; dispositivo desabilitado"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 5,
+     "uuid": "GPU-o5",
+     "name": "NVIDIA GeForce RTX 3075",
+     "log_dir": "<ROOT>/gpus/GPU-o5",
+     "state_dir": "<ROOT>/gpus/GPU-o5",
+     "latest_path": "<ROOT>/gpus/GPU-o5/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-o5/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-o5/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-o5/gpu-agent-request.json",
+     "enabled": false,
+     "profile": "performance",
+     "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "effective_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": false,
+     "device_key": "GPU-o5",
+     "worker_name": "HashPilot_o5",
+     "configuration_error": "Configuração desta GPU inválida; dispositivo desabilitado"
+    }
+   ]
+  },
+  {
+   "name": "profiles",
+   "detected": [
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "GPU-p0",
+     "name": "NVIDIA GeForce RTX 3070"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 1,
+     "uuid": "GPU-p1",
+     "name": "NVIDIA GeForce RTX 3071"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 2,
+     "uuid": "GPU-p2",
+     "name": "NVIDIA GeForce RTX 3072"
+    }
+   ],
+   "settings": {
+    "gpu_settings": {
+     "GPU-p0": {
+      "profile": "balanced"
+     },
+     "GPU-p1": {
+      "profile": "turbo"
+     },
+     "GPU-p2": {
+      "profile": "cool",
+      "enabled": true
+     }
+    }
+   },
+   "ok": [
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "GPU-p0",
+     "name": "NVIDIA GeForce RTX 3070",
+     "log_dir": "<ROOT>/gpus/GPU-p0",
+     "state_dir": "<ROOT>/gpus/GPU-p0",
+     "latest_path": "<ROOT>/gpus/GPU-p0/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-p0/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-p0/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-p0/gpu-agent-request.json",
+     "enabled": true,
+     "profile": "balanced",
+     "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+     "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": true,
+     "device_key": "GPU-p0",
+     "worker_name": "HashPilot_p0",
+     "configuration_error": null
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 1,
+     "uuid": "GPU-p1",
+     "name": "NVIDIA GeForce RTX 3071",
+     "log_dir": "<ROOT>/gpus/GPU-p1",
+     "state_dir": "<ROOT>/gpus/GPU-p1",
+     "latest_path": "<ROOT>/gpus/GPU-p1/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-p1/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-p1/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-p1/gpu-agent-request.json",
+     "enabled": false,
+     "profile": "performance",
+     "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+     "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": true,
+     "device_key": "GPU-p1",
+     "worker_name": "HashPilot_p1",
+     "configuration_error": "Perfil inválido; dispositivo desabilitado"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 2,
+     "uuid": "GPU-p2",
+     "name": "NVIDIA GeForce RTX 3072",
+     "log_dir": "<ROOT>/gpus/GPU-p2",
+     "state_dir": "<ROOT>/gpus/GPU-p2",
+     "latest_path": "<ROOT>/gpus/GPU-p2/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-p2/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-p2/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-p2/gpu-agent-request.json",
+     "enabled": true,
+     "profile": "cool",
+     "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+     "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": true,
+     "device_key": "GPU-p2",
+     "worker_name": "HashPilot_p2",
+     "configuration_error": null
+    }
+   ]
+  },
+  {
+   "name": "author_wallet_flags",
+   "detected": [
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "GPU-w0",
+     "name": "NVIDIA GeForce RTX 3070"
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 1,
+     "uuid": "GPU-w1",
+     "name": "NVIDIA GeForce RTX 3071"
+    }
+   ],
+   "settings": {
+    "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "gpu_settings": {
+     "GPU-w1": {
+      "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+     }
+    }
+   },
+   "ok": [
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "GPU-w0",
+     "name": "NVIDIA GeForce RTX 3070",
+     "log_dir": "<ROOT>/gpus/GPU-w0",
+     "state_dir": "<ROOT>/gpus/GPU-w0",
+     "latest_path": "<ROOT>/gpus/GPU-w0/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-w0/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-w0/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-w0/gpu-agent-request.json",
+     "enabled": true,
+     "profile": "performance",
+     "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+     "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+     "wallet_override": null,
+     "uses_default_wallet": true,
+     "uses_author_wallet": true,
+     "device_key": "GPU-w0",
+     "worker_name": "HashPilot_w0",
+     "configuration_error": null
+    },
+    {
+     "vendor": "NVIDIA",
+     "index": 1,
+     "uuid": "GPU-w1",
+     "name": "NVIDIA GeForce RTX 3071",
+     "log_dir": "<ROOT>/gpus/GPU-w1",
+     "state_dir": "<ROOT>/gpus/GPU-w1",
+     "latest_path": "<ROOT>/gpus/GPU-w1/latest.json",
+     "controller_status_path": "<ROOT>/gpus/GPU-w1/gpu-agent-control.json",
+     "proxy_settings_path": "<ROOT>/gpus/GPU-w1/proxy-settings.json",
+     "benchmark_request_path": "<ROOT>/gpus/GPU-w1/gpu-agent-request.json",
+     "enabled": true,
+     "profile": "performance",
+     "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "effective_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "wallet_override": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "uses_default_wallet": false,
+     "uses_author_wallet": false,
+     "device_key": "GPU-w1",
+     "worker_name": "HashPilot_w1",
+     "configuration_error": null
+    }
+   ]
+  },
+  {
+   "name": "settings_not_dict",
+   "detected": [
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "GPU-a",
+     "name": "NVIDIA GeForce RTX 3070"
+    }
+   ],
+   "settings": [
+    "x"
+   ],
+   "error": "Configuração do rig inválida"
+  },
+  {
+   "name": "invalid_global_wallet",
+   "detected": [
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "GPU-a",
+     "name": "NVIDIA GeForce RTX 3070"
+    }
+   ],
+   "settings": {
+    "wallet": "bc1xyz"
+   },
+   "error": "Carteira global Pearl inválida"
+  },
+  {
+   "name": "gpu_settings_not_dict",
+   "detected": [
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "GPU-a",
+     "name": "NVIDIA GeForce RTX 3070"
+    }
+   ],
+   "settings": {
+    "gpu_settings": []
+   },
+   "error": "gpu_settings precisa ser um objeto por UUID"
+  },
+  {
+   "name": "bool_index",
+   "detected": [
+    {
+     "vendor": "NVIDIA",
+     "index": true,
+     "uuid": "GPU-a"
+    }
+   ],
+   "settings": {},
+   "error": "Índice NVIDIA inválido"
+  },
+  {
+   "name": "negative_index",
+   "detected": [
+    {
+     "vendor": "NVIDIA",
+     "index": -1,
+     "uuid": "GPU-a",
+     "name": "NVIDIA GeForce RTX 3069"
+    }
+   ],
+   "settings": {},
+   "error": "Índice NVIDIA inválido"
+  },
+  {
+   "name": "invalid_uuid",
+   "detected": [
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "gpu-lower",
+     "name": "NVIDIA GeForce RTX 3070"
+    }
+   ],
+   "settings": {},
+   "error": "UUID NVIDIA inválido"
+  },
+  {
+   "name": "uuid_too_long",
+   "detected": [
+    {
+     "vendor": "NVIDIA",
+     "index": 0,
+     "uuid": "GPU-aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+     "name": "NVIDIA GeForce RTX 3070"
+    }
+   ],
+   "settings": {},
+   "error": "UUID NVIDIA inválido"
+  }
+ ],
+ "updates": [
+  {
+   "name": "enable_new",
+   "settings": {
+    "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+   },
+   "gpu_uuid": "GPU-a",
+   "kwargs": {
+    "enabled": true
+   },
+   "ok": {
+    "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "gpu_settings": {
+     "GPU-a": {
+      "enabled": true
+     }
+    }
+   }
+  },
+  {
+   "name": "disable_existing",
+   "settings": {
+    "gpu_settings": {
+     "GPU-a": {
+      "enabled": true,
+      "wallet": "prl1pppppppppppppppppppppppppppppppppppppppp"
+     }
+    }
+   },
+   "gpu_uuid": "GPU-a",
+   "kwargs": {
+    "enabled": false
+   },
+   "ok": {
+    "gpu_settings": {
+     "GPU-a": {
+      "enabled": false,
+      "wallet": "prl1pppppppppppppppppppppppppppppppppppppppp"
+     }
+    }
+   }
+  },
+  {
+   "name": "set_wallet",
+   "settings": {},
+   "gpu_uuid": "GPU-a",
+   "kwargs": {
+    "wallet_override": "prl1pppppppppppppppppppppppppppppppppppppppp",
+    "change_wallet": true
+   },
+   "ok": {
+    "gpu_settings": {
+     "GPU-a": {
+      "wallet": "prl1pppppppppppppppppppppppppppppppppppppppp"
+     }
+    }
+   }
+  },
+  {
+   "name": "clear_wallet",
+   "settings": {
+    "gpu_settings": {
+     "GPU-a": {
+      "wallet": "prl1pppppppppppppppppppppppppppppppppppppppp"
+     }
+    }
+   },
+   "gpu_uuid": "GPU-a",
+   "kwargs": {
+    "wallet_override": "",
+    "change_wallet": true
+   },
+   "ok": {
+    "gpu_settings": {
+     "GPU-a": {
+      "wallet": null
+     }
+    }
+   }
+  },
+  {
+   "name": "wallet_ignored_without_change_flag",
+   "settings": {},
+   "gpu_uuid": "GPU-a",
+   "kwargs": {
+    "wallet_override": "prl1pppppppppppppppppppppppppppppppppppppppp"
+   },
+   "ok": {
+    "gpu_settings": {
+     "GPU-a": {}
+    }
+   }
+  },
+  {
+   "name": "invalid_wallet",
+   "settings": {},
+   "gpu_uuid": "GPU-a",
+   "kwargs": {
+    "wallet_override": "bc1",
+    "change_wallet": true
+   },
+   "error": "Carteira Pearl inválida"
+  },
+  {
+   "name": "enabled_not_bool",
+   "settings": {},
+   "gpu_uuid": "GPU-a",
+   "kwargs": {
+    "enabled": "sim"
+   },
+   "error": "enabled precisa ser booleano"
+  },
+  {
+   "name": "entry_not_dict_is_replaced",
+   "settings": {
+    "gpu_settings": {
+     "GPU-a": "lixo"
+    }
+   },
+   "gpu_uuid": "GPU-a",
+   "kwargs": {},
+   "ok": {
+    "gpu_settings": {
+     "GPU-a": {
+      "enabled": false
+     }
+    }
+   }
+  },
+  {
+   "name": "gpu_settings_not_dict",
+   "settings": {
+    "gpu_settings": 3
+   },
+   "gpu_uuid": "GPU-a",
+   "kwargs": {},
+   "error": "gpu_settings inválido"
+  },
+  {
+   "name": "settings_not_dict",
+   "settings": [
+    1
+   ],
+   "gpu_uuid": "GPU-a",
+   "kwargs": {},
+   "error": "Configuração inválida"
+  },
+  {
+   "name": "invalid_uuid",
+   "settings": {},
+   "gpu_uuid": "x",
+   "kwargs": {},
+   "error": "UUID NVIDIA inválido"
+  }
+ ],
+ "wallets": [
+  {
+   "input": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "valid": true
+  },
+  {
+   "input": "prl1pppppppppppppppppppppppppppppppppppppppp",
+   "valid": true
+  },
+  {
+   "input": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "valid": true
+  },
+  {
+   "input": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "valid": false
+  },
+  {
+   "input": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "valid": true
+  },
+  {
+   "input": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "valid": true
+  },
+  {
+   "input": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "valid": false
+  },
+  {
+   "input": "prl1bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+   "valid": false
+  },
+  {
+   "input": "prl1iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii",
+   "valid": false
+  },
+  {
+   "input": "prl1oooooooooooooooooooooooooooooooooooooooo",
+   "valid": false
+  },
+  {
+   "input": "prl11111111111111111111111111111111111111111",
+   "valid": false
+  },
+  {
+   "input": "PRL1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "valid": false
+  },
+  {
+   "input": " prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "valid": false
+  },
+  {
+   "input": 5,
+   "valid": false
+  },
+  {
+   "input": null,
+   "valid": false
+  }
+ ],
+ "support": [
+  {
+   "settings": {
+    "support_enabled": true,
+    "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+   },
+   "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "result": {
+    "enabled": true,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "percent": 5,
+    "method": "mining_time",
+    "reason": "Contribuição opcional habilitada: 57 min para sua carteira / 3 min para o autor",
+    "configuration_valid": true
+   }
+  },
+  {
+   "settings": {
+    "support_enabled": true
+   },
+   "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "result": {
+    "enabled": true,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "percent": 5,
+    "method": "mining_time",
+    "reason": "Contribuição opcional habilitada: 57 min para sua carteira / 3 min para o autor",
+    "configuration_valid": true
+   }
+  },
+  {
+   "settings": {
+    "support_enabled": "true",
+    "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+   },
+   "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "result": {
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "percent": 5,
+    "method": "mining_time",
+    "reason": "Contribuição opcional desligada",
+    "configuration_valid": true
+   }
+  },
+  {
+   "settings": {
+    "support_enabled": true,
+    "wallet": "prl1pppppppppppppppppppppppppppppppppppppppp"
+   },
+   "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "result": {
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "percent": 5,
+    "method": "mining_time",
+    "reason": "Configuração inválida ou carteira alterada; contribuição desligada",
+    "configuration_valid": false
+   }
+  },
+  {
+   "settings": {
+    "support_enabled": false,
+    "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+   },
+   "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "result": {
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "percent": 5,
+    "method": "mining_time",
+    "reason": "Contribuição opcional desligada",
+    "configuration_valid": true
+   }
+  },
+  {
+   "settings": {
+    "support_enabled": true,
+    "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t"
+   },
+   "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "result": {
+    "enabled": false,
+    "primary_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "percent": 5,
+    "method": "mining_time",
+    "reason": "Carteira do autor configurada; não existe contribuição adicional",
+    "configuration_valid": true
+   }
+  },
+  {
+   "settings": {
+    "support_enabled": true,
+    "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+   },
+   "wallet": "bc1",
+   "result": {
+    "enabled": false,
+    "primary_wallet": "bc1",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "percent": 5,
+    "method": "mining_time",
+    "reason": "Configuração inválida ou carteira alterada; contribuição desligada",
+    "configuration_valid": false
+   }
+  },
+  {
+   "settings": null,
+   "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "result": {
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "percent": 5,
+    "method": "mining_time",
+    "reason": "Configuração inválida ou carteira alterada; contribuição desligada",
+    "configuration_valid": false
+   }
+  },
+  {
+   "settings": [
+    "x"
+   ],
+   "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "result": {
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "percent": 5,
+    "method": "mining_time",
+    "reason": "Configuração inválida ou carteira alterada; contribuição desligada",
+    "configuration_valid": false
+   }
+  }
+ ],
+ "max_gpus": 6
+}
