@@ -29,6 +29,8 @@ python tools/check_powershell_structure.py             # aspas/chaves dos .ps1 s
 - Arquivos `.py` são LF no repositório (`.gitattributes`); ao editar por script no Windows, grave com `newline='\n'`. Os `.ps1` são CRLF com BOM UTF-8; preserve ambos ao editar.
 - Diagnóstico com traceback vai para `LOG_DIR/diagnostics/` (`app_logging`), nunca para `LOG_DIR/*.log`: o painel legado importa todo `.log` dali como log do minerador. Em laços de 2 s use `exception_once`/`warning_once`.
 
+- **Port em Rust** (`rust/`, fase 1 de 6): `hashpilot-core` porta a lógica pura (parser do log, térmica, pagamento, carteira, rig_config, config) e `hashpilot-cli` é só leitura. Não substitui o Python. Paridade: `tools/rust_parity/generate_goldens.py` roda o Python real e grava `rust/hashpilot-core/tests/golden/`; `cargo test` (em `rust/`) compara. Mudou o comportamento de um módulo portado? Regere os goldens (o `test_rust_parity_goldens.py` acusa se esquecer) e ajuste o Rust. Detalhes em `rust/README.md`.
+
 - `dist/` é ignorado pelo git e guarda evidências locais de QA/releases (resultados de testes, pacotes reproduzidos). Não é fonte de verdade do código.
 
 ## Arquitetura
