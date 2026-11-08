@@ -18,6 +18,8 @@ mise exec -- python tools/check_documentation.py      # links locais dos .md/llm
 mise exec -- python tools/check_style.py              # ruff (erros + formatação dos módulos novos) e mypy (mypy.ini), se instalados
 python tools/run_tests.py                              # suíte em qualquer sistema: estado temporário, testes Windows-only pulados
 python tools/check_powershell_structure.py             # aspas/chaves dos .ps1 sem PowerShell (o parser real segue no pre-push)
+cd rust && cargo test                                  # port em Rust: unitários + paridade com o Python
+cd rust && cargo run --release -p hashpilot-cli -- release inspect X.Y.Z --archive-sha256 <hex> --md5 <hex>   # hashes de release nova do SRBMiner, sem extrair/executar
 ```
 
 - QA de interface é opt-in e abre janelas reais com dados temporários: `test_responsive_ui.py --run --native-dpi`, `test_windowing.py --run --native-dpi`, e os `tools/qa_*.py`. Relate dimensões pedidas/reais, área útil, DPI e se 4K foi virtual ou físico.
@@ -29,7 +31,8 @@ python tools/check_powershell_structure.py             # aspas/chaves dos .ps1 s
 - Arquivos `.py` são LF no repositório (`.gitattributes`); ao editar por script no Windows, grave com `newline='\n'`. Os `.ps1` são CRLF com BOM UTF-8; preserve ambos ao editar.
 - Diagnóstico com traceback vai para `LOG_DIR/diagnostics/` (`app_logging`), nunca para `LOG_DIR/*.log`: o painel legado importa todo `.log` dali como log do minerador. Em laços de 2 s use `exception_once`/`warning_once`.
 
-- **Port em Rust** (`rust/`, fase 1 de 6): `hashpilot-core` porta a lógica pura (parser do log, térmica, pagamento, carteira, rig_config, config) e `hashpilot-cli` é só leitura. Não substitui o Python. Paridade: `tools/rust_parity/generate_goldens.py` roda o Python real e grava `rust/hashpilot-core/tests/golden/`; `cargo test` (em `rust/`) compara. Mudou o comportamento de um módulo portado? Regere os goldens (o `test_rust_parity_goldens.py` acusa se esquecer) e ajuste o Rust. Detalhes em `rust/README.md`.
+- **Port em Rust** (`rust/`, fase 1 de 6): `hashpilot-core` porta a lógica pura (parser do log, térmica, pagamento, carteira, rig_config, config) e `hashpilot-cli` é só leitura (inclui `release inspect`, que levanta os hashes de uma release nova do SRBMiner para o catálogo). Não substitui o Python. Paridade: `tools/rust_parity/generate_goldens.py` roda o Python real e grava `rust/hashpilot-core/tests/golden/`; `cargo test` (em `rust/`) compara. Mudou o comportamento de um módulo portado? Regere os goldens (o `test_rust_parity_goldens.py` acusa se esquecer) e ajuste o Rust. Detalhes em `rust/README.md`.
+- **Toda melhoria nova é feita em Rust** (`rust/`), por decisão do autor. O Python fica em manutenção até o Rust substituí-lo: só correção de bug e de segurança e dados de que o produto atual precisa (por exemplo, a entrada de uma release do SRBMiner em `miner_update.CATALOG` e nos `.ps1`). Ferramenta nova vira subcomando da CLI `hashpilot`, não script novo em `tools/`. Correção num módulo já portado vale nos dois lados, com os goldens regerados.
 
 - `dist/` é ignorado pelo git e guarda evidências locais de QA/releases (resultados de testes, pacotes reproduzidos). Não é fonte de verdade do código.
 

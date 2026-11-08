@@ -32,6 +32,7 @@ Informe as dimensões solicitadas e reais, área útil, DPI e se o caso 4K foi v
 
 ## Regras de implementação
 
+- **Melhoria nova é feita em Rust** ([`rust/`](rust/README.md)). O aplicativo Python segue em manutenção até ser substituído: aceita correção de bug e de segurança e dados de que o produto atual precisa, como o catálogo verificado do SRBMiner. Ferramenta nova entra como subcomando da CLI `hashpilot`. Correção num módulo já portado vale nos dois lados, com os goldens de paridade regerados.
 - Preserve a separação entre monitor, modelo financeiro, política pura e controle real da GPU.
 - Não transforme dados ausentes em zero, estimativas em crédito realizado ou catálogo em overclock validado.
 - Preserve a semântica de PRL/BRL/USD/BTC, períodos parciais e saldo confirmado/pendente.

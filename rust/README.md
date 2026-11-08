@@ -5,6 +5,12 @@ Python. Nada aqui substitui o painel, o serviço do rig ou os scripts: o produto
 em uso continua sendo o Python até a reescrita alcançar paridade comprovada e
 validação física na RTX 3070.
 
+**Política: toda melhoria nova é feita aqui, em Rust.** O Python fica em
+manutenção até ser substituído: recebe só correção de bug e de segurança e dados
+de que o produto atual precisa (como a entrada de uma release nova do SRBMiner no
+catálogo verificado). Ferramenta nova vira subcomando da CLI `hashpilot`. Correção
+num módulo já portado vale nos dois lados, com os goldens regerados.
+
 ## Estado: fase 1 de 6
 
 | Fase | Conteúdo | Estado |
@@ -83,7 +89,17 @@ hashpilot gpus                                     # sensores NVIDIA (nvidia-smi
 hashpilot parse-log <log> [--index N] [--shared] [--now EPOCH] [--utc]
 hashpilot payout [--state finance-cache.json] [--now EPOCH] [--price-brl X]
 hashpilot snapshot [--log-dir PASTA]               # sensores + log mais recente de cada GPU
+hashpilot release inspect X.Y.Z --archive-sha256 HEX [--md5 HEX] [--file ZIP]
 ```
+
+`release inspect` levanta a entrada do catálogo de uma release nova do SRBMiner
+(`miner_update.CATALOG`). Valida os argumentos antes de baixar e confere o SHA-256
+do ZIP contra o digest do GitHub e, com `--md5`, contra o MD5 do texto da release.
+Localiza o **único** `SRBMiner-MULTI.exe` do pacote e calcula o hash dele lendo o
+ZIP em memória: nada é extraído nem executado. Sem `--file`, baixa com o `curl` do
+sistema para a pasta temporária e apaga o arquivo no fim. Substituiu a antiga
+`tools/inspect_miner_release.py`; a saída é idêntica à dela, nos pacotes de teste
+e no pacote oficial 3.8.6.
 
 Exemplo com os dados públicos (a partir da raiz do repositório):
 
@@ -97,12 +113,15 @@ rust/target/debug/hashpilot payout --state portable-data/finance-cache.json --no
   `cargo check`/`clippy` também passam para `x86_64-pc-windows-msvc`.
 - A CLI rodou sobre o log real 3.8.0 e o estado financeiro real e reproduziu os
   valores do Python (76,08 TH/s, 8 aceitas, médias 76,22/74,10).
+- `release inspect` baixou e conferiu o pacote oficial do SRBMiner 3.8.6 (SHA-256 e
+  MD5) e deu o mesmo hash de executável que a ferramenta Python anterior.
 - **Não executado no Windows nem com GPU**: os trechos `cfg(windows)` (janela
   oculta do `nvidia-smi`, caminhos Windows, `%VAR%` com o ambiente real) só foram
   compilados. `hashpilot gpus`/`snapshot` precisam ser rodados na RTX 3070.
 
 ## Dependências
 
-Diferente do Python (só biblioteca padrão), o port usa quatro crates amplamente
-usados: `regex`, `chrono`, `serde` e `serde_json`. O `Cargo.lock` é versionado para
+Diferente do Python (só biblioteca padrão), o núcleo usa quatro crates amplamente
+usados: `regex`, `chrono`, `serde` e `serde_json`. A CLI acrescenta `zip` (com
+deflate em Rust puro, sem C), `sha2` e `md-5` para o `release inspect`. O `Cargo.lock` é versionado para
 builds reprodutíveis. Código sob [GPL-3.0-only](../LICENSE).

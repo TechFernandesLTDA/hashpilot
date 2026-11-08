@@ -50,7 +50,13 @@ A inclusão segue o padrão da 3.8.4:
 
 `test_reference_scripts.py` confere a coerência dos três. A 3.8.6 é selecionada pela atualização do minerador no aplicativo, que preserva a versão anterior para o retorno.
 
-Para as próximas releases, `tools/inspect_miner_release.py <versão> --archive-sha256 <hex> --md5 <hex>` faz o mesmo levantamento e imprime a linha pronta do catálogo.
+Para as próximas releases, o levantamento é um subcomando da CLI em Rust. A partir de `rust/`:
+
+```text
+cargo run --release -p hashpilot-cli -- release inspect <versão> --archive-sha256 <hex> --md5 <hex> [--file <zip>]
+```
+
+Ela recusa argumentos malformados antes de baixar e recusa o pacote se o SHA-256 ou o MD5 divergirem. Depois localiza o único `SRBMiner-MULTI.exe` e imprime a linha pronta do catálogo, sem extrair nem executar nada. Sem `--file`, baixa com o `curl` do Windows para a pasta temporária e apaga o arquivo ao terminar. Os valores da 3.8.6 acima saíram dela e foram reproduzidos, sobre os mesmos bytes, pela versão Python anterior da ferramenta.
 
 ## Plano de teste na RTX 3070
 
