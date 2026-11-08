@@ -24,7 +24,7 @@ from tkinter import ttk
 from collections import deque
 from finance import FinanceCollector, financial_model, PortfolioFinanceCollector, portfolio_model, portfolio_snapshots
 from history import HistoryStore, log_key
-from gpu_telemetry import _parse_gpu_log
+from gpu_telemetry import _parse_gpu_log, read_log_tail
 from miner_log import COUNTERS, RATE, log_timestamp
 from nvidia_smi import nvidia_smi_path
 from app_logging import configure as configure_logging, get_logger
@@ -56,6 +56,7 @@ NO_WINDOW = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
 
 
 LOG = get_logger("monitor")
+CLOSE_TIMEOUT_SECONDS = 20
 
 
 def run(command: list[str], timeout: float = 3) -> str:
@@ -102,13 +103,8 @@ def read_gpu() -> dict:
 
 
 def tail(path: Path, limit: int = 160_000) -> str:
-    with path.open("rb") as handle:
-        handle.seek(0, 2)
-        size = handle.tell()
-        handle.seek(max(0, size - limit))
-        data = handle.read()
-    text = data.decode("utf-8-sig", errors="replace")
-    return text.split("\n", 1)[-1] if size > limit else text
+    """Fim do log legado, lido de forma incremental (mesma leitura do serviço, com UTF-16)."""
+    return read_log_tail(path, limit)
 
 
 def parse_log(text: str, now: float | None = None) -> dict:
@@ -539,7 +535,8 @@ class Monitor(tk.Tk):
         self.bind("<Configure>", self.schedule_preferences, add="+")
         self.tabs.bind("<<NotebookTabChanged>>", self.schedule_preferences)
         threading.Thread(target=self.restore_history, daemon=True, name="history-loader").start()
-        threading.Thread(target=self.collector.work, daemon=True).start()
+        self.collector_thread = threading.Thread(target=self.collector.work, daemon=True, name="collector")
+        self.collector_thread.start()
         threading.Thread(target=self.finance_collector.work, daemon=True).start()
         self.after(200, self.poll)
         self.after(1500,self.show_restore_result)
@@ -1613,15 +1610,27 @@ class Monitor(tk.Tk):
         if hasattr(self, "gpu_runtime"):
             self.gpu_runtime.stop.set()
         self.title("HashPilot · salvando histórico…")
-        self.close_thread = threading.Thread(target=lambda: (self.tray.stop(), self.history.close()), daemon=True)
+        self.close_deadline = time.monotonic() + CLOSE_TIMEOUT_SECONDS
+        self.close_thread = threading.Thread(target=self.shutdown_background, daemon=True, name="shutdown")
         self.close_thread.start()
         self.after(100, self.finish_close)
 
+    def shutdown_background(self):
+        """Ordem: bandeja, última amostra do coletor e só então o histórico (sem escrita após o fechamento)."""
+        self.tray.stop()
+        collector = getattr(self, "collector_thread", None)
+        if collector is not None:
+            collector.join(timeout=5)
+        self.history.close()
+
     def finish_close(self):
-        if self.history.worker.is_alive() or (hasattr(self,"gpu_runtime") and self.gpu_runtime.thread.is_alive()):
+        busy = self.history.worker.is_alive() or (hasattr(self,"gpu_runtime") and self.gpu_runtime.thread.is_alive())
+        if busy and time.monotonic() < getattr(self, "close_deadline", 0):
             self.after(100, self.finish_close)
-        else:
-            self.destroy()
+            return
+        if busy:
+            LOG.warning("Encerramento após %s s com tarefas de fundo ainda ativas", CLOSE_TIMEOUT_SECONDS)
+        self.destroy()
 
 
 def console_text(snapshot, finance):
