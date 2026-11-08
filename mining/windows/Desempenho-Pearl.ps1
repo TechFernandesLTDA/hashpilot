@@ -13,6 +13,7 @@ try {
  if($LASTEXITCODE -ne 0){throw 'Falha no power limit'}
  $log=Join-Path $PSScriptRoot ('logs\performance-'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'.log')
  $arguments=@('--disable-cpu','--disable-msr-tweaks','--algorithm-gpu','pearlhash','--gpu-id','0','--pool','prl.kryptex.network:7048','--wallet',$wallet,'--worker','RenanRTX3070','--gpu-off-temperature','80','--gpu-mclock0','810','--gpu-cclock0','1650','--log-file',$log)
+ Register-ReferenceMiner $miner
  $minerProcess=Start-Process -FilePath $miner -ArgumentList $arguments -WorkingDirectory (Split-Path $miner) -WindowStyle Hidden -PassThru
  $minerProcess.Id | Set-Content 'logs\performance-miner.pid'
  Start-Sleep -Seconds 25

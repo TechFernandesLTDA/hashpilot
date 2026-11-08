@@ -16,7 +16,14 @@ O [catálogo de 158 modelos](../../docs/gpu-catalog.md) documenta fontes primár
 
 `Iniciar-Referencia-RTX3070.ps1` e `Parar-Referencia-RTX3070.ps1` preservam o fluxo histórico específico da unidade do autor e seu `thermal_controller.py`. Não são iniciadores genéricos. Uma mineração já ativa não é migrada ou reiniciada apenas por atualizar o aplicativo.
 
-Os scripts históricos (`Iniciar-Referencia`, `Parar-Referencia`, `Restaurar-GPU`, `Maximo`, `Turbo` e `Desempenho`) usam `Referencia-Comum.ps1`: o minerador é o mesmo selecionado no aplicativo (`miner-install.json`, padrão 3.8.0), a carteira vem de `%LOCALAPPDATA%\PearlMonitor\settings.json` (sem configuração, a do autor, com aviso) e os que alteram clocks recusam GPUs que não sejam a RTX 3070. `test_reference_scripts.py` confere a coerência com o catálogo do minerador.
+Os scripts históricos (`Iniciar-Referencia`, `Parar-Referencia`, `Restaurar-GPU`, `Maximo`, `Turbo` e `Desempenho`) usam `Referencia-Comum.ps1`:
+
+- **Minerador:** o mesmo selecionado no aplicativo (`miner-install.json`, padrão 3.8.0). Cada iniciador anota o executável em `logs\reference-miners.txt` antes de iniciá-lo, e o `Parar-Referencia` encerra esses caminhos exatos (sem curinga), mesmo que a seleção mude com o minerador rodando.
+- **Carteira:** a mesma regra do serviço: a carteira própria da GPU de referência em `gpu_settings`, senão a global de `%LOCALAPPDATA%\PearlMonitor\settings.json`; sem configuração, a do autor, com aviso.
+- **Contribuição:** o fluxo histórico minera direto na pool, sem o proxy de contribuição. Com a contribuição opcional ativada (e carteira diferente da do autor), ele **recusa** e indica o serviço do rig, em vez de ignorar a escolha.
+- **GPU:** os que alteram clocks (`Iniciar-Referencia`, `Maximo`, `Turbo`, `Desempenho`) exigem a placa física do autor — mesmo UUID e limite de fábrica de 240 W que `reference_profile.py` —, não qualquer RTX 3070. O `Restaurar-GPU` só restaura padrões e aceita qualquer RTX 3070.
+
+`test_reference_scripts.py` confere essas regras e a coerência com o catálogo do minerador; `tools/check_powershell_structure.py` verifica aspas e chaves de todos os `.ps1` onde não há PowerShell.
 
 Perfil histórico medido: core 1740 MHz, offset +150 MHz, memória 5001 MHz, ventoinhas 100%, limite de fábrica 240 W; consumo aproximado 158 W, hashrate 76–79 TH/s e temperatura 74–75 °C. Esses resultados não garantem estabilidade em outra unidade ou ambiente. A pausa histórica em 78 °C foi substituída pelo supervisor adaptativo; consulte [controle térmico](../../CONTROLE-TERMICO.md) e `portable-data/miner-logs/validated-profile.json` na raiz do repositório.
 

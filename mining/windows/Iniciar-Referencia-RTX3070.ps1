@@ -2,7 +2,7 @@
 $ErrorActionPreference='Stop'
 Set-Location -LiteralPath $PSScriptRoot
 . (Join-Path $PSScriptRoot 'Referencia-Comum.ps1')
-if(-not $Wallet){$Wallet=Get-ReferenceWallet}
+if(-not $Wallet){$Wallet=Get-ReferenceWallet}else{Assert-ReferenceContribution $Wallet}
 if($Wallet -notmatch '^prl1[ac-hj-np-z02-9]{30,100}$'){throw 'Endereco publico Pearl invalido'}
 $principal=[Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
 if(-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)){
@@ -12,8 +12,7 @@ if(-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrat
  exit
 }
 if(Get-Process -Name SRBMiner-MULTI -ErrorAction SilentlyContinue){'Minerador ja esta ativo.';exit}
-$gpu=(& nvidia-smi -i 0 --query-gpu=name --format=csv,noheader).Trim()
-if($LASTEXITCODE -ne 0 -or $gpu -notmatch 'RTX 3070$'){throw 'Controlador validado somente na RTX 3070'}
+Assert-ReferenceRtx3070
 if(-not $Python){$Python=(& mise which python).Trim()}
 if(-not (Test-Path -LiteralPath $Python)){throw 'Python do mise indisponivel'}
 $controller=Join-Path $PSScriptRoot 'thermal_controller.py'
@@ -25,6 +24,7 @@ $log=Join-Path $logDir ('mining-'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'.log')
 $minerProcess=$null
 try {
  $arguments=@('--disable-cpu','--disable-msr-tweaks','--algorithm-gpu','pearlhash','--gpu-id','0','--pool','prl.kryptex.network:7048','--wallet',$Wallet,'--worker','RenanRTX3070','--gpu-off-temperature','84','--gpu-plimit0','240','--gpu-cclock0',$clock,'--gpu-coffset0','150','--gpu-mclock0','5001','--gpu-fan0','100','--log-file',('"'+$log+'"'))
+ Register-ReferenceMiner $miner
  $minerProcess=Start-Process -FilePath $miner -ArgumentList $arguments -WorkingDirectory (Split-Path $miner) -WindowStyle Hidden -PassThru
  $minerProcess.Id|Set-Content -LiteralPath (Join-Path $logDir 'adaptive-miner.pid')
  Start-Sleep -Seconds 5
