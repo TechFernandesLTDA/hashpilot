@@ -6,6 +6,7 @@
 
 mod logs;
 mod nvidia;
+mod release;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -30,6 +31,8 @@ Uso:
   hashpilot payout [--state <arquivo>] [--now <epoch>] [--price-brl <x>]
                                          Previsão de pagamento a partir do finance-cache.json
   hashpilot snapshot [--log-dir <pasta>] Sensores + log mais recente de cada GPU
+  hashpilot release inspect <versão> --archive-sha256 <hex> [--md5 <hex>] [--file <zip>]
+                                         Dados de catálogo de um SRBMiner novo (não extrai nem executa)
   hashpilot --version | --help
 ";
 
@@ -50,6 +53,7 @@ fn main() -> ExitCode {
         Some("parse-log") => parse_log_command(&arguments[1..]),
         Some("payout") => payout_command(&arguments[1..]),
         Some("snapshot") => snapshot_command(&arguments[1..]),
+        Some("release") => release_command(&arguments[1..]),
         Some(other) => Err(Failure::Usage(format!("comando desconhecido: {other}"))),
     };
     match result {
@@ -251,4 +255,35 @@ fn device_snapshot(gpu: Map<String, Value>, log_dir: &Path, now: f64) -> Value {
         },
     };
     json!({"gpu": gpu, "miner": miner, "log_path": path, "log_error": log_error})
+}
+
+fn release_command(arguments: &[String]) -> Result<Value, Failure> {
+    let Some((action, rest)) = arguments.split_first() else {
+        return Err(Failure::Usage("release exige uma ação: inspect".into()));
+    };
+    if action != "inspect" {
+        return Err(Failure::Usage(format!(
+            "ação desconhecida: release {action}"
+        )));
+    }
+    let options = Options::parse(rest, &["archive-sha256", "md5", "file"], &[])?;
+    let [version] = options.positional.as_slice() else {
+        return Err(Failure::Usage(
+            "release inspect exige a versão (X.Y.Z)".into(),
+        ));
+    };
+    let digest = options.text("archive-sha256").ok_or_else(|| {
+        Failure::Usage("--archive-sha256 é obrigatório (digest exibido pelo GitHub)".into())
+    })?;
+    release::validate(version, digest, options.text("md5"))?;
+    let data = match options.text("file") {
+        Some(path) => release::read_file(Path::new(path))?,
+        None => release::download(&release::archive_url(version))?,
+    };
+    Ok(release::inspect(
+        version,
+        &data,
+        digest,
+        options.text("md5"),
+    )?)
 }
