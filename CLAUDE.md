@@ -17,6 +17,7 @@ mise exec -- python monitor.py                         # painel (também --summa
 mise exec -- python tools/check_documentation.py      # links locais dos .md/llms.txt e JSONs públicos
 mise exec -- python tools/check_style.py              # ruff (erros + formatação dos módulos novos) e mypy (mypy.ini), se instalados
 python tools/run_tests.py                              # suíte em qualquer sistema: estado temporário, testes Windows-only pulados
+python tools/check_powershell_structure.py             # aspas/chaves dos .ps1 sem PowerShell (o parser real segue no pre-push)
 ```
 
 - QA de interface é opt-in e abre janelas reais com dados temporários: `test_responsive_ui.py --run --native-dpi`, `test_windowing.py --run --native-dpi`, e os `tools/qa_*.py`. Relate dimensões pedidas/reais, área útil, DPI e se 4K foi virtual ou físico.
@@ -25,7 +26,8 @@ python tools/run_tests.py                              # suíte em qualquer sist
 - Fora do Windows, `config.py` só importa com `HASHPILOT_TEST_STATE_DIR` (definida por `tools/run_tests.py`); teste que exige API do Windows usa `@windows_only(...)` de `testing_support.py`. Formato do log do SRBMiner fica em `miner_log.py` (contrato em `test_miner_log.py`); limites térmicos em `thermal.py` (`EMERGENCY_C`, `MINER_OFF_TEMPERATURE_C`).
 - Não há CI: validação é local. Não crie workflows em `.github/workflows`. O hook `.githooks/pre-push` roda testes, `check_style.py`, `check_documentation.py`, `tools/check_powershell.ps1` e gitleaks; ative com `git config core.hooksPath .githooks`.
 - Módulo novo usado pelo serviço do rig precisa entrar em `data/rig-runtime.json` (o runtime instalado só copia essa lista; `test_stop_defaults` confere).
-- Arquivos `.py` são LF no repositório (`.gitattributes`); ao editar por script no Windows, grave com `newline='\n'`.
+- Arquivos `.py` são LF no repositório (`.gitattributes`); ao editar por script no Windows, grave com `newline='\n'`. Os `.ps1` são CRLF com BOM UTF-8; preserve ambos ao editar.
+- Diagnóstico com traceback vai para `LOG_DIR/diagnostics/` (`app_logging`), nunca para `LOG_DIR/*.log`: o painel legado importa todo `.log` dali como log do minerador. Em laços de 2 s use `exception_once`/`warning_once`.
 
 - `dist/` é ignorado pelo git e guarda evidências locais de QA/releases (resultados de testes, pacotes reproduzidos). Não é fonte de verdade do código.
 

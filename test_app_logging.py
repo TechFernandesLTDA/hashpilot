@@ -44,6 +44,27 @@ class AppLoggingTests(unittest.TestCase):
             self.assertEqual(len(list((Path(folder) / "diagnostics").glob("*.log"))), 2)
             self.tearDown()
 
+    def test_repeated_identical_error_is_logged_once_per_window(self):
+        log = app_logging.get_logger("ciclo")
+
+        def fail(text, now):
+            try:
+                raise RuntimeError(text)
+            except RuntimeError:
+                return app_logging.exception_once(log, "teste-ciclo", "falha", now=now)
+
+        with self.assertLogs("hashpilot.ciclo", "ERROR") as captured:
+            self.assertTrue(fail("sem sensor", 1000.0))
+            self.assertFalse(fail("sem sensor", 1002.0))  # ciclo seguinte, mesmo erro
+            self.assertTrue(fail("outro erro", 1004.0))  # erro mudou
+            self.assertTrue(fail("outro erro", 1004.0 + app_logging.REPEAT_SECONDS))  # janela venceu
+        self.assertEqual(len(captured.records), 3)
+        self.assertIsNotNone(captured.records[0].exc_info)
+        with self.assertLogs("hashpilot.ciclo", "WARNING") as warned:
+            self.assertTrue(app_logging.warning_once(log, "w", "x", "aviso %s", 1, now=5.0))
+            self.assertFalse(app_logging.warning_once(log, "w", "x", "aviso %s", 1, now=6.0))
+        self.assertEqual(len(warned.records), 1)
+
     def test_unconfigured_logger_is_silent(self):
         self.assertTrue(any(isinstance(h, logging.NullHandler) for h in logging.getLogger(app_logging.ROOT).handlers))
 

@@ -57,5 +57,4 @@ SETTINGS_PATH = STATE_DIR / "settings.json"
 SETTINGS = load_settings(SETTINGS_PATH)
 WALLET = str(SETTINGS.get("wallet", DEFAULT_WALLET)).strip()
 POOL = str(SETTINGS.get("pool", DEFAULT_POOL)).strip()
-default_logs = STATE_DIR.parent / "Mining/Pearl/logs"
 LOG_DIR = log_dir(STATE_DIR, SETTINGS)

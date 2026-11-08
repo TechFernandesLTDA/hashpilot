@@ -28,7 +28,7 @@ from mining_continuity import IdleSleepGuard,ContinuityWindow,safe_sensor
 from miner_identity import match_successor
 from miner_log import parse_miner_device_map  # noqa: F401 (API pública de rig)
 from thermal import MINER_OFF_TEMPERATURE_C
-from app_logging import configure as configure_logging, get_logger
+from app_logging import configure as configure_logging, exception_once, get_logger, warning_once
 from process_backend import NO_WINDOW,ProcessBackend,normalized_path,windows_argv  # noqa: F401 (API pública de rig)
 from reference_profile import (REFERENCE_RTX3070_UUID,reference_device_confirmed,  # noqa: F401
     reference_memory_clock,reference_start_clock)
@@ -206,7 +206,7 @@ class RigManager:
             preflight_binary=False
             self.backend.assert_gpu_available(self.miner_path,device.get('miner_index',device['index']))
         except (OSError,RuntimeError,ValueError,subprocess.SubprocessError) as error:
-            LOG.warning("Início bloqueado para %s: %s",identifier,error)
+            warning_once(LOG,f"start-blocked:{identifier}",str(error),"Início bloqueado para %s: %s",identifier,error)
             previous.update(gpu_uuid=identifier,identity=dict(device),enabled=device['enabled'],state='start_blocked',
                             error=str(error)[:300],retry_after=self.clock()+30,miner_running=False)
             for key,value in {'wallet':device['wallet'],'log_dir':device['log_dir'],'index':device['index'],
@@ -260,7 +260,7 @@ class RigManager:
             self.publish()
             return True
         except (OSError,RuntimeError,ValueError,subprocess.SubprocessError) as error:
-            LOG.exception("Falha ao iniciar a GPU %s (etapa %s)",identifier,launch_stage)
+            exception_once(LOG,f"start:{identifier}","Falha ao iniciar a GPU %s (etapa %s)",identifier,launch_stage)
             self.stop_gpu(identifier)
             entry.update(state="error",error=str(error)[:300],retry_after=self.clock()+60)
             if launch_stage=='binary':entry.update(state='blocked_binary',binary_blocked=True)
@@ -297,7 +297,7 @@ class RigManager:
             entry.pop('controller_warning',None)
             self.operations.event(entry['gpu_uuid'],'controller_recovered','Controlador recuperado sem interromper o minerador',self.clock())
         except (OSError,RuntimeError,ValueError,subprocess.SubprocessError) as error:
-            LOG.exception("Supervisor da GPU %s falhou",entry['gpu_uuid'])
+            exception_once(LOG,f"controller:{entry['gpu_uuid']}","Supervisor da GPU %s falhou",entry['gpu_uuid'])
             entry['controller_warning']=str(error)[:300]
             self.operations.event(entry['gpu_uuid'],'controller_failed',entry['controller_warning'],self.clock())
 
@@ -401,7 +401,7 @@ class RigManager:
             try:
                 result=self.backend.restore_defaults(entry.get('identity') or {'uuid':identifier},entry['log_dir'])
             except (OSError,RuntimeError,ValueError) as error:
-                LOG.exception("Restauração de padrões da GPU %s falhou",identifier)
+                exception_once(LOG,f"restore:{identifier}","Restauração de padrões da GPU %s falhou",identifier)
                 result={'state':'failed','at':self.clock(),'error':str(error)[:250]}
             entry['restoration']=result
             atomic_json(Path(entry['log_dir'])/'gpu-defaults.json',result)
@@ -657,7 +657,7 @@ class RigManager:
                 self.processed_ids.append(identifier)
                 self.error=None
             except (OSError,ValueError,TypeError,RuntimeError) as error:
-                LOG.exception("Falha ao processar pedido do rig")
+                exception_once(LOG,"request","Falha ao processar pedido do rig")
                 self.error=str(error)[:300]
             finally:
                 if path.parent==queue_dir and path.is_file():
@@ -725,7 +725,7 @@ class RigManager:
                     self.sleep_guard.update(any(entry.get('enabled') and entry.get('miner_running') and entry.get('managed') and not entry.get('external_readonly') for entry in self.devices.values()))
                     self.publish()
                 except (OSError,RuntimeError,ValueError,subprocess.SubprocessError) as error:
-                    LOG.exception("Falha no ciclo do serviço do rig")
+                    exception_once(LOG,"cycle","Falha no ciclo do serviço do rig")
                     self.error=str(error)[:300]
                     self.publish()
                 time.sleep(max(.1,2-(time.monotonic()-started)))

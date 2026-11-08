@@ -22,7 +22,7 @@ from tkinter import ttk
 from finance import financial_model, PortfolioFinanceCollector, portfolio_model, portfolio_snapshots
 from history import HistoryStore, log_key
 from miner_log import COUNTERS, RATE, log_timestamp
-from app_logging import configure as configure_logging, get_logger
+from app_logging import configure as configure_logging, exception_once, get_logger
 from config import WALLET, POOL, LOG_DIR, STATE_DIR, SETTINGS_PATH
 from fsutil import atomic_json
 from contribution import read_support_status, read_settings as read_support_settings
@@ -88,12 +88,12 @@ class Collector:
         try:
             processes=miner_process_ids()
         except Exception as error:
-            LOG.exception('Falha ao listar processos do minerador')
+            exception_once(LOG, 'processes', 'Falha ao listar processos do minerador')
             process_error=str(error)
         try:
             rig=self.rig_reader.sample(processes)
         except Exception as error:
-            LOG.exception('Falha ao ler telemetria do rig')
+            exception_once(LOG, 'rig', 'Falha ao ler telemetria do rig')
             rig={'schema_version':2,'devices':[],'totals':totals([]),'ignored_devices':[],'error':str(error)}
         now=time.time()
         support_settings=cached_load(SETTINGS_PATH,read_support_settings)
@@ -117,12 +117,12 @@ class Collector:
         try:
             result["gpu"] = read_gpu()
         except Exception as error:
-            LOG.exception("Falha ao ler sensores NVIDIA (modo legado)")
+            exception_once(LOG, "legacy-gpu", "Falha ao ler sensores NVIDIA (modo legado)")
             result["gpu_error"] = str(error)
         try:
             result["miner_running"] = bool(miner_process_ids())
         except Exception as error:
-            LOG.exception("Falha ao listar processos do minerador (modo legado)")
+            exception_once(LOG, "legacy-processes", "Falha ao listar processos do minerador (modo legado)")
             result["process_error"] = str(error)
         try:
             files = list(LOG_DIR.glob("*.log"))
@@ -145,7 +145,7 @@ class Collector:
             else:
                 result["log_error"] = "Nenhum log de mineração encontrado."
         except Exception as error:
-            LOG.exception("Falha ao ler log do minerador (modo legado)")
+            exception_once(LOG, "legacy-log", "Falha ao ler log do minerador (modo legado)")
             result["log_error"] = str(error)
         result["miner"] = self.log_data.copy()
         result["log_path"] = str(self.log_path) if self.log_path else None
@@ -1171,12 +1171,15 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
 
     def finish_close(self):
         busy = self.history.worker.is_alive() or (hasattr(self,"gpu_runtime") and self.gpu_runtime.thread.is_alive())
-        if busy and time.monotonic() < getattr(self, "close_deadline", 0):
-            self.after(100, self.finish_close)
+        if not busy:
+            self.destroy()
             return
-        if busy:
-            LOG.warning("Encerramento após %s s com tarefas de fundo ainda ativas", CLOSE_TIMEOUT_SECONDS)
-        self.destroy()
+        if time.monotonic() >= getattr(self, "close_deadline", float("inf")) and not getattr(self, "close_withdrawn", False):
+            # Prazo esgotado: a janela some, mas gravações pendentes do histórico nunca são descartadas.
+            LOG.warning("Gravações pendentes após %s s; janela oculta até concluir", CLOSE_TIMEOUT_SECONDS)
+            self.close_withdrawn = True
+            self.withdraw()
+        self.after(100, self.finish_close)
 
 
 def console_text(snapshot, finance):
@@ -1309,7 +1312,6 @@ def main():
     parser.add_argument("--setup", action="store_true", help="Configura carteira e instalação opcional do minerador")
     parser.add_argument("--restart", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
-    configure_logging(LOG_DIR)
     if args.snapshot:
         print(json.dumps(Collector().sample(), ensure_ascii=False, indent=2))
         return
@@ -1327,6 +1329,9 @@ def main():
                 return
             if not read_settings().get("onboarding_complete"):
                 return
+    # Só o processo do painel (instância única) escreve o diagnóstico: --console/--snapshot e
+    # processos de passagem não disputam a rotação do mesmo arquivo no Windows.
+    configure_logging(LOG_DIR)
     app = Monitor()
     if args.summary:
         app.after(800, lambda: (app.show_summary(), app.hide_to_tray()))

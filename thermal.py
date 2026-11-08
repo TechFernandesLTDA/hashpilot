@@ -4,9 +4,12 @@ from __future__ import annotations
 from dataclasses import dataclass
 import math
 
-# Limites do produto em °C. O minerador desliga a GPU em MINER_OFF_TEMPERATURE_C
-# (`--gpu-off-temperature` em rig.py); a política entra em emergência antes ou no
-# mesmo ponto, e o agente nunca mira acima do corte (test_thermal confere).
+# Limites do produto em °C. No serviço do rig o minerador desliga a GPU em
+# MINER_OFF_TEMPERATURE_C (`--gpu-off-temperature` em rig.py); a política entra em
+# emergência antes ou no mesmo ponto, e o agente nunca mira acima do corte
+# (test_thermal confere). O fluxo histórico da RTX 3070 de referência mantém o
+# corte medido de 84 °C como reserva acima da emergência do seu controlador
+# (test_reference_scripts confere esse teto).
 EMERGENCY_C = 83
 FAST_COOLING_C = 80
 COOLING_C = 78
