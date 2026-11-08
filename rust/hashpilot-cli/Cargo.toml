@@ -1,0 +1,19 @@
+[package]
+name = "hashpilot-cli"
+description = "CLI somente leitura do HashPilot: GPUs NVIDIA, log do SRBMiner e resumo do rig. Nunca inicia mineração nem altera clocks."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[[bin]]
+name = "hashpilot"
+path = "src/main.rs"
+
+[dependencies]
+hashpilot-core = { path = "../hashpilot-core" }
+serde_json.workspace = true
+
+[lints]
+workspace = true

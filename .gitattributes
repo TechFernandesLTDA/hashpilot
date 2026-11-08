@@ -14,3 +14,5 @@
 *.mp4 -text
 *.srt text eol=lf
 .githooks/* text eol=lf
+*.rs text eol=lf
+*.lock text eol=lf

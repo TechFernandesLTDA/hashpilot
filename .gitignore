@@ -30,3 +30,6 @@ media/qa/
 !portable-data/latest.json
 !portable-data/finance-latest.json
 !portable-data/restart-evidence.json
+
+# Port em Rust
+rust/target/
