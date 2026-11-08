@@ -47,3 +47,5 @@ O teste de 405 MHz falhou nesta combinação de RTX 3070 e driver 617.14. O ajus
 O período anterior em 3.8.3 e a sessão nova não constituem uma comparação de laboratório: não é válido usar os 78,984 TH/s históricos para atribuir ganho ou perda exclusivamente à atualização. A pequena diferença medida pelo ajuste automático de núcleo também não estabelece o máximo absoluto da GPU. O controle continua explorando degraus suportados de até 15 MHz, com validação posterior, margem térmica e reversão quando sua validação falha. O driver não indicava limitação ativa por potência ou temperatura na consulta realizada.
 
 O afinador nativo experimental permanece desligado. O supervisor do HashPilot mantém o controle dinâmico; a memória fixa e o preset de partida foram configurados explicitamente para esta unidade. A evidência pública agregada fica em `VALIDATION-RESULTS.json` na [release v0.5.11](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.5.11), incluindo os resultados negativos.
+
+Revisão seguinte: [SRBMiner 3.8.6](srbminer-3.8.6.md).

@@ -2,7 +2,7 @@
 import json
 from pathlib import Path
 import time
-from contribution import atomic_json
+from fsutil import atomic_json
 from rig_config import device_key,update_gpu_settings
 from stop_mining import read,status_path
 

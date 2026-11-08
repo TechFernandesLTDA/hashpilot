@@ -8,7 +8,6 @@ import os
 from pathlib import Path
 import tempfile
 import time
-from unittest.mock import patch
 
 
 def settle(root):
@@ -50,7 +49,7 @@ def run_native_report(native_dpi=False):
     import monitor
     if native_dpi:
         monitor.enable_native_dpi_awareness()
-    from test_responsive_ui import build_harness, inspect_widgets
+    from test_responsive_ui import build_harness
     with tempfile.TemporaryDirectory() as directory:
         temporary=Path(directory)
         root,_=build_harness(monitor,temporary)

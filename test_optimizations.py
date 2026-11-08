@@ -14,6 +14,7 @@ import gpu_telemetry
 from gpu_agent import detect_nvidia_gpus
 from gpu_telemetry import parse_gpu_log, read_log_tail
 from history import HistoryStore
+from testing_support import windows_only
 
 
 def rate_line(stamp, rate, accepted=1):
@@ -244,6 +245,7 @@ class ServiceScriptInterpreterTests(unittest.TestCase):
 
 class CommandLineCacheTests(unittest.TestCase):
 
+    @windows_only("ctypes.WinDLL")
     def test_command_line_is_queried_once_per_process_identity(self):
         from rig import ProcessBackend
         backend = ProcessBackend()

@@ -15,14 +15,19 @@ mise exec -- python -m unittest -v test_rig.py        # um arquivo
 mise exec -- python -m unittest -v test_rig.RigConfigurationTests.test_six_same_or_mixed_models_have_independent_uuid_paths_and_default_wallet   # um teste
 mise exec -- python monitor.py                         # painel (também --summary, --console, --setup, --snapshot, --smoke-test)
 mise exec -- python tools/check_documentation.py      # links locais dos .md/llms.txt e JSONs públicos
+mise exec -- python tools/check_style.py              # ruff (erros + formatação dos módulos novos) e mypy (mypy.ini), se instalados
+python tools/run_tests.py                              # suíte em qualquer sistema: estado temporário, testes Windows-only pulados
+python tools/check_powershell_structure.py             # aspas/chaves dos .ps1 sem PowerShell (o parser real segue no pre-push)
 ```
 
 - QA de interface é opt-in e abre janelas reais com dados temporários: `test_responsive_ui.py --run --native-dpi`, `test_windowing.py --run --native-dpi`, e os `tools/qa_*.py`. Relate dimensões pedidas/reais, área útil, DPI e se 4K foi virtual ou físico.
 - Release: `tools/release_package.py build --ref vX.Y.Z --version vX.Y.Z --output dist/...` gera um ZIP determinístico só a partir dos blobs do commit (com `RELEASE-MANIFEST.json`); `verify` confere um ZIP contra `SHA256SUMS`. A versão do código fica em `app_version.py`; `install.ps1` e README fixam a tag da release (atualize os três juntos).
-- Antes de publicar (ver `docs/verification.md`): suíte de testes, `check_documentation.py`, análise sintática dos `.ps1` e verificação de segredos (gitleaks).
-- Não há CI: validação é local. Não crie workflows em `.github/workflows`. O hook `.githooks/pre-push` roda testes, `check_documentation.py`, `tools/check_powershell.ps1` e gitleaks; ative com `git config core.hooksPath .githooks`.
+- Antes de publicar (ver `docs/verification.md`): suíte de testes, `check_style.py`, `check_documentation.py`, análise sintática dos `.ps1` e verificação de segredos (gitleaks).
+- Fora do Windows, `config.py` só importa com `HASHPILOT_TEST_STATE_DIR` (definida por `tools/run_tests.py`); teste que exige API do Windows usa `@windows_only(...)` de `testing_support.py`. Formato do log do SRBMiner fica em `miner_log.py` (contrato em `test_miner_log.py`); limites térmicos em `thermal.py` (`EMERGENCY_C`, `MINER_OFF_TEMPERATURE_C`).
+- Não há CI: validação é local. Não crie workflows em `.github/workflows`. O hook `.githooks/pre-push` roda testes, `check_style.py`, `check_documentation.py`, `tools/check_powershell.ps1` e gitleaks; ative com `git config core.hooksPath .githooks`.
 - Módulo novo usado pelo serviço do rig precisa entrar em `data/rig-runtime.json` (o runtime instalado só copia essa lista; `test_stop_defaults` confere).
-- Arquivos `.py` são LF no repositório (`.gitattributes`); ao editar por script no Windows, grave com `newline='\n'`.
+- Arquivos `.py` são LF no repositório (`.gitattributes`); ao editar por script no Windows, grave com `newline='\n'`. Os `.ps1` são CRLF com BOM UTF-8; preserve ambos ao editar.
+- Diagnóstico com traceback vai para `LOG_DIR/diagnostics/` (`app_logging`), nunca para `LOG_DIR/*.log`: o painel legado importa todo `.log` dali como log do minerador. Em laços de 2 s use `exception_once`/`warning_once`.
 
 - `dist/` é ignorado pelo git e guarda evidências locais de QA/releases (resultados de testes, pacotes reproduzidos). Não é fonte de verdade do código.
 
@@ -34,7 +39,7 @@ Separações que devem ser preservadas:
 
 - **Monitor (só leitura) × controle de hardware.** `monitor.py` (Tk, três abas) + `gpu_telemetry.py` leem `nvidia-smi` e logs do SRBMiner; abrir ou fechar o painel nunca inicia/para mineração nem altera clocks. Iniciar é sempre explícito.
 - **Rig por UUID.** `rig.py` (`--serve` é o serviço; `--request` enfileira pedidos em `rig-requests/`) gerencia até seis GPUs por UUID persistente (`rig_config.py`, `MAX_GPUS`), com um SRBMiner, log, supervisor e `gpu-agent.sqlite3` por GPU em `LOG_DIR/gpus/<UUID>/`. O índice do SRBMiner pode diferir do índice NVIDIA (mapeamento pelo barramento PCI). O gerenciador só encerra processos que ele criou (protege contra PID reutilizado e processos alheios); nunca dois supervisores na mesma GPU.
-- **Política pura × aplicação real.** `thermal.py` (decisão de clock a partir de temperatura/tempo) é testável sem hardware; `thermal_controller.py` e `gpu_agent.py --control` escrevem na GPU e exigem elevação. O fluxo histórico da RTX 3070 do autor (`*-Referencia-RTX3070.ps1`, `REFERENCE_RTX3070_UUID`) é separado do iniciador genérico e não deve ter seus clocks copiados para outros modelos.
+- **Política pura × aplicação real.** `thermal.py` (decisão de clock a partir de temperatura/tempo) é testável sem hardware; `thermal_controller.py` e `gpu_agent.py --control` escrevem na GPU e exigem elevação. O fluxo histórico da RTX 3070 do autor (`*-Referencia-RTX3070.ps1` com `Referencia-Comum.ps1`, `reference_profile.py`/`REFERENCE_RTX3070_UUID`) é separado do iniciador genérico e não deve ter seus clocks copiados para outros modelos.
 - **Finanças.** `finance.py` consulta Kryptex/CoinGecko (cache, ciclo de 60 s), `payout.py`/`valuation.py` calculam ETA e equivalentes BRL/USD/BTC. Créditos observados = variação de (total pago + saldo), deduplicados **por carteira efetiva**; nunca derivar ganho por GPU a partir de hashrate. Regras em `PAGAMENTOS.md`.
 - **Contribuição** (`contribution.py`): proxy TCP alterna 57 min para a carteira do usuário e 3 min para `AUTHOR_WALLET`; desativável; sem divisão extra se a carteira já é a do autor. A carteira padrão (`config.DEFAULT_WALLET`) é a do autor, de propósito.
 - **Persistência.** Estado em `%LOCALAPPDATA%\PearlMonitor` (nome legado, mantido por compatibilidade). `history.py` grava SQLite (WAL, `synchronous=NORMAL`) numa thread própria, com linhas de log em lote e posições em `history-log-offsets.json`; a chave SHA-256 das linhas de log é o que deduplica entre reinícios, não a mude; sem expurgo automático; migrações preservam histórico e isolamento por carteira/sessão/UUID. `operations.sqlite3` guarda ACKs e orçamento de reconexão (`mining_health.py`, `mining_continuity.py`, `operations_ui.py`).

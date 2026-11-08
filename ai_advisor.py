@@ -13,7 +13,6 @@ import shutil
 import sqlite3
 import subprocess
 import tempfile
-import threading
 import time
 from urllib.error import HTTPError, URLError
 from urllib.request import Request, build_opener, ProxyHandler, HTTPRedirectHandler

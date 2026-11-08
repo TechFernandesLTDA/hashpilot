@@ -7,6 +7,7 @@ from config import DEFAULT_WALLET
 from operations_ui import console_python, service_update_progress
 from settings_ui import button_role, needs_restart, wallet_feedback
 from ui_host import Section, embedded, open_window
+from testing_support import windows_only
 
 OTHER = "prl1" + "q"*40
 
@@ -44,6 +45,7 @@ class ServiceUpdateTests(unittest.TestCase):
         self.assertIn("v9", done[1])
         self.assertEqual(service_update_progress(before, {"pid": 10, "sampled_at": now-60}, 241)[0], "failed")
 
+    @windows_only("python.exe do Windows")
     def test_service_scripts_get_console_python(self):
         self.assertTrue(console_python().lower().endswith(("python.exe", "python")))
 

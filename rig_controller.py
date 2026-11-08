@@ -2,7 +2,7 @@
 from __future__ import annotations
 from pathlib import Path
 import time
-from contribution import atomic_json
+from fsutil import atomic_json
 from gpu_telemetry import read_device_payload,read_gpu_samples
 
 

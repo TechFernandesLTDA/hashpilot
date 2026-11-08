@@ -8,6 +8,7 @@ from unittest.mock import patch
 from contribution import AUTHOR_WALLET,atomic_json
 from rig import RigManager,write_request,parse_miner_device_map,REFERENCE_RTX3070_UUID,reference_memory_clock,reference_start_clock
 from rig_config import MAX_GPUS,gpu_paths,resolve_devices,update_gpu_settings
+from testing_support import windows_only
 
 OTHER="prl1"+"q"*40
 
@@ -79,6 +80,9 @@ class RigConfigurationTests(unittest.TestCase):
         gpu={'supported_graphics_clocks_mhz':[1560,1710,1725,2100]}
         self.assertEqual(reference_start_clock(gpu,{}),1560)
         self.assertEqual(reference_start_clock(gpu,{'reference_start_core_mhz':1710}),1710)
+        # Temperatura-alvo ligada: partida conservadora, o controlador sobe depois (laço de 07/11/2026).
+        self.assertEqual(reference_start_clock(gpu,{'reference_start_core_mhz':1710,'target_temperature_c':78}),1560)
+        self.assertEqual(reference_start_clock(gpu,{'reference_start_core_mhz':1710,'target_temperature_c':True}),1710)
         self.assertEqual(reference_start_clock(gpu,{'reference_start_core_mhz':1725}),1725)
         self.assertEqual(reference_start_clock(gpu,{'reference_start_core_mhz':2100}),1560)
         self.assertEqual(reference_start_clock({'supported_graphics_clocks_mhz':[1560]},{'reference_start_core_mhz':1710}),1560)
@@ -425,6 +429,7 @@ class RigManagerTests(unittest.TestCase):
         self.assertEqual(self.manager.devices[gpu["uuid"]]["state"],"error")
         self.assertIn("não confirmados",self.manager.devices[gpu["uuid"]]["error"])
 
+    @windows_only("proxy de contribuição")
     def test_stopped_reference_can_opt_in_without_legacy_processes(self):
         gpu={**detected(1)[0],"uuid":REFERENCE_RTX3070_UUID,"power_default_w":240,
              "supported_graphics_clocks_mhz":[1560,1740]}
@@ -434,6 +439,7 @@ class RigManagerTests(unittest.TestCase):
         self.assertEqual(self.manager.reference_uuid,gpu["uuid"])
         self.assertEqual(self.backend.started,[])
 
+    @windows_only("proxy de contribuição")
     def test_unknown_reference_start_fails_before_any_process(self):
         self.manager.shutting_down=True
         with self.assertRaisesRegex(RuntimeError,"não confirmados"):
@@ -441,6 +447,7 @@ class RigManagerTests(unittest.TestCase):
         self.assertIsNone(self.manager.reference_uuid)
         self.assertEqual(self.backend.started,[])
 
+    @windows_only("elevação do Windows")
     def test_cli_accepts_reference_uuid_without_legacy_migration(self):
         import rig
         argv=["rig.py","--serve","--state-dir",str(self.manager.state_dir),

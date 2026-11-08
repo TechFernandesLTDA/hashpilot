@@ -4,7 +4,6 @@ import json
 import os
 from pathlib import Path
 import tkinter as tk
-from tkinter import ttk, messagebox
 import time
 from valuation import numeric
 
@@ -90,7 +89,6 @@ class RigCards(tk.Frame):
             title.configure(text=f"GPU {d['index']} · {d['name'].replace('NVIDIA GeForce ','')}")
             def f(v,unit):return 'N/D' if v is None else f'{v:.1f}{unit}'
             values.configure(text=f"{f(rate,' TH/s')}  ·  {f(gpu.get('temperature.gpu'),'°C')}  ·  {f(gpu.get('power.draw'),' W')}")
-            state=('Parada pendente' if d.get('miner_running') else 'Desativada · sensores ativos') if not d.get('enabled') else 'Minerando' if rate is not None else d.get('state','Aguardando')
             restoration=d.get('restoration') or {}
             stopped_note='Padrão restaurado' if restoration.get('state')=='restored' else 'Restauração incompleta' if restoration.get('state') in ('partial','failed') else 'Restaurando' if restoration.get('state')=='restoring' else 'Parada'
             note.configure(text=(stopped_note if not d.get('enabled') else f"{d['uuid'][-8:]} · {'Global' if d.get('uses_default_wallet') else 'Própria'} · {'ON' if rate is not None else 'Aguarda'}"))

@@ -72,5 +72,27 @@ class ThermalRules(unittest.TestCase):
         self.assertEqual(policy.step(74, 12).clock_mhz, 1740)
 
 
+class ThermalLimitCoherenceTests(unittest.TestCase):
+    def test_policy_reacts_no_later_than_miner_cutoff(self):
+        import thermal
+        from gpu_agent import thermal_limits
+        self.assertLessEqual(thermal.EMERGENCY_C, thermal.MINER_OFF_TEMPERATURE_C)
+        self.assertLess(thermal.RECOVERY_C, thermal.ANTICIPATE_C)
+        self.assertLess(thermal.ANTICIPATE_C, thermal.COOLING_C)
+        self.assertLess(thermal.COOLING_C, thermal.FAST_COOLING_C)
+        self.assertLess(thermal.FAST_COOLING_C, thermal.EMERGENCY_C)
+        for driver in (None, 60, 85, 93, 110):
+            target, hard = thermal_limits({"temperature_limit_c": driver})
+            self.assertLessEqual(hard, thermal.MINER_OFF_TEMPERATURE_C)
+            self.assertLess(target, hard)
+
+    def test_rig_passes_the_same_cutoff_to_the_miner(self):
+        from pathlib import Path
+        import thermal
+        source = (Path(__file__).resolve().parent / "rig.py").read_text(encoding="utf-8")
+        self.assertIn('"--gpu-off-temperature",str(MINER_OFF_TEMPERATURE_C)', source)
+        self.assertEqual(thermal.MINER_OFF_TEMPERATURE_C, 83)
+
+
 if __name__ == "__main__":
     unittest.main()

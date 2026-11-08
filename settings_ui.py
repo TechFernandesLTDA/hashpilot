@@ -12,7 +12,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 from config import STATE_DIR, LOG_DIR, DEFAULT_WALLET, SETTINGS_PATH
-from contribution import atomic_json
+from fsutil import atomic_json
 from file_cache import cached_load
 from onboarding import read_settings, save_settings
 from ui_host import Section
@@ -24,7 +24,7 @@ NARROW = 900
 PREFERENCES = STATE_DIR / "settings-ui.json"
 WALLET_PATTERN = re.compile(r"prl1[ac-hj-np-z02-9]{30,100}")
 DANGER_WORDS = ("Remover", "Parar", "Desativar", "Reverter")
-SECTIONS = ("Carteira e ajuda", "GPUs", "Minerador", "Segurança", "IA", "Atualizações", "Operação", "Sobre")
+SECTIONS = ("Carteira e ajuda", "GPUs", "Temperatura", "Minerador", "Segurança", "IA", "Atualizações", "Operação", "Sobre")
 
 
 def wallet_feedback(value):
@@ -249,7 +249,8 @@ class SettingsWindow(tk.Toplevel):
 
     def build(self, name):
         slot = Slot(self.inner, self, name)
-        builders = {"Carteira e ajuda": self.build_wallet, "GPUs": self.build_gpus, "Minerador": self.build_miner,
+        builders = {"Carteira e ajuda": self.build_wallet, "GPUs": self.build_gpus, "Temperatura": self.build_temperature,
+                    "Minerador": self.build_miner,
                     "Segurança": lambda s: __import__("defender_setup").show_defender_setup(self.root, container=s),
                     "IA": lambda s: __import__("ai_setup").show_ai_setup(self.root, container=s),
                     "Atualizações": lambda s: __import__("app_update").show_update_setup(self.root, container=s),
@@ -377,6 +378,96 @@ class SettingsWindow(tk.Toplevel):
         update()
         return frame
 
+    def build_temperature(self, slot):
+        from thermal_target import MIN_TARGET_C
+        frame = tk.Frame(slot, bg=BG)
+        settings = read_settings()
+        current = settings.get("target_temperature_c")
+        enabled = tk.BooleanVar(value=isinstance(current, (int, float)))
+        value = tk.IntVar(value=int(current) if isinstance(current, (int, float)) else 72)
+        self.heading(frame, "Temperatura-alvo",
+                     "Você escolhe a temperatura; o HashPilot ajusta o clock sozinho, a cada 2 s, para tirar o máximo sem passar dela.")
+        tk.Checkbutton(frame, text="Controlar o clock pela temperatura-alvo", variable=enabled, bg=BG, fg=TEXT, selectcolor=PANEL,
+                       activebackground=BG, activeforeground=TEXT, anchor="w", font=(FONT, -14)).pack(fill="x", padx=24, pady=(8, 4))
+        row = tk.Frame(frame, bg=BG)
+        row.pack(fill="x", padx=24, pady=4)
+        tk.Label(row, text="Alvo (°C)", bg=BG, fg=TEXT, font=(FONT, -14, "bold")).pack(side="left")
+        spin = tk.Spinbox(row, from_=int(MIN_TARGET_C), to=80, increment=1, textvariable=value, width=5, font=(FONT, -16),
+                          bg=PANEL, fg=TEXT, insertbackground=TEXT, buttonbackground=PANEL, relief="flat")
+        spin.pack(side="left", padx=(10, 0), ipady=4)
+        tk.Label(frame, justify="left", anchor="w", wraplength=640, bg=BG, fg=MUTED, font=(FONT, -13), text=(
+            "• Acima do alvo com a ventoinha no máximo: reduz o clock levemente (15 MHz).\n"
+            "• Bem acima do alvo (+2 °C): reduz mesmo antes da ventoinha chegar ao máximo.\n"
+            "• Sobrando 2 °C ou mais por 20 s: sobe o clock levemente.\n"
+            "• Aprende: um clock que estourou o alvo, ou que não aumentou o hashrate, vira teto por 10 min.\n"
+            "Faixa permitida: 50–80 °C. As proteções de emergência (pausa em 83 °C) continuam valendo. "
+            "Desmarcado, vale o controle automático anterior.")).pack(fill="x", padx=24, pady=(8, 4))
+        objective = tk.StringVar(value="profit" if settings.get("optimize_for") == "profit" else "hashrate")
+        price_value = settings.get("electricity_price_brl_kwh")
+        price = tk.StringVar(value=f"{price_value:.2f}".replace(".", ",") if isinstance(price_value, (int, float)) else "")
+        tk.Label(frame, text="Objetivo da otimização (núcleo e memória)", bg=BG, fg=TEXT, font=(FONT, -14, "bold"),
+                 anchor="w").pack(fill="x", padx=24, pady=(14, 2))
+        for key, label in (("hashrate", "Máximo hashrate — mais TH/s dentro do alvo"),
+                           ("profit", "Máximo lucro — receita menos o custo da energia")):
+            tk.Radiobutton(frame, text=label, value=key, variable=objective, bg=BG, fg=TEXT, selectcolor=PANEL,
+                           activebackground=BG, activeforeground=TEXT, anchor="w", font=(FONT, -14)).pack(fill="x", padx=24)
+        price_row = tk.Frame(frame, bg=BG)
+        price_row.pack(fill="x", padx=24, pady=(6, 0))
+        tk.Label(price_row, text="Preço da energia (R$/kWh)", bg=BG, fg=TEXT, font=(FONT, -14)).pack(side="left")
+        tk.Entry(price_row, textvariable=price, width=8, bg=PANEL, fg=TEXT, insertbackground=TEXT, relief="flat",
+                 font=(FONT, -14)).pack(side="left", padx=(10, 0), ipady=4)
+        tk.Label(frame, text="O lucro usa a previsão de receita do HashPilot e o consumo medido de cada clock de memória. "
+                 "Sem preço informado, vale o máximo hashrate.", bg=BG, fg=MUTED, font=(FONT, -12), anchor="w",
+                 justify="left", wraplength=640).pack(fill="x", padx=24, pady=(2, 4))
+        status = tk.Label(frame, text="", bg=BG, fg=MUTED, font=(FONT, -13), anchor="w", justify="left", wraplength=640)
+
+        def save():
+            text = price.get().strip().replace(",", ".")
+            try:
+                price_kwh = float(text) if text else None
+            except ValueError:
+                price_kwh = -1
+            if price_kwh is not None and not 0 <= price_kwh <= 20:
+                status.configure(text="Preço da energia inválido: use algo como 0,90.", fg=ORANGE)
+                return False
+            if objective.get() == "profit" and price_kwh is None:
+                status.configure(text="Para otimizar lucro, informe o preço da energia.", fg=ORANGE)
+                return False
+            try:
+                chosen = int(value.get())
+            except (tk.TclError, ValueError):
+                status.configure(text="Informe um número inteiro entre 50 e 80.", fg=ORANGE)
+                return False
+            if enabled.get() and not MIN_TARGET_C <= chosen <= 80:
+                status.configure(text="Informe um número inteiro entre 50 e 80.", fg=ORANGE)
+                return False
+            try:
+                data = read_settings()
+                if enabled.get():
+                    data["target_temperature_c"] = chosen
+                else:
+                    data.pop("target_temperature_c", None)
+                data["optimize_for"] = objective.get()
+                if price_kwh is None:
+                    data.pop("electricity_price_brl_kwh", None)
+                else:
+                    data["electricity_price_brl_kwh"] = round(price_kwh, 4)
+                atomic_json(SETTINGS_PATH, data)
+            except (ValueError, OSError) as error:
+                messagebox.showerror("Configurações", str(error), parent=self)
+                return False
+            status.configure(text=(f"✓ Salvo. O serviço aplica o alvo de {chosen} °C em até 10 s." if enabled.get()
+                                   else "✓ Salvo. Controle automático anterior reativado em até 10 s."), fg=TEAL)
+            self.refresh_status()
+            return True
+
+        actions = tk.Frame(frame, bg=BG)
+        actions.pack(fill="x", padx=24, pady=(18, 4))
+        tk.Button(actions, text="Salvar", command=save).pack(side="right")
+        status.pack(fill="x", padx=24)
+        frame.save = save
+        return frame
+
     def build_gpus(self, slot):
         from onboarding import run_gpu_setup
         return run_gpu_setup(self.root, selected_uuid=getattr(self.root, "selected_gpu_uuid", None), container=slot)
@@ -464,6 +555,7 @@ class SettingsWindow(tk.Toplevel):
         service = (registry.get("software") or {}).get("version")
         return {"Carteira e ajuda": "carteira do autor" if settings.get("wallet", DEFAULT_WALLET) == DEFAULT_WALLET else "sua carteira",
                 "GPUs": f"{len(devices)} detectada{'s' if len(devices) != 1 else ''}",
+                "Temperatura": f"alvo {settings['target_temperature_c']:.0f} °C" if isinstance(settings.get("target_temperature_c"), (int, float)) else "automática",
                 "Minerador": self.miner_summary().removeprefix("SRBMiner "),
                 "IA": "ativada" if settings.get("ai_enabled") else "desativada",
                 "Atualizações": f"painel {VERSION}" + (f" · serviço {service}" if service and service != VERSION else ""),

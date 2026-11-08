@@ -1,8 +1,6 @@
-import copy
 from concurrent.futures import ThreadPoolExecutor
 from pathlib import Path
 import tempfile
-import threading
 import time
 import unittest
 from finance import PortfolioFinanceCollector,SharedMarketFetcher,URLS,portfolio_model,portfolio_snapshots

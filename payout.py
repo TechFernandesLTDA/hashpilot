@@ -2,25 +2,26 @@
 from __future__ import annotations
 import math
 import time
+from typing import Any
 
 PAYOUT_CYCLE_SECONDS = 3600  # Regra pública da Kryptex para Pearl.
 
 
-def number(value):
+def number(value: object) -> float | None:
     if isinstance(value, bool):
         return None
     try:
-        value = float(value)
+        value = float(value)  # type: ignore[arg-type]
     except (TypeError, ValueError, OverflowError):
         return None
     return value if math.isfinite(value) and value >= 0 else None
 
 
-def duration(seconds):
-    seconds=number(seconds)
-    if seconds is None:
+def duration(seconds: object) -> str:
+    value=number(seconds)
+    if value is None:
         return "não disponível"
-    minutes = max(0, math.ceil(seconds / 60))
+    minutes = max(0, math.ceil(value / 60))
     days, remainder = divmod(minutes, 1440)
     hours, minutes = divmod(remainder, 60)
     if days > 365:
@@ -31,8 +32,8 @@ def duration(seconds):
     return " ".join(parts)
 
 
-def observed_rate(state, now):
-    points = {}
+def observed_rate(state: dict[str, Any], now: float) -> tuple[float, float] | tuple[None, None]:
+    points: dict[float, float] = {}
     for point in state.get("snapshots", []):
         if not isinstance(point,dict):continue
         stamp, total = number(point.get("timestamp")), number(point.get("total_prl"))
@@ -48,7 +49,7 @@ def observed_rate(state, now):
     return change / span * 86400, span
 
 
-def payout_model(state, forecast=None, price_brl=None, now=None):
+def payout_model(state: dict[str, Any], forecast: dict[str, Any] | None = None, price_brl: object = None, now: float | None = None) -> dict[str, Any]:
     now = time.time() if now is None else now
     sources = state.get("sources", {})
     balance_source = sources.get("balance", {})
@@ -62,7 +63,7 @@ def payout_model(state, forecast=None, price_brl=None, now=None):
     total, confirmed, pending = (number(balance.get(key)) for key in ("total", "confirmed", "unconfirmed"))
     price = number(price_brl)
     rate, span = observed_rate(state, now)
-    rate_label = f"Ritmo observado na pool nos últimos {span/60:.0f} min" if rate else "Ritmo ainda não estimável"
+    rate_label = f"Ritmo observado na pool nos últimos {span/60:.0f} min" if rate and span is not None else "Ritmo ainda não estimável"
     if rate is None and forecast:
         rate = number(forecast.get("prl_day")) or None
         if rate:
@@ -77,7 +78,7 @@ def payout_model(state, forecast=None, price_brl=None, now=None):
     missing = max(0.0, threshold-total) if threshold is not None and total is not None else None
     missing_confirmed = max(0.0, threshold-confirmed) if threshold is not None and confirmed is not None else None
     results = sources.get("payout_history", {}).get("data", {}).get("results", [])
-    payments = [p for p in results if isinstance(p, dict) and number(p.get("date")) is not None and number(p['date'])<=now+5]
+    payments = [p for p in results if isinstance(p, dict) and (date:=number(p.get("date"))) is not None and date<=now+5]
     last_payment = None
     if payments:
         payment = max(payments, key=lambda p: float(p["date"]))
@@ -112,6 +113,7 @@ def payout_model(state, forecast=None, price_brl=None, now=None):
                       eta_label=(f"Janela estimada: agora até cerca de {duration(maturation+PAYOUT_CYCLE_SECONDS)}" if maturation is not None else "Aguardando confirmação; prazo exato não disponível"),
                       eta_details="O total inclui créditos pendentes e ainda não habilita o envio. A maturação indicada pela pool é uma duração típica, não o tempo restante individual de cada crédito. A janela pode variar; após confirmar, há o próximo ciclo de pagamento e a confirmação da transação.")
     elif rate:
+        assert missing is not None  # threshold e total já conferidos acima
         generation = missing / rate * 86400
         maturation_delay = maturation if maturation is not None else 0
         earliest = generation + maturation_delay

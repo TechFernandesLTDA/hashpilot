@@ -1,6 +1,9 @@
 ﻿$ErrorActionPreference='Stop'
 Set-Location -LiteralPath $PSScriptRoot
-$miner=Join-Path $PSScriptRoot 'SRBMiner-Multi-3-8-0\SRBMiner-MULTI.exe'
+. (Join-Path $PSScriptRoot 'Referencia-Comum.ps1')
+Assert-ReferenceRtx3070
+$wallet=Get-ReferenceWallet
+$miner=Get-ReferenceMinerPath
 $results=@();$minerProcess=$null
  Get-CimInstance Win32_Process -Filter "Name='powershell.exe'" | Where-Object {$_.CommandLine -like ('*'+$PSScriptRoot+'\Desempenho-Pearl.ps1*')} | ForEach-Object {Stop-Process -Id $_.ProcessId -Force}
 try {
@@ -10,7 +13,8 @@ try {
  & nvidia-smi -i 0 -pl 240 | Out-File 'logs\maximum-actions.txt' -Append
  if($LASTEXITCODE -ne 0){throw 'Falha no power limit'}
  $log=Join-Path $PSScriptRoot ('logs\maximum-'+(Get-Date -Format 'yyyyMMdd-HHmmss')+'.log')
- $arguments=@('--disable-cpu','--disable-msr-tweaks','--algorithm-gpu','pearlhash','--gpu-id','0','--pool','prl.kryptex.network:7048','--wallet','prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t','--worker','RenanRTX3070','--gpu-off-temperature','78','--gpu-mclock0','5001','--gpu-coffset0','150','--gpu-fan0','100','--gpu-cclock0','1650','--log-file',$log)
+ $arguments=@('--disable-cpu','--disable-msr-tweaks','--algorithm-gpu','pearlhash','--gpu-id','0','--pool','prl.kryptex.network:7048','--wallet',$wallet,'--worker','RenanRTX3070','--gpu-off-temperature','78','--gpu-mclock0','5001','--gpu-coffset0','150','--gpu-fan0','100','--gpu-cclock0','1650','--log-file',$log)
+ Register-ReferenceMiner $miner
  $minerProcess=Start-Process -FilePath $miner -ArgumentList $arguments -WorkingDirectory (Split-Path $miner) -WindowStyle Hidden -PassThru
  $minerProcess.Id | Set-Content 'logs\maximum-miner.pid'
  Start-Sleep -Seconds 25

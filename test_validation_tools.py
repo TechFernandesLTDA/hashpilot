@@ -1,13 +1,50 @@
-import copy
 import json
+import os
 from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import unittest
+from unittest import mock
 import zipfile
 from tools import release_package as release
 from tools import validation_capture as validation
+
+# Dentro de um hook do git (pre-push), GIT_DIR e afins apontam para o repositório real.
+# Herdadas, elas faziam a fixture commitar e gravar user.name no repositório do projeto
+# (visto em 08/11/2026 num worktree). Os testes deste módulo rodam sem elas.
+_GIT_REDIRECTS = ("GIT_DIR", "GIT_WORK_TREE", "GIT_INDEX_FILE", "GIT_COMMON_DIR", "GIT_OBJECT_DIRECTORY",
+                  "GIT_ALTERNATE_OBJECT_DIRECTORIES", "GIT_PREFIX", "GIT_NAMESPACE", "GIT_CEILING_DIRECTORIES")
+_ISOLATED_ENV = mock.patch.dict(os.environ, {})
+
+
+def setUpModule():
+    _ISOLATED_ENV.start()
+    for name in _GIT_REDIRECTS:
+        os.environ.pop(name, None)
+
+
+def tearDownModule():
+    _ISOLATED_ENV.stop()
+
+
+class GitIsolationTests(unittest.TestCase):
+    def test_fixture_never_touches_an_inherited_git_dir(self):
+        # Reproduz o hook: GIT_DIR herdado apontando para outro repositório (aqui, um falso).
+        with tempfile.TemporaryDirectory() as temporary:
+            decoy = Path(temporary)/'decoy'
+            subprocess.run(['git', 'init', '-q', str(decoy)], check=True)
+            env = {**os.environ, 'GIT_DIR': str(decoy/'.git')}
+            test = 'test_validation_tools.ReleaseTests.test_changed_zip_and_wrong_checksum_are_rejected'
+            result = subprocess.run([sys.executable, '-m', 'unittest', test], cwd=Path(__file__).parent,
+                                    env=env, capture_output=True, text=True)
+            self.assertEqual(result.returncode, 0, result.stderr[-2000:])
+            head = subprocess.run(['git', 'rev-parse', '--verify', '-q', 'HEAD'], cwd=decoy,
+                                  capture_output=True, text=True)
+            self.assertNotEqual(head.returncode, 0, 'a fixture commitou no repositório herdado')
+            name = subprocess.run(['git', 'config', '--local', '--get', 'user.name'], cwd=decoy,
+                                  capture_output=True, text=True)
+            self.assertEqual(name.stdout.strip(), '')
 
 
 class ReleaseTests(unittest.TestCase):

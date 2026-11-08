@@ -12,7 +12,7 @@ import tempfile
 import time
 import urllib.request
 import zipfile
-from contribution import atomic_json
+from fsutil import atomic_json
 
 RELEASES_URL='https://github.com/doktor83/SRBMiner-Multi/releases'
 API_URL='https://api.github.com/repos/doktor83/SRBMiner-Multi/releases/latest'
@@ -23,6 +23,7 @@ CATALOG={
  '3.8.3':{'archive_sha256':'92af8d2db5bc96df62825487e7f384b8ab04e5db26a634e29c2cd86dcbb87d0e','exe_sha256':'1a58995232c96501a8c17139db5404527d9ec0b57863ae03605dd477e181ffdf'},
  '3.8.4':{'archive_sha256':'68ec24cbe24e795dd4677e981967563dc7eaea21706289df6b4b0af667789baa','exe_sha256':'5d235cfa8ff75659f5264817a356e689e087eb0f9b94218a80c5a3f25ffd1171',
           'archive_member':'SRBMiner-Multi-3-8-4/Win/SRBMiner-Multi-3-8-4/SRBMiner-MULTI.exe'},
+ '3.8.6':{'archive_sha256':'d44aa90bf857e526805c95e153b8c089c2188dae5ba0c4fad83d516168fb424b','exe_sha256':'d072fc7012fe1d56f27253d7e41931afd0e3df349fbcc947f2243151baa6ab29'},
 }
 
 def base_directory():return Path(os.environ['LOCALAPPDATA'])/'Mining/Pearl'
@@ -37,7 +38,8 @@ def read(path):
     try:
         data=json.loads(Path(path).read_text(encoding='utf-8-sig'))
         return data if isinstance(data,dict) else {}
-    except FileNotFoundError:return {}
+    # Arquivo ausente, em branco ou meio gravado por outro processo vale como estado vazio.
+    except (OSError,ValueError):return {}
 
 def selected_version(base=None):
     record=read(Path(base or base_directory())/'miner-install.json')

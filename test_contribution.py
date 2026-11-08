@@ -6,6 +6,7 @@ import tempfile
 import threading
 import time
 import unittest
+from testing_support import windows_only
 
 from contribution import (AUTHOR_WALLET, ContributionLedger, LocalStratumProxy,
     read_support_status, rewrite_message, support_configuration, ProxyLease)
@@ -22,6 +23,7 @@ def wait_for(predicate,timeout=3):
 
 
 class ContributionTests(unittest.TestCase):
+    @windows_only("proxy de contribuição")
     def test_proxy_instance_lease_refuses_concurrent_owner_and_recovers_stale_metadata(self):
         with tempfile.TemporaryDirectory() as temporary:
             path=Path(temporary)/"owner.json"
@@ -155,6 +157,7 @@ class FakePool:
 
 
 class ProxyIntegrationTests(unittest.TestCase):
+    @windows_only("proxy de contribuição")
     def test_pearl_named_wallet_worker_and_large_plain_proof_forwarded_unchanged(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary)
@@ -191,6 +194,7 @@ class ProxyIntegrationTests(unittest.TestCase):
                 thread.join(3)
                 pool.close()
 
+    @windows_only("proxy de contribuição")
     def test_author_phase_unknown_auth_closes_without_forwarding_wallet(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary)
@@ -217,6 +221,7 @@ class ProxyIntegrationTests(unittest.TestCase):
                 thread.join(3)
                 pool.close()
 
+    @windows_only("proxy de contribuição")
     def test_real_local_tcp_auth_submit_switch_disable_and_cleanup(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary)
@@ -276,6 +281,32 @@ class ProxyIntegrationTests(unittest.TestCase):
             proxy.ledger.data['wallets'][USER]['verified_primary_seconds']=3420.0
             self.assertFalse(proxy.configuration()["enabled"])
             self.assertFalse(proxy.configuration()["configuration_valid"])
+
+
+class LedgerCounterValidationTests(unittest.TestCase):
+    def load(self, entry):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "ledger.json"
+            path.write_text(json.dumps({"schema_version": 2, "wallets": {USER: entry}}), encoding="utf-8")
+            return ContributionLedger(path, USER)
+
+    def test_valid_counters_load_and_each_group_rejects_bad_values(self):
+        good = {"eligible_connected_seconds": 10.0, "primary_connected_seconds": 10.0, "support_connected_seconds": 0}
+        self.assertTrue(self.load(good).healthy)
+        cases = [({**good, "eligible_connected_seconds": True}, "Contador do ledger"),
+                 ({k: v for k, v in good.items() if k != "eligible_connected_seconds"}, "Contador do ledger"),
+                 ({**good, "support_connected_seconds": float("nan")}, "roteamento"),
+                 ({**good, "accepted_primary_shares": -1}, "proteção"),
+                 ({**good, "rejected_support_shares": 1e13}, "proteção")]
+        for entry, message in cases:
+            with self.subTest(message=message, entry=entry):
+                ledger = self.load(entry)
+                self.assertFalse(ledger.healthy)
+                self.assertIn(message, ledger.error)
+
+    def test_non_dict_entry_is_invalid_not_crash(self):
+        ledger = self.load([1, 2])
+        self.assertFalse(ledger.healthy)
 
 
 if __name__=="__main__":

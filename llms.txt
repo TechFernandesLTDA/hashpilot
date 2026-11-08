@@ -11,6 +11,7 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 - [VRAM and Pearl optimization analysis](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/vram-pearl-rtx3070.md): measured GPU-wide VRAM versus process RAM, WDDM attribution limits, real batch-size controls in an alternative host, and a proposed benchmark. No gains from filling VRAM or alternative backend integration are claimed.
 
 - [SRBMiner 3.8.4 review and RTX 3070 experiment](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/srbminer-3.8.4.md): official changelog applicability, exact archive verification, failed 405 MHz memory experiment on the author's board, restored 5001 MHz, and measured automatic core tuning. Do not treat advertised efficiency gains as measured gains or infer a universal memory preset.
+- [SRBMiner 3.8.6 review](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/srbminer-3.8.6.md): 3.8.6 advertises better pearlhash efficiency on NVIDIA 3000/4000/5000; all 18 HashPilot miner flags still exist; the native power tuner stays off; now in the verified catalog (archive SHA-256 and release MD5 both matched the official package; executable back at the default SRBMiner-Multi-3-8-6/SRBMiner-MULTI.exe path); default install stays 3.8.0. No measured gain yet: an A/B against 3.8.4 on the RTX 3070 is pending.
 
 - [Verification and evidence](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/verification.md): deterministic source releases, allowlisted diagnostics, passive 24/72-hour protocol; no independent audit or hardware certification claimed.
 
@@ -84,6 +85,6 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 - [GPL license](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/LICENSE)
 - [Brand and third-party notices](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/NOTICE)
 
-Testing: mise exec -- python -m unittest discover -v. UI/windowing QA is opt-in and must distinguish physical displays from virtual 4K cases. Do not run mining or apply clocks merely to inspect the application.
+Testing: mise exec -- python -m unittest discover -v. On non-Windows systems use python tools/run_tests.py (isolated temporary state; Windows-API tests are skipped with a reason, not a substitute for a Windows run). UI/windowing QA is opt-in and must distinguish physical displays from virtual 4K cases. Do not run mining or apply clocks merely to inspect the application.
 
 AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e Ollama local](docs/ai-providers.md). A política adaptativa funciona sem IA.

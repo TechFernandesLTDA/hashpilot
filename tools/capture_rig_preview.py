@@ -1,7 +1,6 @@
 """Capturas da interface multiGPU: amostra real e simulação claramente rotulada."""
 from __future__ import annotations
 import argparse
-import copy
 import json
 from pathlib import Path
 import subprocess

@@ -1,0 +1,17 @@
+# Lint de erros reais (pyflakes + sintaxe) em todo o repositório. Ferramenta de
+# desenvolvimento opcional: o aplicativo continua só com a biblioteca padrão.
+# O estilo denso dos módulos antigos não é reformatado em massa; a formatação
+# automática vale para os módulos listados em tools/check_style.py.
+target-version = "py314"
+line-length = 120
+extend-exclude = ["dist"]
+
+[lint]
+select = ["F", "E9"]
+
+[lint.per-file-ignores]
+# Gerenciadores de contexto de patch nomeados por legibilidade.
+"test_*.py" = ["F841"]
+
+[format]
+quote-style = "preserve"

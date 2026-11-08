@@ -9,10 +9,22 @@ from unittest.mock import patch
 from types import SimpleNamespace
 
 from gpu_agent import (GPUAgent, NvidiaActuator, OllamaAdvisor, detect_nvidia_gpus,
-                       thermal_limits, validated_plan, control, BackgroundAdvisor,
+                       validated_plan, control, BackgroundAdvisor,
                        select_device,read_miner_data,external_supervisor_active)
-from gpu_agent import process_identity,same_process,requested_control_stop
+from gpu_agent import same_process,requested_control_stop
 from gpu_agent import control_plan,thermal_window_summary,performance_probe_gate
+from testing_support import windows_only
+
+_isolated_settings=patch("gpu_agent.read_target_temperature",return_value=None)
+
+
+def setUpModule():
+    # O supervisor relê o settings.json real; estes testes cobrem o modo sem temperatura-alvo.
+    _isolated_settings.start()
+
+
+def tearDownModule():
+    _isolated_settings.stop()
 
 
 def device(identifier="GPU-test-3070"):
@@ -446,6 +458,51 @@ class OllamaAndActuatorTests(unittest.TestCase):
                 self.assertFalse(external_supervisor_active(temporary,gpu_uuid="GPU-test-5",gpu_index=5))
                 self.assertTrue(external_supervisor_active(temporary,gpu_uuid="GPU-test-0",gpu_index=0))
 
+    def run_target_control(self,temps,clock=210,target=72,samples=None):
+        gpu={**device(),"supported_graphics_clocks_mhz":list(range(1350,1860,15))}
+        commands=[];readings=iter(temps)
+        args=SimpleNamespace(duration=300,gpu=0,miner_pid=123,ollama=False,objective="performance",samples=samples or len(temps))
+        with tempfile.TemporaryDirectory() as temporary:
+            with patch("gpu_agent.read_target_temperature",return_value=target), \
+                 patch("gpu_agent.read_fan",return_value=100), \
+                 patch("gpu_agent.detect_nvidia_gpus",return_value=[gpu]), \
+                 patch("gpu_agent.process_identity",return_value={"created_filetime":1,"executable":"SRBMiner-MULTI.exe"}), \
+                 patch("gpu_agent.process_alive",return_value=True), \
+                 patch("gpu_agent.external_supervisor_active",return_value=False), \
+                 patch("gpu_agent.read_sample",side_effect=lambda gpu:sample(time.time(),temp=next(readings,temps[-1]),clock=clock)), \
+                 patch("gpu_agent.smi_command",side_effect=commands.append), \
+                 patch("gpu_agent.time.sleep"), \
+                 patch("ctypes.WinDLL",return_value=SimpleNamespace(IsUserAnAdmin=lambda:True)):
+                code=control(args,temporary,temporary)
+                status=json.loads((Path(temporary)/"gpu-agent-control.json").read_text(encoding="utf-8"))
+        return code,commands,status,gpu
+
+    def test_target_mode_locks_safe_start_clock_before_factory_boost(self):
+        # Caso real de 07/11/2026: sem trava, o boost de fábrica levou a placa de 50 a 83 °C em ~10 s.
+        code,commands,status,gpu=self.run_target_control([50,50],clock=210)
+        self.assertEqual(code,0)
+        locks=[c for c in commands if c[2:3]==["-lgc"]]
+        self.assertEqual(locks[0],["-i",gpu["uuid"],"-lgc","1635,1635"])
+        self.assertEqual(status["start_clock_mhz"],1635)
+
+    def test_target_mode_reduces_hard_at_emergency_instead_of_dying(self):
+        code,commands,status,gpu=self.run_target_control([84,84],clock=1815)
+        self.assertEqual(code,0)
+        locks=[c[3] for c in commands if c[2:3]==["-lgc"]]
+        self.assertIn("1665,1665",locks)  # 1815 - 150
+
+    def test_target_mode_never_calls_real_nvidia_smi_for_memory(self):
+        # Os leitores de memória resolvem smi_command na chamada: o patch do teste vale para eles.
+        code,commands,status,gpu=self.run_target_control([50,50],clock=210)
+        self.assertIn(["-i",gpu["uuid"],"--query-supported-clocks=memory","--format=csv,noheader,nounits"],commands)
+        self.assertIsNone(status["target_control"]["memory"])
+
+    def test_target_mode_proportional_reduction_far_above_target(self):
+        code,commands,status,gpu=self.run_target_control([50,78],clock=1635)
+        locks=[c[3] for c in commands if c[2:3]==["-lgc"]]
+        self.assertIn("1545,1545",locks)  # 6 °C acima: 1635 - 90
+
+    @windows_only("ctypes.WinDLL")
     def test_control_baseline_does_not_tune_and_cleanup_restores_driver(self):
         with tempfile.TemporaryDirectory() as temporary:
             gpu=device()
@@ -467,6 +524,7 @@ class OllamaAndActuatorTests(unittest.TestCase):
             self.assertEqual(status["writes"],0)
             self.assertFalse((Path(temporary)/"gpu-control-owner.json").exists())
 
+    @windows_only("ctypes.WinDLL")
     def test_control_refuses_existing_thermal_supervisor_before_any_write(self):
         with tempfile.TemporaryDirectory() as temporary:
             args=SimpleNamespace(duration=300,gpu=0,miner_pid=123,ollama=False,objective="performance",samples=1)
@@ -478,6 +536,7 @@ class OllamaAndActuatorTests(unittest.TestCase):
                     control(args,temporary,temporary)
                 command.assert_not_called()
 
+    @windows_only("ctypes.WinDLL")
     def test_control_restarts_incomplete_baseline_without_tuning(self):
         with tempfile.TemporaryDirectory() as temporary:
             calls=[]
@@ -502,6 +561,7 @@ class OllamaAndActuatorTests(unittest.TestCase):
             self.assertEqual(status["mode"],"insufficient_data")
             self.assertEqual(status["writes"],0)
 
+    @windows_only("ctypes.WinDLL")
     def test_controller_restart_with_persisted_trial_survives_next_adjustment(self):
         with tempfile.TemporaryDirectory() as temporary:
             gpu=device();agent=GPUAgent(temporary)

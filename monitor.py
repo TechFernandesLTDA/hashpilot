@@ -4,14 +4,12 @@ from __future__ import annotations
 import argparse
 import csv
 import datetime as dt
-import io
 import json
 import os
 from pathlib import Path
 import queue
 import re
 import subprocess
-import shutil
 import webbrowser
 from urllib.parse import quote
 import threading
@@ -21,133 +19,34 @@ import tkinter.font as tkfont
 import sys
 import math
 from tkinter import ttk
-from collections import deque
-from finance import FinanceCollector, financial_model, PortfolioFinanceCollector, portfolio_model, portfolio_snapshots
-from history import HistoryStore
+from finance import financial_model, PortfolioFinanceCollector, portfolio_model, portfolio_snapshots
+from history import HistoryStore, log_key
+from miner_log import COUNTERS, RATE, log_timestamp
+from app_logging import configure as configure_logging, exception_once, get_logger
 from config import WALLET, POOL, LOG_DIR, STATE_DIR, SETTINGS_PATH
-from contribution import atomic_json, read_support_status, read_settings as read_support_settings
+from fsutil import atomic_json
+from contribution import read_support_status, read_settings as read_support_settings
 from file_cache import cached_load, signature as file_signature
 
 
 from tray import WindowsTray
 from bootstrap import restore_bundled_data
-from rig_panel import RigCards, project_selected, totals, save_enabled, show_identity
+from rig_panel import RigCards, project_selected, totals, show_identity
 from app_update import build_identity
+from monitor_theme import ASSET_DIR, BODY_FONT, TITLE_FONT, BG, PANEL, BORDER, TEXT, MUTED, TEAL, BLUE, ORANGE, PINK  # noqa: F401
+from monitor_format import fmt, safe_number, format_prl, format_brl, payout_for_local_state, thermal_description  # noqa: F401
+from monitor_sensors import NO_WINDOW, selected_gpu_context, run, miner_process_ids, number, read_gpu, tail, parse_log  # noqa: F401
+from monitor_chart import Chart  # noqa: F401
+from monitor_layout import MonitorLayoutMixin
 
-
-def selected_gpu_context(data, identifier, fallback_wallet):
-    devices=((data or {}).get('rig') or {}).get('devices') or []
-    device=next((item for item in devices if item.get('uuid')==identifier),None)
-    return (identifier,device.get('wallet') or fallback_wallet) if device else None
 
 APP_NAME = "HashPilot — Tech Fernandes"
 APP_BUILD = build_identity()
 DPI_MODE = {"requested":"PerMonitorV2","enabled":False,"fallback":True}
-ASSET_DIR = Path(__file__).resolve().parent / "assets/brand"
-BODY_FONT, TITLE_FONT = "Segoe UI", "Segoe UI"
-BG, PANEL, BORDER, TEXT, MUTED = "#0A1628", "#10213B", "#23446D", "#FFFFFF", "#E8EDF5"
-TEAL, BLUE, ORANGE, PINK = "#12A98E", "#1C64C8", "#ffbc66", "#E8EDF5"
-NO_WINDOW = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
-STAMP = re.compile(r"^\[(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)\]")
-RATE = re.compile(r"GPU0\s+.*?:\s*([\d.]+)\s+([kMGTPE]?H)/s\s+\[(.*?)\]")
-COUNTERS = re.compile(r"([A-Z]+):([\d.]+)")
-AVERAGE = re.compile(r"Average hashrate: 1m ([\d.]+) TH/s \| 15m ([\d.]+) TH/s")
-RATE_UNITS = {"H": 1e-12, "kH": 1e-9, "MH": 1e-6, "GH": 1e-3, "TH": 1, "PH": 1e3, "EH": 1e6}
-CONNECTION_LOST = ("disconnected", "connection failed", "reconnecting", "connection lost")
 
 
-def run(command: list[str], timeout: float = 3) -> str:
-    result = subprocess.run(command, capture_output=True, text=True, timeout=timeout,
-                            creationflags=NO_WINDOW, encoding="utf-8", errors="replace")
-    if result.returncode:
-        raise RuntimeError((result.stderr or result.stdout).strip()[:220])
-    return result.stdout
-
-
-def miner_process_ids() -> set[int]:
-    """PIDs do SRBMiner pelo Toolhelp32; `tasklist` só se a API do Windows falhar."""
-    try:
-        from process_list import process_ids
-        return process_ids("SRBMiner-MULTI.exe")
-    except OSError:
-        output = run(["tasklist", "/FI", "IMAGENAME eq SRBMiner-MULTI.exe", "/FO", "CSV", "/NH"])
-        return {int(row[1]) for row in csv.reader(output.splitlines())
-                if len(row) > 1 and row[0].lower() == "srbminer-multi.exe" and row[1].isdigit()}
-
-
-def number(value: str) -> float | None:
-
-    try:
-        return float(value.strip())
-    except (ValueError, TypeError):
-        return None
-
-
-def read_gpu() -> dict:
-    fields = ["name", "driver_version", "temperature.gpu", "power.draw", "power.limit",
-              "clocks.gr", "clocks.mem", "utilization.gpu", "utilization.memory",
-              "memory.used", "memory.total", "fan.speed", "pstate"]
-    smi = shutil.which("nvidia-smi")
-    if not smi and os.name == "nt":
-        fallback = Path(os.environ.get("WINDIR", "C:/Windows")) / "System32/nvidia-smi.exe"
-        smi = str(fallback) if fallback.exists() else None
-    if not smi:
-        raise RuntimeError("Sensores NVIDIA indisponíveis: nvidia-smi não encontrado.")
-    output = run([smi, "-i", "0", "--query-gpu=" + ",".join(fields), "--format=csv,noheader,nounits"])
-    row = next(csv.reader(io.StringIO(output)))
-    result = dict(zip(fields, [x.strip() for x in row]))
-    for field in fields[2:-1]:
-        result[field] = number(result.get(field, ""))
-    result["sampled_at"] = time.time()
-    return result
-
-
-def tail(path: Path, limit: int = 160_000) -> str:
-    with path.open("rb") as handle:
-        handle.seek(0, 2)
-        size = handle.tell()
-        handle.seek(max(0, size - limit))
-        data = handle.read()
-    text = data.decode("utf-8-sig", errors="replace")
-    return text.split("\n", 1)[-1] if size > limit else text
-
-
-def parse_log(text: str, now: float | None = None) -> dict:
-    now = time.time() if now is None else now
-    result = {"hashrate": None, "hashrate_at": None, "accepted": 0, "rejected": 0,
-              "hw_errors": 0, "average_1m": None, "average_15m": None, "started_at": None,
-              "last_share_at": None, "connection": "Aguardando conexão", "paused": False, "rate_points": []}
-    from gpu_telemetry import log_timestamp
-    for line in text.splitlines():
-        stamp = log_timestamp(line)
-        if "Miner version:" in line:
-            result["started_at"] = stamp
-        if "Connected to " in line:
-            result["connection"] = "Conectado à pool"
-        if any(word in line.lower() for word in CONNECTION_LOST):
-            result["connection"] = "Reconectando à pool"
-        if "share accepted" in line:
-            result["last_share_at"] = stamp
-        if "GPU0 turned off" in line:
-            result["paused"] = True
-        if "GPU0 turned on" in line:
-            result["paused"] = False
-        match = RATE.search(line)
-        if match:
-            multiplier = RATE_UNITS[match[2]]
-            result["hashrate"] = float(match[1]) * multiplier
-            result["hashrate_at"] = stamp
-            values = dict(COUNTERS.findall(match[3]))
-            for key, log_key in (("accepted", "A"), ("rejected", "R"), ("hw_errors", "HW")):
-                result[key] = int(float(values.get(log_key, 0)))
-            if stamp and now - 900 <= stamp <= now + 5:
-                result["rate_points"].append((stamp, result["hashrate"]))
-        average = AVERAGE.search(line)
-
-        if average:
-            result["average_1m"], result["average_15m"] = map(float, average.groups())
-    result["recent_logs"] = "\n".join(text.splitlines()[-35:])
-    return result
+LOG = get_logger("monitor")
+CLOSE_TIMEOUT_SECONDS = 20
 
 
 def read_thermal_status(path=None, now=None):
@@ -170,31 +69,6 @@ def read_thermal_status(path=None, now=None):
         return {"available": False, "error": str(error), "stale": True, "age_seconds": None}
 
 
-def thermal_description(control, compact=False):
-    if control is None:
-        return "Supervisor não iniciado"
-    if control.get("error"):
-        return "Erro: " + str(control["error"])[:(45 if compact else 140)]
-    if not control.get("enabled"):
-        return "Controle desativado"
-    modes = {"hold": "Mantendo", "cooling": "Resfriando", "anticipating": "Antecipando calor",
-             "recovering": "Recuperando", "emergency": "Emergência",'baseline':'Calibrando referência',
-             'manual_baseline':'Benchmark solicitado','validating':'Validando ajuste','accepted':'Ajuste validado',
-             'rollback':'Revertendo ajuste','insufficient_data':'Aguardando medições válidas'}
-    mode = modes.get(control.get("mode"), str(control.get("mode", "Aguardando")))
-    clock = control.get("current_clock_mhz",(control.get('sample') or {}).get('clock_mhz',"—"))
-    desired = control.get("desired_clock_mhz",(control.get('proposal') or {}).get('clock_mhz'))
-    clock_text = f"{clock} → {desired} MHz" if desired is not None and desired != clock else f"{clock} MHz"
-    age = control.get("age_seconds")
-    age_text = f"{age:.0f} s" if age is not None else "sem horário"
-    text = f"{mode} · {clock_text} · {age_text}"
-    if control.get("stale"):
-        text += " · desatualizado"
-    if not compact and control.get("reason"):
-        text += " — " + str(control["reason"])
-    return text
-
-
 class Collector:
     def __init__(self, history=None):
         self.samples: queue.Queue = queue.Queue(maxsize=2)
@@ -213,10 +87,13 @@ class Collector:
         process_error=None
         try:
             processes=miner_process_ids()
-        except Exception as error:process_error=str(error)
+        except Exception as error:
+            exception_once(LOG, 'processes', 'Falha ao listar processos do minerador')
+            process_error=str(error)
         try:
             rig=self.rig_reader.sample(processes)
         except Exception as error:
+            exception_once(LOG, 'rig', 'Falha ao ler telemetria do rig')
             rig={'schema_version':2,'devices':[],'totals':totals([]),'ignored_devices':[],'error':str(error)}
         now=time.time()
         support_settings=cached_load(SETTINGS_PATH,read_support_settings)
@@ -240,10 +117,12 @@ class Collector:
         try:
             result["gpu"] = read_gpu()
         except Exception as error:
+            exception_once(LOG, "legacy-gpu", "Falha ao ler sensores NVIDIA (modo legado)")
             result["gpu_error"] = str(error)
         try:
             result["miner_running"] = bool(miner_process_ids())
         except Exception as error:
+            exception_once(LOG, "legacy-processes", "Falha ao listar processos do minerador (modo legado)")
             result["process_error"] = str(error)
         try:
             files = list(LOG_DIR.glob("*.log"))
@@ -259,14 +138,14 @@ class Collector:
                     if str(path) not in self.start_times:
                         with path.open("r", encoding="utf-8-sig", errors="replace") as handle:
                             first = handle.readline()
-                        stamp = STAMP.match(first)
-                        self.start_times[str(path)] = dt.datetime.strptime(stamp[1], "%Y-%m-%d %H:%M:%S").timestamp() if stamp else None
+                        self.start_times[str(path)] = log_timestamp(first)
                     self.log_signature = signature
                     self.log_path = path
                 self.log_data["started_at"] = self.start_times.get(str(path))
             else:
                 result["log_error"] = "Nenhum log de mineração encontrado."
         except Exception as error:
+            exception_once(LOG, "legacy-log", "Falha ao ler log do minerador (modo legado)")
             result["log_error"] = str(error)
         result["miner"] = self.log_data.copy()
         result["log_path"] = str(self.log_path) if self.log_path else None
@@ -297,44 +176,6 @@ class Collector:
                     pass
                 self.samples.put_nowait(data)
             self.stop.wait(max(0.2, 2 - (time.monotonic() - started)))
-
-
-def fmt(value, suffix="", precision=0):
-    value=safe_number(value)
-    return "—" if value is None else f"{value:,.{precision}f}".replace(",", " ") + suffix
-
-
-def safe_number(value):
-    if isinstance(value,bool):return None
-    try:
-        value = float(value)
-        return value if math.isfinite(value) else None
-    except (TypeError, ValueError, OverflowError):
-        return None
-
-
-def format_prl(value):
-    value = safe_number(value)
-    return "N/D" if value is None else f"{value:.8f}".replace(".", ",") + " PRL"
-
-
-def format_brl(value):
-    value = safe_number(value)
-    return "N/D" if value is None else "R$ " + f"{value:,.2f}".replace(",", "_").replace(".", ",").replace("_", ".")
-
-
-def payout_for_local_state(model,data):
-    """Do not turn a historical earning rate into a live ETA for a stopped rig."""
-    payout=dict(model.get('payout') or {})
-    devices=((data or {}).get('rig') or {}).get('devices') or []
-    wallet=model.get('selected_wallet') or model.get('wallet')
-    if wallet:devices=[d for d in devices if d.get('wallet')==wallet]
-    remaining=safe_number(payout.get('remaining_prl'))
-    if devices and all(d.get('miner_running') is False for d in devices) and remaining is not None and remaining>0:
-        payout.update(eta_label='Sem previsão local: rig parado e mínimo ainda não atingido',
-            eta_details='O saldo permanece na pool. É necessário mais trabalho creditado para atingir o mínimo; outros workers fora deste rig não são acompanhados.',
-            rate_label='O ritmo histórico não comprova geração atual.')
-    return payout
 
 
 def enable_native_dpi_awareness():
@@ -395,129 +236,7 @@ def work_area(root, geometry=None):
     return 0, 0, root.winfo_screenwidth(), root.winfo_screenheight()-40
 
 
-class Chart(tk.Canvas):
-    def __init__(self, master, title, color, unit, fixed=None, window=900, max_gap=80, show_age=False):
-        super().__init__(master, bg=PANEL, highlightthickness=1, highlightbackground=BORDER, height=185)
-        self.title, self.color, self.unit, self.fixed = title, color, unit, fixed
-        self.window = window
-        self.max_gap, self.show_age = max_gap, show_age
-        self.points = deque(maxlen=50000 if window > 900 else 900)
-        self.dirty = False
-        self._layout = None
-        self.bind("<Configure>", lambda _: self.draw(force=True))
-
-    def redraw_if_dirty(self):
-        if self.dirty and self.winfo_viewable():
-            self.draw()
-
-    def _build_static(self, w, h, title_size, axis_size):
-        """Título, grade e rótulos do eixo só são recriados quando tamanho ou fonte mudam."""
-        self.delete("all")
-        left, right, top, bottom = 50, w-18, 44, h-28
-        self.create_text(16, 18, anchor="w", text=self.title, fill=TEXT, font=(BODY_FONT, title_size, "bold"))
-        self.grid_items, self.axis_items = [], []
-        for i in range(4):
-            y = top + (bottom-top)*i/3
-            self.grid_items.append(self.create_line(left, y, right, y, fill=BORDER))
-            self.axis_items.append(self.create_text(left-8, y, text="", anchor="e", fill=MUTED, font=(BODY_FONT, axis_size)))
-
-    def add(self, timestamp, value):
-        timestamp=safe_number(timestamp)
-        if timestamp is None or timestamp<0:return
-        if value is not None:
-            value=safe_number(value)
-            if value is None:return
-        if not self.points or timestamp > self.points[-1][0]:
-            self.points.append((timestamp, value))
-            return
-        # Logs podem ser descarregados depois de uma amostra de indisponibilidade.
-        # O horário real da medição prevalece sobre a ordem de chegada ao painel.
-        points = dict(self.points)
-        if timestamp in points and points[timestamp] is not None and value is None:
-            return
-        points[timestamp] = value
-        self.points.clear()
-        self.points.extend(sorted(points.items()))
-
-    def segments(self):
-        groups, group, previous = [], [], None
-        for timestamp, value in self.points:
-            if value is None:
-                if group:
-                    groups.append(group)
-                group, previous = [], None
-                continue
-            if previous is not None and timestamp-previous > self.max_gap:
-                if group:
-                    groups.append(group)
-                group = []
-            group.append((timestamp, value))
-            previous = timestamp
-        if group:
-            groups.append(group)
-        return groups
-
-    def sample_info(self):
-        measured = [(stamp, value) for stamp, value in self.points if value is not None]
-        return {"point_count": len(self.points), "latest_sample_at": measured[-1][0] if measured else None,
-                "latest_value": measured[-1][1] if measured else None, "gap_limit_seconds": self.max_gap}
-
-    def draw(self, force=False):
-        # Hidden tabs and the tray only mark the chart; it is drawn when it becomes visible.
-        if not force and not self.winfo_viewable():
-            self.dirty = True
-            return
-        self.dirty = False
-        title_size = -getattr(self, "title_px", 13)
-        axis_size = -getattr(self, "axis_px", 11)
-        w, h = self.winfo_width(), self.winfo_height()
-        if w < 40:
-            return
-        layout = (w, h, title_size, axis_size, self.title)
-        if layout != self._layout:
-            self._build_static(w, h, title_size, axis_size)
-            self._layout = layout
-        self.delete("dynamic")
-        cutoff = time.time() - self.window
-        while self.points and self.points[0][0] < cutoff:
-            self.points.popleft()
-        values = [v for _, v in self.points if v is not None]
-        if not values:
-            for item in self.grid_items+self.axis_items:
-                self.itemconfigure(item, state="hidden")
-            self.create_text(w/2, h/2, text="Aguardando amostras reais", fill=MUTED, font=(BODY_FONT, title_size), tags="dynamic")
-            return
-        ymin, ymax = self.fixed or (max(0, min(values) * .85), max(values) * 1.1)
-        if ymax <= ymin:
-            ymax = ymin + 1
-        left, right, top, bottom = 50, w-18, 44, h-28
-        for i in range(4):
-            value = ymax - (ymax-ymin)*i/3
-            self.itemconfigure(self.grid_items[i], state="normal")
-            self.itemconfigure(self.axis_items[i], state="normal", text=f"{value:.2f}" if abs(ymax) < 2 else f"{value:.0f}")
-        now = time.time()
-        start = max(cutoff, min(p[0] for p in self.points))
-        span = max(60, now-start)
-        for group in self.segments():
-            coordinates = []
-            for timestamp, value in group:
-                x = left + (timestamp-start)/span*(right-left)
-                y = bottom - (value-ymin)/(ymax-ymin)*(bottom-top)
-                coordinates.extend([x, y])
-            if len(coordinates) >= 4:
-                self.create_line(*coordinates, fill=self.color, width=2, tags=("series", "dynamic"))
-            x, y = coordinates[-2:]
-            self.create_oval(x-3, y-3, x+3, y+3, fill=self.color, outline="", tags=("series-point", "dynamic"))
-        if self.show_age:
-            latest = self.sample_info()["latest_sample_at"]
-            age = max(0, int(now-latest))
-            self.create_text(right, 18, anchor="e", text=f"última amostra há {age} s", fill=MUTED,
-                             font=(BODY_FONT, axis_size), tags=("sample-age", "dynamic"))
-        self.create_text(left, h-12, text=dt.datetime.fromtimestamp(start).strftime("%H:%M:%S"), anchor="w", fill=MUTED, font=(BODY_FONT, axis_size), tags=("time-axis", "dynamic"))
-        self.create_text(right, h-12, text="agora · " + self.unit, anchor="e", fill=MUTED, font=(BODY_FONT, axis_size), tags=("time-axis", "dynamic"))
-
-
-class Monitor(tk.Tk):
+class Monitor(MonitorLayoutMixin, tk.Tk):
     def __init__(self):
         enable_native_dpi_awareness()
         restore_bundled_data()
@@ -560,7 +279,8 @@ class Monitor(tk.Tk):
         self.bind("<Configure>", self.schedule_preferences, add="+")
         self.tabs.bind("<<NotebookTabChanged>>", self.schedule_preferences)
         threading.Thread(target=self.restore_history, daemon=True, name="history-loader").start()
-        threading.Thread(target=self.collector.work, daemon=True).start()
+        self.collector_thread = threading.Thread(target=self.collector.work, daemon=True, name="collector")
+        self.collector_thread.start()
         threading.Thread(target=self.finance_collector.work, daemon=True).start()
         self.after(200, self.poll)
         self.after(1500,self.show_restore_result)
@@ -580,7 +300,7 @@ class Monitor(tk.Tk):
                 messagebox.showinfo('Backup restaurado','Históricos e configurações restaurados. Credenciais locais preservadas. Confira as carteiras em Configurações antes de iniciar o rig.\nBackup anterior: '+str(result.get('rollback','')),parent=self)
             else:messagebox.showerror('Restauração não concluída',str(result.get('error','Verifique o backup anterior antes de continuar.')),parent=self)
             result['seen']=True
-            __import__('contribution').atomic_json(path,result)
+            atomic_json(path,result)
         except (OSError,ValueError):pass
 
     def poll_updates(self):
@@ -881,21 +601,20 @@ class Monitor(tk.Tk):
                     handle.seek(offset)
                     while line_bytes := handle.readline():
                         line = line_bytes.decode("utf-8-sig", errors="replace").rstrip()
-                        stamp_match = STAMP.match(line)
-                        stamp = dt.datetime.strptime(stamp_match[1], "%Y-%m-%d %H:%M:%S").timestamp() if stamp_match else stat.st_mtime
+                        stamp = log_timestamp(line)
+                        if stamp is None:
+                            stamp = stat.st_mtime
                         parsed = parse_log(line, now=stamp)
-                        if parsed.get("hashrate") is not None:
-                            match = RATE.search(line)
-                            fields = dict(re.findall(r"([A-Z]+):([\d.]+)", match[3]))
+                        match = RATE.search(line)
+                        if parsed.get("hashrate") is not None and match:
+                            fields = dict(COUNTERS.findall(match[4]))
                             gpu = {key: number(fields.get(field, "")) for key, field in (
                                 ("temperature.gpu", "T"), ("power.draw", "P"), ("fan.speed", "FAN"),
                                 ("clocks.gr", "CC"), ("clocks.mem", "MC"))}
                             self.history.telemetry({"collected_at": stamp, "gpu": gpu, "miner": parsed,
                                 "miner_running": None, "log_path": str(path)}, source="imported_miner_log")
                         else:
-                            import hashlib
-                            key = "log:"+hashlib.sha256((str(path)+"\n"+line).encode()).hexdigest()
-                            self.history.event(stamp, "miner_log", {"line": line, "path": str(path)}, key=key)
+                            self.history.event(stamp, "miner_log", {"line": line, "path": str(path)}, key=log_key(path, line))
                         if self.history.jobs.qsize() > 500:
                             self.history.flush(1)
                     offsets[str(path)] = handle.tell()
@@ -923,21 +642,6 @@ class Monitor(tk.Tk):
             "tab": self.tabs.index(self.tabs.select()), "tab_schema": "three-tabs-v1",
             "selected_gpu_uuid":getattr(self,'selected_gpu_uuid',None)})
 
-    def label(self, master, text="", **kwargs):
-        return tk.Label(master, text=text, bg=kwargs.pop("bg", BG), fg=kwargs.pop("fg", TEXT),
-                        font=kwargs.pop("font", (BODY_FONT, 10)), **kwargs)
-
-    def metric_card(self, parent, title, color, column, values, notes, key):
-        frame = tk.Frame(parent, bg=PANEL, highlightthickness=1, highlightbackground=BORDER)
-        frame.grid(row=0, column=column, sticky="nsew", padx=4)
-        parent.columnconfigure(column, weight=1, uniform="metrics")
-        frame.title_label = self.label(frame, title, bg=PANEL, fg=MUTED, font=(BODY_FONT, 9, "bold"))
-        frame.title_label.pack(anchor="w", padx=12, pady=(8, 2))
-        values[key] = self.label(frame, "—", bg=PANEL, fg=color, font=(TITLE_FONT, 23, "bold"))
-        values[key].pack(anchor="w", padx=12)
-        notes[key] = self.label(frame, "Aguardando dados", bg=PANEL, fg=MUTED, font=(BODY_FONT, 9))
-        notes[key].pack(anchor="w", padx=12, pady=(1, 8))
-        return frame
 
     def build(self):
         left,top,right,bottom = work_area(self)
@@ -1076,188 +780,6 @@ class Monitor(tk.Tk):
             chart.grid(row=0,column=column,sticky='nsew',padx=3,pady=2)
             self.overview_charts[key]=chart
 
-    def build_gpu(self):
-        parent = self.live_tab
-        parent.columnconfigure(0, weight=1)
-        parent.rowconfigure(2, weight=1)
-        selector=tk.Frame(parent,bg=BG)
-        selector.grid(row=0,column=0,sticky='ew',padx=5,pady=(4,0))
-        self.gpu_selection=ttk.Combobox(selector,state='readonly',width=48)
-        self.gpu_selection.pack(side='left',fill='x',expand=True)
-        self.gpu_selection.bind('<<ComboboxSelected>>',lambda e:self.select_gpu(self.gpu_ids[self.gpu_selection.current()]) if self.gpu_selection.current()>=0 else None)
-        tk.Button(selector,text='Identificação completa',command=self.selected_identity,bg=PANEL,fg=TEXT,relief='flat',font=(BODY_FONT,9)).pack(side='left',padx=5)
-        tk.Button(selector,text='Parar esta GPU',command=lambda:self.toggle_gpu(self.selected_gpu_uuid,False) if getattr(self,'selected_gpu_uuid',None) else None,bg='#9E3333',fg=TEXT,relief='flat',font=(BODY_FONT,9)).pack(side='left',padx=5)
-        cards = tk.Frame(parent, bg=BG)
-        cards.grid(row=1, column=0, sticky="ew", pady=(5, 4))
-        for index, (key, title, color) in enumerate((("hash", "HASHRATE", TEAL), ("temp", "TEMPERATURA", ORANGE), ("power", "POTÊNCIA", BLUE), ("fan", "VENTOINHAS", PINK), ("shares", "SHARES ACEITAS", TEAL))):
-            self.metric_card(cards, title, color, index, self.card_values, self.card_notes, key)
-        self.details = self.label(parent, "Lendo sensores…", fg=MUTED, anchor="w", justify="left", font=(BODY_FONT, 9))
-        self.details.grid(row=2, column=0, sticky="ew", padx=5, pady=(0, 5))
-        chart_grid = tk.Frame(parent, bg=BG)
-        chart_grid.grid(row=3, column=0, sticky="nsew")
-        parent.rowconfigure(2,weight=0);parent.rowconfigure(3,weight=1)
-        chart_grid.columnconfigure((0, 1), weight=1, uniform="charts")
-        chart_grid.rowconfigure((0, 1), weight=1, uniform="charts")
-        self.charts = {}
-        for index, (key, title, color, unit, fixed) in enumerate((("hash", "Hashrate · TH/s", TEAL, "TH/s", None), ("temp", "Temperatura da GPU", ORANGE, "°C", (25, 85)), ("power", "Potência da placa", BLUE, "W", None), ("fan", "Ventoinhas", PINK, "%", (0, 100)))):
-            chart = Chart(chart_grid, title, color, unit, fixed, max_gap=180 if key == "hash" else 80, show_age=key == "hash")
-            chart.grid(row=index//2, column=index%2, sticky="nsew", padx=4, pady=3)
-            self.charts[key] = chart
-        self.info = self.label(parent, "Pool e sessão: aguardando", fg=MUTED, anchor="w", font=(BODY_FONT, 8))
-        self.info.grid(row=4, column=0, sticky="ew", padx=5, pady=(5, 3))
-        self.log_title = self.label(parent, "ÚLTIMOS EVENTOS", fg=TEAL, anchor="w", font=(BODY_FONT, 8, "bold"))
-        self.log_title.grid(row=5, column=0, sticky="ew", padx=5)
-        self.logs = self.label(parent, "Aguardando atividade", bg=PANEL, fg=MUTED, anchor="nw", justify="left", font=("Consolas", 8), padx=8, pady=5)
-        self.logs.grid(row=6, column=0, sticky="ew", padx=4, pady=(3, 7))
-
-    def build_finance(self):
-        parent = self.finance_tab
-        parent.columnconfigure(0, weight=1)
-        parent.rowconfigure(2, weight=1)
-        quote_row=tk.Frame(parent,bg=BG)
-        quote_row.grid(row=0,column=0,sticky='ew',padx=5,pady=(7,4))
-        self.finance_wallet_filter=ttk.Combobox(quote_row,state='readonly',width=23,values=['Todas as carteiras'])
-        self.finance_wallet_filter.current(0)
-        self.finance_wallet_filter.pack(side='right',padx=(6,0))
-        self.finance_wallet_filter.bind('<<ComboboxSelected>>',lambda e:self.refresh_finance())
-        self.quote = self.label(quote_row, "Consultando cotações PRL / BRL / USD / BTC…", fg=TEAL, anchor="w", font=(TITLE_FONT, 12, "bold"))
-        self.quote.pack(side='left',fill='x',expand=True)
-        self.quote_note = self.label(parent, "Cotações e pool a cada 60 s", fg=MUTED, anchor="w", font=(BODY_FONT, 8))
-        self.quote_note.grid(row=1, column=0, sticky="ew", padx=5, pady=(0, 6))
-        table_frame = tk.Frame(parent, bg=BG)
-        table_frame.grid(row=2, column=0, sticky="nsew", padx=4)
-        table_frame.columnconfigure(0, weight=1)
-        table_frame.rowconfigure(0, weight=1)
-        style = ttk.Style(self)
-        style.configure("Finance.Treeview", background=PANEL, fieldbackground=PANEL, foreground=TEXT, rowheight=25, font=(BODY_FONT, 10), borderwidth=0)
-        style.configure("Finance.Treeview.Heading", background=BORDER, foreground=TEXT, font=(BODY_FONT, 9, "bold"), relief="flat")
-        style.map("Finance.Treeview", background=[("selected", BORDER)], foreground=[("selected", TEXT)])
-        self.finance_table = ttk.Treeview(table_frame, columns=("prl", "brl", "usd", "btc"), show="tree headings", height=9, style="Finance.Treeview", selectmode="none")
-        self.finance_table.grid(row=0, column=0, sticky="nsew")
-        self.finance_table.heading("#0", text="PERÍODO / TIPO", anchor="w")
-        for key, title in (("prl", "PEARL · PRL"), ("brl", "REAIS · BRL"), ("usd", "DÓLARES · USD"), ("btc", "BITCOIN · BTC")):
-            self.finance_table.heading(key, text=title, anchor="e")
-            self.finance_table.column(key, width=190, minwidth=90, stretch=True, anchor="e")
-        self.finance_table.column("#0", width=240, minwidth=170, stretch=True)
-        self.finance_row_titles = {}
-        for key, title in (("day", "Hoje"), ("week", "Semana · segunda até agora"), ("month", "Últimos 30 dias"), ("accumulated", "Acumulado · pago + saldo"), ("unpaid", "Saldo atual na pool"), ("confirmed", "Confirmado para envio"), ("paid", "Enviado pela pool"), ("forecast7", "Projeção · próximos 7 dias"), ("forecast30", "Projeção · próximos 30 dias")):
-            self.finance_row_titles[key] = title
-            self.finance_table.insert("", "end", iid=key, text=title, values=("N/D",)*4, tags=("forecast",) if key.startswith("forecast") else ())
-        self.finance_table.tag_configure("forecast", foreground=ORANGE)
-        self.money_chart = Chart(parent, "Créditos observados · em reais à cotação atual", TEAL, "R$", window=30*86400)
-        self.money_chart.grid(row=3, column=0, sticky="nsew", padx=4, pady=(6, 5))
-        parent.rowconfigure(3, weight=1)
-        self.finance_pay_summary = self.label(parent, "Pagamento em PRL · aguardando dados", fg=TEAL, anchor="w", justify="left", font=(BODY_FONT, 9))
-        self.finance_pay_summary.grid(row=4, column=0, sticky="ew", padx=5, pady=(2, 3))
-        self.finance_explanation = self.label(parent, "", fg=MUTED, anchor="w", justify="left", font=(BODY_FONT, 8))
-        self.finance_explanation.grid(row=5, column=0, sticky="ew", padx=5, pady=(0, 3))
-        self.finance_sources = self.label(parent, "", fg=MUTED, anchor="w", justify="left", font=(BODY_FONT, 8))
-        self.finance_sources.grid(row=6, column=0, sticky="ew", padx=5, pady=(0, 7))
-
-    def adapt_layout(self, event=None):
-        if event is not None and event.widget is not self:
-            return
-        width, height = self.winfo_width(), self.winfo_height()
-        if width < 500:
-            return
-        # Moving/restoring the native window can repeat Configure at the same size.
-        # Reconfiguring global ttk styles there invalidates the entire widget tree.
-        if getattr(self,'_adapted_size',None)==(width,height):
-            return
-        self._adapted_size=(width,height)
-        self.remember_window_state()
-        logo_width = 360 if height>=1400 and width>=2800 else 240 if height>=740 and width>=1600 else 180
-        if logo_width != self.logo_native_width:
-            self.logo_native_width = logo_width
-            self.brand_logo = self.logo_images[logo_width]
-            self.brand_logo_label.configure(image=self.brand_logo)
-        compact = height < 850 or width < 1450
-        self.overview_activity.grid_remove()
-        self.overview_tab.rowconfigure(4,weight=0)
-        if height>=900 and width>=1450:
-            self.overview_trends.grid();self.overview_tab.rowconfigure(5,weight=1)
-        else:
-            self.overview_trends.grid_remove();self.overview_tab.rowconfigure(5,weight=0)
-        if hasattr(self,'rig_cards'):self.rig_cards.adapt(width-30)
-        for widget in (self.payout_details,self.payout_source,self.payout_rule):
-            if height<780:widget.pack_forget() if widget is not self.payout_rule else widget.grid_remove()
-            elif widget is self.payout_rule:widget.grid()
-            else:widget.pack(fill='x',pady=(3,0))
-        body = 12 if compact else min(19, max(14, round(min(width/1650, height/1000)*14)))
-        value_size = 29 if compact else min(46, max(34, round(body*2.4)))
-        if not hasattr(self, "_font_baselines"):
-            self._font_baselines = {}
-        pending = list(self.winfo_children())
-        while pending:
-            widget = pending.pop()
-            if widget.winfo_toplevel() is not self:
-                continue
-            pending.extend(widget.winfo_children())
-            try:
-                if "font" not in widget.keys():
-                    continue
-                if widget not in self._font_baselines:
-                    font = tkfont.Font(font=widget.cget("font"))
-                    self._font_baselines[widget] = (font.actual("family"), abs(font.actual("size")), font.actual("weight"))
-                family, points, weight = self._font_baselines[widget]
-                pixels = max(11, round(points*4/3*(body/12)))
-                widget.configure(font=(family, -pixels, weight))
-            except tk.TclError:
-                pass
-        for label in list(self.card_values.values())+list(self.overview_values.values()):
-            label.configure(font=(TITLE_FONT, -value_size, "bold"))
-        for label in list(self.card_notes.values())+list(self.overview_notes.values()):
-            label.configure(font=(BODY_FONT, -body))
-        if height>=780:
-            self.support_status_label.pack(anchor='w',pady=(3,0))
-            self.wallet_entry.master.master.configure(pady=8)
-        if height<780:
-            for label in self.overview_values.values():label.configure(font=(TITLE_FONT,-23,'bold'))
-            for label in self.overview_notes.values():label.configure(font=(BODY_FONT,-10))
-            for label in self.overview_values.values():label.master.title_label.configure(font=(BODY_FONT,-11,'bold'))
-            for label in self.overview_values.values():
-                label.master.title_label.pack_configure(pady=(3,0))
-                self.overview_notes[next(key for key,value in self.overview_values.items() if value is label)].pack_configure(pady=(0,3))
-            self.rig_cards.adapt(width-30)
-            wallet_panel=self.wallet_entry.master.master
-            wallet_panel.configure(pady=4)
-            wallet_panel.winfo_children()[0].configure(font=(BODY_FONT,-10,'bold'))
-            self.wallet_entry.configure(font=('Consolas',-11));self.wallet_entry.pack_configure(ipady=0)
-            self.support_status_label.configure(font=(BODY_FONT,-10))
-            self.support_status_label.pack_forget()
-            for button in (self.wallet_copy_button,self.wallet_pool_button):button.configure(font=(BODY_FONT,-10),pady=2)
-            for widget in (self.payout_state,self.payout_generated_text,self.payout_confirmed_text,self.payout_remaining):widget.configure(font=(BODY_FONT,-11))
-            self.payout_eta.configure(font=(TITLE_FONT,-13,'bold'))
-            self.payout_threshold.configure(font=(BODY_FONT,-10))
-            ttk.Style(self).configure('Generated.Horizontal.TProgressbar',thickness=8)
-            ttk.Style(self).configure('Confirmed.Horizontal.TProgressbar',thickness=8)
-        for label in (self.details, self.overview_thermal, self.payout_generated_text, self.payout_confirmed_text, self.payout_remaining, self.payout_details):
-            label.configure(font=(BODY_FONT, -body))
-        half = max(450, (width-95)//2)
-        for label in (self.payout_eta, self.payout_details, self.payout_remaining):
-            label.configure(wraplength=half)
-        for label in (self.details, self.overview_activity, self.logs, self.finance_pay_summary, self.finance_explanation, self.finance_sources):
-            label.configure(wraplength=width-55)
-        lineheight = tkfont.Font(family=BODY_FONT, size=-body).metrics("linespace")
-        rowheight = lineheight+8
-        ttk.Style(self).configure("Finance.Treeview", rowheight=rowheight, font=(BODY_FONT, -body))
-        ttk.Style(self).configure("Finance.Treeview.Heading", font=(BODY_FONT, -body, "bold"))
-        ttk.Style(self).configure("TNotebook.Tab", font=(BODY_FONT, -max(12,body), "bold"))
-        for column, share in (("#0", .24), ("prl", .19), ("brl", .18), ("usd", .18), ("btc", .21)):
-            self.finance_table.column(column, width=int((width-48)*share), minwidth=80)
-        table_height = rowheight*9+31
-        self.finance_tab.rowconfigure(2, weight=0, minsize=table_height)
-        self.finance_tab.rowconfigure(3, weight=1, minsize=85)
-        self.money_chart.configure(height=100 if compact else 170)
-        self.layout_profile = {"width": width, "height": height, "compact": compact, "body_font": body, "rowheight": rowheight}
-        for chart in list(self.charts.values())+[self.money_chart]:
-            chart.title_px = max(13,body)
-            chart.axis_px = max(11,body-2)
-            chart.draw()
-        if height<780:
-            for widget in (self.payout_state,self.payout_generated_text,self.payout_confirmed_text,self.payout_remaining):widget.configure(font=(BODY_FONT,-11))
-            self.payout_state.master.configure(pady=4)
-            self.payout_remaining.configure(text=self.payout_remaining.cget('text').replace('\n',' · ').replace('Pendente:','Pend.').replace('Falta gerar:','Falta:'))
 
     def refresh_finance(self):
         def timestamp(value):
@@ -1496,7 +1018,6 @@ class Monitor(tk.Tk):
             errors=['Minerador indisponível: arquivo ausente ou bloqueado. Abra Configurações > Segurança.']
         if self.history.last_error:
             errors.append("Histórico aguardando gravação: " + self.history.last_error)
-        archived = self.history.info.get("telemetry", (0, None, None))[0]
         self.footer.configure(text=" | ".join(errors) if errors else f"Histórico permanente · gráficos mostram 15 min · atualização {dt.datetime.fromtimestamp(data['collected_at']).strftime('%H:%M:%S')}")
         STATE_DIR.mkdir(parents=True, exist_ok=True)
         snapshot = {k: v for k, v in data.items() if k != "miner"}
@@ -1635,15 +1156,30 @@ class Monitor(tk.Tk):
         if hasattr(self, "gpu_runtime"):
             self.gpu_runtime.stop.set()
         self.title("HashPilot · salvando histórico…")
-        self.close_thread = threading.Thread(target=lambda: (self.tray.stop(), self.history.close()), daemon=True)
+        self.close_deadline = time.monotonic() + CLOSE_TIMEOUT_SECONDS
+        self.close_thread = threading.Thread(target=self.shutdown_background, daemon=True, name="shutdown")
         self.close_thread.start()
         self.after(100, self.finish_close)
 
+    def shutdown_background(self):
+        """Ordem: bandeja, última amostra do coletor e só então o histórico (sem escrita após o fechamento)."""
+        self.tray.stop()
+        collector = getattr(self, "collector_thread", None)
+        if collector is not None:
+            collector.join(timeout=5)
+        self.history.close()
+
     def finish_close(self):
-        if self.history.worker.is_alive() or (hasattr(self,"gpu_runtime") and self.gpu_runtime.thread.is_alive()):
-            self.after(100, self.finish_close)
-        else:
+        busy = self.history.worker.is_alive() or (hasattr(self,"gpu_runtime") and self.gpu_runtime.thread.is_alive())
+        if not busy:
             self.destroy()
+            return
+        if time.monotonic() >= getattr(self, "close_deadline", float("inf")) and not getattr(self, "close_withdrawn", False):
+            # Prazo esgotado: a janela some, mas gravações pendentes do histórico nunca são descartadas.
+            LOG.warning("Gravações pendentes após %s s; janela oculta até concluir", CLOSE_TIMEOUT_SECONDS)
+            self.close_withdrawn = True
+            self.withdraw()
+        self.after(100, self.finish_close)
 
 
 def console_text(snapshot, finance):
@@ -1793,6 +1329,9 @@ def main():
                 return
             if not read_settings().get("onboarding_complete"):
                 return
+    # Só o processo do painel (instância única) escreve o diagnóstico: --console/--snapshot e
+    # processos de passagem não disputam a rotação do mesmo arquivo no Windows.
+    configure_logging(LOG_DIR)
     app = Monitor()
     if args.summary:
         app.after(800, lambda: (app.show_summary(), app.hide_to_tray()))

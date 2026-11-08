@@ -4,7 +4,7 @@ import time
 import tkinter as tk
 from config import STATE_DIR,LOG_DIR,SETTINGS_PATH
 from stop_mining import request_stop,read,status_path
-from contribution import atomic_json
+from fsutil import atomic_json
 from rig_config import device_key
 
 BG,PANEL,TEXT,MUTED,RED,TEAL='#0A1628','#10213B','#FFFFFF','#B9C7DC','#9E3333','#12A98E'

@@ -5,16 +5,16 @@ isoladas em NvidiaActuator, desativado por padrão e protegido por posse exclusi
 """
 from __future__ import annotations
 from ai_advisor import RoutedAdvisor
+from thermal import EMERGENCY_C
+from nvidia_smi import nvidia_smi_path
 
 import argparse
-from contextlib import contextmanager
 import csv
 import json
 import math
 import os
 from pathlib import Path
 import re
-import shutil
 import sqlite3
 import statistics
 import subprocess
@@ -22,7 +22,7 @@ import threading
 import time
 from urllib.error import URLError
 from urllib.parse import urlparse
-from urllib.request import Request, urlopen
+from urllib.request import Request
 import uuid
 
 NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
@@ -42,10 +42,7 @@ def numeric(value, default=None):
 
 
 def smi_command(arguments, timeout=4):
-    executable = shutil.which("nvidia-smi")
-    if not executable and os.name == "nt":
-        candidate = Path(os.environ.get("WINDIR", "C:/Windows")) / "System32/nvidia-smi.exe"
-        executable = str(candidate) if candidate.is_file() else None
+    executable = nvidia_smi_path()
     if not executable:
         raise RuntimeError("Driver NVIDIA/nvidia-smi indisponível")
     result = subprocess.run([executable, *map(str, arguments)], capture_output=True, text=True,
@@ -182,6 +179,65 @@ def read_sample(gpu, command=smi_command):
     return result
 
 
+def read_fan(gpu, command=smi_command):
+    """Velocidade da ventoinha em %, ou None (placa sem leitura, erro do driver)."""
+    try:
+        value=numeric(command(["-i",gpu["uuid"],"--query-gpu=fan.speed","--format=csv,noheader,nounits"]).strip().splitlines()[0])
+    except (OSError,RuntimeError,IndexError,subprocess.SubprocessError):
+        return None
+    return value if value is not None and 0<=value<=100 else None
+
+
+def read_memory_clocks(gpu, command=None):
+    """Clocks de memória suportados pelo driver (MHz); lista vazia se indisponível."""
+    try:
+        text=(command or smi_command)(["-i",gpu["uuid"],"--query-supported-clocks=memory","--format=csv,noheader,nounits"])
+        lines=text.splitlines()
+    except (OSError,RuntimeError,AttributeError,subprocess.SubprocessError):
+        return []
+    return sorted({int(v) for v in (numeric(line.strip()) for line in lines) if v and v>0},reverse=True)
+
+
+def read_memory_clock(gpu, command=None):
+    try:
+        return numeric((command or smi_command)(["-i",gpu["uuid"],"--query-gpu=clocks.mem","--format=csv,noheader,nounits"]).strip().splitlines()[0])
+    except (OSError,RuntimeError,IndexError,AttributeError,subprocess.SubprocessError):
+        return None
+
+
+def read_optimization(settings_path, finance_path):
+    """(objetivo, preço R$/kWh, receita R$ por TH/s por dia). Lucro sem preço ou receita volta a hashrate."""
+    try:
+        settings=json.loads(Path(settings_path).read_text(encoding="utf-8-sig"))
+    except (OSError,ValueError):
+        settings={}
+    objective=settings.get("optimize_for") if isinstance(settings,dict) else None
+    price=numeric(settings.get("electricity_price_brl_kwh")) if isinstance(settings,dict) else None
+    revenue=None
+    try:
+        forecast=json.loads(Path(finance_path).read_text(encoding="utf-8-sig")).get("forecast") or {}
+        day,rate=numeric(forecast.get("brl_day")),numeric(forecast.get("hashrate_ths"))
+        if day and rate and day>0 and rate>0:revenue=day/rate
+    except (OSError,ValueError,AttributeError):
+        pass
+    if objective!="profit" or price is None or price<0 or revenue is None:
+        return "hashrate",price,revenue
+    return "profit",price,revenue
+
+
+def read_target_temperature(settings_path, gpu_uuid):
+    """Alvo do usuário: override por GPU em gpu_settings, senão o global; None se não configurado."""
+    try:
+        settings=json.loads(Path(settings_path).read_text(encoding="utf-8-sig"))
+    except (OSError,ValueError):
+        return None
+    if not isinstance(settings,dict):return None
+    entry=(settings.get("gpu_settings") or {}).get(gpu_uuid) if isinstance(settings.get("gpu_settings"),dict) else None
+    value=entry.get("target_temperature_c") if isinstance(entry,dict) else None
+    if value is None:value=settings.get("target_temperature_c")
+    return numeric(value)
+
+
 def normalize_sample(sample, now=None):
     now = time.time() if now is None else float(now)
     pairs = {"temperature_c":("temperature_c","temperature.gpu"), "power_w":("power_w","power.draw"),
@@ -195,7 +251,8 @@ def normalize_sample(sample, now=None):
 def thermal_limits(gpu):
     # 76/83 are conservative product ceilings; a lower driver limit always wins.
     driver = numeric(gpu.get("temperature_limit_c"))
-    hard = min(83.0,driver-2) if driver and 50 <= driver <= 110 else 83.0
+    ceiling = float(EMERGENCY_C)
+    hard = min(ceiling,driver-2) if driver and 50 <= driver <= 110 else ceiling
     return min(76.0, hard-7), hard
 
 
@@ -726,9 +783,13 @@ class NvidiaActuator:
                 import fcntl
                 fcntl.flock(handle.fileno(),fcntl.LOCK_EX|fcntl.LOCK_NB)
             self.handle=handle
+        except OSError as error:
+            # Lock ocupado (msvcrt/fcntl levantam OSError); outros erros e Ctrl+C não viram "outra sessão".
+            handle.close()
+            raise RuntimeError("Outra sessão detém o controle da GPU") from error
         except BaseException:
             handle.close()
-            raise RuntimeError("Outra sessão detém o controle da GPU")
+            raise
 
     def _unlock(self):
         handle,self.handle=self.handle,None
@@ -807,6 +868,35 @@ class NvidiaActuator:
         elif checked["power_limit_w"] is not None:
             self.command(["-i",gpu["uuid"],"-pl",str(checked["power_limit_w"])])
         return checked
+
+    def set_memory_clock(self, gpu, clock, supported):
+        """Trava a memória num clock da lista do driver (troca em tempo real nas Ampere)."""
+        validate_device(gpu)
+        if not self.enabled or not self.owns:
+            raise RuntimeError("Hardware somente leitura ou controle concorrente")
+        if int(clock) not in {int(value) for value in supported}:
+            raise ValueError("Clock de memória fora da lista do driver")
+        self.assert_owner(gpu["uuid"])
+        self.command(["-i",gpu["uuid"],"-lmc",f"{int(clock)},{int(clock)}"])
+        return int(clock)
+
+    def apply_reduction(self, gpu, sample, clock, *, startup=False):
+        """Trava num clock suportado <= pedido e < atual. Só reduz: usado na partida e em excesso térmico.
+
+        startup=True trava mesmo com a GPU ociosa (clock atual baixo), antes do boost de fábrica esquentar a placa."""
+        validate_device(gpu)
+        if not self.enabled or not self.owns:
+            raise RuntimeError("Hardware somente leitura ou controle concorrente")
+        self.assert_owner(gpu["uuid"])
+        normalized=normalize_sample(sample)
+        current=normalized["clock_mhz"]
+        clocks=sorted({int(value) for value in gpu.get("supported_graphics_clocks_mhz",[]) if numeric(value) and value>0})
+        eligible=[value for value in clocks if value<=clock and (startup or current is None or value<current)]
+        if not eligible:
+            return None
+        value=max(eligible)
+        self.command(["-i",gpu["uuid"],"-lgc",f"{value},{value}"])
+        return value
 
     def close(self):
         try:
@@ -1056,7 +1146,7 @@ def read_miner_data(args,gpu,monitor_state_dir,device_count,now=None):
 
 
 def write_status(path,payload):
-    from contribution import atomic_json
+    from fsutil import atomic_json
     atomic_json(path,payload)
 
 
@@ -1093,6 +1183,7 @@ def control(args,state_dir,monitor_state_dir):
             "gpu_name":gpu["name"],"mode":"baseline","sampled_at":time.time(),"error":None,"writes":0}
     status.update(software=component_identity(),profile=selected_profile)
     owns=False
+    memory_explorer=None
     controller_started_at=time.time()
     def apply_recorded(sample,plan,rate=None):
         actuator.apply(gpu,sample,plan,external_controller_active=False)
@@ -1105,10 +1196,37 @@ def control(args,state_dir,monitor_state_dir):
         status["enabled"]=True
         agent.start_benchmark(gpu,args.duration,args.objective)
         trial_active=False
+        trial_rejected=0  # definido de fato ao aplicar um ajuste (trial_active=True)
         cycles=0
         last_request=0
         last_thermal_adjustment=0
         objective=args.objective
+        from thermal_target import TargetTemperatureController,MemoryExplorer,clamp_target,SAFE_START_CLOCK_MHZ
+        from contribution import atomic_json
+        settings_path=__import__("config").SETTINGS_PATH
+        target_controller=None
+        target_checked_at=float("-inf")
+        hot_since=None
+        memory_path=state_dir/"thermal-target.json"
+        def remembered():
+            try:
+                data=json.loads(memory_path.read_text(encoding="utf-8-sig"))
+                return data if isinstance(data,dict) and data.get("gpu_uuid")==gpu["uuid"] else {}
+            except (OSError,ValueError):return {}
+        def remember(**values):
+            try:atomic_json(memory_path,{**remembered(),"gpu_uuid":gpu["uuid"],**values,"at":time.time()})
+            except OSError:pass
+        def remember_clock(clock):remember(clock_mhz=clock)
+        memory_explorer=None
+        memory_supported=[]
+        def start_clock():
+            try:
+                memory=json.loads(memory_path.read_text(encoding="utf-8-sig"))
+                if memory.get("gpu_uuid")==gpu["uuid"] and numeric(memory.get("clock_mhz")):
+                    # Memória nunca autoriza partida acima do clock seguro; o controlador sobe depois.
+                    return min(float(memory["clock_mhz"]),SAFE_START_CLOCK_MHZ)
+            except (OSError,ValueError,AttributeError):pass
+            return SAFE_START_CLOCK_MHZ
         while same_process(args.miner_pid,miner_identity):
             if requested_control_stop(state_dir,gpu["uuid"],controller_started_at):
                 status.update(mode="stopped",reason="Parada solicitada pelo gerenciador desta GPU")
@@ -1117,9 +1235,120 @@ def control(args,state_dir,monitor_state_dir):
                 raise RuntimeError("Outro supervisor detectado; interrompendo controle concorrente")
             miner,fresh=read_miner_data(args,gpu,monitor_state_dir,len(devices))
             sample=read_sample(gpu)
-            if sample["temperature_c"] is None or sample["temperature_c"]>=thermal_limits(gpu)[1]:
+            if sample["temperature_c"] is None:
                 raise RuntimeError("Limite térmico ou sensor inválido: supervisor deve encerrar o minerador")
             now=time.time()
+            if now-target_checked_at>=10:
+                # Relido periodicamente: mudar o alvo nas Configurações vale sem reiniciar.
+                target_checked_at=now
+                target=clamp_target(read_target_temperature(settings_path,gpu["uuid"]),thermal_limits(gpu)[1])
+                if target is None:
+                    target_controller=None
+                elif target_controller is None:
+                    target_controller=TargetTemperatureController(target)
+                    memory_supported=read_memory_clocks(gpu)
+                    if len(memory_supported)>=2:
+                        best=numeric(remembered().get("memory_mhz"))
+                        memory_explorer=MemoryExplorer(memory_supported,target,best_mhz=best if best in memory_supported else None)
+                    # Partida segura: trava no último clock bom antes do boost de fábrica aquecer a placa.
+                    running=sample["clock_mhz"] if (sample["clock_mhz"] or 0)>=1000 else None
+                    locked=actuator.apply_reduction(gpu,sample,min(start_clock(),running or float("inf")),startup=True)
+                    if locked is not None:
+                        status["writes"]+=1
+                        status["start_clock_mhz"]=locked
+                        sample=read_sample(gpu)
+                    if trial_active:
+                        rollback=agent.cancel_trial(gpu,sample)
+                        if rollback and rollback["action"]!="hold":
+                            apply_recorded(sample,rollback,miner.get('hashrate'))
+                            status["writes"]+=1
+                        trial_active=False
+                else:
+                    target_controller.target_c=target
+                    if memory_explorer is not None:memory_explorer.target_c=target
+                if target is None:memory_explorer=None
+                if memory_explorer is not None:
+                    objective_now,price,revenue=read_optimization(settings_path,Path(settings_path).parent/"finance-latest.json")
+                    if objective_now!=memory_explorer.objective and memory_explorer.best_mhz is not None:
+                        memory_explorer.explored_at=float("-inf")  # objetivo mudou: reexplorar na próxima janela
+                    memory_explorer.objective,memory_explorer.price_kwh,memory_explorer.revenue_per_ths_day=objective_now,price,revenue
+            hard=thermal_limits(gpu)[1]
+            if sample["temperature_c"]>=hard:
+                # Sem alvo: contrato original (encerrar). Com alvo: reduz forte e só desiste após 10 s.
+                if target_controller is None:
+                    raise RuntimeError("Limite térmico ou sensor inválido: supervisor deve encerrar o minerador")
+                hot_since=now if hot_since is None else hot_since
+                if now-hot_since>=10:
+                    raise RuntimeError("Limite térmico por mais de 10 s mesmo reduzindo: supervisor deve encerrar o minerador")
+                if sample["clock_mhz"] is not None:
+                    locked=actuator.apply_reduction(gpu,sample,sample["clock_mhz"]-150)
+                    if locked is not None:
+                        status["writes"]+=1
+                        target_controller.notify_applied("clock_down",sample["clock_mhz"],locked,now)
+                        remember_clock(locked)
+                status.update(mode="target",sampled_at=now,sample=sample,target_control={"target_c":target_controller.target_c,
+                    "action":"clock_down","reason":f"Emergência: {sample['temperature_c']:.0f} °C; redução forte aplicada"})
+                write_status(status_path,status)
+                cycles+=1
+                if args.samples and cycles>=args.samples:
+                    break
+                time.sleep(2)
+                continue
+            hot_since=None
+            if target_controller is not None:
+                fan=read_fan(gpu)
+                rate=miner.get("hashrate") if fresh else None
+                decision=target_controller.step(sample["temperature_c"],fan,sample["clock_mhz"],now,rate)
+                applied=None
+                excess=sample["temperature_c"]-target_controller.target_c
+                if decision.action=="clock_down" and excess>=2 and sample["clock_mhz"] is not None:
+                    # Muito acima do alvo: redução proporcional ao excesso (15 MHz por °C, até 90 MHz).
+                    locked=actuator.apply_reduction(gpu,sample,sample["clock_mhz"]-min(90,15*int(excess)))
+                    if locked is not None:
+                        target_controller.notify_applied("clock_down",sample["clock_mhz"],locked,now,rate)
+                        remember_clock(locked)
+                        status["writes"]+=1
+                        applied={"action":"clock_down","clock_mhz":locked}
+                elif decision.action=="clock_up" and sample["temperature_c"]>=thermal_limits(gpu)[0]:
+                    decision.reason="Folga em relação ao alvo, mas acima do limite de subida segura do atuador"
+                elif decision.action!="hold":
+                    plan=validated_plan(gpu,sample,decision.action)
+                    plan.update(gpu_uuid=gpu["uuid"],at=now,reason=decision.reason)
+                    if plan["action"]!="hold":
+                        apply_recorded(sample,plan,rate)
+                        target_controller.notify_applied(plan["action"],sample["clock_mhz"],plan["clock_mhz"],now,rate)
+                        remember_clock(plan["clock_mhz"])
+                        status["writes"]+=1
+                        applied=plan
+                memory_info=None
+                if memory_explorer is not None:
+                    errors=int(miner.get("rejected",0) or 0)+int(miner.get("hw_errors",0) or 0)
+                    wanted=memory_explorer.step(now,sample["temperature_c"],rate,errors,read_memory_clock(gpu),sample.get("power_w"))
+                    if wanted is not None:
+                        actuator.set_memory_clock(gpu,wanted,memory_supported)
+                        status["writes"]+=1
+                        # Outra memória muda o calor: o teto aprendido do núcleo deixa de valer.
+                        target_controller.ceiling_mhz=None
+                        target_controller.pending_up=None
+                    if memory_explorer.best_mhz is not None and not memory_explorer.queue:
+                        remember(memory_mhz=memory_explorer.best_mhz,memory_scores={str(int(k)):round(v,3) for k,v in memory_explorer.scores.items()})
+                    memory_info={"testing_mhz":memory_explorer.current_mhz,"best_mhz":memory_explorer.best_mhz,
+                                 "pending":[int(c) for c in memory_explorer.queue],
+                                 "unreachable":sorted(int(c) for c in memory_explorer.unreachable),
+                                 "objective":memory_explorer.objective,"price_kwh":memory_explorer.price_kwh,
+                                 "revenue_per_ths_day":memory_explorer.revenue_per_ths_day,
+                                 "scores":{str(int(k)):round(v,3) for k,v in memory_explorer.scores.items()}}
+                status.update(mode="target",sampled_at=now,sample=sample,target_control={
+                    "target_c":target_controller.target_c,"fan_pct":fan,"action":decision.action,
+                    "reason":decision.reason,"ceiling_mhz":decision.ceiling_mhz,"applied":applied,"memory":memory_info})
+                agent.observe(gpu,sample,rate,miner.get("accepted",0),miner.get("rejected",0),
+                              hash_sampled_at=miner.get("hashrate_at"),hw_errors=miner.get("hw_errors",0))
+                write_status(status_path,status)
+                cycles+=1
+                if args.samples and cycles>=args.samples:
+                    break
+                time.sleep(2)
+                continue
             soft_limit=thermal_limits(gpu)[0]-profile(selected_profile)['thermal_margin']
             if sample["temperature_c"]>=soft_limit and now-last_thermal_adjustment>=6:
                 cooling=validated_plan(gpu,sample,"clock_down")
@@ -1225,6 +1454,9 @@ def control(args,state_dir,monitor_state_dir):
                 if minimum is not None and maximum is not None and original_power is not None and minimum<=original_power<=maximum:
                     actuator.assert_owner(gpu["uuid"])
                     smi_command(["-i",gpu["uuid"],"-pl",str(original_power)])
+                if memory_explorer is not None:
+                    actuator.assert_owner(gpu["uuid"])
+                    smi_command(["-i",gpu["uuid"],"-rmc"])
             except (OSError,RuntimeError,subprocess.SubprocessError) as error:
                 status["restore_error"]=str(error)
             finally:

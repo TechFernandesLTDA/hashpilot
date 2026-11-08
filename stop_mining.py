@@ -6,7 +6,7 @@ from pathlib import Path
 import subprocess
 import sys
 import time
-from contribution import atomic_json
+from fsutil import atomic_json
 from rig_config import device_key,update_gpu_settings,gpu_paths
 
 def read(path):

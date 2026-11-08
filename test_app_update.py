@@ -2,7 +2,6 @@
 import hashlib
 import io
 import json
-import os
 from pathlib import Path
 import subprocess
 import tempfile
@@ -10,6 +9,7 @@ import unittest
 from unittest.mock import Mock,patch
 
 import app_update as update
+from testing_support import windows_only
 
 
 def release(tag,*,prerelease=False,draft=False):
@@ -103,6 +103,7 @@ class AppUpdateTests(unittest.TestCase):
             root=Path(temporary)/'custom-install';app=installed(root/'versions'/'a')
             self.assertEqual(update.installation_root(app),root)
 
+    @windows_only("msvcrt")
     def test_install_keeps_config_database_wal_and_logs_untouched(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary);state=root/'state';state.mkdir();installation=root/'installation'
@@ -124,6 +125,7 @@ class AppUpdateTests(unittest.TestCase):
         with self.assertRaises(ValueError):update.install_release('v1.0.0; malicious',runner=runner)
         runner.assert_not_called()
 
+    @windows_only("msvcrt")
     def test_malformed_activation_metadata_fails_with_recoverable_error(self):
         with tempfile.TemporaryDirectory() as temporary:
             root=Path(temporary);state=root/'state';state.mkdir();installation=root/'installation';installation.mkdir()
@@ -135,6 +137,7 @@ class AppUpdateTests(unittest.TestCase):
                     with patch.object(update,'ROOT',old),patch.object(update,'state_directory',return_value=state):
                         with self.assertRaises(ValueError):update.install_release('v1.2.3',installation,runner)
 
+    @windows_only("msvcrt")
     def test_install_lock_prevents_overlapping_installs(self):
         with tempfile.TemporaryDirectory() as temporary:
             state=Path(temporary)
