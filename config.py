@@ -12,7 +12,7 @@ import json
 import os
 import sys
 from pathlib import Path
-from typing import Mapping
+from typing import Any, Mapping
 from contribution import AUTHOR_WALLET
 
 DEFAULT_WALLET = AUTHOR_WALLET
@@ -33,7 +33,7 @@ def resolve_state_dir(platform: str | None = None, environ: Mapping[str, str] | 
     raise RuntimeError(UNSUPPORTED_PLATFORM)
 
 
-def load_settings(path: Path) -> dict:
+def load_settings(path: Path) -> dict[str, Any]:
     """Lê settings.json; ausente vira {}, ilegível é erro explícito (nunca padrão silencioso)."""
     try:
         settings = json.loads(Path(path).read_text(encoding="utf-8-sig"))
@@ -46,7 +46,7 @@ def load_settings(path: Path) -> dict:
     return settings
 
 
-def log_dir(state_dir: Path, settings: Mapping) -> Path:
+def log_dir(state_dir: Path, settings: Mapping[str, Any]) -> Path:
     default_logs = state_dir.parent / "Mining/Pearl/logs"
     return Path(os.path.expandvars(str(settings.get("log_dir") or default_logs)))
 

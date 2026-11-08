@@ -23,7 +23,7 @@ def get_logger(name: str) -> logging.Logger:
     return logging.getLogger(f"{ROOT}.{name}")
 
 
-def configure(directory, filename: str = "hashpilot.log", level: int = logging.INFO) -> Path | None:
+def configure(directory: str | Path, filename: str = "hashpilot.log", level: int = logging.INFO) -> Path | None:
     """Ativa o arquivo rotativo uma única vez por processo; falha de disco não derruba o app."""
     root = logging.getLogger(ROOT)
     path = Path(directory) / filename

@@ -5,17 +5,20 @@ from pathlib import Path
 import re
 from contribution import AUTHOR_WALLET,valid_wallet
 from gpu_profiles import PROFILES
+from typing import Any, Iterable, cast
+
+from data_contracts import GpuPaths, JsonObject, RigDevice
 
 MAX_GPUS=6
 
 
-def device_key(gpu_uuid):
+def device_key(gpu_uuid: object) -> str:
     if not isinstance(gpu_uuid,str) or not re.fullmatch(r"GPU-[A-Za-z0-9-]{1,100}",gpu_uuid):
         raise ValueError("UUID NVIDIA inválido")
     return gpu_uuid
 
 
-def gpu_paths(log_root,gpu_uuid):
+def gpu_paths(log_root: str | Path, gpu_uuid: str) -> GpuPaths:
     root=Path(log_root).resolve()/"gpus"/device_key(gpu_uuid)
     return {"log_dir":str(root),"state_dir":str(root),"latest_path":str(root/"latest.json"),
         "controller_status_path":str(root/"gpu-agent-control.json"),
@@ -23,7 +26,7 @@ def gpu_paths(log_root,gpu_uuid):
         "benchmark_request_path":str(root/"gpu-agent-request.json")}
 
 
-def resolve_devices(detected,settings,log_root):
+def resolve_devices(detected: Iterable[Any], settings: object, log_root: str | Path) -> list[RigDevice]:
     """New GPUs default enabled; only a running manager starts desired workers."""
     if not isinstance(settings,dict):
         raise ValueError("Configuração do rig inválida")
@@ -33,8 +36,8 @@ def resolve_devices(detected,settings,log_root):
     overrides=settings.get("gpu_settings",{})
     if not isinstance(overrides,dict):
         raise ValueError("gpu_settings precisa ser um objeto por UUID")
-    result=[]
-    seen=set()
+    result: list[RigDevice]=[]
+    seen: set[str]=set()
     candidates=[gpu for gpu in detected if isinstance(gpu,dict) and gpu.get('vendor')=='NVIDIA']
     for gpu in candidates:
         if isinstance(gpu.get('index'),bool) or not isinstance(gpu.get('index'),int) or gpu['index']<0:
@@ -67,17 +70,17 @@ def resolve_devices(detected,settings,log_root):
             enabled=False
             error='Perfil inválido; dispositivo desabilitado'
             selected_profile='performance'
-        gpu={**detected_gpu,**gpu_paths(log_root,identifier),"enabled":enabled,
+        device=cast(RigDevice,{**detected_gpu,**gpu_paths(log_root,identifier),"enabled":enabled,
             'profile':selected_profile,
             "wallet":wallet,"effective_wallet":wallet,"wallet_override":override,
             "uses_default_wallet":override is None,"uses_author_wallet":wallet==AUTHOR_WALLET,
             "device_key":identifier,"worker_name":"HashPilot_"+identifier[4:],
-            "configuration_error":error}
-        result.append(gpu)
+            "configuration_error":error})
+        result.append(device)
     return result
 
 
-def update_gpu_settings(settings,gpu_uuid,*,enabled=None,wallet_override=None,change_wallet=False):
+def update_gpu_settings(settings: object, gpu_uuid: str, *, enabled: object = None, wallet_override: str | None = None, change_wallet: bool = False) -> JsonObject:
     """Return a new settings document; callers retain ownership of atomic saving."""
     identifier=device_key(gpu_uuid)
     if not isinstance(settings,dict):

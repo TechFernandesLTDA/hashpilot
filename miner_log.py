@@ -9,6 +9,7 @@ from __future__ import annotations
 
 import datetime as dt
 import re
+from typing import Any
 
 STAMP_FORMAT = "%Y-%m-%d %H:%M:%S"
 STAMP = re.compile(r"^\[(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)\]")
@@ -46,24 +47,24 @@ def log_timestamp(line: str) -> float | None:
     return value
 
 
-def parse_miner_device_map(text,devices):
+def parse_miner_device_map(text: str, devices: list[dict[str, Any]]) -> dict[str, int]:
     """Match SRBMiner IDs to NVIDIA UUIDs by unique PCI bus, never model name."""
-    buses={}
+    buses: dict[int, set[int]]={}
     for line in text.splitlines():
         index=DEVICE_INDEX.search(line)
         bus=DEVICE_BUS.search(line)
         if index and bus and "nvidia" in line.lower():
             buses.setdefault(int(bus[1],16),set()).add(int(index[1]))
-    result={}
-    seen_buses=set()
+    result: dict[str, int]={}
+    seen_buses: set[int]=set()
     for gpu in devices:
         pci=re.fullmatch(r"[0-9a-fA-F]{4,8}:([0-9a-fA-F]{2}):[0-9a-fA-F]{2}\.[0-7]",str(gpu.get("pci_bus_id","")))
         if not pci: raise RuntimeError("Endereço PCI da NVIDIA ausente; seleção do minerador não confirmada")
-        bus=int(pci[1],16)
-        candidates=buses.get(bus,set())
-        if bus in seen_buses or len(candidates)!=1:
+        bus_number=int(pci[1],16)
+        candidates=buses.get(bus_number,set())
+        if bus_number in seen_buses or len(candidates)!=1:
             raise RuntimeError("Mapeamento PCI/ID do SRBMiner ambíguo ou ausente; mineração não iniciada")
-        seen_buses.add(bus)
+        seen_buses.add(bus_number)
         result[gpu["uuid"]]=next(iter(candidates))
     if len(set(result.values()))!=len(result): raise RuntimeError("Um ID do minerador correspondeu a mais de uma GPU")
     return result

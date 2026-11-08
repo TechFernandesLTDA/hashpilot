@@ -34,7 +34,7 @@ class ContributionWindowEnded(Exception):
     """A normal quota boundary, including one reached during a partial send."""
 
 
-def valid_wallet(wallet):
+def valid_wallet(wallet: object) -> bool:
     return isinstance(wallet,str) and bool(re.fullmatch(r"prl1[ac-hj-np-z02-9]{30,100}",wallet))
 
 

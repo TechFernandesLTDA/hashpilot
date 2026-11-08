@@ -12,7 +12,7 @@ from pathlib import Path
 import time
 
 
-def atomic_json(path, payload, *, durable=False, compact=False):
+def atomic_json(path: str | os.PathLike[str], payload: object, *, durable: bool = False, compact: bool = False) -> None:
     """`compact` serve para snapshots reescritos a cada ciclo; arquivos lidos por pessoas mantêm a indentação."""
     path = Path(path)
     path.parent.mkdir(parents=True, exist_ok=True)

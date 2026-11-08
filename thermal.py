@@ -30,7 +30,7 @@ class ThermalPolicy:
     é uma exceção de emergência imediata, independentemente do cooldown.
     """
 
-    def __init__(self, min_clock=1500, max_clock=1800, initial_clock=1740):
+    def __init__(self, min_clock: int = 1500, max_clock: int = 1800, initial_clock: int = 1740) -> None:
         for value in (min_clock, max_clock, initial_clock):
             if isinstance(value, bool) or not isinstance(value, int) or value <= 0:
                 raise ValueError("Clocks precisam ser inteiros positivos em MHz")
@@ -38,10 +38,10 @@ class ThermalPolicy:
             raise ValueError("Clock mínimo não pode exceder o máximo")
         self.min_clock, self.max_clock = min_clock, max_clock
         self.clock_mhz = max(min_clock, min(max_clock, initial_clock))
-        self.last_sample = None
-        self.last_temperature = None
-        self.last_adjustment = None
-        self.cold_since = None
+        self.last_sample: float | None = None
+        self.last_temperature: float | None = None
+        self.last_adjustment: float | None = None
+        self.cold_since: float | None = None
 
     def step(self, temp: float, now: float) -> Decision:
         if isinstance(temp, bool) or isinstance(now, bool):
@@ -56,7 +56,7 @@ class ThermalPolicy:
             raise ValueError("Timestamp monotônico inválido")
 
         slope = 0.0
-        if self.last_sample is not None and now > self.last_sample:
+        if self.last_sample is not None and self.last_temperature is not None and now > self.last_sample:
             slope = (temp-self.last_temperature)/(now-self.last_sample)
         self.last_sample, self.last_temperature = now, temp
         if temp <= RECOVERY_C:
