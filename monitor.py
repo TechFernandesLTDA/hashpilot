@@ -27,6 +27,7 @@ from history import HistoryStore, log_key
 from gpu_telemetry import _parse_gpu_log
 from miner_log import COUNTERS, RATE, log_timestamp
 from nvidia_smi import nvidia_smi_path
+from app_logging import configure as configure_logging, get_logger
 from config import WALLET, POOL, LOG_DIR, STATE_DIR, SETTINGS_PATH
 from fsutil import atomic_json
 from contribution import read_support_status, read_settings as read_support_settings
@@ -52,6 +53,9 @@ BODY_FONT, TITLE_FONT = "Segoe UI", "Segoe UI"
 BG, PANEL, BORDER, TEXT, MUTED = "#0A1628", "#10213B", "#23446D", "#FFFFFF", "#E8EDF5"
 TEAL, BLUE, ORANGE, PINK = "#12A98E", "#1C64C8", "#ffbc66", "#E8EDF5"
 NO_WINDOW = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
+
+
+LOG = get_logger("monitor")
 
 
 def run(command: list[str], timeout: float = 3) -> str:
@@ -183,10 +187,13 @@ class Collector:
         process_error=None
         try:
             processes=miner_process_ids()
-        except Exception as error:process_error=str(error)
+        except Exception as error:
+            LOG.exception('Falha ao listar processos do minerador')
+            process_error=str(error)
         try:
             rig=self.rig_reader.sample(processes)
         except Exception as error:
+            LOG.exception('Falha ao ler telemetria do rig')
             rig={'schema_version':2,'devices':[],'totals':totals([]),'ignored_devices':[],'error':str(error)}
         now=time.time()
         support_settings=cached_load(SETTINGS_PATH,read_support_settings)
@@ -210,10 +217,12 @@ class Collector:
         try:
             result["gpu"] = read_gpu()
         except Exception as error:
+            LOG.exception("Falha ao ler sensores NVIDIA (modo legado)")
             result["gpu_error"] = str(error)
         try:
             result["miner_running"] = bool(miner_process_ids())
         except Exception as error:
+            LOG.exception("Falha ao listar processos do minerador (modo legado)")
             result["process_error"] = str(error)
         try:
             files = list(LOG_DIR.glob("*.log"))
@@ -236,6 +245,7 @@ class Collector:
             else:
                 result["log_error"] = "Nenhum log de mineração encontrado."
         except Exception as error:
+            LOG.exception("Falha ao ler log do minerador (modo legado)")
             result["log_error"] = str(error)
         result["miner"] = self.log_data.copy()
         result["log_path"] = str(self.log_path) if self.log_path else None
@@ -1744,6 +1754,7 @@ def main():
     parser.add_argument("--setup", action="store_true", help="Configura carteira e instalação opcional do minerador")
     parser.add_argument("--restart", action="store_true", help=argparse.SUPPRESS)
     args = parser.parse_args()
+    configure_logging(LOG_DIR)
     if args.snapshot:
         print(json.dumps(Collector().sample(), ensure_ascii=False, indent=2))
         return

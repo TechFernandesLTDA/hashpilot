@@ -726,9 +726,13 @@ class NvidiaActuator:
                 import fcntl
                 fcntl.flock(handle.fileno(),fcntl.LOCK_EX|fcntl.LOCK_NB)
             self.handle=handle
+        except OSError as error:
+            # Lock ocupado (msvcrt/fcntl levantam OSError); outros erros e Ctrl+C não viram "outra sessão".
+            handle.close()
+            raise RuntimeError("Outra sessão detém o controle da GPU") from error
         except BaseException:
             handle.close()
-            raise RuntimeError("Outra sessão detém o controle da GPU")
+            raise
 
     def _unlock(self):
         handle,self.handle=self.handle,None
