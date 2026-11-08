@@ -26,8 +26,10 @@ from finance import FinanceCollector, financial_model, PortfolioFinanceCollector
 from history import HistoryStore, log_key
 from gpu_telemetry import _parse_gpu_log
 from miner_log import COUNTERS, RATE, log_timestamp
+from nvidia_smi import nvidia_smi_path
 from config import WALLET, POOL, LOG_DIR, STATE_DIR, SETTINGS_PATH
-from contribution import atomic_json, read_support_status, read_settings as read_support_settings
+from fsutil import atomic_json
+from contribution import read_support_status, read_settings as read_support_settings
 from file_cache import cached_load, signature as file_signature
 
 
@@ -83,10 +85,7 @@ def read_gpu() -> dict:
     fields = ["name", "driver_version", "temperature.gpu", "power.draw", "power.limit",
               "clocks.gr", "clocks.mem", "utilization.gpu", "utilization.memory",
               "memory.used", "memory.total", "fan.speed", "pstate"]
-    smi = shutil.which("nvidia-smi")
-    if not smi and os.name == "nt":
-        fallback = Path(os.environ.get("WINDIR", "C:/Windows")) / "System32/nvidia-smi.exe"
-        smi = str(fallback) if fallback.exists() else None
+    smi = nvidia_smi_path()
     if not smi:
         raise RuntimeError("Sensores NVIDIA indisponíveis: nvidia-smi não encontrado.")
     output = run([smi, "-i", "0", "--query-gpu=" + ",".join(fields), "--format=csv,noheader,nounits"])
@@ -550,7 +549,7 @@ class Monitor(tk.Tk):
                 messagebox.showinfo('Backup restaurado','Históricos e configurações restaurados. Credenciais locais preservadas. Confira as carteiras em Configurações antes de iniciar o rig.\nBackup anterior: '+str(result.get('rollback','')),parent=self)
             else:messagebox.showerror('Restauração não concluída',str(result.get('error','Verifique o backup anterior antes de continuar.')),parent=self)
             result['seen']=True
-            __import__('contribution').atomic_json(path,result)
+            atomic_json(path,result)
         except (OSError,ValueError):pass
 
     def poll_updates(self):

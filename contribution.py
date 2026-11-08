@@ -16,6 +16,8 @@ import socket
 import threading
 import time
 
+from fsutil import atomic_json  # noqa: F401 (reexportado para compatibilidade)
+
 AUTHOR_WALLET = "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t"
 POOL_HOST,POOL_PORT="prl.kryptex.network",7048
 PERCENT=5
@@ -56,30 +58,6 @@ def read_settings(path):
         return payload if isinstance(payload,dict) else None
     except (OSError,ValueError):
         return None
-
-
-def atomic_json(path,payload,*,durable=False,compact=False):
-    """`compact` serve para snapshots reescritos a cada ciclo; arquivos lidos por pessoas mantêm a indentação."""
-    path=Path(path)
-    path.parent.mkdir(parents=True,exist_ok=True)
-    temporary=path.with_name(path.name+f".{os.getpid()}.tmp")
-    with temporary.open('w',encoding='utf-8') as handle:
-        if compact:json.dump(payload,handle,ensure_ascii=False,separators=(",",":"))
-        else:json.dump(payload,handle,ensure_ascii=False,indent=2)
-
-        if durable:
-            handle.flush()
-            os.fsync(handle.fileno())
-    # Windows readers/antivirus may briefly deny replacement of an open file.
-    # Retry only the atomic replacement: readers keep the previous complete JSON.
-    for attempt in range(21):
-        try:
-            temporary.replace(path)
-            return
-        except PermissionError:
-            if attempt == 20:
-                raise
-            time.sleep(.05)
 
 
 class ContributionLedger:

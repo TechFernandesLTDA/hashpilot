@@ -16,7 +16,8 @@ from config import STATE_DIR,LOG_DIR
 from component_status import identity,miner_version
 from gpu_profiles import PROFILES
 from mining_health import health
-from contribution import atomic_json,read_support_status,read_settings
+from contribution import read_support_status,read_settings
+from fsutil import atomic_json
 from rig import write_request,ProcessBackend
 from contribution_audit import audit,audit_text
 

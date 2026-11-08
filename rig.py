@@ -17,7 +17,8 @@ import sys
 import time
 import uuid
 
-from contribution import ProxyLease,atomic_json,support_configuration
+from contribution import ProxyLease,support_configuration
+from fsutil import atomic_json
 from gpu_agent import detect_nvidia_gpus
 from file_cache import cached_load
 

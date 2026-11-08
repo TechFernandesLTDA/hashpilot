@@ -6,7 +6,7 @@ import subprocess
 import sys
 import time
 from backup import restore_backup
-from contribution import atomic_json
+from fsutil import atomic_json
 from rig import ProcessBackend
 
 def main():

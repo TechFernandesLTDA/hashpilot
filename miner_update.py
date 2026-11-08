@@ -12,7 +12,7 @@ import tempfile
 import time
 import urllib.request
 import zipfile
-from contribution import atomic_json
+from fsutil import atomic_json
 
 RELEASES_URL='https://github.com/doktor83/SRBMiner-Multi/releases'
 API_URL='https://api.github.com/repos/doktor83/SRBMiner-Multi/releases/latest'

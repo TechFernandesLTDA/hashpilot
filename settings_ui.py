@@ -12,7 +12,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox, ttk
 
 from config import STATE_DIR, LOG_DIR, DEFAULT_WALLET, SETTINGS_PATH
-from contribution import atomic_json
+from fsutil import atomic_json
 from file_cache import cached_load
 from onboarding import read_settings, save_settings
 from ui_host import Section

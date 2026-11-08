@@ -8,10 +8,10 @@ import json
 import math
 import os
 from pathlib import Path
-import shutil
 import subprocess
 import sys
 import time
+from nvidia_smi import nvidia_smi_path
 from thermal import ThermalPolicy
 
 CREATE_NO_WINDOW = getattr(subprocess, "CREATE_NO_WINDOW", 0)
@@ -21,7 +21,7 @@ class NvidiaBackend:
         if sys.platform != "win32":
             raise RuntimeError("O controlador de clocks desta RTX 3070 é específico do Windows")
         self.dry_run = dry_run
-        self.smi = shutil.which("nvidia-smi")
+        self.smi = nvidia_smi_path()
         if not self.smi:
             raise RuntimeError("nvidia-smi não encontrado")
         if not dry_run and not ctypes.WinDLL("shell32").IsUserAnAdmin():
@@ -81,7 +81,7 @@ class NvidiaBackend:
 
 
 def atomic_json(path, payload):
-    from contribution import atomic_json as persist_json
+    from fsutil import atomic_json as persist_json
     persist_json(path,payload)
 
 

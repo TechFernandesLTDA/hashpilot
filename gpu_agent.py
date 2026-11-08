@@ -6,6 +6,7 @@ isoladas em NvidiaActuator, desativado por padrão e protegido por posse exclusi
 from __future__ import annotations
 from ai_advisor import RoutedAdvisor
 from thermal import EMERGENCY_C
+from nvidia_smi import nvidia_smi_path
 
 import argparse
 from contextlib import contextmanager
@@ -43,10 +44,7 @@ def numeric(value, default=None):
 
 
 def smi_command(arguments, timeout=4):
-    executable = shutil.which("nvidia-smi")
-    if not executable and os.name == "nt":
-        candidate = Path(os.environ.get("WINDIR", "C:/Windows")) / "System32/nvidia-smi.exe"
-        executable = str(candidate) if candidate.is_file() else None
+    executable = nvidia_smi_path()
     if not executable:
         raise RuntimeError("Driver NVIDIA/nvidia-smi indisponível")
     result = subprocess.run([executable, *map(str, arguments)], capture_output=True, text=True,
@@ -1058,7 +1056,7 @@ def read_miner_data(args,gpu,monitor_state_dir,device_count,now=None):
 
 
 def write_status(path,payload):
-    from contribution import atomic_json
+    from fsutil import atomic_json
     atomic_json(path,payload)
 
 
@@ -1107,6 +1105,7 @@ def control(args,state_dir,monitor_state_dir):
         status["enabled"]=True
         agent.start_benchmark(gpu,args.duration,args.objective)
         trial_active=False
+        trial_rejected=0  # definido de fato ao aplicar um ajuste (trial_active=True)
         cycles=0
         last_request=0
         last_thermal_adjustment=0

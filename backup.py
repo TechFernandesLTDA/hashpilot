@@ -10,7 +10,8 @@ import tempfile
 import time
 import zipfile
 from contextlib import closing
-from contribution import atomic_json, valid_wallet
+from contribution import valid_wallet
+from fsutil import atomic_json
 from rig_config import device_key
 from gpu_profiles import profile
 

@@ -9,7 +9,7 @@ from tkinter import ttk, messagebox
 import webbrowser
 from ai_advisor import PROVIDERS, configuration, credential, RoutedAdvisor
 from config import SETTINGS_PATH
-from contribution import atomic_json
+from fsutil import atomic_json
 
 DESCRIPTIONS={
  'openrouter':'Recomendado para rigs com CPU simples. Usa modelos na nuvem: openrouter/free ou :free, confirmados no catálogo com preço zero. Exige conta e chave API. Há cotas e indisponibilidade; sem fallback pago.',
