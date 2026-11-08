@@ -26,10 +26,22 @@ class AppLoggingTests(unittest.TestCase):
                 log.exception("Contexto do erro")
             for handler in logging.getLogger(app_logging.ROOT).handlers:
                 handler.flush()
-            text = (Path(folder) / "hashpilot.log").read_text(encoding="utf-8")
+            text = (Path(folder) / "diagnostics" / "hashpilot.log").read_text(encoding="utf-8")
             self.assertIn("Contexto do erro", text)
             self.assertIn("Traceback", text)
             self.assertEqual(text.count("Contexto do erro"), 1)
+            self.tearDown()
+
+    def test_diagnostics_never_look_like_miner_logs_in_log_dir(self):
+        # O painel legado importa todo LOG_DIR/*.log como log do minerador.
+        with tempfile.TemporaryDirectory() as folder:
+            for name in ("hashpilot.log", "rig-service.log"):
+                app_logging.configure(folder, name)
+            app_logging.get_logger("teste").error("linha de diagnóstico")
+            for handler in logging.getLogger(app_logging.ROOT).handlers:
+                handler.flush()
+            self.assertEqual(list(Path(folder).glob("*.log")), [])
+            self.assertEqual(len(list((Path(folder) / "diagnostics").glob("*.log"))), 2)
             self.tearDown()
 
     def test_unconfigured_logger_is_silent(self):

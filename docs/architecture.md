@@ -50,7 +50,7 @@ flowchart LR
 | `process_backend.py` | Criação, identidade (PID, criação, executável) e encerramento seguro de processos no Windows |
 | `reference_profile.py` | Opt-in da RTX 3070 de referência do autor (UUID fixo); separado do fluxo genérico |
 | `fsutil.py` | Escrita atômica de JSON (`atomic_json`) |
-| `app_logging.py` | Diagnóstico local rotativo: `hashpilot.log` (painel) e `rig-service.log` (serviço), com traceback |
+| `app_logging.py` | Diagnóstico local rotativo: `diagnostics/hashpilot.log` (painel) e `diagnostics/rig-service.log` (serviço) dentro da pasta de logs, com traceback — fora de `LOG_DIR/*.log`, que o painel legado importa como log do minerador |
 | `data_contracts.py` | Contratos `TypedDict` conferidos por `mypy` nos módulos de dados |
 | `rig_panel.py` | Seleção e informações individuais das GPUs na interface |
 | `data/nvidia-gpus.json` | 158 modelos com proveniência NVIDIA; não contém presets universais de overclock |

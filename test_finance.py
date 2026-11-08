@@ -94,6 +94,8 @@ class FetchJsonTests(unittest.TestCase):
             return self.Response(b'{"ok": true}')
         self.assertEqual(finance.fetch_json("https://example.invalid/a", opener=opener), {"ok": True})
         self.assertIn(finance.APP_VERSION.lstrip("v"), seen[0])
+        with patch("finance.urllib.request.urlopen", side_effect=opener):
+            self.assertEqual(finance.fetch_json("https://example.invalid/b"), {"ok": True})
         big = self.Response(b" " * (finance.MAX_RESPONSE_BYTES + 1))
         with self.assertRaisesRegex(ValueError, "excede"):
             finance.fetch_json("https://example.invalid/a", opener=lambda request, timeout: big)

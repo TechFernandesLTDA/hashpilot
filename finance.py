@@ -261,8 +261,13 @@ MAX_RESPONSE_BYTES = 2_000_000
 USER_AGENT = f"HashPilot/{APP_VERSION.lstrip('v')} (Tech Fernandes; local read-only dashboard)"
 
 
-def fetch_json(url, opener=urllib.request.urlopen):
-    """GET JSON público com corpo limitado; resposta grande demais é erro explícito, não truncada."""
+def fetch_json(url, opener=None):
+    """GET JSON público com corpo limitado; resposta grande demais é erro explícito, não truncada.
+
+    `opener` é resolvido na chamada (não na definição), para que um patch de
+    `urllib.request.urlopen` continue valendo.
+    """
+    opener = urllib.request.urlopen if opener is None else opener
     request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
     with opener(request, timeout=9) as response:
         body = response.read(MAX_RESPONSE_BYTES + 1)
