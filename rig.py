@@ -27,6 +27,7 @@ from component_status import identity as component_identity
 from gpu_profiles import profile
 from mining_continuity import IdleSleepGuard,ContinuityWindow,safe_sensor
 from miner_identity import match_successor
+from miner_log import DEVICE_BUS,DEVICE_INDEX
 
 MARKER="HashPilotRig-v1"
 REFERENCE_RTX3070_UUID="GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75"
@@ -54,8 +55,8 @@ def parse_miner_device_map(text,devices):
     """Match SRBMiner IDs to NVIDIA UUIDs by unique PCI bus, never model name."""
     buses={}
     for line in text.splitlines():
-        index=re.search(r"\bGPU\s*(\d+)\s*[:\[]",line,re.I)
-        bus=re.search(r"\bBUS\s*:\s*([0-9a-f]{1,2})\b",line,re.I)
+        index=DEVICE_INDEX.search(line)
+        bus=DEVICE_BUS.search(line)
         if index and bus and "nvidia" in line.lower():
             buses.setdefault(int(bus[1],16),set()).add(int(index[1]))
     result={}

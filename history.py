@@ -10,10 +10,9 @@ import threading
 import time
 import uuid
 import math
-import re
-import datetime as dt
 
-STAMP = re.compile(r"^\[(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)\]")
+from miner_log import STAMP, parse_stamp
+
 RAW_MINER_FIELDS = ("recent_logs", "rate_points")
 
 
@@ -190,8 +189,7 @@ class HistoryStore:
                 stamp = None
                 if match:
                     if match[1] not in stamps:
-                        try:stamps[match[1]] = dt.datetime.strptime(match[1], "%Y-%m-%d %H:%M:%S").timestamp()
-                        except ValueError:stamps[match[1]] = None
+                        stamps[match[1]] = parse_stamp(match[1])
                     stamp = stamps[match[1]]
                 events.append({"timestamp": time.time() if stamp is None else stamp, "key": log_key(path, line), "kind": "miner_log",
                                "data": {"line": line, "path": str(path), 'gpu_uuid': gpu_uuid}, 'wallet': wallet})

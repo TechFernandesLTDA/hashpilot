@@ -2,25 +2,17 @@
 from __future__ import annotations
 
 import csv
-import datetime as dt
 from pathlib import Path
-import re
 import subprocess
 import time
 
 from gpu_agent import numeric, smi_command, validate_device
+from miner_log import AVERAGE, COUNTERS, GPU_LABEL, RATE, STAMP, UNITS, log_timestamp  # noqa: F401 (reexportados)
 
 FIELDS=("uuid","index","name","driver_version","temperature.gpu","power.draw","power.limit",
         "clocks.gr","clocks.mem","utilization.gpu","utilization.memory","memory.used","memory.total","fan.speed","pstate")
 NUMERIC_FIELDS=FIELDS[4:-1]
-STAMP=re.compile(r"^\[(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)\]")
-GPU_LABEL=re.compile(r"\bGPU\s*(?:\[\s*)?(\d+)(?:\s*\])?(?!\d)")
-RATE=re.compile(r"\bGPU\s*(?:\[\s*)?(\d+)(?:\s*\])?\s+.*?:\s*([\d.]+)\s+([kMGTPE]?H)/s\s+\[(.*?)\]")
-AVERAGE=re.compile(r"Average hashrate:\s*1m\s+([\d.]+)\s+([kMGTPE]?H)/s\s*\|\s*15m\s+([\d.]+)\s+([kMGTPE]?H)/s",re.I)
-UNITS={"H":1e-12,"kH":1e-9,"MH":1e-6,"GH":1e-3,"TH":1,"PH":1e3,"EH":1e6}
-COUNTERS=re.compile(r"([A-Z]+):([\d.]+)")
 CACHE_LIMIT=32
-_STAMPS={}
 _PARSED={}
 _TAILS={}
 
@@ -65,21 +57,6 @@ def read_gpu_samples(devices, command=smi_command, now=None):
         for sample in result.values():
             sample["error"]=str(error)[:240]
     return result
-
-
-def log_timestamp(line):
-    match=STAMP.match(line)
-    if match:
-        text=match[1]
-        if text in _STAMPS:return _STAMPS[text]
-        try:
-            value=dt.datetime.strptime(text,"%Y-%m-%d %H:%M:%S").timestamp()
-        except ValueError:
-            value=None
-        if len(_STAMPS)>=4096:_STAMPS.clear()
-        _STAMPS[text]=value
-        return value
-    return None
 
 
 def parse_gpu_log(text,gpu_uuid,index,now=None,*,allow_local_gpu0=True):

@@ -23,7 +23,9 @@ import math
 from tkinter import ttk
 from collections import deque
 from finance import FinanceCollector, financial_model, PortfolioFinanceCollector, portfolio_model, portfolio_snapshots
-from history import HistoryStore
+from history import HistoryStore, log_key
+from gpu_telemetry import _parse_gpu_log
+from miner_log import COUNTERS, RATE, log_timestamp
 from config import WALLET, POOL, LOG_DIR, STATE_DIR, SETTINGS_PATH
 from contribution import atomic_json, read_support_status, read_settings as read_support_settings
 from file_cache import cached_load, signature as file_signature
@@ -48,12 +50,6 @@ BODY_FONT, TITLE_FONT = "Segoe UI", "Segoe UI"
 BG, PANEL, BORDER, TEXT, MUTED = "#0A1628", "#10213B", "#23446D", "#FFFFFF", "#E8EDF5"
 TEAL, BLUE, ORANGE, PINK = "#12A98E", "#1C64C8", "#ffbc66", "#E8EDF5"
 NO_WINDOW = subprocess.CREATE_NO_WINDOW if os.name == "nt" else 0
-STAMP = re.compile(r"^\[(\d{4}-\d\d-\d\d \d\d:\d\d:\d\d)\]")
-RATE = re.compile(r"GPU0\s+.*?:\s*([\d.]+)\s+([kMGTPE]?H)/s\s+\[(.*?)\]")
-COUNTERS = re.compile(r"([A-Z]+):([\d.]+)")
-AVERAGE = re.compile(r"Average hashrate: 1m ([\d.]+) TH/s \| 15m ([\d.]+) TH/s")
-RATE_UNITS = {"H": 1e-12, "kH": 1e-9, "MH": 1e-6, "GH": 1e-3, "TH": 1, "PH": 1e3, "EH": 1e6}
-CONNECTION_LOST = ("disconnected", "connection failed", "reconnecting", "connection lost")
 
 
 def run(command: list[str], timeout: float = 3) -> str:
@@ -113,40 +109,15 @@ def tail(path: Path, limit: int = 160_000) -> str:
 
 
 def parse_log(text: str, now: float | None = None) -> dict:
-    now = time.time() if now is None else now
-    result = {"hashrate": None, "hashrate_at": None, "accepted": 0, "rejected": 0,
-              "hw_errors": 0, "average_1m": None, "average_15m": None, "started_at": None,
-              "last_share_at": None, "connection": "Aguardando conexão", "paused": False, "rate_points": []}
-    from gpu_telemetry import log_timestamp
-    for line in text.splitlines():
-        stamp = log_timestamp(line)
-        if "Miner version:" in line:
-            result["started_at"] = stamp
-        if "Connected to " in line:
-            result["connection"] = "Conectado à pool"
-        if any(word in line.lower() for word in CONNECTION_LOST):
-            result["connection"] = "Reconectando à pool"
-        if "share accepted" in line:
-            result["last_share_at"] = stamp
-        if "GPU0 turned off" in line:
-            result["paused"] = True
-        if "GPU0 turned on" in line:
-            result["paused"] = False
-        match = RATE.search(line)
-        if match:
-            multiplier = RATE_UNITS[match[2]]
-            result["hashrate"] = float(match[1]) * multiplier
-            result["hashrate_at"] = stamp
-            values = dict(COUNTERS.findall(match[3]))
-            for key, log_key in (("accepted", "A"), ("rejected", "R"), ("hw_errors", "HW")):
-                result[key] = int(float(values.get(log_key, 0)))
-            if stamp and now - 900 <= stamp <= now + 5:
-                result["rate_points"].append((stamp, result["hashrate"]))
-        average = AVERAGE.search(line)
+    """Log legado de uma GPU: mesmo parser do rig (`gpu_telemetry`), sem cache.
 
-        if average:
-            result["average_1m"], result["average_15m"] = map(float, average.groups())
-    result["recent_logs"] = "\n".join(text.splitlines()[-35:])
+    Antes havia aqui regex próprias que só reconheciam `GPU0` e médias em TH/s;
+    agora qualquer unidade e o rótulo `GPU[0]` são tratados como no serviço.
+    """
+    now = time.time() if now is None else now
+    result, _future = _parse_gpu_log(text, None, 0, now, True)
+    for key in ("gpu_uuid", "gpu_index", "log_gpu_index", "isolated_log", "connection_at", "last_job_at", "last_log_at", "pause_at", "version"):
+        result.pop(key, None)
     return result
 
 
@@ -259,8 +230,7 @@ class Collector:
                     if str(path) not in self.start_times:
                         with path.open("r", encoding="utf-8-sig", errors="replace") as handle:
                             first = handle.readline()
-                        stamp = STAMP.match(first)
-                        self.start_times[str(path)] = dt.datetime.strptime(stamp[1], "%Y-%m-%d %H:%M:%S").timestamp() if stamp else None
+                        self.start_times[str(path)] = log_timestamp(first)
                     self.log_signature = signature
                     self.log_path = path
                 self.log_data["started_at"] = self.start_times.get(str(path))
@@ -881,21 +851,20 @@ class Monitor(tk.Tk):
                     handle.seek(offset)
                     while line_bytes := handle.readline():
                         line = line_bytes.decode("utf-8-sig", errors="replace").rstrip()
-                        stamp_match = STAMP.match(line)
-                        stamp = dt.datetime.strptime(stamp_match[1], "%Y-%m-%d %H:%M:%S").timestamp() if stamp_match else stat.st_mtime
+                        stamp = log_timestamp(line)
+                        if stamp is None:
+                            stamp = stat.st_mtime
                         parsed = parse_log(line, now=stamp)
-                        if parsed.get("hashrate") is not None:
-                            match = RATE.search(line)
-                            fields = dict(re.findall(r"([A-Z]+):([\d.]+)", match[3]))
+                        match = RATE.search(line)
+                        if parsed.get("hashrate") is not None and match:
+                            fields = dict(COUNTERS.findall(match[4]))
                             gpu = {key: number(fields.get(field, "")) for key, field in (
                                 ("temperature.gpu", "T"), ("power.draw", "P"), ("fan.speed", "FAN"),
                                 ("clocks.gr", "CC"), ("clocks.mem", "MC"))}
                             self.history.telemetry({"collected_at": stamp, "gpu": gpu, "miner": parsed,
                                 "miner_running": None, "log_path": str(path)}, source="imported_miner_log")
                         else:
-                            import hashlib
-                            key = "log:"+hashlib.sha256((str(path)+"\n"+line).encode()).hexdigest()
-                            self.history.event(stamp, "miner_log", {"line": line, "path": str(path)}, key=key)
+                            self.history.event(stamp, "miner_log", {"line": line, "path": str(path)}, key=log_key(path, line))
                         if self.history.jobs.qsize() > 500:
                             self.history.flush(1)
                     offsets[str(path)] = handle.tell()
