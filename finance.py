@@ -8,9 +8,11 @@ from pathlib import Path
 import queue
 import threading
 import time
+import urllib.parse
 import urllib.request
 import copy
 
+from app_version import VERSION as APP_VERSION
 from config import WALLET, SETTINGS
 from contribution import support_configuration
 from payout import payout_model
@@ -255,10 +257,18 @@ def portfolio_snapshots(state,wallets=None):
     return result
 
 
-def fetch_json(url):
-    request = urllib.request.Request(url, headers={"User-Agent": "HashPilot/1.0 (Tech Fernandes; local read-only dashboard)", "Accept": "application/json"})
-    with urllib.request.urlopen(request, timeout=9) as response:
-        return json.load(response)
+MAX_RESPONSE_BYTES = 2_000_000
+USER_AGENT = f"HashPilot/{APP_VERSION.lstrip('v')} (Tech Fernandes; local read-only dashboard)"
+
+
+def fetch_json(url, opener=urllib.request.urlopen):
+    """GET JSON público com corpo limitado; resposta grande demais é erro explícito, não truncada."""
+    request = urllib.request.Request(url, headers={"User-Agent": USER_AGENT, "Accept": "application/json"})
+    with opener(request, timeout=9) as response:
+        body = response.read(MAX_RESPONSE_BYTES + 1)
+    if len(body) > MAX_RESPONSE_BYTES:
+        raise ValueError(f"Resposta de {urllib.parse.urlsplit(url).netloc} excede {MAX_RESPONSE_BYTES} bytes")
+    return json.loads(body.decode("utf-8-sig"))
 
 
 class FinanceCollector:

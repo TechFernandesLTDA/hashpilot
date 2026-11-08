@@ -60,6 +60,21 @@ def read_settings(path):
         return None
 
 
+ROUTING_COUNTERS=("primary_connected_seconds","support_connected_seconds")
+PROTECTION_COUNTERS=('verified_primary_seconds','reserved_support_seconds','verified_support_seconds',
+                     'accepted_primary_shares','accepted_support_shares','rejected_primary_shares','rejected_support_shares')
+MAX_COUNTER=1e12
+
+
+def _check_counter(entry,key,message,*,required=False):
+    """Contador do ledger: número finito em [0, 1e12]; booleano ou ausente obrigatório é inválido."""
+    if required and key not in entry:
+        raise ValueError(message)
+    value=entry.get(key,0)
+    if isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value) or not 0<=value<=MAX_COUNTER:
+        raise ValueError(message)
+
+
 class ContributionLedger:
     """Loading never credits downtime; runtime earns quota only via record_route."""
     def __init__(self,path,wallet):
@@ -78,23 +93,17 @@ class ContributionLedger:
                 # Preserve history, but never turn it into newly verified quota.
                 for entry in data['wallets'].values():
                     if isinstance(entry,dict):
-                        for key in ('verified_primary_seconds','reserved_support_seconds','verified_support_seconds',
-                                    'accepted_primary_shares','accepted_support_shares','rejected_primary_shares','rejected_support_shares'):
+                        for key in PROTECTION_COUNTERS:
                             entry[key]=0
                 data['schema_version']=2
             for identifier,entry in data["wallets"].items():
-                value=entry.get("eligible_connected_seconds") if isinstance(entry,dict) else None
-                if not valid_wallet(identifier) or isinstance(value,bool) or not isinstance(value,(int,float)) or not math.isfinite(value) or not 0<=value<=1e12:
+                if not valid_wallet(identifier) or not isinstance(entry,dict):
                     raise ValueError("Contador do ledger inválido")
-                for key in ("primary_connected_seconds","support_connected_seconds"):
-                    counter=entry.get(key,0)
-                    if isinstance(counter,bool) or not isinstance(counter,(int,float)) or not math.isfinite(counter) or not 0<=counter<=1e12:
-                        raise ValueError("Contador de roteamento do ledger inválido")
-                for key in ('verified_primary_seconds','reserved_support_seconds','verified_support_seconds',
-                            'accepted_primary_shares','accepted_support_shares','rejected_primary_shares','rejected_support_shares'):
-                    counter=entry.get(key,0)
-                    if isinstance(counter,bool) or not isinstance(counter,(int,float)) or not math.isfinite(counter) or not 0<=counter<=1e12:
-                        raise ValueError('Contador de proteção da contribuição inválido')
+                _check_counter(entry,"eligible_connected_seconds","Contador do ledger inválido",required=True)
+                for key in ROUTING_COUNTERS:
+                    _check_counter(entry,key,"Contador de roteamento do ledger inválido")
+                for key in PROTECTION_COUNTERS:
+                    _check_counter(entry,key,'Contador de proteção da contribuição inválido')
                 verified=entry.get('verified_primary_seconds',0)
                 reserved=entry.get('reserved_support_seconds',0)
                 if reserved>math.floor(verified/PRIMARY_SECONDS)*SUPPORT_SECONDS+1e-6 or entry.get('verified_support_seconds',0)>reserved+1e-6:

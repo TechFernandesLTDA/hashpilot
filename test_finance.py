@@ -79,5 +79,25 @@ class FinanceRules(unittest.TestCase):
             self.assertIsNone(model["periods"][period]["prl"])
 
 
+class FetchJsonTests(unittest.TestCase):
+    class Response:
+        def __init__(self, body): self.body = body
+        def __enter__(self): return self
+        def __exit__(self, *args): return False
+        def read(self, limit): return self.body[:limit]
+
+    def test_body_is_capped_and_user_agent_carries_version(self):
+        import finance
+        seen = []
+        def opener(request, timeout):
+            seen.append(request.get_header("User-agent"))
+            return self.Response(b'{"ok": true}')
+        self.assertEqual(finance.fetch_json("https://example.invalid/a", opener=opener), {"ok": True})
+        self.assertIn(finance.APP_VERSION.lstrip("v"), seen[0])
+        big = self.Response(b" " * (finance.MAX_RESPONSE_BYTES + 1))
+        with self.assertRaisesRegex(ValueError, "excede"):
+            finance.fetch_json("https://example.invalid/a", opener=lambda request, timeout: big)
+
+
 if __name__ == "__main__":
     unittest.main()

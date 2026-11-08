@@ -278,5 +278,31 @@ class ProxyIntegrationTests(unittest.TestCase):
             self.assertFalse(proxy.configuration()["configuration_valid"])
 
 
+class LedgerCounterValidationTests(unittest.TestCase):
+    def load(self, entry):
+        with tempfile.TemporaryDirectory() as folder:
+            path = Path(folder) / "ledger.json"
+            path.write_text(json.dumps({"schema_version": 2, "wallets": {USER: entry}}), encoding="utf-8")
+            return ContributionLedger(path, USER)
+
+    def test_valid_counters_load_and_each_group_rejects_bad_values(self):
+        good = {"eligible_connected_seconds": 10.0, "primary_connected_seconds": 10.0, "support_connected_seconds": 0}
+        self.assertTrue(self.load(good).healthy)
+        cases = [({**good, "eligible_connected_seconds": True}, "Contador do ledger"),
+                 ({k: v for k, v in good.items() if k != "eligible_connected_seconds"}, "Contador do ledger"),
+                 ({**good, "support_connected_seconds": float("nan")}, "roteamento"),
+                 ({**good, "accepted_primary_shares": -1}, "proteção"),
+                 ({**good, "rejected_support_shares": 1e13}, "proteção")]
+        for entry, message in cases:
+            with self.subTest(message=message, entry=entry):
+                ledger = self.load(entry)
+                self.assertFalse(ledger.healthy)
+                self.assertIn(message, ledger.error)
+
+    def test_non_dict_entry_is_invalid_not_crash(self):
+        ledger = self.load([1, 2])
+        self.assertFalse(ledger.healthy)
+
+
 if __name__=="__main__":
     unittest.main()
