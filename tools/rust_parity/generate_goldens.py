@@ -4314,6 +4314,504 @@ def contribution_golden():
     write("contribution", {"wallet": CONTRIBUTION_WALLET, "author": contribution.AUTHOR_WALLET, "cases": cases})
 
 
+# Consultor de IA (`ai_advisor.py` e os consultores de `gpu_agent.py`). A rede da nuvem e o
+# cliente OpenCode são simulados; o Ollama fala HTTP de verdade com um servidor local.
+def ai_try(function, *args, **kwargs):
+    try:
+        return {"ok": function(*args, **kwargs)}
+    except (ValueError, KeyError, TypeError, OSError) as error:
+        return {"error": f"{type(error).__name__}: {error}"}
+
+
+AI_SETTINGS = [
+    {},
+    {"ai_enabled": True},
+    {"ai_enabled": False, "ai": {}},
+    {"ai": []},
+    [],
+    "texto",
+    {"ai": {"provider": "openrouter"}},
+    {"ai": {"provider": "openrouter", "model": "x/y:free", "cloud_consent": True}},
+    {"ai": {"provider": "openrouter", "model": "x/y"}},
+    {"ai": {"provider": "opencode"}},
+    {"ai": {"provider": "opencode", "model": "opencode/glm-5-free"}},
+    {"ai": {"provider": "opencode", "model": "opencode/GLM-free"}},
+    {"ai": {"provider": "ollama", "model": None}, "ai_enabled": True},
+    {"ai": {"provider": "ollama", "model": ""}},
+    {"ai": {"provider": "ollama", "model": 5}},
+    {"ai": {"provider": "ollama", "model": "a b"}},
+    {"ai": {"provider": "x"}},
+    {"ai": {"provider": 5}},
+    {"ai": {"provider": "ollama", "model": "m" * 161}},
+    {"ai": {"provider": "ollama", "model": "m" * 160}},
+    {"ai": {"provider": "ollama", "cloud_consent": 1}, "ai_enabled": 1},
+]
+
+AI_CONTEXTS = [
+    {},
+    [],
+    {"sample": [], "benchmark": "x"},
+    {
+        "sample": {
+            "temperature_c": 70.5,
+            "power_w": 150,
+            "clock_mhz": True,
+            "utilization_pct": -1,
+            "temperature.gpu": "70",
+            "outro": 1,
+            "power.limit": 0,
+        },
+        "benchmark": {
+            "validated": True,
+            "mean_hashrate_ths": 99.5,
+            "elapsed_seconds": 0,
+            "invalid_samples": 2,
+            "nome": "x",
+            "independent_hash_samples": None,
+        },
+    },
+    {"benchmark": {"validated": 1, "efficiency_ths_per_w": 1e-300, "mean_power_w": 1e308}},
+    {"sample": None, "benchmark": None, "gpu": "RTX"},
+]
+
+AI_COMPLETIONS = [
+    None,
+    [],
+    {},
+    {"choices": []},
+    {"choices": ["x"]},
+    {"choices": [{"finish_reason": "length", "message": {"content": "{}"}}]},
+    {"choices": [{"message": {"content": "  {\"action\":\"hold\"}\n"}}]},
+    {"choices": [{"message": "texto"}]},
+    {"choices": [{"message": {"content": "   "}}]},
+    {"choices": [{"message": {"content": None}}]},
+    {
+        "choices": [
+            {
+                "message": {
+                    "content": [
+                        {"type": "text", "text": "{\"a\":"},
+                        {"type": "image"},
+                        {"type": "text", "text": "1}"},
+                        "x",
+                    ]
+                }
+            }
+        ]
+    },
+    {"choices": [{"message": {"content": "```json\n{\"action\":\"hold\"}\n```"}}]},
+    {"choices": [{"message": {"content": "```JSON  \n {\"x\":1} \n```"}}]},
+    {"choices": [{"message": {"content": "```\nlinha1\nlinha2\n```"}}]},
+    {"choices": [{"message": {"content": "```json {\"x\":1}```"}}]},
+    {"choices": [{"finish_reason": "stop", "message": {"content": "\x1c ok \x1f"}}]},
+]
+
+AI_PARSES = [
+    None,
+    5,
+    "",
+    "nao json",
+    "[]",
+    '{"action":"hold"}',
+    '{"action":"hold","reason":"ok"}',
+    '{"action":"voar","reason":"ok"}',
+    '{"action":"clock_up","reason":"   "}',
+    '{"action":"clock_up","reason":5}',
+    '{"action":"power_down","reason":"' + "r" * 400 + '"}',
+    '{"action":"power_down","reason":"' + "r" * 401 + '"}',
+    '{"action":"hold","reason":"ok","extra":1}',
+    '{"reason":"ação ✓","action":"restore_best"}',
+    ' {"action":"hold","reason":"  x  "} ',
+]
+
+AI_OLLAMA_INITS = [
+    ("qwen2.5:0.5b", "http://127.0.0.1:11434", 12),
+    ("m", "http://localhost:11434/", 0.1),
+    ("m", "http://[::1]:11434", 99),
+    ("m", "https://127.0.0.1:11434", 12),
+    ("m", "http://example.com", 12),
+    ("m", "http://user:pw@127.0.0.1", 12),
+    ("m", "HTTP://LOCALHOST", 12),
+    ("m a", "http://127.0.0.1", 12),
+    ("m:cloud", "http://127.0.0.1", 12),
+    ("m-cloud", "http://127.0.0.1", 12),
+    ("x" * 121, "http://127.0.0.1", 12),
+    (5, "http://127.0.0.1", 12),
+    ("m", "http://127.0.0.1:11434//", "7.5"),
+    ("m", "http://127.0.0.1", 1.0),
+    ("m", "http://127.0.0.1", 30.0),
+    ("m", "http://127.0.0.1", 29.5),
+]
+
+
+def ai_requests_budget():
+    import ai_advisor
+
+    rows = []
+    with tempfile.TemporaryDirectory() as temporary:
+        budget = ai_advisor.RequestBudget(temporary)
+        base = 1794000000.0
+        stamps = [base, base + 30, base + 60, True, float("inf"), -1, 253402300800, "x"]
+        stamps += [base + 120 + 60 * index for index in range(40)]
+        stamps += [base + 86400 * 2, base + 86400 * 2 + 59.5]
+        for stamp in stamps:
+            outcome = ai_try(budget.reserve, stamp)
+            rows.append(
+                {
+                    "now": stamp
+                    if not isinstance(stamp, float) or stamp == stamp and abs(stamp) != float("inf")
+                    else "inf",
+                    "out": outcome,
+                }
+            )
+    return rows
+
+
+AI_KEY = "sk-or-v1-teste-sem-valor-real"
+
+
+def ai_routed_case(
+    name,
+    settings,
+    *,
+    catalog=None,
+    completion=None,
+    key=AI_KEY,
+    credential=None,
+    which="C:/fake/opencode.exe",
+    opencode_catalog=None,
+    opencode_raw=b"",
+    opencode_code=0,
+    budget_error=None,
+    ollama_result=None,
+    calls=1,
+):
+    import ai_advisor
+    import gpu_agent
+
+    log = []
+
+    def request_json(url, payload=None, key=None):
+        log.append({"url": url, "payload": payload, "key": key is not None})
+        if url.endswith("/api/v1/models"):
+            if isinstance(catalog, Exception):
+                raise catalog
+            return {"data": catalog or []}
+        if url.endswith("/zen/v1/models"):
+            return {"data": opencode_catalog or []}
+        if isinstance(completion, Exception):
+            raise completion
+        return completion
+
+    def run(argv, **kwargs):
+        log.append(
+            {
+                "run": argv[1:-1],
+                "prompt_tail": argv[-1][-60:],
+                "cwd_is_temp": "HashPilot-advice-" in str(kwargs["cwd"]),
+                "env": {
+                    key: ("<temp>" if key == "OPENCODE_CONFIG_DIR" else kwargs["env"][key])
+                    for key in sorted(kwargs["env"])
+                    if key.startswith("OPENCODE_")
+                },
+                "timeout": kwargs["timeout"],
+            }
+        )
+        kwargs["stdout"].write(opencode_raw)
+        return types.SimpleNamespace(returncode=opencode_code)
+
+    def reserve(self, now=None):
+        log.append({"budget": True})
+        if budget_error:
+            raise ValueError(budget_error)
+
+    def ollama(self, context):
+        log.append({"ollama_model": self.model, "context": context})
+        if isinstance(ollama_result, Exception):
+            raise ollama_result
+        return ollama_result
+
+    context = {
+        "sample": {"temperature_c": 70.0, "power_w": 150.5, "nome": "x"},
+        "benchmark": {"validated": False, "x": 1},
+    }
+    with contextlib.ExitStack() as stack:
+        stack.enter_context(mock.patch.object(ai_advisor, "request_json", request_json))
+        stack.enter_context(mock.patch.object(ai_advisor, "credential", lambda provider: credential))
+        stack.enter_context(mock.patch.object(ai_advisor.shutil, "which", lambda name: which))
+        stack.enter_context(mock.patch.object(ai_advisor.subprocess, "run", run))
+        stack.enter_context(mock.patch.object(ai_advisor.RequestBudget, "reserve", reserve))
+        stack.enter_context(mock.patch.object(gpu_agent.OllamaAdvisor, "advise", ollama))
+        stack.enter_context(mock.patch.object(ai_advisor.time, "time", lambda: 1794000000.0))
+        advisor = ai_advisor.RoutedAdvisor("C:/estado", config_override=settings, key_override=key)
+        results = [ai_try(advisor.advise, context) for _ in range(calls)]
+        enabled = advisor.enabled()
+    return {
+        "kind": "routed",
+        "name": name,
+        "settings": settings,
+        "key": key is not None,
+        "credential": credential,
+        "which": which,
+        "catalog": None if isinstance(catalog, Exception) else catalog,
+        "catalog_error": str(catalog) if isinstance(catalog, Exception) else None,
+        "completion": None if isinstance(completion, Exception) else completion,
+        "completion_error": str(completion) if isinstance(completion, Exception) else None,
+        "opencode_catalog": opencode_catalog,
+        "opencode_raw": opencode_raw.decode("utf-8", "replace"),
+        "opencode_code": opencode_code,
+        "budget_error": budget_error,
+        "ollama_result": None if isinstance(ollama_result, Exception) else ollama_result,
+        "ollama_error": str(ollama_result) if isinstance(ollama_result, Exception) else None,
+        "calls": calls,
+        "results": results,
+        "label": advisor.label,
+        "enabled": enabled,
+        "log": log,
+    }
+
+
+def ai_routed_cases():
+    free = [
+        {"id": "openrouter/free", "pricing": {"prompt": "0", "completion": "0"}},
+        {"id": "x/pago:free", "pricing": {"prompt": "0.1", "completion": "0"}},
+        {"id": "x/sem:free", "pricing": {"prompt": "0"}},
+        {"id": "x/texto:free", "pricing": {"prompt": "zero", "completion": "0"}},
+        {"id": "x/num:free", "pricing": {"prompt": 0, "completion": 0.0}},
+    ]
+    good = {"choices": [{"message": {"content": '{"action":"clock_down","reason":"Quente"}'}}]}
+    cloud = lambda model="openrouter/free", consent=True: {
+        "ai_enabled": True,
+        "ai": {"provider": "openrouter", "model": model, "cloud_consent": consent},
+    }  # noqa: E731
+    events = b'{"type":"step_start"}\n{"type":"text","part":{"text":"{\\"action\\":\\"hold\\","}}\n{"type":"text","part":{"text":"\\"reason\\":\\"ok\\"}"}}\n'
+    oc = {"ai_enabled": True, "ai": {"provider": "opencode", "model": "opencode/glm-5-free", "cloud_consent": True}}
+    return [
+        ai_routed_case("desligada", {"ai": {"provider": "openrouter"}}),
+        ai_routed_case("config_invalida", {"ai_enabled": True, "ai": {"provider": "x"}}),
+        ai_routed_case("sem_consentimento", cloud(consent=False)),
+        ai_routed_case("openrouter_ok", cloud(), catalog=free, completion=good, calls=2),
+        ai_routed_case(
+            "openrouter_credencial", cloud(), catalog=free, completion=good, key=None, credential="sk-cofre"
+        ),
+        ai_routed_case("openrouter_sem_chave", cloud(), catalog=free, completion=good, key=None, credential=None),
+        ai_routed_case("openrouter_chave_vazia", cloud(), catalog=free, completion=good, key="", credential=""),
+        ai_routed_case("modelo_pago", cloud("x/pago:free"), catalog=free, completion=good),
+        ai_routed_case("modelo_sem_preco", cloud("x/sem:free"), catalog=free, completion=good),
+        ai_routed_case("modelo_texto", cloud("x/texto:free"), catalog=free, completion=good),
+        ai_routed_case("modelo_numerico", cloud("x/num:free"), catalog=free, completion=good),
+        ai_routed_case("modelo_ausente", cloud("x/outro:free"), catalog=free, completion=good),
+        ai_routed_case(
+            "cota_esgotada",
+            cloud(),
+            catalog=free,
+            completion=good,
+            budget_error="Limite local de 40 consultas cloud/dia atingido",
+        ),
+        ai_routed_case(
+            "resposta_truncada",
+            cloud(),
+            catalog=free,
+            completion={"choices": [{"finish_reason": "length", "message": {"content": "{"}}]},
+        ),
+        ai_routed_case(
+            "catalogo_falha", cloud(), catalog=ValueError("Provedor sem conexão ou tempo de resposta excedido")
+        ),
+        ai_routed_case(
+            "http_falha",
+            cloud(),
+            catalog=free,
+            completion=ValueError("Limite gratuito atingido; controle adaptativo permanece ativo"),
+        ),
+        ai_routed_case(
+            "ollama_ok",
+            {"ai_enabled": True, "ai": {"provider": "ollama"}},
+            ollama_result={"action": "hold", "reason": "ok"},
+        ),
+        ai_routed_case(
+            "ollama_erro",
+            {"ai_enabled": True, "ai": {"provider": "ollama", "model": "llama3:8b"}},
+            ollama_result=ValueError("sem Ollama"),
+        ),
+        ai_routed_case("opencode_ok", oc, opencode_catalog=[{"id": "glm-5-free"}], opencode_raw=events),
+        ai_routed_case("opencode_sem_cliente", oc, which=None),
+        ai_routed_case("opencode_modelo_removido", oc, opencode_catalog=[{"id": "outro-free"}]),
+        ai_routed_case(
+            "opencode_codigo", oc, opencode_catalog=[{"id": "glm-5-free"}], opencode_raw=events, opencode_code=1
+        ),
+        ai_routed_case("opencode_evento_lista", oc, opencode_catalog=[{"id": "glm-5-free"}], opencode_raw=b"[1]\n"),
+        ai_routed_case(
+            "opencode_parte_invalida",
+            oc,
+            opencode_catalog=[{"id": "glm-5-free"}],
+            opencode_raw=b'{"type":"text","part":{"text":5}}\n',
+        ),
+        ai_routed_case("opencode_grande", oc, opencode_catalog=[{"id": "glm-5-free"}], opencode_raw=b"x" * 65537),
+        ai_routed_case(
+            "opencode_sem_texto",
+            oc,
+            opencode_catalog=[{"id": "glm-5-free"}],
+            opencode_raw=b'{"type":"step_start"}\r\n\n',
+        ),
+    ]
+
+
+def ai_ollama_http_cases():
+    import http.server
+    import threading
+
+    import gpu_agent
+
+    scenarios = [
+        ("ok", 200, json.dumps({"response": '{"action":"clock_up","reason":"Folga térmica"}'}).encode()),
+        ("sem_response", 200, b'{"done":true}'),
+        ("json_invalido", 200, b"nao json"),
+        ("resposta_fora", 200, json.dumps({"response": '{"action":"voar","reason":"x"}'}).encode()),
+        ("grande", 200, b'{"response":"' + b"x" * 65530 + b'"}'),
+        ("limite_exato", 200, b'{"response":"' + b"x" * 65520 + b'","p":""}'),
+        ("http_500", 500, b"erro"),
+        ("http_404", 404, b""),
+    ]
+    cases = []
+    for name, code, body in scenarios:
+        received = {}
+
+        class Handler(http.server.BaseHTTPRequestHandler):
+            def do_POST(self):  # noqa: N802
+                length = int(self.headers["Content-Length"])
+                received.update(
+                    path=self.path, content_type=self.headers["Content-Type"], body=json.loads(self.rfile.read(length))
+                )
+                self.send_response(code)
+                self.send_header("Content-Length", str(len(body)))
+                self.end_headers()
+                self.wfile.write(body)
+
+            def log_message(self, *args):
+                pass
+
+        server = http.server.HTTPServer(("127.0.0.1", 0), Handler)
+        thread = threading.Thread(target=server.handle_request)
+        thread.start()
+        advisor = gpu_agent.OllamaAdvisor(
+            model="qwen2.5:0.5b", endpoint=f"http://127.0.0.1:{server.server_port}", timeout=5
+        )
+        context = {
+            "sample": {"temperature_c": 71.25, "clock_mhz": 1650},
+            "benchmark": {"validated": True},
+            "nota": "ação",
+        }
+        outcome = ai_try(advisor.advise, context)
+        thread.join()
+        server.server_close()
+        if "error" in outcome and outcome["error"].startswith("HTTPError"):
+            outcome["error"] = outcome["error"].split(":", 1)[0] + ": " + outcome["error"].split(": ", 1)[1]
+        cases.append(
+            {
+                "kind": "ollama_http",
+                "name": name,
+                "status": code,
+                "body": body.decode(),
+                "context": context,
+                "received": received,
+                "out": outcome,
+            }
+        )
+    return cases
+
+
+def ai_background_cases():
+    import ai_advisor
+    import gpu_agent
+
+    class Scripted:
+        label = "local_ollama"
+
+        def __init__(self, answers):
+            self.answers, self.contexts = list(answers), []
+
+        def advise(self, context):
+            self.contexts.append(context)
+            answer = self.answers.pop(0)
+            if isinstance(answer, Exception):
+                raise answer
+            return answer
+
+    class Routed(ai_advisor.RoutedAdvisor):
+        def __init__(self, answers, configs):
+            super().__init__("C:/estado")
+            self.answers, self.configs, self.contexts = list(answers), list(configs), []
+            self.label = "IA opcional"
+
+        def settings(self):
+            config = self.configs[0] if len(self.configs) == 1 else self.configs.pop(0)
+            if isinstance(config, Exception):
+                raise config
+            return config
+
+        def advise(self, context):
+            self.contexts.append(context)
+            answer = self.answers.pop(0)
+            if isinstance(answer, Exception):
+                raise answer
+            self.label = "OpenRouter · Cloud Free"
+            return answer
+
+    ok = {"action": "hold", "reason": "ok"}
+    cloud = {"ai_enabled": True, "ai": {"provider": "openrouter", "cloud_consent": True}}
+    local = {"ai_enabled": True, "ai": {"provider": "ollama"}}
+    scenarios = [
+        (
+            "local",
+            lambda: Scripted([ok, ValueError("falhou"), ok, {"action": "clock_down", "reason": "quarta"}]),
+            [0, 30, 59.9, 60, 100, 151, 160, 400],
+            60,
+        ),
+        ("intervalo_minimo", lambda: Scripted([ok, ok, ok]), [0, 59, 61, 121], 5),
+        ("intervalo_maior", lambda: Scripted([ok, ok]), [0, 100, 119, 120.5], 120),
+        ("roteado_nuvem", lambda: Routed([ok, ok, ok], [cloud]), [0, 61, 3599, 3600, 3700], 60),
+        ("roteado_troca", lambda: Routed([ok, ok, ok], [local, local, cloud, cloud]), [0, 10, 20, 30], 60),
+        ("roteado_config_invalida", lambda: Routed([ok], [ValueError("x")]), [0], 60),
+        ("erro_tipo", lambda: Scripted([TypeError("tipo"), KeyError("response"), ok]), [0, 60, 200], 60),
+        ("erro_longo", lambda: Scripted([ValueError("é" * 170 + "fim")]), [0, 1], 60),
+    ]
+    cases = []
+    for name, factory, stamps, interval in scenarios:
+        advisor = factory()
+        background = gpu_agent.BackgroundAdvisor(advisor, interval_seconds=interval)
+        clock = {"now": 0.0}
+        polls = []
+        with mock.patch.object(gpu_agent.time, "monotonic", lambda: clock["now"]):
+            for stamp in stamps:
+                clock["now"] = float(stamp)
+                result = background.poll({"sample": {"t": stamp}}, now=stamp)
+                if background.thread is not None:
+                    background.thread.join()
+                polls.append({"now": stamp, "out": result})
+        cases.append(
+            {"kind": "background", "name": name, "interval": interval, "polls": polls, "contexts": advisor.contexts}
+        )
+    return cases
+
+
+def ai_advisor_golden():
+    import ai_advisor
+    import gpu_agent
+
+    cases = [{"kind": "configuration", "in": item, **ai_try(ai_advisor.configuration, item)} for item in AI_SETTINGS]
+    cases += [{"kind": "telemetry", "in": item, **ai_try(ai_advisor.telemetry_context, item)} for item in AI_CONTEXTS]
+    cases += [{"kind": "completion", "in": item, **ai_try(ai_advisor.completion_text, item)} for item in AI_COMPLETIONS]
+    cases += [{"kind": "parse", "in": item, **ai_try(gpu_agent.OllamaAdvisor.parse, item)} for item in AI_PARSES]
+    for model, endpoint, timeout in AI_OLLAMA_INITS:
+        outcome = ai_try(lambda: vars(gpu_agent.OllamaAdvisor(model=model, endpoint=endpoint, timeout=timeout)))
+        cases.append({"kind": "ollama_init", "in": [model, endpoint, timeout], **outcome})
+    cases.append({"kind": "budget", "rows": ai_requests_budget()})
+    cases += ai_routed_cases()
+    cases += ai_ollama_http_cases()
+    cases += ai_background_cases()
+    write("ai_advisor", {"system": ai_advisor.SYSTEM, "providers": ai_advisor.PROVIDERS, "cases": cases})
+
+
 # Agente da GPU (`gpu_agent.py`), parte sem hardware e sem IA: funções puras, leituras com
 # nvidia-smi falso e o `GPUAgent` sobre SQLite, com relógio e uuid4 determinísticos.
 AGENT_GPU = {
@@ -5124,10 +5622,11 @@ GENERATORS = {
     "nvidia_detect": nvidia_detect_golden,
     "thermal_target": thermal_target_golden,
     "contribution": contribution_golden,
+    "ai_advisor": ai_advisor_golden,
     "gpu_agent": gpu_agent_golden,
 }
 # Goldens que não dependem do fuso nem de caminhos e podem ser gerados no Windows.
-PORTABLE = {"history", "finance", "rig_support", "nvidia_detect", "thermal_target", "contribution"}
+PORTABLE = {"history", "finance", "rig_support", "nvidia_detect", "thermal_target", "contribution", "ai_advisor"}
 # Goldens que usam a API real do Windows (shell32 `CommandLineToArgvW`, `GetFullPathNameW`).
 WINDOWS_ONLY = {"process", "rig_manager", "gpu_control", "gpu_agent"}
 
