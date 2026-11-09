@@ -13,6 +13,7 @@ pub mod argv;
 pub mod continuity;
 pub mod contribution;
 pub mod fsutil;
+pub mod gpu_agent;
 pub mod gpu_defaults;
 pub mod health;
 pub mod lease;

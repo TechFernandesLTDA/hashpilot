@@ -18,7 +18,7 @@ num módulo já portado vale nos dois lados, com os goldens regerados.
 | 1 | **Núcleo de lógica pura** (`hashpilot-core`) e **CLI somente leitura** (`hashpilot`) | Feita, com paridade testada |
 | 2 | **Histórico SQLite** (`hashpilot-history`): ler/gravar o `history.sqlite3` existente com a mesma chave SHA-256 e as mesmas migrações | Feita em 08/11/2026: paridade com o Python real, mutação e banco real de 2,8 GB |
 | 3 | **Finanças** (`hashpilot-finance`): Kryptex/CoinGecko com corpo limitado, cache e ciclo de 60 s | Feita em 08/11/2026: paridade com o Python real, mutação, respostas reais da API e cache real |
-| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 e 4b-2 feitas em 08/11/2026** (dependências e lógica do `RigManager`, provadas com backend falso). **4b-3a feita em 09/11/2026** (laço `serve`, atualização do minerador com reversão, snapshots e trava do serviço). **4b-3b-1 feita em 09/11/2026** (restauração da GPU pelo NVML, provada com driver falso e lida no driver real sem escrita). **4b-3b-2 feita em 09/11/2026** (`hashpilot rig --serve`, com detector e sensores reais; o primeiro uso real fica para o Renan presente). **4c-1 feita em 09/11/2026** (`thermal_target`: controle por temperatura-alvo e explorador de memória). **4d feita em 09/11/2026** (proxy de contribuição `hashpilot contribution`, que o serviço em Rust já inicia). **Motor Rust em uso no PC desde 09/11/2026** (`Iniciar-Rig.ps1 -Motor Rust`). 4c-2 (laço do supervisor e atuador) planejada; maior risco, exigem o Renan presente a cada início |
+| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 e 4b-2 feitas em 08/11/2026** (dependências e lógica do `RigManager`, provadas com backend falso). **4b-3a feita em 09/11/2026** (laço `serve`, atualização do minerador com reversão, snapshots e trava do serviço). **4b-3b-1 feita em 09/11/2026** (restauração da GPU pelo NVML, provada com driver falso e lida no driver real sem escrita). **4b-3b-2 feita em 09/11/2026** (`hashpilot rig --serve`, com detector e sensores reais; o primeiro uso real fica para o Renan presente). **4c-1 feita em 09/11/2026** (`thermal_target`: controle por temperatura-alvo e explorador de memória). **4d feita em 09/11/2026** (proxy de contribuição `hashpilot contribution`, que o serviço em Rust já inicia). **Motor Rust em uso no PC desde 09/11/2026** (`Iniciar-Rig.ps1 -Motor Rust`). **4c-2a feita em 09/11/2026** (`gpu_agent`: leituras, planos e o `GPUAgent` sobre o mesmo SQLite, sem hardware nem IA). 4c-2b (laço do supervisor e atuador) planejada; maior risco, exigem o Renan presente a cada início |
 | 5 | Interface: três abas, bandeja, configurações (provável `egui`/`eframe`) | Planejada |
 | 6 | Instalador, atualizador e troca do Python | Só depois das fases 1–5 validadas |
 
@@ -172,7 +172,6 @@ powershell -File mining\windows\Iniciar-Rig.ps1 -Motor Rust     # troca para o R
 powershell -File mining\windows\Iniciar-Rig.ps1 -Motor Python   # volta ao Python
 ```
 
-O supervisor térmico (`gpu_agent.py`) e o proxy de contribuição (`contribution.py`)
 No motor Rust, o proxy de contribuição já é o `hashpilot contribution` (etapa 4d). O supervisor
 térmico (`gpu_agent.py`) continua em Python nos dois motores até a etapa 4c-2.
 
@@ -390,6 +389,45 @@ contribution` (os mesmos argumentos do Python). O serviço em Rust inicia esse p
   - o Rust recusa inteiros maiores que 64 bits e surrogates soltos, que o Python aceitaria.
 
 **Não testado:** a contribuição ligada com mineração real. Ela está desligada neste rig, e ligar a contribuição é decisão do Renan.
+
+## Validação da etapa 4c-2a (Windows 11, 09/11/2026)
+
+A parte do `gpu_agent.py` que não escreve no hardware nem fala com a IA foi portada para
+`hashpilot-rig::gpu_agent`:
+- leituras do `nvidia-smi` (`read_sample`, `read_fan`, clocks de memória) e das configurações;
+- planos limitados (`validated_plan`, `control_plan`), limites e janela térmica;
+- o `GpuAgent`, que grava benchmarks, observações, decisões e testes de ajuste no mesmo
+  `gpu-agent.sqlite3`, com o mesmo esquema e o mesmo texto JSON do Python (`ensure_ascii`
+  onde o Python usa, inclusive surrogates); os dois motores leem o banco um do outro;
+- seleção da GPU, pedido de parada e detecção de outro supervisor.
+
+A IA entra por um trait `Advisor`; ainda não há implementação em Rust. O laço do supervisor e o
+atuador ficam para a etapa 4c-2b, e o serviço continua usando o `gpu_agent.py`.
+
+- **Golden `gpu_agent`:** 435 casos executados pelo Python real, com `time.time` fixo e `uuid4`
+  em sequência.
+  - **Funções puras:** 222 planos (6 GPUs NVIDIA, inclusive clocks densos, esparsos e potência
+    incoerente, × 6 amostras × 6 ações, mais restauração e uma GPU recusada), janela térmica em cada fronteira de estabilidade, e
+    `statistics.mean` exata.
+  - **Leituras:** `nvidia-smi` falso (respostas incompletas, `[N/A]`, fronteiras de 0, 100 e
+    120, falha do comando) e arquivos de configuração quebrados, com BOM ou sem os campos.
+  - **Roteiros do agente:** 7, comparando cada resposta, o contexto entregue à IA, o arquivo da
+    política e o conteúdo final das cinco tabelas. Cobrem benchmark validado e instável, contadores
+    reiniciados, erro de hardware, IA (sugestão, falha e ausente), emergência, a espera de 30 s, e
+    testes aceitos, rejeitados, vencidos, cancelados e interrompidos, além das fronteiras exatas
+    (10 s de sensor, 180 s de hashrate, 70 % de cobertura, empate de perfis, 97 % e 240 s).
+- **Média exata:** `statistics.mean` soma frações exatas e arredonda uma vez; o Rust soma as
+  mantissas num inteiro grande. Em 3 dos 9 casos do golden (por exemplo `[0.1, 0.2, 0.3]`) a
+  soma de floats erra.
+- **Mutações:** 46 mutações, todas detectadas. As 27 que escaparam dos roteiros naturais ganharam
+  casos de fronteira.
+- **Diferenças conhecidas:**
+  - em JSON que o Python nem aceitaria (configuração de supervisor que não é objeto), o Rust
+    ignora o arquivo em vez de levantar `AttributeError`;
+  - erros de SQLite e de disco têm o texto de cada linguagem.
+
+**Não testado:** nada desta etapa escreve no hardware. O uso com a GPU real vem com o laço da
+etapa 4c-2b, com o Renan presente.
 
 ## Validação da etapa 4c-1 (Windows 11, 09/11/2026)
 
