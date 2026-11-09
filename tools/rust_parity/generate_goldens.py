@@ -9,16 +9,26 @@ os goldens independentes da máquina) e com estado temporário isolado.
 
 Uso (na raiz do repositório):
     python tools/rust_parity/generate_goldens.py
+    python tools/rust_parity/generate_goldens.py history   # só um golden
+
+Sem `time.tzset` (Windows) só o golden `history` pode ser gerado: ele não depende
+do fuso nem de caminhos do sistema, e sai idêntico no Linux.
 """
 
 from __future__ import annotations
 
+import contextlib
+import datetime as dt
+import itertools
 import json
 import os
 from pathlib import Path
+import sqlite3
 import sys
 import tempfile
 import time
+import types
+from unittest import mock
 
 ROOT = Path(__file__).resolve().parents[2]
 # HASHPILOT_GOLDEN_OUT permite regerar num diretório temporário (test_rust_parity_goldens.py).
@@ -26,7 +36,8 @@ OUT = Path(os.environ.get("HASHPILOT_GOLDEN_OUT") or ROOT / "rust/hashpilot-core
 LOGS = ROOT / "portable-data/miner-logs"
 
 os.environ["TZ"] = "UTC"
-time.tzset()
+if hasattr(time, "tzset"):
+    time.tzset()
 if sys.platform != "win32":
     os.environ.setdefault("HASHPILOT_TEST_STATE_DIR", tempfile.mkdtemp(prefix="hashpilot-golden-"))
 sys.path.insert(0, str(ROOT))
@@ -764,11 +775,514 @@ def configs():
     write("config", {"cases": cases, "log_dir": expansions, "env": env, "expandvars_nt": nt, "expandvars_posix": posix})
 
 
+# --- Histórico SQLite (history.HistoryStore) ---------------------------------------
+#
+# Cada cenário roda o HistoryStore REAL numa pasta temporária (cwd, com nomes de
+# arquivo sem pasta, para as chaves SHA-256 não dependerem do sistema) e despeja o
+# banco inteiro: SQL do esquema, linhas, user_version, offsets e rejeitadas. O
+# uuid4, o relógio e o fuso do carimbo do log são fixos; nada mais é simulado.
+
+HISTORY_NOW = 1794100000.25
+HISTORY_WALLET = "prl1fixture"
+
+
+def history_utc_stamp(text):
+    """`miner_log.parse_stamp` sob TZ=UTC, sem `time.tzset` (o golden sai igual no Windows)."""
+    try:
+        return dt.datetime.strptime(text, "%Y-%m-%d %H:%M:%S").replace(tzinfo=dt.timezone.utc).timestamp()
+    except ValueError:
+        return None
+
+
+def history_apply(history, store, op):
+    kind = op["op"]
+    try:
+        if kind == "telemetry":
+            store.telemetry(op["data"], op.get("source", "live"))
+        elif kind == "rig_telemetry":
+            store.rig_telemetry(op["rig"])
+        elif kind == "event":
+            store.event(op["timestamp"], op["kind"], op["data"], op.get("key"), wallet=op.get("wallet"))
+        elif kind == "finance":
+            store.finance(op["state"])
+        elif kind == "preferences":
+            store.preferences(op["data"])
+        elif kind == "write_file":
+            data = bytes.fromhex(op["hex"]) if "hex" in op else op["text"].encode("utf-8")
+            with open(op["path"], "ab" if op.get("append") else "wb") as handle:
+                handle.write(data)
+        elif kind == "archive_log":
+            store.archive_log(Path(op["path"]), gpu_uuid=op.get("gpu_uuid"), wallet=op.get("wallet"))
+        elif kind == "archive_thermal":
+            store.archive_thermal(Path(op["path"]))
+        elif kind == "reopen":
+            store.flush()
+            store.close()
+            return history.HistoryStore(Path("history.sqlite3"), op.get("wallet", HISTORY_WALLET))
+        elif kind == "last_error":
+            store.flush()
+            return {"last_error": store.last_error}
+        elif kind == "read":
+            store.flush()
+            return {"read": op["call"], "result": getattr(store, op["call"])(*op.get("args", []))}
+        else:
+            raise AssertionError(f"operação desconhecida: {kind}")
+    # `stats()` deixa o sqlite3.Error subir (ex.: banco recusado pela versão do esquema).
+    except (ValueError, KeyError, TypeError, sqlite3.Error) as error:
+        return {"raised": str(error)}
+    return None
+
+
+def history_dump(database):
+    with contextlib.closing(sqlite3.connect(database)) as connection:
+        schema = [
+            list(row)
+            for row in connection.execute("SELECT type,name,tbl_name,sql FROM sqlite_master ORDER BY type,name")
+        ]
+        tables = {}
+        for (table,) in connection.execute(
+            "SELECT name FROM sqlite_master WHERE type='table' ORDER BY name"
+        ).fetchall():
+            columns = [row[1] for row in connection.execute(f"PRAGMA table_info({table})")]
+            rows = connection.execute(f"SELECT * FROM {table} ORDER BY {','.join(columns)}").fetchall()
+            tables[table] = {"columns": columns, "rows": [list(row) for row in rows]}
+        version = connection.execute("PRAGMA user_version").fetchone()[0]
+        journal = connection.execute("PRAGMA journal_mode").fetchone()[0]
+    offsets, rejected = Path("history-log-offsets.json"), Path("history-rejected.jsonl")
+    return {
+        "schema": schema,
+        "tables": tables,
+        "user_version": version,
+        "journal_mode": journal,
+        "offsets": offsets.read_text(encoding="utf-8") if offsets.exists() else None,
+        "rejected": rejected.read_text(encoding="utf-8").splitlines() if rejected.exists() else [],
+    }
+
+
+def history_case(name, ops, prepare=()):
+    import history
+
+    counter = itertools.count(1)
+    fake_uuid = types.SimpleNamespace(uuid4=lambda: types.SimpleNamespace(hex=f"{next(counter):032x}"))
+    fake_time = types.SimpleNamespace(time=lambda: HISTORY_NOW, monotonic=time.monotonic, sleep=time.sleep)
+    outputs = []
+    previous = os.getcwd()
+    with (
+        tempfile.TemporaryDirectory(prefix="hashpilot-history-") as folder,
+        mock.patch.object(history, "uuid", fake_uuid),
+        mock.patch.object(history, "time", fake_time),
+        mock.patch.object(history, "parse_stamp", history_utc_stamp),
+    ):
+        os.chdir(folder)
+        try:
+            database = Path("history.sqlite3")
+            if prepare:
+                with contextlib.closing(sqlite3.connect(database)) as connection:
+                    for statement in prepare:
+                        connection.execute(statement)
+                    connection.commit()
+            store = history.HistoryStore(database, HISTORY_WALLET)
+            for op in ops:
+                result = history_apply(history, store, op)
+                if isinstance(result, history.HistoryStore):
+                    store = result
+                elif result is not None:
+                    outputs.append(result)
+            store.flush()
+            store.close()
+            dump = history_dump(database)
+            dump["last_error"] = store.last_error
+        finally:
+            os.chdir(previous)
+    return {"name": name, "prepare": list(prepare), "ops": ops, "outputs": outputs, **dump}
+
+
+def history_reads():
+    return [
+        {"op": "read", "call": "restore", "args": [1794100011.0]},
+        {"op": "read", "call": "restore", "args": [0]},
+        {"op": "read", "call": "restore_gpu", "args": ["GPU-1111", 0, "prl1gpu"]},
+        {"op": "read", "call": "restore_gpu", "args": ["GPU-2222", 0, HISTORY_WALLET]},
+        {"op": "read", "call": "restore_gpu", "args": ["GPU-1111", 0, ""]},
+        {"op": "read", "call": "gpu_stats", "args": []},
+        {"op": "read", "call": "gpu_stats", "args": ["GPU-2222"]},
+        {"op": "read", "call": "finance_state", "args": [0]},
+        {"op": "read", "call": "finance_state", "args": [1794100030.0, "prl1other"]},
+        {"op": "read", "call": "stats", "args": []},
+    ]
+
+
+def history_basic_ops():
+    device = {
+        "uuid": "GPU-1111",
+        "index": 0,
+        "name": "RTX 3070",
+        "identity": {"vendor": "NVIDIA", "extra": 1},
+        "collected_at": 1794100019.5,
+        "gpu": {"temperature.gpu": 76, "power.draw": 167.5, "fan.speed": 94},
+        "miner": {"hashrate": 78.37, "hashrate_at": 1794100019.0, "recent_logs": "x", "rate_points": []},
+        "miner_running": True,
+        "wallet": "prl1gpu",
+        "log_path": "gpus/GPU-1111/mining.log",
+        "driver_version": "621.14",
+        "memory_mib": 8192,
+        "serial": None,
+    }
+    disabled = {
+        "uuid": "GPU-2222",
+        "index": 1,
+        "enabled": False,
+        "gpu": None,
+        "miner": None,
+        "configuration_error": "sem carteira",
+        "gpu_error": "",
+    }
+    return [
+        {
+            "op": "telemetry",
+            "data": {
+                "collected_at": 1794100010.5,
+                "gpu": {"temperature.gpu": 70, "power.draw": 150.5, "fan.speed": 80, "name": "RTX ação"},
+                "miner": {
+                    "hashrate": 78.3,
+                    "hashrate_at": 1794100005,
+                    "paused": False,
+                    "connection": "ok",
+                    "recent_logs": "[2026-11-08 20:00:00] linha um\nlinha dois\r\n",
+                    "rate_points": [[1, 2]],
+                },
+                "miner_running": True,
+                "log_path": "logs/mining-1.log",
+            },
+        },
+        {
+            "op": "telemetry",
+            "data": {
+                "collected_at": 1794100012,
+                "gpu": {"temperature.gpu": 71},
+                "miner": {"hashrate": 78.4, "hashrate_at": 1794100011.5, "paused": False, "connection": "ok"},
+                "miner_running": True,
+                "log_path": "logs/mining-1.log",
+            },
+        },
+        {
+            "op": "telemetry",
+            "data": {
+                "collected_at": 1794100014.25,
+                "gpu": None,
+                "miner": {"hashrate": None, "paused": True},
+                "miner_running": False,
+                "gpu_error": "nvidia-smi falhou",
+                "process_error": "",
+                "log_path": "logs/mining-1.log",
+            },
+        },
+        {
+            "op": "telemetry",
+            "source": "import",
+            "data": {
+                "collected_at": 1794099000.0,
+                "gpu": {"temperature.gpu": 60},
+                "miner": {"hashrate": 70.0, "hashrate_at": 1794098990.0},
+                "miner_running": True,
+            },
+        },
+        {
+            "op": "telemetry",
+            "data": {
+                "wallet": "prl1other",
+                "collected_at": 1794100016.0,
+                "miner": {"connection": "ok", "paused": False},
+                "miner_running": True,
+                "log_path": "logs/mining-1.log",
+            },
+        },
+        {
+            "op": "telemetry",
+            "data": {
+                "collected_at": 1794100010.5,
+                "miner": {"paused": False, "connection": "ok"},
+                "miner_running": True,
+                "log_path": "logs/mining-1.log",
+            },
+        },
+        {"op": "rig_telemetry", "rig": {"collected_at": 1794100020.0, "devices": [device, disabled]}},
+        {
+            "op": "rig_telemetry",
+            "rig": {
+                "collected_at": 1794100030.0,
+                "devices": [
+                    {
+                        "uuid": "GPU-1111",
+                        "index": 0,
+                        "name": "RTX 3070 (2)",
+                        "gpu": {"temperature.gpu": 77},
+                        "miner": {"hashrate": 79.0, "hashrate_at": 1794099800.0},
+                        "wallet": "prl1gpu",
+                    }
+                ],
+            },
+        },
+        # Bordas da janela de 180 s do restore_gpu: exatamente 180 entra; 180,25 e idade negativa não.
+        {
+            "op": "rig_telemetry",
+            "rig": {
+                "devices": [
+                    {
+                        "uuid": "GPU-1111",
+                        "collected_at": 1794100040.0,
+                        "wallet": "prl1gpu",
+                        "miner": {"hashrate": 77.5, "hashrate_at": 1794099860.0},
+                    }
+                ]
+            },
+        },
+        {
+            "op": "rig_telemetry",
+            "rig": {
+                "devices": [
+                    {
+                        "uuid": "GPU-1111",
+                        "collected_at": 1794100041.0,
+                        "wallet": "prl1gpu",
+                        "miner": {"hashrate": 77.6, "hashrate_at": 1794099860.75},
+                    }
+                ]
+            },
+        },
+        {
+            "op": "rig_telemetry",
+            "rig": {
+                "devices": [
+                    {
+                        "uuid": "GPU-1111",
+                        "collected_at": 1794100042.0,
+                        "wallet": "prl1gpu",
+                        "miner": {"hashrate": 77.7, "hashrate_at": 1794100043.0},
+                    }
+                ]
+            },
+        },
+        # Carteira vazia ("") é falsa no Python: cai na carteira do histórico.
+        {
+            "op": "rig_telemetry",
+            "rig": {"devices": [{"uuid": "GPU-2222", "collected_at": 1794100043.0, "wallet": "", "enabled": True}]},
+        },
+        {
+            "op": "telemetry",
+            "data": {
+                "wallet": "",
+                "collected_at": 1794100018.0,
+                "miner": {"paused": False, "connection": "ok"},
+                "miner_running": True,
+                "log_path": "logs/mining-1.log",
+            },
+        },
+        {"op": "rig_telemetry", "rig": {"devices": [{"uuid": f"GPU-{n}"} for n in range(7)]}},
+        {"op": "rig_telemetry", "rig": {"devices": [{"uuid": "GPU-1111"}, {"uuid": "GPU-1111"}]}},
+        {"op": "event", "timestamp": 1794100040.0, "kind": "manual", "data": {"a": 1}, "key": "k-1"},
+        {
+            "op": "event",
+            "timestamp": 1794100041.5,
+            "kind": "sem_chave",
+            "data": {
+                "numeros": [1e16, 1e-7, -0.0, 0.1, 12345678901234567890, 2.5e-5, 1e22, 100.0],
+                "texto": "ação   \u0001 \"aspas\" \\ / \t fim",
+                "vazio": {},
+                "lista": [],
+            },
+        },
+        {"op": "event", "timestamp": 1794100042, "kind": "outra", "data": None, "key": "", "wallet": "prl1other"},
+        {
+            "op": "finance",
+            "state": {
+                "snapshots": [{"timestamp": 1794100000.0, "total_prl": 1.5}, {"timestamp": 1794100060, "total_prl": 2}],
+                "sources": {
+                    "kryptex": {"fetched_at": 1794100050.0, "data": {"balance": 2.0}},
+                    "coingecko": {"fetched_at": 1794100055.5, "data": {"brl": 0.42}},
+                },
+                "errors": {"coingecko": "timeout"},
+            },
+        },
+        {
+            "op": "finance",
+            "state": {
+                "snapshots": [
+                    {"timestamp": 1794100060, "total_prl": 9},
+                    {"timestamp": 1794100065.0, "total_prl": 2.25},
+                ],
+                "sources": {"kryptex": {"fetched_at": 1794100070.0, "data": {"balance": 2.5}}},
+                "errors": {},
+                "attempted_at": 1794100071,
+            },
+        },
+        {
+            "op": "finance",
+            "state": {
+                "wallet": "prl1other",
+                "snapshots": [{"timestamp": 1794100066.0, "total_prl": 0.5}],
+                "sources": {},
+                "errors": {"kryptex": "HTTP 503"},
+                "attempted_at": 1794100072,
+            },
+        },
+        {"op": "preferences", "data": {"range": "1h", "zoom": [1, 2]}},
+        {"op": "preferences", "data": {"range": "24h"}},
+        *history_reads(),
+    ]
+
+
+def history_archive_ops():
+    thermal_lines = (
+        '{"sampled_at": 1794100100.5, "temp": 76}\n'
+        '{"sampled_at": "1794100101", "temp": 77}\r\n'
+        '{"temp": 78}\n'
+        '{"sampled_at": -1}\n'
+        '{"sampled_at": "nan"}\n'
+        '{"sampled_at": true, "ação": "sim"}\n'
+        '{"sampled_at": 1794'
+    )
+    return [
+        {
+            "op": "write_file",
+            "path": "mining-a.log",
+            "text": "﻿[2026-11-08 20:00:00] GPU0 RTX 3070: 78.00 TH/s   \r\n"
+            "linha sem carimbo\n"
+            "[2026-13-40 99:99:99] carimbo inválido\n"
+            "incompleta",
+        },
+        {"op": "archive_log", "path": "mining-a.log", "gpu_uuid": "GPU-1111", "wallet": "prl1gpu"},
+        {"op": "archive_log", "path": "mining-a.log", "gpu_uuid": "GPU-1111", "wallet": "prl1gpu"},
+        {
+            "op": "write_file",
+            "path": "mining-a.log",
+            "append": True,
+            "text": " agora completa\n[2026-11-08 20:00:05] segunda\nlinha sem carimbo\n",
+        },
+        {"op": "archive_log", "path": "mining-a.log", "gpu_uuid": "GPU-1111", "wallet": "prl1gpu"},
+        {"op": "write_file", "path": "mining-a.log", "append": True, "hex": "fffe410a"},
+        {"op": "write_file", "path": "mining-a.log", "append": True, "text": "fim com separador\x1c\x1f \n"},
+        {"op": "archive_log", "path": "mining-a.log"},
+        {"op": "reopen"},
+        {
+            "op": "write_file",
+            "path": "mining-a.log",
+            "append": True,
+            "text": "[2026-11-08 20:01:00] depois de reabrir\n",
+        },
+        {"op": "archive_log", "path": "mining-a.log", "gpu_uuid": "GPU-1111"},
+        {"op": "write_file", "path": "mining-a.log", "text": "[2026-11-08 20:02:00] rotacionado\n"},
+        {"op": "archive_log", "path": "mining-a.log", "gpu_uuid": "GPU-1111"},
+        {"op": "write_file", "path": "thermal.jsonl", "text": thermal_lines},
+        {"op": "archive_thermal", "path": "thermal.jsonl"},
+        {"op": "archive_thermal", "path": "thermal.jsonl"},
+        {"op": "archive_thermal", "path": "ausente.jsonl"},
+        {
+            "op": "telemetry",
+            "data": {
+                "collected_at": 1794100200.0,
+                "miner": {"recent_logs": "sem caminho 1\n\nsem caminho 2"},
+                "log_path": None,
+            },
+        },
+        {"op": "reopen", "wallet": "prl1second"},
+        {"op": "archive_thermal", "path": "thermal.jsonl"},
+        {"op": "read", "call": "stats", "args": []},
+    ]
+
+
+def history_rejected_ops():
+    return [
+        {"op": "telemetry", "data": {"miner": {}}},
+        {"op": "last_error"},
+        {"op": "rig_telemetry", "rig": {"devices": [{"uuid": "GPU-3333", "collected_at": None}]}},
+        {"op": "last_error"},
+        {"op": "finance", "state": {"snapshots": [{"timestamp": 1.0}]}},
+        {"op": "last_error"},
+        {"op": "telemetry", "data": {"miner": {"recent_logs": "linha"}}},
+        {"op": "preferences", "data": ["não", "é", "objeto"]},
+        {"op": "last_error"},
+        {"op": "event", "timestamp": 1794100300.0, "kind": "depois", "data": {}, "key": "ok"},
+        {"op": "last_error"},
+    ]
+
+
+LEGACY_GPU_TABLE = (
+    "CREATE TABLE gpu_telemetry (gpu_uuid TEXT NOT NULL,timestamp REAL NOT NULL,wallet TEXT NOT NULL,"
+    "session TEXT NOT NULL,source TEXT NOT NULL,gpu_json TEXT,miner_json TEXT NOT NULL,miner_running INTEGER,"
+    "enabled INTEGER,errors_json TEXT,log_path TEXT,PRIMARY KEY(gpu_uuid,timestamp))"
+)
+
+
+def history_store():
+    cases = [
+        history_case("basico", history_basic_ops()),
+        history_case("arquivo_de_log", history_archive_ops()),
+        history_case("rejeitadas", history_rejected_ops()),
+        history_case(
+            "migracao_gpu_v2",
+            [
+                {
+                    "op": "rig_telemetry",
+                    "rig": {
+                        "devices": [
+                            {
+                                "uuid": "GPU-1111",
+                                "collected_at": 1794000000.0,
+                                "wallet": "prl1new",
+                                "gpu": {"temperature.gpu": 71},
+                            }
+                        ]
+                    },
+                },
+                {"op": "read", "call": "gpu_stats", "args": []},
+                {"op": "read", "call": "restore_gpu", "args": ["GPU-1111", 0, "prl1old"]},
+            ],
+            prepare=[
+                LEGACY_GPU_TABLE,
+                "INSERT INTO gpu_telemetry VALUES('GPU-1111',1794000000.0,'prl1old','s-old','live','{\"temperature.gpu\":70}','{}',1,1,'{}',NULL)",
+                "INSERT INTO gpu_telemetry VALUES('GPU-1111',1794000002.0,'prl1old','s-old','live',NULL,'{}',0,1,'{}','a.log')",
+                "PRAGMA user_version=2",
+            ],
+        ),
+        history_case(
+            "versao_futura",
+            [
+                {"op": "event", "timestamp": 1.0, "kind": "x", "data": {}, "key": "k"},
+                {"op": "last_error"},
+                {"op": "read", "call": "stats", "args": []},
+            ],
+            prepare=["PRAGMA user_version=4"],
+        ),
+        history_case(
+            "esquema_gpu_desconhecido",
+            [
+                {"op": "last_error"},
+            ],
+            prepare=["CREATE TABLE gpu_telemetry (gpu_uuid TEXT PRIMARY KEY, timestamp REAL)"],
+        ),
+    ]
+    write("history", {"cases": cases, "now": HISTORY_NOW, "wallet": HISTORY_WALLET})
+
+
+GENERATORS = {
+    "numbers": numbers,
+    "miner_log": miner_logs,
+    "thermal": thermal_sequences,
+    "valuation": valuations,
+    "payout": payout_states,
+    "rig_config": rig,
+    "config": configs,
+    "history": history_store,
+}
+
+
 if __name__ == "__main__":
-    numbers()
-    miner_logs()
-    thermal_sequences()
-    valuations()
-    payout_states()
-    rig()
-    configs()
+    selected = sys.argv[1:] or list(GENERATORS)
+    unknown = [name for name in selected if name not in GENERATORS]
+    if unknown:
+        sys.exit(f"Golden desconhecido: {', '.join(unknown)}. Opções: {', '.join(GENERATORS)}")
+    if not hasattr(time, "tzset") and set(selected) - {"history"}:
+        sys.exit("Sem time.tzset (Windows): só o golden 'history' pode ser gerado aqui.")
+    for name in selected:
+        GENERATORS[name]()

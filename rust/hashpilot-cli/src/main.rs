@@ -1,9 +1,10 @@
 //! `hashpilot` — CLI somente leitura do port em Rust do HashPilot.
 //!
-//! Lê sensores NVIDIA, logs do SRBMiner e o estado financeiro, e imprime JSON.
-//! Nunca inicia ou para mineração, nunca altera clocks, potência ou ventoinhas,
-//! e não grava nada nos dados do aplicativo.
+//! Lê sensores NVIDIA, logs do SRBMiner, o estado financeiro e o histórico SQLite,
+//! e imprime JSON. Nunca inicia ou para mineração, nunca altera clocks, potência ou
+//! ventoinhas, e não grava nada nos dados do aplicativo.
 
+mod history;
 mod logs;
 mod nvidia;
 mod release;
@@ -33,6 +34,14 @@ Uso:
   hashpilot snapshot [--log-dir <pasta>] Sensores + log mais recente de cada GPU
   hashpilot release inspect <versão> --archive-sha256 <hex> [--md5 <hex>] [--file <zip>]
                                          Dados de catálogo de um SRBMiner novo (não extrai nem executa)
+  hashpilot history <consulta> [--db <arquivo>] [--wallet <carteira>] [--since <epoch>]
+                                         Histórico SQLite, aberto somente para leitura:
+      stats              linhas e intervalo de cada tabela da carteira
+      restore            séries do painel (hashrate, temperatura, potência, ventoinha)
+      gpu <UUID>         séries de uma GPU do rig (hashrate medido até 180 s antes)
+      gpus [<UUID>]      linhas e intervalo por GPU
+      finance            pontos de saldo e a fonte financeira mais recente
+      (padrões: banco da pasta de estado, carteira do settings.json, --since 0)
   hashpilot --version | --help
 ";
 
@@ -54,6 +63,7 @@ fn main() -> ExitCode {
         Some("payout") => payout_command(&arguments[1..]),
         Some("snapshot") => snapshot_command(&arguments[1..]),
         Some("release") => release_command(&arguments[1..]),
+        Some("history") => history_command(&arguments[1..]),
         Some(other) => Err(Failure::Usage(format!("comando desconhecido: {other}"))),
     };
     match result {
@@ -187,6 +197,25 @@ fn payout_command(arguments: &[String]) -> Result<Value, Failure> {
 
 fn state_dir() -> Result<PathBuf, String> {
     resolve_state_dir(current_platform(), &process_env)
+}
+
+fn history_command(arguments: &[String]) -> Result<Value, Failure> {
+    let options = Options::parse(arguments, &["db", "wallet", "since"], &[])?;
+    let (query, rest) = options
+        .positional
+        .split_first()
+        .ok_or_else(|| Failure::Usage("history exige uma consulta".into()))?;
+    let database = match options.text("db") {
+        Some(path) => PathBuf::from(path),
+        None => hashpilot_history::default_path(&state_dir()?),
+    };
+    let wallet = match options.text("wallet") {
+        Some(wallet) => wallet.to_string(),
+        None => history::settings_wallet(&state_dir()?)?,
+    };
+    let since = options.number("since")?.unwrap_or(0.0);
+    let query = history::Query::parse(query, rest).map_err(Failure::Usage)?;
+    Ok(history::run(&database, &wallet, since, &query)?)
 }
 
 fn default_log_dir() -> Result<PathBuf, String> {
