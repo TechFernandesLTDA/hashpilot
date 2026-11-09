@@ -1,0 +1,1454 @@
+{
+ "cases": [
+  {
+   "kind": "detect",
+   "name": "duas_gpus",
+   "cache": false,
+   "script": {
+    "--query-gpu=index,name,uuid,pci.bus_id --format=csv,noheader,nounits": "0, NVIDIA GeForce RTX 3070, GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75, 00000000:01:00.0\n1, NVIDIA GeForce RTX 2060, GPU-11111111-2222-3333-4444-555555555555, 00000000:02:00.0",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit --format=csv,noheader,nounits": "566.36, 1324021012345, 0x248410DE, 0x147E10DE, 94.04.25.00.4B, 8.6, 100.00, 240.00, 240.00, 240.00, 2100, 8192, 93",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-supported-clocks=graphics --format=csv,noheader,nounits": "2100\n2085\n1995\n210\n2085\n0\n-15\n1500.5\nabc",
+    "-i GPU-11111111-2222-3333-4444-555555555555 --query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit --format=csv,noheader,nounits": "566.36, [N/A], 0x1F0810DE, [Not Supported], 90.06.18.00.98, 7.5, 125.00, 200.00, 175.00, 175.00, 2100, 8192, N/A",
+    "-i GPU-11111111-2222-3333-4444-555555555555 --query-supported-clocks=graphics --format=csv,noheader,nounits": "1800\n1500"
+   },
+   "steps": [
+    {
+     "now": 1000.0,
+     "result": [
+      {
+       "vendor": "NVIDIA",
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "pci_bus_id": "00000000:01:00.0",
+       "driver_version": "566.36",
+       "serial": "1324021012345",
+       "pci_device_id": "0x248410DE",
+       "pci_subdevice_id": "0x147E10DE",
+       "vbios_version": "94.04.25.00.4B",
+       "compute_capability": "8.6",
+       "power_min_w": 100.0,
+       "power_max_w": 240.0,
+       "power_default_w": 240.0,
+       "power_limit_w": 240.0,
+       "graphics_max_mhz": 2100.0,
+       "memory_mib": 8192.0,
+       "temperature_limit_c": 93.0,
+       "supported_graphics_clocks_mhz": [
+        210,
+        1995,
+        2085,
+        2100
+       ],
+       "capabilities_queried_at": 1000.0,
+       "catalog_id": "nvidia-geforce-rtx-3070",
+       "architecture": "Ampere",
+       "form_factor": "desktop",
+       "family": "GeForce RTX 30 Series",
+       "catalog_match": "name_and_pci",
+       "catalog_sources": [
+        "https://download.nvidia.com/XFree86/Linux-x86_64/580.95.05/README/supportedchips.html",
+        "https://www.nvidia.com/en-us/geforce/graphics-cards/compare/"
+       ]
+      },
+      {
+       "vendor": "NVIDIA",
+       "index": 1,
+       "name": "NVIDIA GeForce RTX 2060",
+       "uuid": "GPU-11111111-2222-3333-4444-555555555555",
+       "pci_bus_id": "00000000:02:00.0",
+       "driver_version": "566.36",
+       "serial": null,
+       "pci_device_id": "0x1F0810DE",
+       "pci_subdevice_id": null,
+       "vbios_version": "90.06.18.00.98",
+       "compute_capability": "7.5",
+       "power_min_w": 125.0,
+       "power_max_w": 200.0,
+       "power_default_w": 175.0,
+       "power_limit_w": 175.0,
+       "graphics_max_mhz": 2100.0,
+       "memory_mib": 8192.0,
+       "temperature_limit_c": null,
+       "supported_graphics_clocks_mhz": [
+        1500,
+        1800
+       ],
+       "capabilities_queried_at": 1000.0,
+       "catalog_id": "nvidia-geforce-rtx-2060",
+       "architecture": "Turing",
+       "form_factor": "unspecified",
+       "family": "GeForce RTX 20 Series",
+       "catalog_match": "name_and_pci",
+       "catalog_sources": [
+        "https://download.nvidia.com/XFree86/Linux-x86_64/580.95.05/README/supportedchips.html",
+        "https://www.nvidia.com/en-us/geforce/graphics-cards/compare/"
+       ]
+      }
+     ],
+     "calls": [
+      [
+       "--query-gpu=index,name,uuid,pci.bus_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-supported-clocks=graphics",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-11111111-2222-3333-4444-555555555555",
+       "--query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-11111111-2222-3333-4444-555555555555",
+       "--query-supported-clocks=graphics",
+       "--format=csv,noheader,nounits"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "detect",
+   "name": "consulta_campo_a_campo",
+   "cache": false,
+   "script": {
+    "--query-gpu=index,name,uuid,pci.bus_id --format=csv,noheader,nounits": "0, GeForce RTX 3070, GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75, 00000000:01:00.0",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit --format=csv,noheader,nounits": "566.36, 1, 2",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-gpu=driver_version --format=csv,noheader,nounits": "566.36",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-gpu=pci.device_id --format=csv,noheader,nounits": "0x248810DE",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-gpu=power.limit --format=csv,noheader,nounits": " 220.00 ",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-gpu=memory.total --format=csv,noheader,nounits": "8192\n8192",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-gpu=serial --format=csv,noheader,nounits": "[N/A]",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-supported-clocks=graphics --format=csv,noheader,nounits": "1800"
+   },
+   "steps": [
+    {
+     "now": 5.0,
+     "result": [
+      {
+       "vendor": "NVIDIA",
+       "index": 0,
+       "name": "GeForce RTX 3070",
+       "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "pci_bus_id": "00000000:01:00.0",
+       "driver_version": "566.36",
+       "serial": null,
+       "pci_device_id": "0x248810DE",
+       "pci_subdevice_id": null,
+       "vbios_version": null,
+       "compute_capability": null,
+       "power_min_w": null,
+       "power_max_w": null,
+       "power_default_w": null,
+       "power_limit_w": 220.0,
+       "graphics_max_mhz": null,
+       "memory_mib": null,
+       "temperature_limit_c": null,
+       "supported_graphics_clocks_mhz": [
+        1800
+       ],
+       "capabilities_queried_at": 5.0,
+       "catalog_id": "nvidia-geforce-rtx-3070",
+       "architecture": "Ampere",
+       "form_factor": "desktop",
+       "family": "GeForce RTX 30 Series",
+       "catalog_match": "name_and_pci",
+       "catalog_sources": [
+        "https://download.nvidia.com/XFree86/Linux-x86_64/580.95.05/README/supportedchips.html",
+        "https://www.nvidia.com/en-us/geforce/graphics-cards/compare/"
+       ]
+      }
+     ],
+     "calls": [
+      [
+       "--query-gpu=index,name,uuid,pci.bus_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=driver_version",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=serial",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=pci.device_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=pci.sub_device_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=vbios_version",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=compute_cap",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=power.min_limit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=power.max_limit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=power.default_limit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=power.limit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=clocks.max.graphics",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=memory.total",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=temperature.gpu.tlimit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-supported-clocks=graphics",
+       "--format=csv,noheader,nounits"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "detect",
+   "name": "caps_com_erro",
+   "cache": false,
+   "script": {
+    "--query-gpu=index,name,uuid,pci.bus_id --format=csv,noheader,nounits": "0, RTX 3070, GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75, 00000000:01:00.0"
+   },
+   "steps": [
+    {
+     "now": 5.0,
+     "result": [
+      {
+       "vendor": "NVIDIA",
+       "index": 0,
+       "name": "RTX 3070",
+       "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "pci_bus_id": "00000000:01:00.0",
+       "driver_version": null,
+       "serial": null,
+       "pci_device_id": null,
+       "pci_subdevice_id": null,
+       "vbios_version": null,
+       "compute_capability": null,
+       "power_min_w": null,
+       "power_max_w": null,
+       "power_default_w": null,
+       "power_limit_w": null,
+       "graphics_max_mhz": null,
+       "memory_mib": null,
+       "temperature_limit_c": null,
+       "supported_graphics_clocks_mhz": [],
+       "capabilities_queried_at": 5.0,
+       "catalog_id": "nvidia-geforce-rtx-3070",
+       "architecture": "Ampere",
+       "form_factor": "desktop",
+       "family": "GeForce RTX 30 Series",
+       "catalog_match": "name_only",
+       "catalog_sources": [
+        "https://download.nvidia.com/XFree86/Linux-x86_64/580.95.05/README/supportedchips.html",
+        "https://www.nvidia.com/en-us/geforce/graphics-cards/compare/"
+       ]
+      }
+     ],
+     "calls": [
+      [
+       "--query-gpu=index,name,uuid,pci.bus_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=driver_version",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=serial",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=pci.device_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=pci.sub_device_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=vbios_version",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=compute_cap",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=power.min_limit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=power.max_limit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=power.default_limit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=power.limit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=clocks.max.graphics",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=memory.total",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=temperature.gpu.tlimit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-supported-clocks=graphics",
+       "--format=csv,noheader,nounits"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "detect",
+   "name": "pci_divergente",
+   "cache": false,
+   "script": {
+    "--query-gpu=index,name,uuid,pci.bus_id --format=csv,noheader,nounits": "0, NVIDIA   geforce rtx 3070 , GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75, 00000000:01:00.0",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit --format=csv,noheader,nounits": "566.36, 1324021012345, 0x9999, 0x147E10DE, 94.04.25.00.4B, 8.6, 100.00, 240.00, 240.00, 240.00, 2100, 8192, 93",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-supported-clocks=graphics --format=csv,noheader,nounits": "1800"
+   },
+   "steps": [
+    {
+     "now": 5.0,
+     "result": [
+      {
+       "vendor": "NVIDIA",
+       "index": 0,
+       "name": "NVIDIA   geforce rtx 3070",
+       "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "pci_bus_id": "00000000:01:00.0",
+       "driver_version": "566.36",
+       "serial": "1324021012345",
+       "pci_device_id": "0x9999",
+       "pci_subdevice_id": "0x147E10DE",
+       "vbios_version": "94.04.25.00.4B",
+       "compute_capability": "8.6",
+       "power_min_w": 100.0,
+       "power_max_w": 240.0,
+       "power_default_w": 240.0,
+       "power_limit_w": 240.0,
+       "graphics_max_mhz": 2100.0,
+       "memory_mib": 8192.0,
+       "temperature_limit_c": 93.0,
+       "supported_graphics_clocks_mhz": [
+        1800
+       ],
+       "capabilities_queried_at": 5.0,
+       "catalog_match": "name_only_pci_mismatch",
+       "architecture": null
+      }
+     ],
+     "calls": [
+      [
+       "--query-gpu=index,name,uuid,pci.bus_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-supported-clocks=graphics",
+       "--format=csv,noheader,nounits"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "detect",
+   "name": "nome_desconhecido",
+   "cache": false,
+   "script": {
+    "--query-gpu=index,name,uuid,pci.bus_id --format=csv,noheader,nounits": "0, Placa Misteriosa X, GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75, 00000000:01:00.0",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit --format=csv,noheader,nounits": "566.36, 1324021012345, 0x248410DE, 0x147E10DE, 94.04.25.00.4B, 8.6, 100.00, 240.00, 240.00, 240.00, 2100, 8192, 93",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-supported-clocks=graphics --format=csv,noheader,nounits": ""
+   },
+   "steps": [
+    {
+     "now": 5.0,
+     "result": [
+      {
+       "vendor": "NVIDIA",
+       "index": 0,
+       "name": "Placa Misteriosa X",
+       "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "pci_bus_id": "00000000:01:00.0",
+       "driver_version": "566.36",
+       "serial": "1324021012345",
+       "pci_device_id": "0x248410DE",
+       "pci_subdevice_id": "0x147E10DE",
+       "vbios_version": "94.04.25.00.4B",
+       "compute_capability": "8.6",
+       "power_min_w": 100.0,
+       "power_max_w": 240.0,
+       "power_default_w": 240.0,
+       "power_limit_w": 240.0,
+       "graphics_max_mhz": 2100.0,
+       "memory_mib": 8192.0,
+       "temperature_limit_c": 93.0,
+       "supported_graphics_clocks_mhz": [],
+       "capabilities_queried_at": 5.0,
+       "architecture": null
+      }
+     ],
+     "calls": [
+      [
+       "--query-gpu=index,name,uuid,pci.bus_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-supported-clocks=graphics",
+       "--format=csv,noheader,nounits"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "detect",
+   "name": "linhas_invalidas",
+   "cache": false,
+   "script": {
+    "--query-gpu=index,name,uuid,pci.bus_id --format=csv,noheader,nounits": "\n0, RTX 3070, GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75\nx, RTX 3070, GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75, p\n2, RTX 3070, NAO-GPU, p\n3, \"NVIDIA GeForce RTX 3070, edição\", GPU-11111111-2222-3333-4444-555555555555, 00000000:03:00.0\n4,\"NVIDIA GeForce RTX 3070, edi\"\"cao\"\"\",GPU-11111111-2222-3333-4444-555555555555,00000000:04:00.0\n\r\n",
+    "-i GPU-11111111-2222-3333-4444-555555555555 --query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit --format=csv,noheader,nounits": "566.36, [N/A], 0x1F0810DE, [Not Supported], 90.06.18.00.98, 7.5, 125.00, 200.00, 175.00, 175.00, 2100, 8192, N/A",
+    "-i GPU-11111111-2222-3333-4444-555555555555 --query-supported-clocks=graphics --format=csv,noheader,nounits": "1800"
+   },
+   "steps": [
+    {
+     "now": 5.0,
+     "result": [
+      {
+       "vendor": "NVIDIA",
+       "index": 4,
+       "name": "NVIDIA GeForce RTX 3070, edi\"cao\"",
+       "uuid": "GPU-11111111-2222-3333-4444-555555555555",
+       "pci_bus_id": "00000000:04:00.0",
+       "driver_version": "566.36",
+       "serial": null,
+       "pci_device_id": "0x1F0810DE",
+       "pci_subdevice_id": null,
+       "vbios_version": "90.06.18.00.98",
+       "compute_capability": "7.5",
+       "power_min_w": 125.0,
+       "power_max_w": 200.0,
+       "power_default_w": 175.0,
+       "power_limit_w": 175.0,
+       "graphics_max_mhz": 2100.0,
+       "memory_mib": 8192.0,
+       "temperature_limit_c": null,
+       "supported_graphics_clocks_mhz": [
+        1800
+       ],
+       "capabilities_queried_at": 5.0,
+       "architecture": null
+      }
+     ],
+     "calls": [
+      [
+       "--query-gpu=index,name,uuid,pci.bus_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-11111111-2222-3333-4444-555555555555",
+       "--query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-11111111-2222-3333-4444-555555555555",
+       "--query-supported-clocks=graphics",
+       "--format=csv,noheader,nounits"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "detect",
+   "name": "limite_de_placas",
+   "cache": false,
+   "script": {
+    "--query-gpu=index,name,uuid,pci.bus_id --format=csv,noheader,nounits": "0, RTX 3070, GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75, p0\n1, RTX 2060, GPU-11111111-2222-3333-4444-555555555555, p1",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit --format=csv,noheader,nounits": "566.36, 1324021012345, 0x248410DE, 0x147E10DE, 94.04.25.00.4B, 8.6, 100.00, 240.00, 240.00, 240.00, 2100, 8192, 93",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-supported-clocks=graphics --format=csv,noheader,nounits": "1",
+    "-i GPU-11111111-2222-3333-4444-555555555555 --query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit --format=csv,noheader,nounits": "566.36, [N/A], 0x1F0810DE, [Not Supported], 90.06.18.00.98, 7.5, 125.00, 200.00, 175.00, 175.00, 2100, 8192, N/A",
+    "-i GPU-11111111-2222-3333-4444-555555555555 --query-supported-clocks=graphics --format=csv,noheader,nounits": "1"
+   },
+   "steps": [
+    {
+     "now": 5.0,
+     "max_devices": 1,
+     "result": [
+      {
+       "vendor": "NVIDIA",
+       "index": 0,
+       "name": "RTX 3070",
+       "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "pci_bus_id": "p0",
+       "driver_version": "566.36",
+       "serial": "1324021012345",
+       "pci_device_id": "0x248410DE",
+       "pci_subdevice_id": "0x147E10DE",
+       "vbios_version": "94.04.25.00.4B",
+       "compute_capability": "8.6",
+       "power_min_w": 100.0,
+       "power_max_w": 240.0,
+       "power_default_w": 240.0,
+       "power_limit_w": 240.0,
+       "graphics_max_mhz": 2100.0,
+       "memory_mib": 8192.0,
+       "temperature_limit_c": 93.0,
+       "supported_graphics_clocks_mhz": [
+        1
+       ],
+       "capabilities_queried_at": 5.0,
+       "catalog_id": "nvidia-geforce-rtx-3070",
+       "architecture": "Ampere",
+       "form_factor": "desktop",
+       "family": "GeForce RTX 30 Series",
+       "catalog_match": "name_and_pci",
+       "catalog_sources": [
+        "https://download.nvidia.com/XFree86/Linux-x86_64/580.95.05/README/supportedchips.html",
+        "https://www.nvidia.com/en-us/geforce/graphics-cards/compare/"
+       ]
+      }
+     ],
+     "calls": [
+      [
+       "--query-gpu=index,name,uuid,pci.bus_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-supported-clocks=graphics",
+       "--format=csv,noheader,nounits"
+      ]
+     ]
+    },
+    {
+     "now": 5.0,
+     "max_devices": 0,
+     "result": [],
+     "calls": []
+    },
+    {
+     "now": 5.0,
+     "max_devices": -3,
+     "result": [],
+     "calls": []
+    }
+   ]
+  },
+  {
+   "kind": "detect",
+   "name": "cache",
+   "cache": true,
+   "script": {
+    "--query-gpu=index,name,uuid,pci.bus_id --format=csv,noheader,nounits": "0, RTX 3070, GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75, p0",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit --format=csv,noheader,nounits": "566.36, 1324021012345, 0x248410DE, 0x147E10DE, 94.04.25.00.4B, 8.6, 100.00, 240.00, 240.00, 240.00, 2100, 8192, 93",
+    "-i GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75 --query-supported-clocks=graphics --format=csv,noheader,nounits": "1800"
+   },
+   "steps": [
+    {
+     "now": 1000.0,
+     "result": [
+      {
+       "vendor": "NVIDIA",
+       "index": 0,
+       "name": "RTX 3070",
+       "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "pci_bus_id": "p0",
+       "driver_version": "566.36",
+       "serial": "1324021012345",
+       "pci_device_id": "0x248410DE",
+       "pci_subdevice_id": "0x147E10DE",
+       "vbios_version": "94.04.25.00.4B",
+       "compute_capability": "8.6",
+       "power_min_w": 100.0,
+       "power_max_w": 240.0,
+       "power_default_w": 240.0,
+       "power_limit_w": 240.0,
+       "graphics_max_mhz": 2100.0,
+       "memory_mib": 8192.0,
+       "temperature_limit_c": 93.0,
+       "supported_graphics_clocks_mhz": [
+        1800
+       ],
+       "capabilities_queried_at": 1000.0,
+       "catalog_id": "nvidia-geforce-rtx-3070",
+       "architecture": "Ampere",
+       "form_factor": "desktop",
+       "family": "GeForce RTX 30 Series",
+       "catalog_match": "name_and_pci",
+       "catalog_sources": [
+        "https://download.nvidia.com/XFree86/Linux-x86_64/580.95.05/README/supportedchips.html",
+        "https://www.nvidia.com/en-us/geforce/graphics-cards/compare/"
+       ]
+      }
+     ],
+     "calls": [
+      [
+       "--query-gpu=index,name,uuid,pci.bus_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-supported-clocks=graphics",
+       "--format=csv,noheader,nounits"
+      ]
+     ]
+    },
+    {
+     "now": 1100.0,
+     "result": [
+      {
+       "vendor": "NVIDIA",
+       "index": 0,
+       "name": "RTX 3070",
+       "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "pci_bus_id": "p0",
+       "driver_version": "566.36",
+       "serial": "1324021012345",
+       "pci_device_id": "0x248410DE",
+       "pci_subdevice_id": "0x147E10DE",
+       "vbios_version": "94.04.25.00.4B",
+       "compute_capability": "8.6",
+       "power_min_w": 100.0,
+       "power_max_w": 240.0,
+       "power_default_w": 240.0,
+       "power_limit_w": 240.0,
+       "graphics_max_mhz": 2100.0,
+       "memory_mib": 8192.0,
+       "temperature_limit_c": 93.0,
+       "supported_graphics_clocks_mhz": [
+        1800
+       ],
+       "capabilities_queried_at": 1000.0,
+       "catalog_id": "nvidia-geforce-rtx-3070",
+       "architecture": "Ampere",
+       "form_factor": "desktop",
+       "family": "GeForce RTX 30 Series",
+       "catalog_match": "name_and_pci",
+       "catalog_sources": [
+        "https://download.nvidia.com/XFree86/Linux-x86_64/580.95.05/README/supportedchips.html",
+        "https://www.nvidia.com/en-us/geforce/graphics-cards/compare/"
+       ]
+      }
+     ],
+     "calls": [
+      [
+       "--query-gpu=index,name,uuid,pci.bus_id",
+       "--format=csv,noheader,nounits"
+      ]
+     ]
+    },
+    {
+     "now": 1599.9,
+     "result": [
+      {
+       "vendor": "NVIDIA",
+       "index": 0,
+       "name": "RTX 3070",
+       "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "pci_bus_id": "p0",
+       "driver_version": "566.36",
+       "serial": "1324021012345",
+       "pci_device_id": "0x248410DE",
+       "pci_subdevice_id": "0x147E10DE",
+       "vbios_version": "94.04.25.00.4B",
+       "compute_capability": "8.6",
+       "power_min_w": 100.0,
+       "power_max_w": 240.0,
+       "power_default_w": 240.0,
+       "power_limit_w": 240.0,
+       "graphics_max_mhz": 2100.0,
+       "memory_mib": 8192.0,
+       "temperature_limit_c": 93.0,
+       "supported_graphics_clocks_mhz": [
+        1800
+       ],
+       "capabilities_queried_at": 1000.0,
+       "catalog_id": "nvidia-geforce-rtx-3070",
+       "architecture": "Ampere",
+       "form_factor": "desktop",
+       "family": "GeForce RTX 30 Series",
+       "catalog_match": "name_and_pci",
+       "catalog_sources": [
+        "https://download.nvidia.com/XFree86/Linux-x86_64/580.95.05/README/supportedchips.html",
+        "https://www.nvidia.com/en-us/geforce/graphics-cards/compare/"
+       ]
+      }
+     ],
+     "calls": [
+      [
+       "--query-gpu=index,name,uuid,pci.bus_id",
+       "--format=csv,noheader,nounits"
+      ]
+     ]
+    },
+    {
+     "now": 1600.0,
+     "result": [
+      {
+       "vendor": "NVIDIA",
+       "index": 0,
+       "name": "RTX 3070",
+       "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "pci_bus_id": "p0",
+       "driver_version": "566.36",
+       "serial": "1324021012345",
+       "pci_device_id": "0x248410DE",
+       "pci_subdevice_id": "0x147E10DE",
+       "vbios_version": "94.04.25.00.4B",
+       "compute_capability": "8.6",
+       "power_min_w": 100.0,
+       "power_max_w": 240.0,
+       "power_default_w": 240.0,
+       "power_limit_w": 240.0,
+       "graphics_max_mhz": 2100.0,
+       "memory_mib": 8192.0,
+       "temperature_limit_c": 93.0,
+       "supported_graphics_clocks_mhz": [
+        1800
+       ],
+       "capabilities_queried_at": 1600.0,
+       "catalog_id": "nvidia-geforce-rtx-3070",
+       "architecture": "Ampere",
+       "form_factor": "desktop",
+       "family": "GeForce RTX 30 Series",
+       "catalog_match": "name_and_pci",
+       "catalog_sources": [
+        "https://download.nvidia.com/XFree86/Linux-x86_64/580.95.05/README/supportedchips.html",
+        "https://www.nvidia.com/en-us/geforce/graphics-cards/compare/"
+       ]
+      }
+     ],
+     "calls": [
+      [
+       "--query-gpu=index,name,uuid,pci.bus_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-supported-clocks=graphics",
+       "--format=csv,noheader,nounits"
+      ]
+     ]
+    },
+    {
+     "now": 1590.0,
+     "result": [
+      {
+       "vendor": "NVIDIA",
+       "index": 0,
+       "name": "RTX 3070",
+       "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "pci_bus_id": "p0",
+       "driver_version": "566.36",
+       "serial": "1324021012345",
+       "pci_device_id": "0x248410DE",
+       "pci_subdevice_id": "0x147E10DE",
+       "vbios_version": "94.04.25.00.4B",
+       "compute_capability": "8.6",
+       "power_min_w": 100.0,
+       "power_max_w": 240.0,
+       "power_default_w": 240.0,
+       "power_limit_w": 240.0,
+       "graphics_max_mhz": 2100.0,
+       "memory_mib": 8192.0,
+       "temperature_limit_c": 93.0,
+       "supported_graphics_clocks_mhz": [
+        1800
+       ],
+       "capabilities_queried_at": 1590.0,
+       "catalog_id": "nvidia-geforce-rtx-3070",
+       "architecture": "Ampere",
+       "form_factor": "desktop",
+       "family": "GeForce RTX 30 Series",
+       "catalog_match": "name_and_pci",
+       "catalog_sources": [
+        "https://download.nvidia.com/XFree86/Linux-x86_64/580.95.05/README/supportedchips.html",
+        "https://www.nvidia.com/en-us/geforce/graphics-cards/compare/"
+       ]
+      }
+     ],
+     "calls": [
+      [
+       "--query-gpu=index,name,uuid,pci.bus_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-supported-clocks=graphics",
+       "--format=csv,noheader,nounits"
+      ]
+     ]
+    },
+    {
+     "now": 2300.0,
+     "result": [
+      {
+       "vendor": "NVIDIA",
+       "index": 0,
+       "name": "RTX 3070",
+       "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "pci_bus_id": "p0",
+       "driver_version": "566.36",
+       "serial": "1324021012345",
+       "pci_device_id": "0x248410DE",
+       "pci_subdevice_id": "0x147E10DE",
+       "vbios_version": "94.04.25.00.4B",
+       "compute_capability": "8.6",
+       "power_min_w": 100.0,
+       "power_max_w": 240.0,
+       "power_default_w": 240.0,
+       "power_limit_w": 240.0,
+       "graphics_max_mhz": 2100.0,
+       "memory_mib": 8192.0,
+       "temperature_limit_c": 93.0,
+       "supported_graphics_clocks_mhz": [
+        1800
+       ],
+       "capabilities_queried_at": 2300.0,
+       "catalog_id": "nvidia-geforce-rtx-3070",
+       "architecture": "Ampere",
+       "form_factor": "desktop",
+       "family": "GeForce RTX 30 Series",
+       "catalog_match": "name_and_pci",
+       "catalog_sources": [
+        "https://download.nvidia.com/XFree86/Linux-x86_64/580.95.05/README/supportedchips.html",
+        "https://www.nvidia.com/en-us/geforce/graphics-cards/compare/"
+       ]
+      }
+     ],
+     "calls": [
+      [
+       "--query-gpu=index,name,uuid,pci.bus_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+       "--query-supported-clocks=graphics",
+       "--format=csv,noheader,nounits"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "detect",
+   "name": "uuid_vazio",
+   "cache": false,
+   "script": {
+    "--query-gpu=index,name,uuid,pci.bus_id --format=csv,noheader,nounits": "1, RTX 3070, GPU-, p",
+    "-i GPU- --query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit --format=csv,noheader,nounits": "566.36, 1324021012345, 0x248410DE, 0x147E10DE, 94.04.25.00.4B, 8.6, 100.00, 240.00, 240.00, 240.00, 2100, 8192, 93",
+    "-i GPU- --query-supported-clocks=graphics --format=csv,noheader,nounits": ""
+   },
+   "steps": [
+    {
+     "now": 5.0,
+     "error": "O agente aceita apenas GPUs NVIDIA identificadas pelo driver",
+     "calls": [
+      [
+       "--query-gpu=index,name,uuid,pci.bus_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-",
+       "--query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-",
+       "--query-supported-clocks=graphics",
+       "--format=csv,noheader,nounits"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "detect",
+   "name": "uuid_invalido",
+   "cache": false,
+   "script": {
+    "--query-gpu=index,name,uuid,pci.bus_id --format=csv,noheader,nounits": "0, RTX 3070, GPU-abc_def, p0",
+    "-i GPU-abc_def --query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit --format=csv,noheader,nounits": "566.36, 1324021012345, 0x248410DE, 0x147E10DE, 94.04.25.00.4B, 8.6, 100.00, 240.00, 240.00, 240.00, 2100, 8192, 93",
+    "-i GPU-abc_def --query-supported-clocks=graphics --format=csv,noheader,nounits": ""
+   },
+   "steps": [
+    {
+     "now": 5.0,
+     "error": "O agente aceita apenas GPUs NVIDIA identificadas pelo driver",
+     "calls": [
+      [
+       "--query-gpu=index,name,uuid,pci.bus_id",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-abc_def",
+       "--query-gpu=driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit",
+       "--format=csv,noheader,nounits"
+      ],
+      [
+       "-i",
+       "GPU-abc_def",
+       "--query-supported-clocks=graphics",
+       "--format=csv,noheader,nounits"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "detect",
+   "name": "lista_falha",
+   "cache": false,
+   "script": {},
+   "steps": [
+    {
+     "now": 5.0,
+     "error": "sem resposta para --query-gpu=index,name,uuid,pci.bus_id --format=csv,noheader",
+     "calls": [
+      [
+       "--query-gpu=index,name,uuid,pci.bus_id",
+       "--format=csv,noheader,nounits"
+      ]
+     ]
+    }
+   ]
+  },
+  {
+   "kind": "samples",
+   "name": "normal",
+   "devices": [
+    {
+     "vendor": "NVIDIA",
+     "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+     "index": 0,
+     "name": "NVIDIA GeForce RTX 3070"
+    },
+    {
+     "vendor": "NVIDIA",
+     "uuid": "GPU-11111111-2222-3333-4444-555555555555",
+     "index": 1,
+     "name": "RTX 2060"
+    }
+   ],
+   "script": {
+    "--query-gpu=uuid,index,name,driver_version,temperature.gpu,power.draw,power.limit,clocks.gr,clocks.mem,utilization.gpu,utilization.memory,memory.used,memory.total,fan.speed,pstate --format=csv,noheader,nounits": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75, 0, NVIDIA GeForce RTX 3070, 566.36, 76, 177.10, 240.00, 1695, 7001, 100, 85, 6400, 8192, 95, P2\nGPU-11111111-2222-3333-4444-555555555555, 1, RTX 2060, 566.36, 60, 90.5, 175.00, 1500, 7000, 99, 80, 5000, 6144, [N/A], P2"
+   },
+   "now": 1234.5,
+   "result": {
+    "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75": {
+     "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+     "index": 0,
+     "name": "NVIDIA GeForce RTX 3070",
+     "driver_version": "566.36",
+     "temperature.gpu": 76.0,
+     "power.draw": 177.1,
+     "power.limit": 240.0,
+     "clocks.gr": 1695.0,
+     "clocks.mem": 7001.0,
+     "utilization.gpu": 100.0,
+     "utilization.memory": 85.0,
+     "memory.used": 6400.0,
+     "memory.total": 8192.0,
+     "fan.speed": 95.0,
+     "pstate": "P2",
+     "sampled_at": 1234.5,
+     "error": null
+    },
+    "GPU-11111111-2222-3333-4444-555555555555": {
+     "uuid": "GPU-11111111-2222-3333-4444-555555555555",
+     "index": 1,
+     "name": "RTX 2060",
+     "driver_version": "566.36",
+     "temperature.gpu": 60.0,
+     "power.draw": 90.5,
+     "power.limit": 175.0,
+     "clocks.gr": 1500.0,
+     "clocks.mem": 7000.0,
+     "utilization.gpu": 99.0,
+     "utilization.memory": 80.0,
+     "memory.used": 5000.0,
+     "memory.total": 6144.0,
+     "fan.speed": null,
+     "pstate": "P2",
+     "sampled_at": 1234.5,
+     "error": null
+    }
+   },
+   "calls": [
+    [
+     "--query-gpu=uuid,index,name,driver_version,temperature.gpu,power.draw,power.limit,clocks.gr,clocks.mem,utilization.gpu,utilization.memory,memory.used,memory.total,fan.speed,pstate",
+     "--format=csv,noheader,nounits"
+    ]
+   ]
+  },
+  {
+   "kind": "samples",
+   "name": "uma_ausente_e_estranha",
+   "devices": [
+    {
+     "vendor": "NVIDIA",
+     "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+     "index": 0,
+     "name": "NVIDIA GeForce RTX 3070"
+    },
+    {
+     "vendor": "NVIDIA",
+     "uuid": "GPU-11111111-2222-3333-4444-555555555555",
+     "index": 1,
+     "name": "RTX 2060"
+    }
+   ],
+   "script": {
+    "--query-gpu=uuid,index,name,driver_version,temperature.gpu,power.draw,power.limit,clocks.gr,clocks.mem,utilization.gpu,utilization.memory,memory.used,memory.total,fan.speed,pstate --format=csv,noheader,nounits": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75, 0, NVIDIA GeForce RTX 3070, 566.36, 76, 177.10, 240.00, 1695, 7001, 100, 85, 6400, 8192, 95, P2\nGPU-outra, 2, X, 1, 50, 1, 1, 1, 1, 1, 1, 1, 1, 1, P0"
+   },
+   "now": 1234.5,
+   "result": {
+    "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75": {
+     "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+     "index": 0,
+     "name": "NVIDIA GeForce RTX 3070",
+     "driver_version": "566.36",
+     "temperature.gpu": 76.0,
+     "power.draw": 177.1,
+     "power.limit": 240.0,
+     "clocks.gr": 1695.0,
+     "clocks.mem": 7001.0,
+     "utilization.gpu": 100.0,
+     "utilization.memory": 85.0,
+     "memory.used": 6400.0,
+     "memory.total": 8192.0,
+     "fan.speed": 95.0,
+     "pstate": "P2",
+     "sampled_at": 1234.5,
+     "error": null
+    },
+    "GPU-11111111-2222-3333-4444-555555555555": {
+     "uuid": "GPU-11111111-2222-3333-4444-555555555555",
+     "index": 1,
+     "name": "RTX 2060",
+     "sampled_at": 1234.5,
+     "error": "GPU não apareceu na consulta NVIDIA"
+    }
+   },
+   "calls": [
+    [
+     "--query-gpu=uuid,index,name,driver_version,temperature.gpu,power.draw,power.limit,clocks.gr,clocks.mem,utilization.gpu,utilization.memory,memory.used,memory.total,fan.speed,pstate",
+     "--format=csv,noheader,nounits"
+    ]
+   ]
+  },
+  {
+   "kind": "samples",
+   "name": "indice_trocado_e_invalido",
+   "devices": [
+    {
+     "vendor": "NVIDIA",
+     "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+     "index": 0,
+     "name": "NVIDIA GeForce RTX 3070"
+    },
+    {
+     "vendor": "NVIDIA",
+     "uuid": "GPU-11111111-2222-3333-4444-555555555555",
+     "index": 1,
+     "name": "RTX 2060"
+    }
+   ],
+   "script": {
+    "--query-gpu=uuid,index,name,driver_version,temperature.gpu,power.draw,power.limit,clocks.gr,clocks.mem,utilization.gpu,utilization.memory,memory.used,memory.total,fan.speed,pstate --format=csv,noheader,nounits": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75, 3, NVIDIA GeForce RTX 3070, 566.36, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, P0\nGPU-11111111-2222-3333-4444-555555555555, x, RTX, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, P0"
+   },
+   "now": 1234.5,
+   "result": {
+    "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75": {
+     "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+     "index": 3,
+     "name": "NVIDIA GeForce RTX 3070",
+     "driver_version": "566.36",
+     "temperature.gpu": 70.0,
+     "power.draw": 1.0,
+     "power.limit": 1.0,
+     "clocks.gr": 1.0,
+     "clocks.mem": 1.0,
+     "utilization.gpu": 1.0,
+     "utilization.memory": 1.0,
+     "memory.used": 1.0,
+     "memory.total": 1.0,
+     "fan.speed": 1.0,
+     "pstate": "P0",
+     "sampled_at": 1234.5,
+     "error": null
+    },
+    "GPU-11111111-2222-3333-4444-555555555555": {
+     "uuid": "GPU-11111111-2222-3333-4444-555555555555",
+     "index": 1,
+     "name": "RTX 2060",
+     "sampled_at": 1234.5,
+     "error": "GPU não apareceu na consulta NVIDIA"
+    }
+   },
+   "calls": [
+    [
+     "--query-gpu=uuid,index,name,driver_version,temperature.gpu,power.draw,power.limit,clocks.gr,clocks.mem,utilization.gpu,utilization.memory,memory.used,memory.total,fan.speed,pstate",
+     "--format=csv,noheader,nounits"
+    ]
+   ]
+  },
+  {
+   "kind": "samples",
+   "name": "temperatura_invalida",
+   "devices": [
+    {
+     "vendor": "NVIDIA",
+     "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+     "index": 0,
+     "name": "NVIDIA GeForce RTX 3070"
+    },
+    {
+     "vendor": "NVIDIA",
+     "uuid": "GPU-11111111-2222-3333-4444-555555555555",
+     "index": 1,
+     "name": "RTX 2060"
+    }
+   ],
+   "script": {
+    "--query-gpu=uuid,index,name,driver_version,temperature.gpu,power.draw,power.limit,clocks.gr,clocks.mem,utilization.gpu,utilization.memory,memory.used,memory.total,fan.speed,pstate --format=csv,noheader,nounits": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75, 0, N, 1, [N/A], 1, 1, 1, 1, 1, 1, 1, 1, 1, P0\nGPU-11111111-2222-3333-4444-555555555555, 1, N, 1, 121, 1, 1, 1, 1, 1, 1, 1, 1, 1, P0"
+   },
+   "now": 1234.5,
+   "result": {
+    "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75": {
+     "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+     "index": 0,
+     "name": "N",
+     "driver_version": "1",
+     "temperature.gpu": null,
+     "power.draw": 1.0,
+     "power.limit": 1.0,
+     "clocks.gr": 1.0,
+     "clocks.mem": 1.0,
+     "utilization.gpu": 1.0,
+     "utilization.memory": 1.0,
+     "memory.used": 1.0,
+     "memory.total": 1.0,
+     "fan.speed": 1.0,
+     "pstate": "P0",
+     "sampled_at": 1234.5,
+     "error": "Temperatura NVIDIA indisponível ou inválida"
+    },
+    "GPU-11111111-2222-3333-4444-555555555555": {
+     "uuid": "GPU-11111111-2222-3333-4444-555555555555",
+     "index": 1,
+     "name": "N",
+     "driver_version": "1",
+     "temperature.gpu": 121.0,
+     "power.draw": 1.0,
+     "power.limit": 1.0,
+     "clocks.gr": 1.0,
+     "clocks.mem": 1.0,
+     "utilization.gpu": 1.0,
+     "utilization.memory": 1.0,
+     "memory.used": 1.0,
+     "memory.total": 1.0,
+     "fan.speed": 1.0,
+     "pstate": "P0",
+     "sampled_at": 1234.5,
+     "error": "Temperatura NVIDIA indisponível ou inválida"
+    }
+   },
+   "calls": [
+    [
+     "--query-gpu=uuid,index,name,driver_version,temperature.gpu,power.draw,power.limit,clocks.gr,clocks.mem,utilization.gpu,utilization.memory,memory.used,memory.total,fan.speed,pstate",
+     "--format=csv,noheader,nounits"
+    ]
+   ]
+  },
+  {
+   "kind": "samples",
+   "name": "linha_repetida_e_curta",
+   "devices": [
+    {
+     "vendor": "NVIDIA",
+     "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+     "index": 0,
+     "name": "NVIDIA GeForce RTX 3070"
+    }
+   ],
+   "script": {
+    "--query-gpu=uuid,index,name,driver_version,temperature.gpu,power.draw,power.limit,clocks.gr,clocks.mem,utilization.gpu,utilization.memory,memory.used,memory.total,fan.speed,pstate --format=csv,noheader,nounits": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75, 0, NVIDIA GeForce RTX 3070, 566.36, 76, 177.10, 240.00, 1695, 7001, 100, 85, 6400, 8192, 95, P2\nGPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75, 0, NVIDIA GeForce RTX 3070, 566.36, 80, 177.10, 240.00, 1695, 7001, 100, 85, 6400, 8192, 95, P2\nGPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75, 0, curta"
+   },
+   "now": 1234.5,
+   "result": {
+    "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75": {
+     "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+     "index": 0,
+     "name": "NVIDIA GeForce RTX 3070",
+     "driver_version": "566.36",
+     "temperature.gpu": 80.0,
+     "power.draw": 177.1,
+     "power.limit": 240.0,
+     "clocks.gr": 1695.0,
+     "clocks.mem": 7001.0,
+     "utilization.gpu": 100.0,
+     "utilization.memory": 85.0,
+     "memory.used": 6400.0,
+     "memory.total": 8192.0,
+     "fan.speed": 95.0,
+     "pstate": "P2",
+     "sampled_at": 1234.5,
+     "error": null
+    }
+   },
+   "calls": [
+    [
+     "--query-gpu=uuid,index,name,driver_version,temperature.gpu,power.draw,power.limit,clocks.gr,clocks.mem,utilization.gpu,utilization.memory,memory.used,memory.total,fan.speed,pstate",
+     "--format=csv,noheader,nounits"
+    ]
+   ]
+  },
+  {
+   "kind": "samples",
+   "name": "comando_falha",
+   "devices": [
+    {
+     "vendor": "NVIDIA",
+     "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+     "index": 0,
+     "name": "NVIDIA GeForce RTX 3070"
+    },
+    {
+     "vendor": "NVIDIA",
+     "uuid": "GPU-11111111-2222-3333-4444-555555555555",
+     "index": 1,
+     "name": "RTX 2060"
+    }
+   ],
+   "script": {
+    "--query-gpu=uuid,index,name,driver_version,temperature.gpu,power.draw,power.limit,clocks.gr,clocks.mem,utilization.gpu,utilization.memory,memory.used,memory.total,fan.speed,pstate --format=csv,noheader,nounits": {
+     "error": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+   },
+   "now": 1234.5,
+   "result": {
+    "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75": {
+     "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+     "index": 0,
+     "name": "NVIDIA GeForce RTX 3070",
+     "sampled_at": 1234.5,
+     "error": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    },
+    "GPU-11111111-2222-3333-4444-555555555555": {
+     "uuid": "GPU-11111111-2222-3333-4444-555555555555",
+     "index": 1,
+     "name": "RTX 2060",
+     "sampled_at": 1234.5,
+     "error": "xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx"
+    }
+   },
+   "calls": [
+    [
+     "--query-gpu=uuid,index,name,driver_version,temperature.gpu,power.draw,power.limit,clocks.gr,clocks.mem,utilization.gpu,utilization.memory,memory.used,memory.total,fan.speed,pstate",
+     "--format=csv,noheader,nounits"
+    ]
+   ]
+  },
+  {
+   "kind": "samples",
+   "name": "sem_placas",
+   "devices": [],
+   "script": {
+    "--query-gpu=uuid,index,name,driver_version,temperature.gpu,power.draw,power.limit,clocks.gr,clocks.mem,utilization.gpu,utilization.memory,memory.used,memory.total,fan.speed,pstate --format=csv,noheader,nounits": ""
+   },
+   "now": 1234.5,
+   "result": {},
+   "calls": []
+  },
+  {
+   "kind": "samples",
+   "name": "placa_invalida",
+   "devices": [
+    {
+     "vendor": "AMD",
+     "uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
+     "index": 0,
+     "name": "x"
+    }
+   ],
+   "script": {
+    "--query-gpu=uuid,index,name,driver_version,temperature.gpu,power.draw,power.limit,clocks.gr,clocks.mem,utilization.gpu,utilization.memory,memory.used,memory.total,fan.speed,pstate --format=csv,noheader,nounits": ""
+   },
+   "now": 1234.5,
+   "error": "O agente aceita apenas GPUs NVIDIA identificadas pelo driver",
+   "calls": []
+  }
+ ]
+}

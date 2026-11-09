@@ -1,10 +1,7 @@
 //! Consulta somente leitura ao `nvidia-smi` — porte de `nvidia_smi.py` e de
 //! `gpu_telemetry.read_gpu_samples`. Nunca escreve clocks, potência ou ventoinhas.
 
-use std::io::Read;
-use std::path::PathBuf;
-use std::process::{Command, Stdio};
-use std::time::{Duration, Instant, SystemTime, UNIX_EPOCH};
+use std::time::{SystemTime, UNIX_EPOCH};
 
 use hashpilot_core::numbers::numeric_str;
 use serde_json::{Map, Value, json};
@@ -28,96 +25,8 @@ pub const FIELDS: [&str; 15] = [
     "pstate",
 ];
 const NUMERIC_FIELDS: std::ops::Range<usize> = 4..14;
-const TIMEOUT: Duration = Duration::from_secs(4);
 
-/// Caminho do executável do driver (PATH e, no Windows, System32), ou `None`.
-pub fn nvidia_smi_path() -> Option<PathBuf> {
-    let name = if cfg!(windows) {
-        "nvidia-smi.exe"
-    } else {
-        "nvidia-smi"
-    };
-    let from_path = std::env::var_os("PATH")
-        .into_iter()
-        .flat_map(|paths| std::env::split_paths(&paths).collect::<Vec<_>>())
-        .map(|directory| directory.join(name))
-        .find(|candidate| candidate.is_file());
-    from_path.or_else(|| {
-        if !cfg!(windows) {
-            return None;
-        }
-        let windows =
-            std::env::var_os("WINDIR").map_or_else(|| PathBuf::from("C:/Windows"), PathBuf::from);
-        Some(windows.join("System32").join(name)).filter(|candidate| candidate.is_file())
-    })
-}
-
-fn hidden(command: &mut Command) -> &mut Command {
-    #[cfg(windows)]
-    {
-        use std::os::windows::process::CommandExt;
-        const CREATE_NO_WINDOW: u32 = 0x0800_0000;
-        command.creation_flags(CREATE_NO_WINDOW);
-    }
-    command
-}
-
-/// Executa o `nvidia-smi` com prazo; erro do driver volta como texto curto.
-pub fn run_smi(arguments: &[&str]) -> Result<String, String> {
-    let executable = nvidia_smi_path().ok_or("Driver NVIDIA/nvidia-smi indisponível")?;
-    let mut child = hidden(Command::new(executable).args(arguments))
-        .stdin(Stdio::null())
-        .stdout(Stdio::piped())
-        .stderr(Stdio::piped())
-        .spawn()
-        .map_err(|error| error.to_string())?;
-    let mut stdout = child.stdout.take().expect("stdout canalizado");
-    let mut stderr = child.stderr.take().expect("stderr canalizado");
-    let out = std::thread::spawn(move || {
-        let mut buffer = Vec::new();
-        stdout.read_to_end(&mut buffer).map(|_| buffer)
-    });
-    let err = std::thread::spawn(move || {
-        let mut buffer = Vec::new();
-        stderr.read_to_end(&mut buffer).map(|_| buffer)
-    });
-    let deadline = Instant::now() + TIMEOUT;
-    let status = loop {
-        if let Some(status) = child.try_wait().map_err(|error| error.to_string())? {
-            break status;
-        }
-        if Instant::now() >= deadline {
-            let _ = child.kill();
-            let _ = child.wait();
-            return Err(format!(
-                "nvidia-smi não respondeu em {} s",
-                TIMEOUT.as_secs()
-            ));
-        }
-        std::thread::sleep(Duration::from_millis(20));
-    };
-    let stdout = String::from_utf8_lossy(
-        &out.join()
-            .map_err(|_| "leitura do stdout falhou")?
-            .unwrap_or_default(),
-    )
-    .into_owned();
-    let stderr = String::from_utf8_lossy(
-        &err.join()
-            .map_err(|_| "leitura do stderr falhou")?
-            .unwrap_or_default(),
-    )
-    .into_owned();
-    if !status.success() {
-        let message = if stderr.trim().is_empty() {
-            stdout
-        } else {
-            stderr
-        };
-        return Err(message.trim().chars().take(240).collect());
-    }
-    Ok(stdout.trim().to_string())
-}
+pub use hashpilot_rig::nvidia::run_smi;
 
 pub fn now_epoch() -> f64 {
     SystemTime::now()
