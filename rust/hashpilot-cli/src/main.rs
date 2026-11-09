@@ -65,6 +65,14 @@ Uso:
   hashpilot contribution --wallet W --settings S --state-dir D [--port N]
                                          Proxy Stratum local da contribuição opcional (como
                                          contribution.py); roda até Ctrl+C
+  hashpilot gpu-agent --control --miner-pid PID --uuid U [--index N] [--miner-index N]
+                [--duration S] [--objective O] [--profile P] [--state-dir D]
+                [--monitor-state-dir D] [--log-dir D] [--miner-log L] [--project-dir P]
+                [--samples N] [--ollama]
+                                         Supervisor NVIDIA (como gpu_agent.py --control):
+                                         único escritor de clock e potência enquanto o
+                                         minerador vive; exige administrador; sai com 1
+                                         quando o gerenciador deve parar o minerador
   hashpilot --version | --help
 ";
 
@@ -94,6 +102,7 @@ fn main() -> ExitCode {
         Some("nvml") => nvml_command(&arguments[1..]),
         Some("rig") => rig_cli::rig_command(&arguments[1..]),
         Some("contribution") => contribution_command(&arguments[1..]),
+        Some("gpu-agent") => gpu_agent_command(&arguments[1..]),
         Some(other) => Err(Failure::Usage(format!("comando desconhecido: {other}"))),
     };
     match result {
@@ -391,6 +400,116 @@ fn contribution_command(arguments: &[String]) -> Result<Value, Failure> {
     }
     proxy.run().map_err(Failure::Runtime)?;
     Ok(json!({"stopped": true, "status": proxy.status}))
+}
+
+/// `hashpilot gpu-agent --control`: o supervisor NVIDIA, com os argumentos do
+/// `gpu_agent.py`. Código 1 é o sinal para o gerenciador parar o minerador desta GPU.
+fn gpu_agent_command(arguments: &[String]) -> Result<Value, Failure> {
+    use hashpilot_rig::controller::{ControlArgs, Hooks, MinerSource, control};
+    let options = Options::parse(
+        arguments,
+        &[
+            "miner-pid",
+            "uuid",
+            "index",
+            "gpu",
+            "miner-index",
+            "duration",
+            "objective",
+            "profile",
+            "state-dir",
+            "monitor-state-dir",
+            "log-dir",
+            "miner-log",
+            "project-dir",
+            "samples",
+        ],
+        &["control", "ollama"],
+    )?;
+    if !options.flag("control") {
+        return Err(Failure::Usage(
+            "o port em Rust só tem o modo --control".into(),
+        ));
+    }
+    let integer = |name: &str| -> Result<Option<i64>, Failure> {
+        options
+            .text(name)
+            .map(|text| {
+                text.parse::<i64>()
+                    .map_err(|_| Failure::Usage(format!("--{name} precisa ser um inteiro")))
+            })
+            .transpose()
+    };
+    let miner_pid = integer("miner-pid")?
+        .filter(|pid| *pid > 0)
+        .ok_or_else(|| Failure::Usage("--control exige --miner-pid".into()))?;
+    let choice = |name: &str, default: &str, allowed: &[&str]| -> Result<String, Failure> {
+        let value = options.text(name).unwrap_or(default);
+        if allowed.contains(&value) {
+            Ok(value.to_string())
+        } else {
+            Err(Failure::Usage(format!("--{name} inválido: {value}")))
+        }
+    };
+    let path = |name: &str| options.text(name).map(PathBuf::from);
+    let state = match path("state-dir") {
+        Some(directory) => directory,
+        None => state_dir().map_err(Failure::Runtime)?,
+    };
+    let monitor =
+        path("monitor-state-dir").unwrap_or_else(|| state_dir().unwrap_or_else(|_| state.clone()));
+    let source = MinerSource {
+        miner_log: path("miner-log"),
+        log_dir: path("log-dir"),
+        miner_index: integer("miner-index")?,
+    };
+    let args = ControlArgs {
+        miner_pid: u32::try_from(miner_pid)
+            .map_err(|_| Failure::Usage("--miner-pid fora do intervalo".into()))?,
+        uuid: options.text("uuid").map(str::to_owned),
+        index: integer("index")?.or(integer("gpu")?),
+        duration: integer("duration")?.unwrap_or(300),
+        objective: choice("objective", "performance", &["performance", "efficiency"])?,
+        profile: choice(
+            "profile",
+            "performance",
+            &["performance", "balanced", "cool"],
+        )?,
+        source: source.clone(),
+        samples: integer("samples")?.unwrap_or(0).max(0) as u64,
+    };
+    let project = match path("project-dir") {
+        Some(directory) => directory,
+        None => std::env::current_dir().map_err(|error| Failure::Runtime(error.to_string()))?,
+    };
+    let software = hashpilot_rig::manager::software_identity(&project);
+    if !hashpilot_rig::win32::install_ctrl_handler() {
+        eprintln!(
+            "aviso: tratamento de Ctrl+C indisponível; o gerenciador para pelo gpu-agent-stop.json"
+        );
+    }
+    let mut hooks = Hooks::real(monitor.clone(), source, software, |file: &Path| {
+        logs::read_log_tail(file, logs::TAIL_LIMIT)
+    })
+    .map_err(|error| Failure::Runtime(error.message))?;
+    match control(&args, &state, &monitor, &mut hooks) {
+        Ok(0) => Ok(json!({"code": 0})),
+        Ok(code) => {
+            let status =
+                std::fs::read_to_string(state.join("gpu-agent-control.json")).unwrap_or_default();
+            let error = serde_json::from_str::<Value>(&status)
+                .ok()
+                .and_then(|status| {
+                    status
+                        .get("error")
+                        .and_then(Value::as_str)
+                        .map(str::to_owned)
+                })
+                .unwrap_or_else(|| format!("controle encerrado com código {code}"));
+            Err(Failure::Runtime(error))
+        }
+        Err(error) => Err(Failure::Runtime(error.describe())),
+    }
 }
 
 fn nvml_command(arguments: &[String]) -> Result<Value, Failure> {

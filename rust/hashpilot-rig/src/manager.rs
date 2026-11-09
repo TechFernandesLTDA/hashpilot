@@ -320,6 +320,9 @@ pub struct RigManager {
     /// `contribution.py` (o mesmo do `rig.py`); o serviço em Rust usa o próprio
     /// executável (`hashpilot contribution`).
     pub proxy_command: Option<Vec<String>>,
+    /// Início da linha de comando do supervisor NVIDIA. `None` usa o `gpu_agent.py`; o
+    /// serviço em Rust usa `hashpilot gpu-agent`, que recebe também `--project-dir`.
+    pub controller_command: Option<Vec<String>>,
 }
 
 impl RigManager {
@@ -367,6 +370,7 @@ impl RigManager {
             sleep_guard,
             operations,
             proxy_command: None,
+            controller_command: None,
         };
         manager.load_registry();
         manager.continuity.known = manager
@@ -892,9 +896,17 @@ impl RigManager {
             .unwrap_or_else(|| json!("performance"));
         let objective = profile(&chosen)?["objective"].clone();
         let dir = path_text(&directory);
-        let mut arguments: Vec<String> = vec![
-            path_text(&self.python_path),
-            path_text(&self.project_dir.join("gpu_agent.py")),
+        let (mut arguments, project_argument) = match &self.controller_command {
+            Some(command) => (command.clone(), true),
+            None => (
+                vec![
+                    path_text(&self.python_path),
+                    path_text(&self.project_dir.join("gpu_agent.py")),
+                ],
+                false,
+            ),
+        };
+        arguments.extend::<Vec<String>>(vec![
             "--control".into(),
             "--miner-pid".into(),
             py_str(field(&entry, "miner_pid")),
@@ -918,7 +930,10 @@ impl RigManager {
             py_str(&chosen),
             "--objective".into(),
             py_str(&objective),
-        ];
+        ]);
+        if project_argument {
+            arguments.extend(["--project-dir".into(), path_text(&self.project_dir)]);
+        }
         if settings.get("ai_enabled") == Some(&Value::Bool(true)) {
             arguments.push("--ollama".into());
         }

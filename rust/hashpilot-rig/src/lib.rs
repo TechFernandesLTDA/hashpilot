@@ -12,6 +12,7 @@ pub mod ai_advisor;
 pub mod argv;
 pub mod continuity;
 pub mod contribution;
+pub mod controller;
 pub mod fsutil;
 pub mod gpu_agent;
 pub mod gpu_defaults;

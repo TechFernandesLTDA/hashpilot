@@ -5605,6 +5605,318 @@ def gpu_agent_golden():
     write("gpu_agent", {"gpu": AGENT_GPU, "bad_gpu": AGENT_BAD_GPU, "cases": cases})
 
 
+# Laço do supervisor (`gpu_agent.control`). Tudo fora do laço é simulado: nvidia-smi
+# (temperatura segue o clock travado), relógio virtual, processo do minerador e leitura do
+# minerador. O teste compara cada comando nvidia-smi, o status final e a memória térmica.
+CONTROL_GPU = {
+    "vendor": "NVIDIA",
+    "uuid": "GPU-ctl-0001",
+    "index": 0,
+    "name": "NVIDIA GeForce RTX 3070",
+    "supported_graphics_clocks_mhz": list(range(1410, 1891, 15)),
+    "power_min_w": 100.0,
+    "power_max_w": 240.0,
+    "power_default_w": 220.0,
+    "temperature_limit_c": 93,
+}
+CONTROL_T0 = 1794000000.0
+
+
+def control_model_temp(spec, cycle, clock):
+    temps = spec["temps"]
+    return round(temps[min(cycle, len(temps) - 1)] + 0.02 * (clock - 1600), 1)
+
+
+def control_model_rate(clock):
+    return round(70 + 0.03 * (clock - 1500), 2)
+
+
+CONTROL_SCENARIOS = {
+    "baseline_sem_alvo": {"temps": [64.0], "alive": 175},
+    "baseline_quente": {"temps": [70.0, 71.0, 72.0, 74.0, 75.0], "alive": 175},
+    "alvo_com_memoria": {
+        "temps": [74.0, 74.0, 73.0, 72.0],
+        "alive": 700,
+        "target": 70,
+        "memory": [7001, 6801, 5001, 405],
+    },
+    "alvo_frio": {"temps": [60.0], "alive": 90, "target": 72, "memory": [7001], "remembered": {"clock_mhz": 1590}},
+    "emergencia_com_alvo": {"temps": [86.0], "alive": 30, "target": 70},
+    "quente_sem_alvo": {"temps": [84.0], "alive": 30},
+    "parada_pedida": {
+        "temps": [64.0],
+        "alive": 50,
+        "events": {4: [["gpu-agent-stop.json", {"gpu_uuid": "GPU-ctl-0001", "pid": "<pid>", "at": "<now>"}]]},
+    },
+    "parada_outra_gpu": {
+        "temps": [64.0],
+        "alive": 8,
+        "events": {2: [["gpu-agent-stop.json", {"gpu_uuid": "GPU-x", "pid": "<pid>", "at": "<now>"}]]},
+    },
+    "pedido_benchmark": {
+        "temps": [64.0],
+        "alive": 30,
+        "events": {
+            3: [
+                [
+                    "gpu-agent-request.json",
+                    {
+                        "action": "benchmark",
+                        "gpu_uuid": "GPU-ctl-0001",
+                        "at": "<now>",
+                        "profile": "balanced",
+                        "objective": "efficiency",
+                        "duration_seconds": 600,
+                    },
+                ]
+            ],
+            9: [
+                [
+                    "gpu-agent-request.json",
+                    {"action": "benchmark", "gpu_uuid": "GPU-ctl-0001", "at": "<now>", "objective": "voar"},
+                ]
+            ],
+            14: [["gpu-agent-request.json", "nao json"]],
+        },
+    },
+    "troca_de_alvo": {
+        "temps": [72.0],
+        "alive": 40,
+        "events": {
+            7: [["<settings>", {"target_temperature_c": 70}]],
+            26: [["<settings>", {"target_temperature_c": 75}]],
+        },
+    },
+    "sem_admin": {"temps": [64.0], "alive": 5, "admin": False},
+    "minerador_desconhecido": {"temps": [64.0], "alive": 5, "executable": "c:\\x\\outro.exe"},
+    "minerador_morto": {"temps": [64.0], "alive": 0},
+    "duracao_invalida": {"temps": [64.0], "alive": 5, "duration": 299},
+    "outro_supervisor": {
+        "temps": [64.0],
+        "alive": 5,
+        "files": {"thermal-control.json": {"enabled": True, "controller_pid": 4, "gpu_uuid": "GPU-ctl-0001"}},
+    },
+    "trava_legada": {
+        "temps": [64.0],
+        "alive": 5,
+        "files": {"gpu-control-owner.json": {"pid": 4, "token": "x", "gpu_uuid": "GPU-ctl-0001"}},
+    },
+    "amostras": {"temps": [64.0], "alive": 50, "samples": 3},
+    "alvo_muito_acima": {"temps": [70.0], "alive": 20, "target": 65},
+    "partida_ociosa": {"temps": [55.0], "alive": 12, "target": 70, "start_clock": 900},
+    "perfil_frio": {"temps": [66.0, 67.0, 68.0], "alive": 60, "profile": "cool"},
+    "pedidos_limite": {
+        "temps": [64.0],
+        "alive": 20,
+        "events": {
+            2: [
+                [
+                    "gpu-agent-request.json",
+                    {"action": "benchmark", "gpu_uuid": "GPU-ctl-0001", "at": "<now>", "duration_seconds": 3601},
+                ]
+            ],
+            5: [
+                [
+                    "gpu-agent-request.json",
+                    {"action": "benchmark", "gpu_uuid": "GPU-ctl-0001", "at": "<now-30>", "objective": "efficiency"},
+                ]
+            ],
+        },
+    },
+    "trava_legada_morta": {
+        "temps": [64.0],
+        "alive": 3,
+        "files": {"gpu-control-owner.json": {"pid": 4000000, "token": "x", "gpu_uuid": "GPU-ctl-0001"}},
+    },
+    "telemetria_velha": {"temps": [64.0], "alive": 160, "fresh": False},
+    "subida_bloqueada": {"temps": [75.5], "alive": 40, "target": 80},
+}
+
+
+def run_control_scenario(name, spec):
+    import component_status
+    import config as hp_config
+    import ctypes
+
+    import gpu_agent as ga
+
+    real_windll = ctypes.WinDLL
+    state = {
+        "now": CONTROL_T0,
+        "cycle": 0,
+        "clock": spec.get("start_clock", 1860),
+        "limit": 220.0,
+        "memory": (spec.get("memory") or [7001])[0],
+    }
+    log = []
+    trace = []
+    ids = iter(f"{number:032x}" for number in range(1, 10_000))
+
+    with tempfile.TemporaryDirectory() as temporary:
+        root = Path(temporary)
+        state_dir, global_dir = root / "gpu", root / "global"
+        state_dir.mkdir()
+        global_dir.mkdir()
+        settings = global_dir / "settings.json"
+        base_settings = {} if spec.get("target") is None else {"target_temperature_c": spec["target"]}
+        settings.write_text(json.dumps(base_settings), encoding="utf-8")
+        for file_name, payload in spec.get("files", {}).items():
+            (state_dir / file_name).write_text(json.dumps(payload), encoding="utf-8")
+        if spec.get("remembered"):
+            (state_dir / "thermal-target.json").write_text(
+                json.dumps({"gpu_uuid": CONTROL_GPU["uuid"], **spec["remembered"]}), encoding="utf-8"
+            )
+
+        def fake_smi(arguments, timeout=4):
+            arguments = [str(item) for item in arguments]
+            log.append(arguments)
+            joined = " ".join(arguments)
+            if "--query-gpu=temperature.gpu" in joined:
+                temp = control_model_temp(spec, state["cycle"], state["clock"])
+                return (
+                    f"{temp:.1f}, {150 + (state['clock'] - 1500) / 10:.1f}, {state['limit']:.2f}, {state['clock']}, 100"
+                )
+            if "--query-gpu=fan.speed" in joined:
+                return "61"
+            if "--query-supported-clocks=memory" in joined:
+                return "\n".join(str(item) for item in spec.get("memory") or [])
+            if "--query-gpu=clocks.mem" in joined:
+                return str(state["memory"])
+            if "-lgc" in arguments:
+                state["clock"] = int(arguments[arguments.index("-lgc") + 1].split(",")[0])
+            elif "-pl" in arguments:
+                state["limit"] = float(arguments[arguments.index("-pl") + 1])
+            elif "-lmc" in arguments:
+                state["memory"] = int(arguments[arguments.index("-lmc") + 1].split(",")[0])
+            elif "-rgc" in arguments:
+                state["clock"] = 1860
+            return ""
+
+        def substitute(value):
+            if value == "<pid>":
+                return os.getpid()
+            if value == "<now>":
+                return state["now"]
+            if value == "<now-30>":
+                return state["now"] - 30
+            if isinstance(value, dict):
+                return {key: substitute(item) for key, item in value.items()}
+            return value
+
+        def sleep(seconds):
+            try:
+                current = json.loads((state_dir / "gpu-agent-control.json").read_text(encoding="utf-8"))
+            except OSError, ValueError:
+                current = {}
+            control = current.get("target_control") or {}
+            trace.append(
+                [
+                    current.get("mode"),
+                    current.get("writes"),
+                    control.get("action"),
+                    control.get("reason"),
+                    control.get("ceiling_mhz"),
+                ]
+            )
+            state["now"] += seconds
+            state["cycle"] += 1
+            for file_name, payload in spec.get("events", {}).get(state["cycle"], []):
+                target = settings if file_name == "<settings>" else state_dir / file_name
+                content = payload if isinstance(payload, str) else json.dumps(substitute(payload))
+                target.write_text(content, encoding="utf-8")
+
+        def read_miner(args, gpu, monitor, count, now=None):
+            rate = control_model_rate(state["clock"])
+            return {
+                "hashrate": rate,
+                "hashrate_at": state["now"] - 5,
+                "accepted": 2 * state["cycle"],
+                "rejected": 0,
+                "hw_errors": 0,
+            }, spec.get("fresh", True)
+
+        class FakeShell:
+            def IsUserAnAdmin(self):  # noqa: N802
+                return spec.get("admin", True)
+
+        def windll(name, *args, **kwargs):
+            return FakeShell() if name == "shell32" else real_windll(name, *args, **kwargs)
+
+        identity = {"created_filetime": 1, "executable": spec.get("executable", "c:\\mineradores\\srbminer-multi.exe")}
+        args = types.SimpleNamespace(
+            duration=spec.get("duration", 300),
+            objective="performance",
+            profile=spec.get("profile", "performance"),
+            gpu=0,
+            uuid=CONTROL_GPU["uuid"],
+            miner_index=None,
+            miner_pid=4242,
+            samples=spec.get("samples", 0),
+            ollama=False,
+            log_dir=None,
+            miner_log=None,
+        )
+        originals = {
+            name: getattr(ga, name) for name in ("read_sample", "read_fan", "read_memory_clocks", "read_memory_clock")
+        }
+        with contextlib.ExitStack() as stack:
+            patch = lambda target, attribute, value: stack.enter_context(mock.patch.object(target, attribute, value))  # noqa: E731
+            patch(ga.time, "time", lambda: state["now"])
+            patch(ga.time, "sleep", sleep)
+            patch(ga.uuid, "uuid4", lambda: types.SimpleNamespace(hex=next(ids)))
+            patch(ga, "smi_command", fake_smi)
+            patch(ga, "detect_nvidia_gpus", lambda *a, **k: [dict(CONTROL_GPU)])
+            for helper, original in originals.items():
+                patch(ga, helper, lambda gpu, command=None, _original=original: _original(gpu, fake_smi))
+            patch(ga, "process_alive", lambda pid: pid == 4242 and state["cycle"] < spec["alive"])
+            patch(ga, "process_identity", lambda pid: dict(identity) if pid == 4242 else None)
+            patch(ga, "read_miner_data", read_miner)
+            patch(ctypes, "WinDLL", windll)
+            patch(hp_config, "STATE_DIR", global_dir)
+            patch(hp_config, "SETTINGS_PATH", settings)
+            patch(component_status, "identity", lambda *a, **k: {"version": "teste"})
+            try:
+                outcome = {"code": ga.control(args, state_dir, state_dir)}
+            except (OSError, ValueError, RuntimeError) as error:
+                outcome = {"error": f"{type(error).__name__}: {error}"}
+
+        def load(file_name):
+            try:
+                return json.loads((state_dir / file_name).read_text(encoding="utf-8-sig"))
+            except OSError, ValueError:
+                return None
+
+        status = load("gpu-agent-control.json")
+        if isinstance(status, dict) and status.get("controller_pid") == os.getpid():
+            status["controller_pid"] = "<pid>"
+        memory = load("thermal-target.json")
+        tables = {}
+        if (state_dir / "gpu-agent.sqlite3").exists():
+            import sqlite3
+
+            with contextlib.closing(sqlite3.connect(state_dir / "gpu-agent.sqlite3")) as db:
+                for table in ("benchmarks", "observations", "decisions", "trials", "adjustments"):
+                    tables[table] = db.execute(f"SELECT count(*) FROM {table}").fetchone()[0]
+        return {
+            "kind": "control",
+            "name": name,
+            "spec": {**spec, "events": {str(k): v for k, v in spec.get("events", {}).items()}},
+            **outcome,
+            "cycles": state["cycle"],
+            "smi": log,
+            "trace": trace,
+            "status": status,
+            "memory": memory,
+            "owner_left": (state_dir / "gpu-control-owner.json").exists(),
+            "tables": tables,
+        }
+
+
+def control_loop_golden():
+    cases = [run_control_scenario(name, spec) for name, spec in CONTROL_SCENARIOS.items()]
+    write("control_loop", {"gpu": CONTROL_GPU, "t0": CONTROL_T0, "cases": cases})
+
+
 GENERATORS = {
     "numbers": numbers,
     "miner_log": miner_logs,
@@ -5624,11 +5936,12 @@ GENERATORS = {
     "contribution": contribution_golden,
     "ai_advisor": ai_advisor_golden,
     "gpu_agent": gpu_agent_golden,
+    "control_loop": control_loop_golden,
 }
 # Goldens que não dependem do fuso nem de caminhos e podem ser gerados no Windows.
 PORTABLE = {"history", "finance", "rig_support", "nvidia_detect", "thermal_target", "contribution", "ai_advisor"}
 # Goldens que usam a API real do Windows (shell32 `CommandLineToArgvW`, `GetFullPathNameW`).
-WINDOWS_ONLY = {"process", "rig_manager", "gpu_control", "gpu_agent"}
+WINDOWS_ONLY = {"process", "rig_manager", "gpu_control", "gpu_agent", "control_loop"}
 
 
 if __name__ == "__main__":
