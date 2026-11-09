@@ -8,6 +8,7 @@ mod history;
 mod logs;
 mod nvidia;
 mod release;
+mod rig_cli;
 
 use std::path::{Path, PathBuf};
 use std::process::ExitCode;
@@ -20,7 +21,7 @@ use hashpilot_core::payout::payout_model;
 use serde_json::{Map, Value, json};
 
 const USAGE: &str = "\
-hashpilot — HashPilot em Rust (somente leitura: não minera nem altera a GPU)
+hashpilot — HashPilot em Rust (só lê, exceto `rig --serve`, que minera e restaura a GPU)
 
 Uso:
   hashpilot gpus                         Sensores NVIDIA de todas as placas (nvidia-smi)
@@ -57,6 +58,10 @@ Uso:
                                          Orçamento de recuperação e incidentes recentes da GPU
   hashpilot miner [--base <pasta>]      Versão selecionada do SRBMiner e conferência do SHA-256
                                          do executável pelo catálogo (só lê; não executa nada)
+  hashpilot rig --request AÇÃO --state-dir D [--gpu-uuid U] [--profile P] [--objective O]
+  hashpilot rig --serve --state-dir D --log-dir L --settings S --miner-path M --python PY
+                [--project-dir P] [--adopt-legacy] [--migrate-legacy] [--legacy-uuid U]
+                [--reference-rtx3070] [--check]
   hashpilot --version | --help
 ";
 
@@ -84,6 +89,7 @@ fn main() -> ExitCode {
         Some("recovery") => recovery_command(&arguments[1..]),
         Some("miner") => miner_command(&arguments[1..]),
         Some("nvml") => nvml_command(&arguments[1..]),
+        Some("rig") => rig_cli::rig_command(&arguments[1..]),
         Some(other) => Err(Failure::Usage(format!("comando desconhecido: {other}"))),
     };
     match result {

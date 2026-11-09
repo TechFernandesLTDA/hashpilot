@@ -2494,6 +2494,223 @@ def gpu_control_golden():
     write("gpu_control", {"cases": cases})
 
 
+# --- nvidia_detect: detect_nvidia_gpus e read_gpu_samples com um nvidia-smi simulado ----------
+
+LIST_QUERY = "--query-gpu=index,name,uuid,pci.bus_id --format=csv,noheader,nounits"
+CAPS_FIELDS = "driver_version,serial,pci.device_id,pci.sub_device_id,vbios_version,compute_cap,power.min_limit,power.max_limit,power.default_limit,power.limit,clocks.max.graphics,memory.total,temperature.gpu.tlimit"
+SAMPLE_QUERY = "--query-gpu=uuid,index,name,driver_version,temperature.gpu,power.draw,power.limit,clocks.gr,clocks.mem,utilization.gpu,utilization.memory,memory.used,memory.total,fan.speed,pstate --format=csv,noheader,nounits"
+
+
+def caps_key(uuid):
+    return f"-i {uuid} --query-gpu={CAPS_FIELDS} --format=csv,noheader,nounits"
+
+
+def clocks_key(uuid):
+    return f"-i {uuid} --query-supported-clocks=graphics --format=csv,noheader,nounits"
+
+
+def field_key(uuid, field):
+    return f"-i {uuid} --query-gpu={field} --format=csv,noheader,nounits"
+
+
+A = "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75"
+B = "GPU-11111111-2222-3333-4444-555555555555"
+CAPS_A = (
+    "566.36, 1324021012345, 0x248410DE, 0x147E10DE, 94.04.25.00.4B, 8.6, 100.00, 240.00, 240.00, 240.00, 2100, 8192, 93"
+)
+CAPS_B = (
+    "566.36, [N/A], 0x1F0810DE, [Not Supported], 90.06.18.00.98, 7.5, 125.00, 200.00, 175.00, 175.00, 2100, 8192, N/A"
+)
+CLOCKS = "2100\n2085\n1995\n210\n2085\n0\n-15\n1500.5\nabc"
+
+DETECT_SCENARIOS = {
+    "duas_gpus": {
+        "script": {
+            LIST_QUERY: "0, NVIDIA GeForce RTX 3070, "
+            + A
+            + ", 00000000:01:00.0\n1, NVIDIA GeForce RTX 2060, "
+            + B
+            + ", 00000000:02:00.0",
+            caps_key(A): CAPS_A,
+            clocks_key(A): CLOCKS,
+            caps_key(B): CAPS_B,
+            clocks_key(B): "1800\n1500",
+        },
+        "steps": [{"now": 1000.0}],
+    },
+    "consulta_campo_a_campo": {
+        "script": {
+            LIST_QUERY: "0, GeForce RTX 3070, " + A + ", 00000000:01:00.0",
+            caps_key(A): "566.36, 1, 2",
+            field_key(A, "driver_version"): "566.36",
+            field_key(A, "pci.device_id"): "0x248810DE",
+            field_key(A, "power.limit"): " 220.00 ",
+            field_key(A, "memory.total"): "8192\n8192",
+            field_key(A, "serial"): "[N/A]",
+            clocks_key(A): "1800",
+        },
+        "steps": [{"now": 5.0}],
+    },
+    "caps_com_erro": {"script": {LIST_QUERY: "0, RTX 3070, " + A + ", 00000000:01:00.0"}, "steps": [{"now": 5.0}]},
+    "pci_divergente": {
+        "script": {
+            LIST_QUERY: "0, NVIDIA   geforce rtx 3070 , " + A + ", 00000000:01:00.0",
+            caps_key(A): CAPS_A.replace("0x248410DE", "0x9999"),
+            clocks_key(A): "1800",
+        },
+        "steps": [{"now": 5.0}],
+    },
+    "nome_desconhecido": {
+        "script": {
+            LIST_QUERY: "0, Placa Misteriosa X, " + A + ", 00000000:01:00.0",
+            caps_key(A): CAPS_A,
+            clocks_key(A): "",
+        },
+        "steps": [{"now": 5.0}],
+    },
+    "linhas_invalidas": {
+        "script": {
+            LIST_QUERY: "\n0, RTX 3070, "
+            + A
+            + "\nx, RTX 3070, "
+            + A
+            + ", p\n2, RTX 3070, NAO-GPU, p\n"
+            + '3, "NVIDIA GeForce RTX 3070, edição", '
+            + B
+            + ", 00000000:03:00.0\n"
+            + '4,"NVIDIA GeForce RTX 3070, edi""cao""",'
+            + B
+            + ",00000000:04:00.0\n\r\n",
+            caps_key(B): CAPS_B,
+            clocks_key(B): "1800",
+        },
+        "steps": [{"now": 5.0}],
+    },
+    "limite_de_placas": {
+        "script": {
+            LIST_QUERY: "0, RTX 3070, " + A + ", p0\n1, RTX 2060, " + B + ", p1",
+            caps_key(A): CAPS_A,
+            clocks_key(A): "1",
+            caps_key(B): CAPS_B,
+            clocks_key(B): "1",
+        },
+        "steps": [{"now": 5.0, "max_devices": 1}, {"now": 5.0, "max_devices": 0}, {"now": 5.0, "max_devices": -3}],
+    },
+    "cache": {
+        "cache": True,
+        "script": {LIST_QUERY: "0, RTX 3070, " + A + ", p0", caps_key(A): CAPS_A, clocks_key(A): "1800"},
+        "steps": [{"now": 1000.0}, {"now": 1100.0}, {"now": 1599.9}, {"now": 1600.0}, {"now": 1590.0}, {"now": 2300.0}],
+    },
+    "uuid_vazio": {
+        "script": {LIST_QUERY: "1, RTX 3070, GPU-, p", caps_key("GPU-"): CAPS_A, clocks_key("GPU-"): ""},
+        "steps": [{"now": 5.0}],
+    },
+    "uuid_invalido": {
+        "script": {
+            LIST_QUERY: "0, RTX 3070, GPU-abc_def, p0",
+            caps_key("GPU-abc_def"): CAPS_A,
+            clocks_key("GPU-abc_def"): "",
+        },
+        "steps": [{"now": 5.0}],
+    },
+    "lista_falha": {"script": {}, "steps": [{"now": 5.0}]},
+}
+
+DEV_A = {"vendor": "NVIDIA", "uuid": A, "index": 0, "name": "NVIDIA GeForce RTX 3070"}
+DEV_B = {"vendor": "NVIDIA", "uuid": B, "index": 1, "name": "RTX 2060"}
+ROW_A = A + ", 0, NVIDIA GeForce RTX 3070, 566.36, 76, 177.10, 240.00, 1695, 7001, 100, 85, 6400, 8192, 95, P2"
+SAMPLE_SCENARIOS = {
+    "normal": {
+        "devices": [DEV_A, DEV_B],
+        "output": ROW_A
+        + "\n"
+        + B
+        + ", 1, RTX 2060, 566.36, 60, 90.5, 175.00, 1500, 7000, 99, 80, 5000, 6144, [N/A], P2",
+    },
+    "uma_ausente_e_estranha": {
+        "devices": [DEV_A, DEV_B],
+        "output": ROW_A + "\nGPU-outra, 2, X, 1, 50, 1, 1, 1, 1, 1, 1, 1, 1, 1, P0",
+    },
+    "indice_trocado_e_invalido": {
+        "devices": [DEV_A, DEV_B],
+        "output": A
+        + ", 3, NVIDIA GeForce RTX 3070, 566.36, 70, 1, 1, 1, 1, 1, 1, 1, 1, 1, P0\n"
+        + B
+        + ", x, RTX, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, P0",
+    },
+    "temperatura_invalida": {
+        "devices": [DEV_A, DEV_B],
+        "output": A
+        + ", 0, N, 1, [N/A], 1, 1, 1, 1, 1, 1, 1, 1, 1, P0\n"
+        + B
+        + ", 1, N, 1, 121, 1, 1, 1, 1, 1, 1, 1, 1, 1, P0",
+    },
+    "linha_repetida_e_curta": {
+        "devices": [DEV_A],
+        "output": ROW_A + "\n" + ROW_A.replace(", 76,", ", 80,") + "\n" + A + ", 0, curta",
+    },
+    "comando_falha": {"devices": [DEV_A, DEV_B], "error": "x" * 300},
+    "sem_placas": {"devices": []},
+    "placa_invalida": {"devices": [{"vendor": "AMD", "uuid": A, "index": 0, "name": "x"}]},
+}
+
+
+def nvidia_detect_golden():
+    import gpu_agent
+    import gpu_telemetry
+
+    def fake(script, calls):
+        def command(arguments, timeout=4):
+            key = " ".join(map(str, arguments))
+            calls.append(list(map(str, arguments)))
+            if key not in script:
+                raise RuntimeError("sem resposta para " + key[:60])
+            value = script[key]
+            if isinstance(value, dict):
+                raise RuntimeError(value["error"])
+            return value
+
+        return command
+
+    cases = []
+    for name, scenario in DETECT_SCENARIOS.items():
+        cache = {} if scenario.get("cache") else None
+        records = []
+        for step in scenario["steps"]:
+            calls = []
+            record = {**step}
+            try:
+                record["result"] = gpu_agent.detect_nvidia_gpus(
+                    fake(scenario["script"], calls), max_devices=step.get("max_devices"), cache=cache, now=step["now"]
+                )
+            except (OSError, RuntimeError, ValueError) as error:
+                record["error"] = str(error)
+            record["calls"] = calls
+            records.append(record)
+        cases.append(
+            {
+                "kind": "detect",
+                "name": name,
+                "cache": bool(scenario.get("cache")),
+                "script": scenario["script"],
+                "steps": records,
+            }
+        )
+    for name, scenario in SAMPLE_SCENARIOS.items():
+        calls = []
+        script = {SAMPLE_QUERY: {"error": scenario["error"]} if "error" in scenario else scenario.get("output", "")}
+        record = {"kind": "samples", "name": name, "devices": scenario["devices"], "script": script, "now": 1234.5}
+        try:
+            record["result"] = gpu_telemetry.read_gpu_samples(
+                scenario["devices"], command=fake(script, calls), now=1234.5
+            )
+        except (OSError, RuntimeError, ValueError, KeyError) as error:
+            record["error"] = str(error)
+        record["calls"] = calls
+        cases.append(record)
+    write("nvidia_detect", {"cases": cases})
+
+
 def rig_support_golden():
     cases = (
         health_cases()
@@ -3359,9 +3576,10 @@ GENERATORS = {
     "rig_support": rig_support_golden,
     "rig_manager": rig_manager_golden,
     "gpu_control": gpu_control_golden,
+    "nvidia_detect": nvidia_detect_golden,
 }
 # Goldens que não dependem do fuso nem de caminhos e podem ser gerados no Windows.
-PORTABLE = {"history", "finance", "rig_support"}
+PORTABLE = {"history", "finance", "rig_support", "nvidia_detect"}
 # Goldens que usam a API real do Windows (shell32 `CommandLineToArgvW`, `GetFullPathNameW`).
 WINDOWS_ONLY = {"process", "rig_manager", "gpu_control"}
 

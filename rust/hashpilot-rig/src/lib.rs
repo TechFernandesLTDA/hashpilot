@@ -16,6 +16,7 @@ pub mod health;
 pub mod lease;
 pub mod manager;
 pub mod miner_install;
+pub mod nvidia;
 pub mod nvml;
 pub mod process;
 pub mod reference;

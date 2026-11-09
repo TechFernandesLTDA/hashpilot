@@ -18,7 +18,7 @@ num módulo já portado vale nos dois lados, com os goldens regerados.
 | 1 | **Núcleo de lógica pura** (`hashpilot-core`) e **CLI somente leitura** (`hashpilot`) | Feita, com paridade testada |
 | 2 | **Histórico SQLite** (`hashpilot-history`): ler/gravar o `history.sqlite3` existente com a mesma chave SHA-256 e as mesmas migrações | Feita em 08/11/2026: paridade com o Python real, mutação e banco real de 2,8 GB |
 | 3 | **Finanças** (`hashpilot-finance`): Kryptex/CoinGecko com corpo limitado, cache e ciclo de 60 s | Feita em 08/11/2026: paridade com o Python real, mutação, respostas reais da API e cache real |
-| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 e 4b-2 feitas em 08/11/2026** (dependências e lógica do `RigManager`, provadas com backend falso). **4b-3a feita em 09/11/2026** (laço `serve`, atualização do minerador com reversão, snapshots e trava do serviço). **4b-3b-1 feita em 09/11/2026** (restauração da GPU pelo NVML, provada com driver falso e lida no driver real sem escrita). 4b-3b-2 (`rig serve` e teste com o minerador real) e 4c–4d planejadas; maior risco, exigem o Renan presente a cada início |
+| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 e 4b-2 feitas em 08/11/2026** (dependências e lógica do `RigManager`, provadas com backend falso). **4b-3a feita em 09/11/2026** (laço `serve`, atualização do minerador com reversão, snapshots e trava do serviço). **4b-3b-1 feita em 09/11/2026** (restauração da GPU pelo NVML, provada com driver falso e lida no driver real sem escrita). **4b-3b-2 feita em 09/11/2026** (`hashpilot rig --serve`, com detector e sensores reais; o primeiro uso real fica para o Renan presente). 4c–4d planejadas; maior risco, exigem o Renan presente a cada início |
 | 5 | Interface: três abas, bandeja, configurações (provável `egui`/`eframe`) | Planejada |
 | 6 | Instalador, atualizador e troca do Python | Só depois das fases 1–5 validadas |
 
@@ -138,9 +138,25 @@ etapas 4c e 4d.
 - **CLI:** `hashpilot nvml <uuid>` lê ventoinhas, P-states, offsets e potência.
   Nunca chama uma função de escrita.
 
-Ainda falta (etapa 4b-3b-2): o comando `hashpilot rig serve`, que liga o laço aos
-sensores e ao minerador reais. A primeira restauração real e o primeiro início do
-minerador pelo Rust só acontecem com o Renan presente, confirmando cada um.
+### O que a etapa 4b-3b-2 porta
+
+- **Detector e sensores** (`nvidia`): `detect_nvidia_gpus` (capacidades com cache de
+  600 s e identidade do `data/nvidia-gpus.json`) e `read_gpu_samples`, iguais ao
+  `gpu_agent.py` e ao `gpu_telemetry.py`. O `nvidia-smi` real (`run_smi`) passou da CLI
+  para cá.
+- **`hashpilot rig`**, com os mesmos argumentos do `rig.py`:
+  - `--request` grava um pedido em `rig-requests/`, como `rig.write_request`;
+  - `--serve` liga o `RigManager` ao `nvidia-smi`, aos logs (hora local) e ao
+    minerador reais. Exige administrador e o `--python` que roda `gpu_agent.py` e
+    `contribution.py`. Ctrl+C ou fechar o console grava um pedido `shutdown`: o ciclo
+    seguinte para e restaura todas as GPUs;
+  - `--serve --check` confere administrador, scripts, executável do minerador (pelo
+    SHA-256), GPUs e sensores **sem** criar o gerenciador, gravar nada ou iniciar
+    processo.
+
+O `Iniciar-Rig.ps1` continua iniciando o `rig.py`. Trocar o serviço Python pelo Rust
+é decisão do Renan, depois do primeiro uso real com ele presente. Os dois não rodam
+juntos: a trava do serviço recusa o segundo.
 
 ### O que a etapa 4b-1 porta (`hashpilot-rig`)
 
@@ -282,6 +298,8 @@ hashpilot process inspect <PID> [--command-line] | miners | owned [--manager rig
 hashpilot recovery --gpu <UUID> [--operations operations.sqlite3] [--now EPOCH]
 hashpilot miner [--base <pasta>]
 hashpilot nvml <UUID>                              # só leitura pelo NVML
+hashpilot rig --request AÇÃO --state-dir D [--gpu-uuid U] [--profile P] [--objective O]
+hashpilot rig --serve [--check] --state-dir D --log-dir L --settings S --miner-path M --python PY [--project-dir P] [--adopt-legacy] [--migrate-legacy] [--legacy-uuid U] [--reference-rtx3070]
 ```
 
 `process` só lê: identidade de um processo, mineradores em execução com as GPUs do
@@ -317,6 +335,24 @@ Exemplo com os dados públicos (a partir da raiz do repositório):
 ```text
 rust/target/debug/hashpilot payout --state portable-data/finance-cache.json --now 1792900000
 ```
+
+## Validação da etapa 4b-3b-2 (Windows 11, 09/11/2026)
+
+- **Golden `nvidia_detect`:** 19 cenários, executados pelo `detect_nvidia_gpus` e pelo `read_gpu_samples` reais com um `nvidia-smi` simulado. O teste Rust compara o resultado, o erro e cada chamada ao comando. Cobre:
+  - duas GPUs com catálogo pelo nome e pelo PCI;
+  - consulta campo a campo quando o driver recusa o lote, e campos `[N/A]`;
+  - PCI divergente e nome desconhecido;
+  - linhas inválidas e nome entre aspas com vírgula;
+  - UUID vazio ou inválido, que derruba a detecção como no Python;
+  - limite de placas e cache de capacidades (validade de 600 s, relógio voltando);
+  - sensores: GPU ausente, linha de outra GPU, índice trocado, temperatura inválida, linha repetida e falha do comando.
+- **Argumentos do `rig`:** testes de unidade com as mesmas recusas do `argparse` do `rig.py` e o mesmo pedido gravado, na mesma ordem de chaves.
+- **`rig --serve --check` real**, com os caminhos do `Iniciar-Rig.ps1`:
+  - SRBMiner 3.8.4 conferido pelo SHA-256;
+  - RTX 3070 detectada com `name_and_pci` e 114 clocks suportados;
+  - sensores lidos (76,9 °C, 177 W);
+  - nenhum pedido gravado, pasta de estado idêntica antes e depois.
+- **Não testado:** o `--serve` real. Ele inicia e para a mineração e restaura a GPU; o primeiro uso fica para quando o Renan estiver presente.
 
 ## Validação da etapa 4b-3b-1 (Windows 11, 09/11/2026)
 

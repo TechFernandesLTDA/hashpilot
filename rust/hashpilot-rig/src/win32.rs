@@ -198,3 +198,44 @@ pub fn process_state(pid: u32) -> &'static str {
 pub fn process_state(_pid: u32) -> &'static str {
     "unknown"
 }
+
+/// `shell32.IsUserAnAdmin()`: o processo roda com privilégio de administrador.
+#[cfg(windows)]
+pub fn is_user_an_admin() -> bool {
+    // SAFETY: função sem argumentos que só consulta o token do processo.
+    unsafe { windows_sys::Win32::UI::Shell::IsUserAnAdmin() != 0 }
+}
+
+#[cfg(not(windows))]
+pub fn is_user_an_admin() -> bool {
+    false
+}
+
+/// Ligado por Ctrl+C, Ctrl+Break ou pelo fechamento do console.
+pub static CTRL_STOP: std::sync::atomic::AtomicBool = std::sync::atomic::AtomicBool::new(false);
+
+#[cfg(windows)]
+unsafe extern "system" fn ctrl_handler(event: u32) -> i32 {
+    CTRL_STOP.store(true, std::sync::atomic::Ordering::SeqCst);
+    // CTRL_CLOSE_EVENT (2), LOGOFF (5) e SHUTDOWN (6): o Windows encerra o processo
+    // quando esta função volta; esperar até 4,5 s dá tempo ao laço de parar as GPUs.
+    if matches!(event, 2 | 5 | 6) {
+        std::thread::sleep(std::time::Duration::from_millis(4500));
+    }
+    1
+}
+
+/// Instala o tratamento de Ctrl+C que liga [`CTRL_STOP`].
+#[cfg(windows)]
+pub fn install_ctrl_handler() -> bool {
+    // SAFETY: a função de tratamento é `extern "system"`, vive o programa inteiro e só
+    // grava um atômico.
+    unsafe {
+        windows_sys::Win32::System::Console::SetConsoleCtrlHandler(Some(ctrl_handler), 1) != 0
+    }
+}
+
+#[cfg(not(windows))]
+pub fn install_ctrl_handler() -> bool {
+    false
+}
