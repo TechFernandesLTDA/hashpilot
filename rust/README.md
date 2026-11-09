@@ -154,9 +154,26 @@ etapas 4c e 4d.
     SHA-256), GPUs e sensores **sem** criar o gerenciador, gravar nada ou iniciar
     processo.
 
-O `Iniciar-Rig.ps1` continua iniciando o `rig.py`. Trocar o serviço Python pelo Rust
-é decisão do Renan, depois do primeiro uso real com ele presente. Os dois não rodam
-juntos: a trava do serviço recusa o segundo.
+### Escolher o motor do serviço
+
+O `Iniciar-Rig.ps1` aceita `-Motor Python|Rust`. Sem o parâmetro, ele usa a última
+escolha, gravada em `%LOCALAPPDATA%\PearlMonitor\rig-motor.txt`, e na primeira vez usa o
+Python. O motor Rust usa `rust\target\release\hashpilot.exe` (`cargo build --release -p
+hashpilot-cli`).
+
+Se o outro motor estiver ativo, o script grava um pedido `shutdown`, espera até 60 s
+pelo desligamento limpo (que para e restaura as GPUs) e só então inicia o escolhido.
+Ele nunca encerra processos à força. O `Atualizar-Rig.ps1` reconhece os dois motores,
+e no Rust recompila antes de parar o serviço atual. Os dois nunca rodam juntos: a
+trava do serviço recusa o segundo.
+
+```text
+powershell -File mining\windows\Iniciar-Rig.ps1 -Motor Rust     # troca para o Rust
+powershell -File mining\windows\Iniciar-Rig.ps1 -Motor Python   # volta ao Python
+```
+
+O supervisor térmico (`gpu_agent.py`) e o proxy de contribuição (`contribution.py`)
+continuam em Python nos dois motores até as etapas 4c-2 e 4d.
 
 ### O que a etapa 4b-1 porta (`hashpilot-rig`)
 

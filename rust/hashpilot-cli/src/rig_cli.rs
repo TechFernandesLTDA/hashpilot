@@ -291,9 +291,8 @@ fn run(serve: Serve) -> Result<Value, Failure> {
     )
     .map_err(Failure::Runtime)?;
     if !hashpilot_rig::win32::install_ctrl_handler() {
-        return Err(Failure::Runtime(
-            "Não foi possível instalar o tratamento de Ctrl+C".into(),
-        ));
+        // Sem console (serviço oculto) o painel ainda desliga pelo pedido `shutdown`.
+        eprintln!("aviso: tratamento de Ctrl+C indisponível; use o pedido shutdown para desligar");
     }
     let mut collect = |devices: &[Value], entries: &Map<String, Value>| {
         let now = now_epoch();
