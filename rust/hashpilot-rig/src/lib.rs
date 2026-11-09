@@ -8,6 +8,7 @@
 //!
 //! Nada aqui inicia mineração sozinho: `start` só cria o processo que o chamador pedir.
 
+pub mod ai_advisor;
 pub mod argv;
 pub mod continuity;
 pub mod contribution;
