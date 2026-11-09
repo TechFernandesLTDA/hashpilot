@@ -15,6 +15,7 @@ path = "src/main.rs"
 hashpilot-core = { path = "../hashpilot-core" }
 hashpilot-history = { path = "../hashpilot-history" }
 hashpilot-finance = { path = "../hashpilot-finance" }
+hashpilot-rig = { path = "../hashpilot-rig" }
 serde_json.workspace = true
 zip.workspace = true
 sha2.workspace = true

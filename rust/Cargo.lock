@@ -272,6 +272,7 @@ dependencies = [
  "hashpilot-core",
  "hashpilot-finance",
  "hashpilot-history",
+ "hashpilot-rig",
  "md-5",
  "serde_json",
  "sha2",
@@ -306,6 +307,16 @@ dependencies = [
  "rusqlite",
  "serde_json",
  "sha2",
+]
+
+[[package]]
+name = "hashpilot-rig"
+version = "0.1.0"
+dependencies = [
+ "hashpilot-core",
+ "hashpilot-history",
+ "serde_json",
+ "windows-sys 0.61.2",
 ]
 
 [[package]]

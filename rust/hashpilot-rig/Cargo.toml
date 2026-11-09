@@ -1,0 +1,25 @@
+[package]
+name = "hashpilot-rig"
+description = "Serviço do rig do HashPilot (fase 4 do port): identidade e encerramento seguro de processos no Windows."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+hashpilot-core = { path = "../hashpilot-core" }
+hashpilot-history = { path = "../hashpilot-history" }
+serde_json.workspace = true
+
+[target.'cfg(windows)'.dependencies]
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Threading"] }
+
+# Lints próprias: o resto do workspace usa `unsafe_code = "forbid"`, que não admite
+# exceção. Aqui é `deny`, liberado só no módulo `win32` (chamadas Win32 justificadas).
+[lints.rust]
+unsafe_code = "deny"
+
+[lints.clippy]
+dbg_macro = "deny"
+todo = "deny"

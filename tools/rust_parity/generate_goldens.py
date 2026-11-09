@@ -1907,6 +1907,58 @@ def finance_portfolio_collector_case():
     return case
 
 
+PROCESS_ARGV = [
+    "p",
+    "p a b",
+    "p\ta\t\tb",
+    "  p a",
+    '"C:\\Program Files\\SRBMiner\\SRBMiner-MULTI.exe" --algorithm pearlhash --gpu-id 0,1',
+    'C:\\m\\SRBMiner-MULTI.exe --gpu-id 0 --pool "stratum+tcp://x:1" --wallet "prl1 abc"',
+    'p "a b c" d e',
+    'p "ab\\"c" "\\\\" d',
+    'p a\\\\\\b d"e f"g h',
+    'p a\\\\\\"b c d',
+    'p a\\\\\\\\"b c" d e',
+    'p "a""b"',
+    'p """"',
+    'p """"""',
+    'p a"b"""c d',
+    'p "a"""b c',
+    'p ""',
+    'p "" x',
+    'p a\\',
+    'p a\\\\',
+    'p "a\\\\"',
+    'p "unterminated',
+    'p "x"y"z"',
+    'p \\"a',
+    'p ação "é ç" 日本',
+    '"" a',
+    '"a"b c',
+    '"a b',
+    'p --gpu-id',
+    'p --gpu-id ""',
+    "p a   ",
+]
+PROCESS_PATHS = [
+    "C:\\Program Files\\SRBMiner\\..\\SRBMiner\\SRBMiner-MULTI.exe",
+    "C:/Mining//Pearl/./SRBMiner-MULTI.EXE",
+    "c:\\MINING\\Pearl\\",
+    "D:\\a\\b\\..\\..\\c",
+    "C:\\Users\\Ação\\Miner.exe",
+]
+
+
+def process_golden():
+    import process_backend
+
+    cases = [{"kind": "argv", "line": line, "expected": process_backend.windows_argv(line)} for line in PROCESS_ARGV]
+    cases += [
+        {"kind": "path", "path": path, "expected": process_backend.normalized_path(path)} for path in PROCESS_PATHS
+    ]
+    write("process", {"cases": cases})
+
+
 def finance_golden():
     cases = (
         finance_model_cases()
@@ -1927,17 +1979,29 @@ GENERATORS = {
     "config": configs,
     "history": history_store,
     "finance": finance_golden,
+    "process": process_golden,
 }
 # Goldens que não dependem do fuso nem de caminhos e podem ser gerados no Windows.
 PORTABLE = {"history", "finance"}
+# Goldens que usam a API real do Windows (shell32 `CommandLineToArgvW`, `GetFullPathNameW`).
+WINDOWS_ONLY = {"process"}
 
 
 if __name__ == "__main__":
-    selected = sys.argv[1:] or list(GENERATORS)
+    windows = sys.platform == "win32"
+    if sys.argv[1:] == ["--list"]:
+        here = sorted(PORTABLE | WINDOWS_ONLY) if windows else sorted(set(GENERATORS) - WINDOWS_ONLY)
+        print(json.dumps({"here": here, "windows_only": sorted(WINDOWS_ONLY)}))
+        sys.exit(0)
+    default = (PORTABLE | WINDOWS_ONLY) if windows else set(GENERATORS) - WINDOWS_ONLY
+    selected = sys.argv[1:] or [name for name in GENERATORS if name in default]
     unknown = [name for name in selected if name not in GENERATORS]
     if unknown:
         sys.exit(f"Golden desconhecido: {', '.join(unknown)}. Opções: {', '.join(GENERATORS)}")
-    if not hasattr(time, "tzset") and set(selected) - PORTABLE:
-        sys.exit(f"Sem time.tzset (Windows): só os goldens {', '.join(sorted(PORTABLE))} podem ser gerados aqui.")
+    if not hasattr(time, "tzset") and set(selected) - PORTABLE - WINDOWS_ONLY:
+        allowed = ", ".join(sorted(PORTABLE | WINDOWS_ONLY))
+        sys.exit(f"Sem time.tzset (Windows): só os goldens {allowed} podem ser gerados aqui.")
+    if not windows and set(selected) & WINDOWS_ONLY:
+        sys.exit(f"Os goldens {', '.join(sorted(WINDOWS_ONLY))} usam a API do Windows e só são gerados lá.")
     for name in selected:
         GENERATORS[name]()
