@@ -2284,8 +2284,29 @@ def indent_cases():
     ]
 
 
+def catalog_cases():
+    import miner_update
+
+    unknown = None
+    try:
+        miner_update.descriptor("9.9.9")
+    except ValueError as error:
+        unknown = str(error)
+    return [
+        {
+            "kind": "catalog",
+            "catalog": miner_update.CATALOG,
+            "default_version": miner_update.DEFAULT_VERSION,
+            "descriptors": {version: miner_update.descriptor(version) for version in miner_update.CATALOG},
+            "unknown": unknown,
+        }
+    ]
+
+
 def rig_support_golden():
-    cases = health_cases() + operations_case() + continuity_cases() + reference_cases() + indent_cases()
+    cases = (
+        health_cases() + operations_case() + continuity_cases() + reference_cases() + indent_cases() + catalog_cases()
+    )
     write("rig_support", {"cases": cases})
 
 
@@ -2295,6 +2316,7 @@ def rig_support_golden():
 # o backend fez; no fim, os arquivos gravados e o operations.sqlite3.
 
 RIG_CLOCK = 1000.5
+LOG_EPOCH = 1793000000.0
 RIG_OTHER = "prl1" + "q" * 40
 
 
@@ -2351,6 +2373,26 @@ def rig_scenarios():
         return {"temperature.gpu": temperature, "sampled_at": sampled_at, "error": None}
 
     stalled_miner = {"hashrate": 0, "hashrate_at": None, "connection": None}
+    install = [
+        {"op": "install", "version": "3.8.0", "content": "binario antigo"},
+        {"op": "install", "version": "3.8.1", "content": "binario novo"},
+        {"op": "set_miner", "version": "3.8.0"},
+    ]
+
+    def log_stamp(offset):
+        # Carimbo do log no fuso do gerador (TZ=UTC, que o Python respeita também no Windows);
+        # o teste Rust lê o mesmo texto com StampZone::UTC.
+        return time.strftime("%Y-%m-%d %H:%M:%S", time.localtime(LOG_EPOCH + offset))
+
+    def update_snapshots(version, stamp):
+        return {
+            f"GPU-test-{index}": {
+                "miner_running": True,
+                "miner": {"version": version, "hashrate": 80, "hashrate_at": stamp},
+            }
+            for index in range(2)
+        }
+
     other = rig_detected(2)[1]
     return {
         "seis_gpus": [{"op": "reconcile"}],
@@ -2645,6 +2687,138 @@ def rig_scenarios():
             {"op": "process_requests"},
             {"op": "reconcile", "detected": rig_detected(1)},
         ],
+        "atualizacao_validada": [
+            *install,
+            {"op": "reconcile", "detected": rig_detected(2)},
+            {"op": "activate", "version": "3.8.1", "request_id": "u1"},
+            {"op": "reconcile", "detected": rig_detected(2)},
+            {"op": "validate_update", "snapshots": update_snapshots("3.8.0", 1000.0)},
+            {"op": "validate_update", "snapshots": update_snapshots("3.8.1", 700.0)},
+            {"op": "validate_update", "snapshots": update_snapshots("3.8.1", 820.0)},
+            {
+                "op": "validate_update",
+                "snapshots": {
+                    **update_snapshots("3.8.1", 1000.0),
+                    "GPU-test-0": {
+                        "miner_running": True,
+                        "miner": {"version": "3.8.1", "hashrate": 80, "hashrate_at": 1000.0, "paused": True},
+                    },
+                },
+            },
+            {
+                "op": "validate_update",
+                "snapshots": {
+                    **update_snapshots("3.8.1", 1000.0),
+                    "GPU-test-0": {
+                        "miner_running": "sim",
+                        "miner": {"version": "3.8.1", "hashrate": 80, "hashrate_at": 1000.0},
+                    },
+                },
+            },
+            {
+                "op": "validate_update",
+                "snapshots": {
+                    **update_snapshots("3.8.1", 1000.0),
+                    "GPU-test-1": {
+                        "miner_running": True,
+                        "miner": {"version": "3.8.1", "hashrate": 0, "hashrate_at": 1000.0},
+                    },
+                },
+            },
+            {"op": "new_manager"},
+            {"op": "set_miner", "version": "3.8.1"},
+            {"op": "validate_update", "snapshots": update_snapshots("3.8.1", 1000.0)},
+            {"op": "reconcile", "detected": rig_detected(2)},
+        ],
+        "atualizacao_revertida": [
+            *install,
+            {"op": "reconcile", "detected": rig_detected(2)},
+            {"op": "activate", "version": "3.8.1", "request_id": "u2"},
+            {"op": "reconcile", "detected": rig_detected(2)},
+            {"op": "set_clock", "value": 1180.5},
+            {"op": "validate_update", "snapshots": {}},
+            {"op": "set_clock", "value": 1181.0},
+            {"op": "validate_update", "snapshots": {}},
+            {"op": "reconcile", "detected": rig_detected(2)},
+        ],
+        "atualizacao_desabilitada_ignorada": [
+            *install,
+            {
+                "op": "reconcile",
+                "detected": rig_detected(2),
+                "settings": {**author, "gpu_settings": {"GPU-test-1": {"enabled": False}}},
+            },
+            {"op": "activate", "version": "3.8.1"},
+            {"op": "validate_update", "snapshots": {"GPU-test-0": update_snapshots("3.8.1", 1000.0)["GPU-test-0"]}},
+        ],
+        "atualizacao_bloqueada": [
+            *install,
+            {"op": "reconcile", "detected": rig_detected(2)},
+            {"op": "set_entry", "uuid": "GPU-test-1", "fields": {"external_readonly": True}},
+            {"op": "activate", "version": "3.8.1"},
+            {
+                "op": "set_entry",
+                "uuid": "GPU-test-1",
+                "fields": {"external_readonly": False, "ownership_unverified": True},
+            },
+            {"op": "activate", "version": "3.8.1"},
+            {"op": "set_entry", "uuid": "GPU-test-1", "fields": {"ownership_unverified": False}},
+            {"op": "tamper", "version": "3.8.1"},
+            {"op": "activate", "version": "3.8.1"},
+            {"op": "activate", "version": "9.9.9"},
+            {"op": "activate", "version": None},
+            {"op": "tamper", "version": "3.8.0"},
+            {"op": "install", "version": "3.8.1", "content": "nova"},
+            {"op": "activate", "version": "3.8.1"},
+        ],
+        "atualizacao_mesma_versao": [*install, {"op": "activate", "version": "3.8.0", "request_id": "u3"}],
+        "atualizacao_por_pedido": [
+            *install,
+            {"op": "reconcile", "detected": rig_detected(2)},
+            request("u1.json", id="u1", action="miner_update", gpu_uuid=None, at=1000.0, version="9.9.9"),
+            {"op": "process_requests"},
+            request("u2.json", id="u2", action="miner_update", gpu_uuid=None, at=1000.1, version="3.8.1"),
+            {"op": "process_requests"},
+            {"op": "new_manager"},
+            {"op": "set_miner", "version": "3.8.1"},
+            request("u3.json", id="u3", action="miner_update", gpu_uuid=None, at=1000.2, version="3.8.0"),
+            {"op": "process_requests"},
+            {"op": "reconcile", "detected": rig_detected(2)},
+        ],
+        "selecao_adulterada": [
+            *install,
+            {"op": "select", "version": "3.8.1"},
+            {"op": "corrupt_selection", "text": '{"version": "../../fora"}'},
+            {"op": "activate", "version": "3.8.1"},
+        ],
+        "coleta": [
+            {"op": "set_clock", "value": LOG_EPOCH + 10},
+            {
+                "op": "reconcile",
+                "detected": rig_detected(3),
+                "settings": {**author, "gpu_settings": {"GPU-test-2": {"enabled": False}}},
+            },
+            {
+                "op": "collect",
+                "samples": {"GPU-test-0": gpu_sample(61.0, LOG_EPOCH + 9)},
+                "logs": {
+                    "GPU-test-0": "\n".join(
+                        [
+                            f"[{log_stamp(0)}] GPU0 RTX: 71.5 TH/s [T:65C P:150W A:10 R:1 HW:0]",
+                            f"[{log_stamp(5)}] GPU1 GTX: 9.5 TH/s [T:60C P:90W A:3 R:0 HW:0]",
+                        ]
+                    ),
+                    "GPU-test-1": "\n".join(
+                        [
+                            f"[{log_stamp(-60)}] Miner version: 3.8.4",
+                            f"[{log_stamp(0)}] GPU1 GTX: 9.5 TH/s [T:60C P:90W A:3 R:0 HW:0]",
+                            f"[{log_stamp(2)}] GPU1 turned off",
+                        ]
+                    ),
+                },
+            },
+            {"op": "observe_health", "snapshots_from": "collect"},
+        ],
         "desconectada": [
             {"op": "reconcile", "detected": rig_detected(3)},
             {"op": "reconcile", "detected": rig_detected(3)[1:]},
@@ -2725,7 +2899,14 @@ def rig_run(name, steps):
 
     folder = Path(tempfile.mkdtemp()).resolve()
     try:
-        return rig_run_in(folder, name, steps, rig)
+        import miner_update
+
+        saved = dict(miner_update.CATALOG)
+        try:
+            return rig_run_in(folder, name, steps, rig)
+        finally:
+            miner_update.CATALOG.clear()
+            miner_update.CATALOG.update(saved)
     finally:
         import shutil
 
@@ -2786,6 +2967,7 @@ def rig_run_in(root, name, steps, rig):
 
     seen = 0
     records = []
+    last_collect = {}
     for step in steps:
         op = step["op"]
         record = {"op": op}
@@ -2796,6 +2978,7 @@ def rig_run_in(root, name, steps, rig):
                     settings=copy_json(step["settings"]) if "settings" in step else None,
                 )
                 record["result"] = result
+                state["desired"] = result
             elif op == "new_manager":
                 manager = make()
             elif op == "set_detector":
@@ -2838,7 +3021,12 @@ def rig_run_in(root, name, steps, rig):
             elif op == "migrate_legacy":
                 record["result"] = manager.migrate_legacy(step["uuid"], reference_rtx3070=step["reference"])
             elif op == "observe_health":
-                manager.observe_health(copy_json(step["snapshots"]))
+                if "snapshots_from" in step:
+                    manager.observe_health(copy_json(last_collect))
+                else:
+                    manager.observe_health(copy_json(step["snapshots"]))
+            elif op == "corrupt_selection":
+                (root / "miner" / "miner-install.json").write_text(step["text"], encoding="utf-8")
             elif op == "publish":
                 manager.publish()
             elif op == "set_attr":
@@ -2847,11 +3035,54 @@ def rig_run_in(root, name, steps, rig):
                     step["name"],
                     Path(expand(step["value"])) if step["name"] == "miner_path" else step["value"],
                 )
+            elif op == "install":
+                import hashlib
+                import miner_update
+
+                folder = "SRBMiner-Multi-" + step["version"].replace(".", "-")
+                binary = root / "miner" / folder / "SRBMiner-MULTI.exe"
+                binary.parent.mkdir(parents=True, exist_ok=True)
+                binary.write_bytes(step["content"].encode())
+                miner_update.CATALOG[step["version"]] = {
+                    "archive_sha256": "0" * 64,
+                    "exe_sha256": hashlib.sha256(step["content"].encode()).hexdigest(),
+                }
+            elif op == "tamper":
+                folder = "SRBMiner-Multi-" + step["version"].replace(".", "-")
+                (root / "miner" / folder / "SRBMiner-MULTI.exe").write_bytes(b"adulterado")
+            elif op == "set_miner":
+                import miner_update
+
+                manager.miner_base = root / "miner"
+                manager.miner_path = miner_update.executable(step["version"], manager.miner_base)
+            elif op == "select":
+                import miner_update
+
+                miner_update.select(step["version"], root / "miner")
+            elif op == "activate":
+                manager.activate_miner(step["version"], step.get("request_id"))
+            elif op == "validate_update":
+                manager.validate_miner_update(copy_json(step["snapshots"]))
+            elif op == "set_entry":
+                manager.devices[step["uuid"]].update(copy_json(step["fields"]))
+            elif op == "collect":
+                import rig_controller
+
+                for uuid, text in step.get("logs", {}).items():
+                    Path(manager.devices[uuid]["miner_log"]).write_text(text, encoding="utf-8")
+                record["result"] = rig_controller.collect_snapshots(
+                    state["desired"],
+                    manager.devices,
+                    sample_reader=lambda devices, now: copy_json(step["samples"]),
+                    now=state["clock"],
+                )
             elif op == "corrupt_registry":
                 manager.registry_path.parent.mkdir(parents=True, exist_ok=True)
                 manager.registry_path.write_text(step["text"], encoding="utf-8")
             else:
                 raise AssertionError(op)
+            if op == "collect":
+                last_collect = record["result"]
         except Exception as error:  # noqa: BLE001 — o golden registra qualquer erro do Python
             record["error"] = str(error)
         record["devices"] = copy_json(manager.devices)
@@ -2863,6 +3094,8 @@ def rig_run_in(root, name, steps, rig):
             "registry_valid": manager.registry_valid,
             "shutting_down": manager.shutting_down,
             "miner_path": str(manager.miner_path),
+            "miner_base": str(manager.miner_base),
+            "miner_update_pending": manager.miner_update_pending,
         }
         record["backend"] = {
             "started": [item["argv"] for item in backend.started[seen:]],
@@ -2887,6 +3120,8 @@ def rig_run_in(root, name, steps, rig):
                 content = {"text": text}
         if relative == "state/rig-manager.json" and isinstance(content, dict) and "pid" in content:
             content["pid"] = 0
+        if relative.endswith("miner-install.json") and isinstance(content, dict):
+            content["selected_at"] = 0
         files[norm(relative)] = norm(content)
     database = root / "state" / "operations.sqlite3"
     with contextlib.closing(sqlite3.connect(database)) as db:

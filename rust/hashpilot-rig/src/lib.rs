@@ -12,9 +12,12 @@ pub mod argv;
 pub mod continuity;
 pub mod fsutil;
 pub mod health;
+pub mod lease;
 pub mod manager;
+pub mod miner_install;
 pub mod process;
 pub mod reference;
+pub mod snapshots;
 pub mod successor;
 pub mod win32;
 

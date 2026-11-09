@@ -134,3 +134,32 @@ pub fn set_thread_execution_state(flags: u32) -> u32 {
 pub fn set_thread_execution_state(_flags: u32) -> u32 {
     0
 }
+
+/// Trava exclusiva e sem espera do primeiro byte (`msvcrt.locking(LK_NBLCK, 1)`).
+#[cfg(windows)]
+pub fn lock_first_byte(file: &std::fs::File) -> bool {
+    use std::os::windows::io::AsRawHandle;
+    // SAFETY: o handle é de um arquivo aberto e vivo durante a chamada; a API só lê
+    // os inteiros de região. Retorno diferente de zero indica a trava obtida.
+    unsafe {
+        windows_sys::Win32::Storage::FileSystem::LockFile(file.as_raw_handle(), 0, 0, 1, 0) != 0
+    }
+}
+
+#[cfg(not(windows))]
+pub fn lock_first_byte(_file: &std::fs::File) -> bool {
+    false
+}
+
+/// Libera a trava de [`lock_first_byte`].
+#[cfg(windows)]
+pub fn unlock_first_byte(file: &std::fs::File) {
+    use std::os::windows::io::AsRawHandle;
+    // SAFETY: mesmo handle vivo e mesma região travada por `lock_first_byte`.
+    unsafe {
+        windows_sys::Win32::Storage::FileSystem::UnlockFile(file.as_raw_handle(), 0, 0, 1, 0);
+    }
+}
+
+#[cfg(not(windows))]
+pub fn unlock_first_byte(_file: &std::fs::File) {}
