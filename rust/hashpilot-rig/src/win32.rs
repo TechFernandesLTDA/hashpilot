@@ -121,3 +121,16 @@ pub fn process_metadata(pid: u32) -> Option<Metadata> {
 pub fn terminate_if(pid: u32, expected: &dyn Fn(&Metadata) -> bool) -> bool {
     imp::terminate_if(pid, expected)
 }
+
+/// `SetThreadExecutionState(flags)`: devolve o estado anterior, ou 0 em falha. Vale
+/// para a thread que chama, como no Python (o serviço chama sempre da mesma).
+#[cfg(windows)]
+pub fn set_thread_execution_state(flags: u32) -> u32 {
+    // SAFETY: função sem ponteiros; qualquer combinação de flags é aceita pela API.
+    unsafe { windows_sys::Win32::System::Power::SetThreadExecutionState(flags) }
+}
+
+#[cfg(not(windows))]
+pub fn set_thread_execution_state(_flags: u32) -> u32 {
+    0
+}

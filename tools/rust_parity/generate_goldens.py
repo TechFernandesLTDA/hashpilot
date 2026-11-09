@@ -1949,6 +1949,75 @@ PROCESS_PATHS = [
 ]
 
 
+SUCCESSOR_MINER = "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe"
+
+
+def successor_cases():
+    import miner_identity
+
+    log = "C:\\Logs\\GPU-a\\mining-1.log"
+    argv = [SUCCESSOR_MINER, "--gpu-id", "1", "--pool", "127.0.0.1:7048", "--wallet", "prl1w", "--worker", "rig-1"]
+    argv += ["--log-file", log]
+    base = {"pid": 20, "created_at": "200", "executable": SUCCESSOR_MINER, "argv": argv}
+    previous = {
+        "miner": {"pid": 10, "created_at": "100"},
+        "miner_log": log,
+        "wallet": "prl1w",
+        "pool": "127.0.0.1:7048",
+    }
+    device = {"index": 0, "miner_index": 1, "worker_name": "rig-1"}
+
+    def changed(argv_from=None, **fields):
+        candidate = {**base, **fields}
+        if argv_from is not None:
+            candidate["argv"] = argv_from
+        return candidate
+
+    def swap(name, value):
+        items = list(argv)
+        items[items.index(name) + 1] = value
+        return items
+
+    variants = [
+        ("igual", changed(), previous, device),
+        ("mesmo_pid", changed(pid=10), previous, device),
+        ("mais_antigo", changed(created_at="100"), previous, device),
+        ("created_texto_invalido", changed(created_at="x"), previous, device),
+        ("created_inteiro", changed(created_at=201), previous, device),
+        ("created_espacos", changed(created_at=" 300 "), previous, device),
+        ("created_float", changed(created_at=200.9), previous, device),
+        ("sem_created", {key: value for key, value in base.items() if key != "created_at"}, previous, device),
+        ("exe_maiusculo", changed(executable=SUCCESSOR_MINER.upper()), previous, device),
+        ("exe_barra", changed(executable=SUCCESSOR_MINER.replace("\\", "/")), previous, device),
+        ("exe_outro", changed(executable="C:\\Outro\\SRBMiner-MULTI.exe"), previous, device),
+        ("argv0_outro", changed(argv_from=["C:\\x.exe", *argv[1:]]), previous, device),
+        ("log_outro", changed(argv_from=swap("--log-file", "C:\\Logs\\outro.log")), previous, device),
+        ("log_caixa", changed(argv_from=swap("--log-file", log.upper())), previous, device),
+        ("sem_log_anterior", changed(), {**previous, "miner_log": None}, device),
+        ("gpu_outra", changed(argv_from=swap("--gpu-id", "0")), previous, device),
+        ("sem_miner_index", changed(argv_from=swap("--gpu-id", "0")), previous, {"index": 0, "worker_name": "rig-1"}),
+        ("carteira_outra", changed(argv_from=swap("--wallet", "prl1x")), previous, device),
+        ("pool_outra", changed(argv_from=swap("--pool", "prl.kryptex.network:7048")), previous, device),
+        ("worker_outro", changed(), previous, {**device, "worker_name": "rig-2"}),
+        ("gpu_repetida", changed(argv_from=[*argv, "--gpu-id", "1"]), previous, device),
+        ("argv_vazio", changed(argv_from=[]), previous, device),
+        ("sem_miner_anterior", changed(), {**previous, "miner": None}, device),
+        ("log_sem_valor", changed(argv_from=[*argv[:-2], "--log-file"]), previous, device),
+    ]
+    return [
+        {
+            "kind": "successor",
+            "name": name,
+            "candidate": candidate,
+            "previous": old,
+            "device": gpu,
+            "miner_path": SUCCESSOR_MINER,
+            "expected": miner_identity.match_successor(candidate, old, gpu, SUCCESSOR_MINER),
+        }
+        for name, candidate, old, gpu in variants
+    ]
+
+
 def process_golden():
     import process_backend
 
@@ -1956,7 +2025,268 @@ def process_golden():
     cases += [
         {"kind": "path", "path": path, "expected": process_backend.normalized_path(path)} for path in PROCESS_PATHS
     ]
+    cases += successor_cases()
     write("process", {"cases": cases})
+
+
+def health_cases():
+    import mining_health
+
+    now = 100000.5
+    miners = {
+        "vazio": {},
+        "minerando": {
+            "hashrate": 76.5,
+            "hashrate_at": now - 10,
+            "connection": "Conectado à pool",
+            "last_share_at": now - 60,
+        },
+        "sem_share": {"hashrate": 76.5, "hashrate_at": now - 10, "connection": "Conectado à pool"},
+        "share_antiga": {
+            "hashrate": 76.5,
+            "hashrate_at": now - 10,
+            "last_share_at": now - 2000,
+            "started_at": now - 5000,
+        },
+        "share_futura": {"hashrate": 76.5, "hashrate_at": now - 10, "last_share_at": now + 5},
+        "share_igual": {"hashrate": 1, "hashrate_at": now, "last_share_at": now, "connection": "Conectado à pool"},
+        "reconectando": {
+            "hashrate": 76.5,
+            "hashrate_at": now - 10,
+            "last_share_at": now - 30,
+            "connection": "Reconectando à pool",
+        },
+        "job_recente": {"hashrate": 76.5, "hashrate_at": now - 10, "last_job_at": now - 20},
+        "job_antes_do_inicio": {
+            "hashrate": 76.5,
+            "hashrate_at": now - 10,
+            "last_job_at": now - 400,
+            "started_at": now - 300,
+        },
+        "hashrate_velho": {"hashrate": 76.5, "hashrate_at": now - 181, "connection": "Conectado à pool"},
+        "hashrate_limite": {"hashrate": 76.5, "hashrate_at": now - 180, "connection": "Conectado à pool"},
+        "hashrate_zero": {"hashrate": 0, "hashrate_at": now - 1, "connection": "Conectado à pool"},
+        "hashrate_bool": {"hashrate": True, "hashrate_at": now - 1, "connection": "Conectado à pool"},
+        "pausado": {"hashrate": 76.5, "hashrate_at": now - 1, "paused": True},
+        "inicio_inteiro": {
+            "hashrate": 76.5,
+            "hashrate_at": now - 1,
+            "started_at": 99000,
+            "connection": "Conectado à pool",
+        },
+        "inicio_texto": {"hashrate": 76.5, "hashrate_at": now - 1, "started_at": "x", "connection": "Conectado à pool"},
+        "alerta": {"hashrate": 76.5, "hashrate_at": now - 5, "last_share_at": now - 1000, "started_at": now - 4000},
+    }
+    starts = [None, now - 600, now - 100, 1, now + 10]
+    intervals = [
+        (),
+        (100.0, 200.0),
+        (100.0, 200.0, 300.0),
+        (2000.0, 2000.0, 3000.0, 2500.0),
+        (0.0, -5.0, 90000.0, 50.0, 60.0, 70.0),
+        (150.0, 150.0, 150.0),
+        (1200.0, 1200.0, 1200.0),
+    ]
+    cases = []
+    for (name, miner), running, started, gaps in itertools.product(
+        miners.items(), [True, False, None, 1], starts, intervals
+    ):
+        cases.append(
+            {
+                "kind": "health",
+                "name": name,
+                "miner": miner,
+                "running": running,
+                "now": now,
+                "started_at": started,
+                "intervals": list(gaps),
+                "expected": mining_health.health(miner, running, now, started_at=started, intervals=gaps),
+            }
+        )
+    return cases
+
+
+def operations_case():
+    import mining_health
+
+    with tempfile.TemporaryDirectory() as folder:
+        store = mining_health.OperationalStore(Path(folder) / "operations.sqlite3")
+        ops = []
+
+        def run(op, *args, **kwargs):
+            method = getattr(store, op)
+            ops.append({"op": op, "args": list(args), "kwargs": kwargs, "result": method(*args, **kwargs)})
+
+        gpu = "GPU-a"
+        for at in (1000.0, 1100.0, 1300.0, 1700.0, 2500.0):
+            run("assess", gpu, {"last_share_at": at, "hashrate": 70.0, "hashrate_at": at}, True, at + 5.0, 900.0)
+        run("assess", gpu, {"hashrate": 70.0, "hashrate_at": 2600.0}, True, 2610.0, 900.0)
+        run("assess", gpu, {"hashrate": 70.0, "hashrate_at": 2600.0}, True, 2610.0, 2550.0)
+        run("assess", gpu, {"last_share_at": 1000.0}, True, 90000.0, None)
+        run("assess", "GPU-b", {"last_share_at": 50}, False, 60.0, None)
+        for at in (5000.0, 5001.0, 5070.0, 5200.0, 5400.0, 9000.0, 9500.0):
+            run("budget", gpu, at)
+            run("reserve", gpu, "Processo encerrado " + "x" * 130, at)
+        run("budget", gpu, 9100.0)
+        run("budget", gpu, 20000.0)
+        for at in (100.0, 120.0, 160.0, 300.0, 400.0, 3800.0):
+            run("reserve_component", gpu, "controller", at)
+        for at in (100.0, 125.0, 140.0, 200.0):
+            run("reserve_component", gpu, "manual_start", at, delay=30, limit=2)
+        for at, kind, message in (
+            (10.0, "started", "Minerador iniciado"),
+            (20.0, "started", "Minerador iniciado"),
+            (75.0, "started", "Minerador iniciado"),
+            (135.0, "started", "Minerador iniciado"),
+            (76.0, "stopped", "Parada confirmada"),
+            (77.0, "stopped", "Parada confirmada" + "é" * 400),
+            (78.0, "stopped", "Parada confirmada" + "é" * 500),
+            (5.0, "stopped", "Parada confirmada"),
+        ):
+            run("event", gpu, kind, message, at)
+        run("recent_events", gpu)
+        run("recent_events", gpu, 2)
+        run("recent_events", gpu, 0)
+        run("recent_events", gpu, 50)
+        run("recent_events", "GPU-z")
+        with contextlib.closing(sqlite3.connect(Path(folder) / "operations.sqlite3")) as db:
+            dump = {
+                table: [list(row) for row in db.execute(f"SELECT * FROM {table} ORDER BY rowid")]
+                for table in ("acks", "recoveries", "incidents", "component_attempts")
+            }
+    return [{"kind": "operations", "ops": ops, "dump": dump}]
+
+
+def continuity_cases():
+    import mining_continuity
+
+    window = mining_continuity.ContinuityWindow()
+    a, b, c = ({"uuid": f"GPU-{name}", "index": index} for index, name in enumerate("abc"))
+    steps = []
+    for now, devices in (
+        (0.0, [a, b]),
+        (10.0, [b]),
+        (50.0, []),
+        (95.0, [c]),
+        (100.0, [c]),
+        (140.0, [c]),
+        (141.0, [a, c, {**a, "index": 9}]),
+    ):
+        steps.append({"op": "inventory", "now": now, "devices": devices, "result": window.inventory(devices, now)})
+    for now in (100.0, 110.0, 141.0, 150.0, 199.0, 202.0, 190.0, 260.0, 261.0):
+        steps.append({"op": "tick", "now": now, "result": window.tick(now), "grace_until": window.grace_until})
+    sensors = [
+        {"temperature.gpu": 60, "sampled_at": 990.0},
+        {"temperature.gpu": 70, "sampled_at": 990.0},
+        {"temperature.gpu": 69.9, "sampled_at": 984.5},
+        {"temperature.gpu": 60, "sampled_at": 984.0},
+        {"temperature.gpu": -1, "sampled_at": 990.0},
+        {"temperature.gpu": 60, "sampled_at": 1001.0},
+        {"temperature.gpu": 60, "sampled_at": 990.0, "error": "x"},
+        {"temperature.gpu": True, "sampled_at": 990.0},
+        {"temperature.gpu": None, "sampled_at": 990.0},
+        {"temperature.gpu": 60},
+        {},
+    ]
+    safe = [
+        {"sensor": sensor, "now": 999.5, "expected": mining_continuity.safe_sensor(sensor, 999.5)} for sensor in sensors
+    ]
+    return [{"kind": "continuity", "steps": steps}, {"kind": "safe_sensor", "cases": safe}]
+
+
+def reference_cases():
+    import gpu_profiles
+    import reference_profile
+
+    uuid = reference_profile.REFERENCE_RTX3070_UUID
+    good = {
+        "uuid": uuid,
+        "name": "NVIDIA GeForce RTX 3070",
+        "power_default_w": 240,
+        "supported_graphics_clocks_mhz": [1500, 1560, 1710],
+    }
+    gpus = [
+        good,
+        {**good, "power_default_w": 240.0},
+        {**good, "power_default_w": 220},
+        {**good, "name": "RTX 3070 Ti"},
+        {**good, "name": None},
+        {**good, "uuid": "GPU-outra"},
+        {**good, "supported_graphics_clocks_mhz": [1560.0]},
+        {**good, "supported_graphics_clocks_mhz": []},
+        {key: value for key, value in good.items() if key != "name"},
+    ]
+    confirmed = [{"gpu": gpu, "expected": reference_profile.reference_device_confirmed(gpu)} for gpu in gpus]
+    paths = [
+        "C:/Mining/SRBMiner-Multi-3-8-4/SRBMiner-MULTI.exe",
+        "C:/Mining/SRBMiner-Multi-3-8-3/SRBMiner-MULTI.exe",
+        "C:/Mining/SRBMiner-Multi-3-10-0/SRBMiner-MULTI.exe",
+        "C:/Mining/SRBMiner-Multi-4-0-0/SRBMiner-MULTI.exe",
+        "C:/Mining/SRBMiner-Multi-3-8/SRBMiner-MULTI.exe",
+        "C:/Mining/srbminer-multi-3-8-4/SRBMiner-MULTI.exe",
+        "C:/Mining/SRBMiner-Multi-3-8-4x/SRBMiner-MULTI.exe",
+        "SRBMiner-MULTI.exe",
+    ]
+    memory_settings = [
+        {},
+        {"reference_memory_mhz": 405},
+        {"reference_memory_mhz": 405.0},
+        {"reference_memory_mhz": "405"},
+        {"reference_memory_mhz": 5001},
+    ]
+    memory = [
+        {"miner_path": path, "settings": settings, "expected": reference_profile.reference_memory_clock(path, settings)}
+        for path in paths
+        for settings in memory_settings
+    ]
+    start_settings = [
+        {},
+        {"reference_start_core_mhz": 1710},
+        {"reference_start_core_mhz": 1725},
+        {"reference_start_core_mhz": 1710.0},
+        {"reference_start_core_mhz": 1800},
+        {"reference_start_core_mhz": "1710"},
+        {"reference_start_core_mhz": 1710, "target_temperature_c": 78},
+        {"reference_start_core_mhz": 1710, "target_temperature_c": 77.5},
+        {"reference_start_core_mhz": 1710, "target_temperature_c": True},
+        {"reference_start_core_mhz": 1710, "target_temperature_c": None},
+    ]
+    start = [
+        {"gpu": gpu, "settings": settings, "expected": reference_profile.reference_start_clock(gpu, settings)}
+        for gpu in (good, {**good, "supported_graphics_clocks_mhz": [1560, 1725]})
+        for settings in start_settings
+    ]
+    profiles = [
+        {"value": value, **capture(lambda value=value: gpu_profiles.profile(value))}
+        for value in ("performance", "balanced", "cool", "turbo", None, 1)
+    ]
+    return [
+        {"kind": "reference_confirmed", "cases": confirmed},
+        {"kind": "reference_memory", "cases": memory},
+        {"kind": "reference_start", "cases": start},
+        {"kind": "profile", "cases": profiles},
+    ]
+
+
+def indent_cases():
+    values = [
+        {},
+        [],
+        {"a": [], "b": {}, "c": [1, 2.5, 1e16, 1e-07, -0.0, None, True, 'ã\n"\\\u001f']},
+        {"devices": {"GPU-a": {"miner": {"pid": 1, "argv": ["C:\\x.exe", "--gpu-id", "0"]}, "ok": False}}},
+        [[[]], [{}], {"x": [{"y": []}]}],
+        "texto",
+        3,
+    ]
+    return [
+        {"kind": "indent", "value": value, "expected": json.dumps(value, ensure_ascii=False, indent=2)}
+        for value in values
+    ]
+
+
+def rig_support_golden():
+    cases = health_cases() + operations_case() + continuity_cases() + reference_cases() + indent_cases()
+    write("rig_support", {"cases": cases})
 
 
 def finance_golden():
@@ -1980,9 +2310,10 @@ GENERATORS = {
     "history": history_store,
     "finance": finance_golden,
     "process": process_golden,
+    "rig_support": rig_support_golden,
 }
 # Goldens que não dependem do fuso nem de caminhos e podem ser gerados no Windows.
-PORTABLE = {"history", "finance"}
+PORTABLE = {"history", "finance", "rig_support"}
 # Goldens que usam a API real do Windows (shell32 `CommandLineToArgvW`, `GetFullPathNameW`).
 WINDOWS_ONLY = {"process"}
 

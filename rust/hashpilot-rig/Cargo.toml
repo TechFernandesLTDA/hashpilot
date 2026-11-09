@@ -11,9 +11,13 @@ repository.workspace = true
 hashpilot-core = { path = "../hashpilot-core" }
 hashpilot-history = { path = "../hashpilot-history" }
 serde_json.workspace = true
+rusqlite.workspace = true
+
+[dev-dependencies]
+rusqlite.workspace = true
 
 [target.'cfg(windows)'.dependencies]
-windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Threading"] }
+windows-sys = { version = "0.61", features = ["Win32_Foundation", "Win32_System_Threading", "Win32_System_Power"] }
 
 # Lints próprias: o resto do workspace usa `unsafe_code = "forbid"`, que não admite
 # exceção. Aqui é `deny`, liberado só no módulo `win32` (chamadas Win32 justificadas).
