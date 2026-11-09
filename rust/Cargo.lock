@@ -313,8 +313,10 @@ dependencies = [
 name = "hashpilot-rig"
 version = "0.1.0"
 dependencies = [
+ "chrono",
  "hashpilot-core",
  "hashpilot-history",
+ "regex",
  "rusqlite",
  "serde_json",
  "windows-sys 0.61.2",

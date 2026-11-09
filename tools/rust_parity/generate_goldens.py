@@ -2289,6 +2289,620 @@ def rig_support_golden():
     write("rig_support", {"cases": cases})
 
 
+# --- rig_manager: cenários do RigManager com o backend falso do test_rig.py -----------------
+# Cada cenário é uma lista de passos em dados (a mesma linguagem que o teste Rust interpreta).
+# Depois de cada passo grava o resultado, o registro de GPUs, o estado do gerenciador e o que
+# o backend fez; no fim, os arquivos gravados e o operations.sqlite3.
+
+RIG_CLOCK = 1000.5
+RIG_OTHER = "prl1" + "q" * 40
+
+
+def rig_detected(count=6, mixed=True):
+    return [
+        {
+            "vendor": "NVIDIA",
+            "uuid": f"GPU-test-{index}",
+            "index": index,
+            "name": ("NVIDIA GeForce RTX 3070" if not mixed or index % 2 == 0 else "NVIDIA GeForce GTX 1660 SUPER"),
+        }
+        for index in range(count)
+    ]
+
+
+def rig_reference_gpu():
+    import reference_profile
+
+    return {
+        **rig_detected(1)[0],
+        "uuid": reference_profile.REFERENCE_RTX3070_UUID,
+        "power_default_w": 240,
+        "supported_graphics_clocks_mhz": [1500, 1560, 1740, 1755],
+    }
+
+
+def rig_scenarios():
+    from contribution import AUTHOR_WALLET
+
+    author = {"wallet": AUTHOR_WALLET}
+    ref = rig_reference_gpu()
+    legacy = [
+        {
+            "op": "backend_start",
+            "args": ["{miner}", "--gpu-id", "0", "--wallet", AUTHOR_WALLET, "--log-file", "{root}\\legacy.log"],
+        },
+        {
+            "op": "backend_start",
+            "args": ["{root}\\python.exe", "{log_parent}\\thermal_controller.py", "--miner-pid", "101"],
+        },
+    ]
+    supervisor = {"op": "backend_start", "args": ["{root}\\powershell.exe", "-File", "{log_parent}\\Iniciar-Pearl.ps1"]}
+    migration = [
+        {"op": "set_detector", "detected": [ref]},
+        *legacy,
+        supervisor,
+        {"op": "set_legacy", "started": [0, 1, 2]},
+    ]
+
+    def request(file, **payload):
+        return {"op": "write_request", "file": file, "payload": payload}
+
+    def gpu_sample(temperature, sampled_at):
+        return {"temperature.gpu": temperature, "sampled_at": sampled_at, "error": None}
+
+    stalled_miner = {"hashrate": 0, "hashrate_at": None, "connection": None}
+    other = rig_detected(2)[1]
+    return {
+        "seis_gpus": [{"op": "reconcile"}],
+        "gpu_ocupada": [
+            {"op": "backend", "set": {"blocked": "GPU already occupied"}},
+            {"op": "reconcile", "detected": rig_detected(1)},
+        ],
+        "desligar_uma": [
+            {"op": "reconcile"},
+            {"op": "reconcile", "settings": {**author, "gpu_settings": {"GPU-test-2": {"enabled": False}}}},
+        ],
+        "carteira_por_gpu": [
+            {"op": "reconcile"},
+            {"op": "reconcile", "settings": {**author, "gpu_settings": {"GPU-test-3": {"wallet": RIG_OTHER}}}},
+        ],
+        "falha_isolada": [{"op": "backend", "set": {"fail_uuid": "GPU-test-3"}}, {"op": "reconcile"}],
+        "reinicio_preserva": [{"op": "reconcile"}, {"op": "new_manager"}, {"op": "reconcile"}],
+        "pid_reutilizado": [
+            {"op": "reconcile"},
+            {
+                "op": "mutate",
+                "target": ["device", "GPU-test-1", "miner"],
+                "fields": {"created_at": "9999999", "argv": ["unrelated.exe"], "launch_id": "different"},
+            },
+            {"op": "new_manager"},
+            {"op": "reconcile", "settings": {**author, "gpu_settings": {"GPU-test-1": {"enabled": False}}}},
+        ],
+        "linha_de_comando_alterada": [
+            {"op": "reconcile"},
+            {"op": "mutate", "target": ["device", "GPU-test-1", "miner"], "append_argv": "unexpected"},
+            {"op": "reconcile"},
+        ],
+        "registro_corrompido": [
+            {"op": "corrupt_registry", "text": "[1, 2]"},
+            {"op": "new_manager"},
+            {"op": "reconcile"},
+        ],
+        "registro_metadados": [
+            {
+                "op": "corrupt_registry",
+                "text": json.dumps(
+                    {
+                        "schema_version": 1,
+                        "marker": "HashPilotRig-v1",
+                        "devices": {"GPU-test-0": {"gpu_uuid": "GPU-test-0", "miner": {"pid": 1}}},
+                    }
+                ),
+            },
+            {"op": "new_manager"},
+            {"op": "reconcile"},
+        ],
+        "pedido_parar": [
+            {"op": "reconcile"},
+            request("r1.json", id="req-1", action="stop", gpu_uuid="GPU-test-4", at=RIG_CLOCK),
+            {"op": "process_requests"},
+            {"op": "reconcile"},
+        ],
+        "parar_e_iniciar_em_ordem": [
+            {"op": "reconcile"},
+            request("zzzz-stop.json", id="stop-first", action="stop", gpu_uuid="GPU-test-2", at=990.5),
+            request("aaaa-start.json", id="start-second", action="start", gpu_uuid="GPU-test-2", at=991.5),
+            {"op": "process_requests"},
+            {"op": "reconcile"},
+        ],
+        "pedidos_diversos": [
+            {"op": "reconcile", "detected": rig_detected(2)},
+            request("a.json", id="b1", action="benchmark", gpu_uuid=None, at=990.0, objective="efficiency"),
+            request("b.json", id="p1", action="profile", gpu_uuid="GPU-test-0", at=990.1, profile="cool"),
+            request("c.json", id="p2", action="profile", gpu_uuid="GPU-test-1", at=990.2, profile="turbo"),
+            request("d.json", id="x1", action="restart", gpu_uuid="GPU-test-1", at=990.3),
+            request("e.json", id="x2", action="desconhecida", gpu_uuid=None, at=990.4),
+            request("f.json", id="x3", action="reconcile", gpu_uuid=None, at=500.0),
+            request("g.json", id="b1", action="benchmark", gpu_uuid=None, at=990.5),
+            request("h.json", id="x4", action="stop", gpu_uuid=None, at=990.6),
+            request("i.json", id="x5", action="start", gpu_uuid="../fora", at=990.7),
+            request("j.json", id="x6", action="restart", gpu_uuid="GPU-nao-existe", at=990.8),
+            {"op": "process_requests"},
+            {"op": "reconcile", "detected": rig_detected(2)},
+            request("k.json", id="s1", action="stop_all", gpu_uuid=None, at=999.0),
+            request("l.json", id="z1", action="shutdown", gpu_uuid=None, at=999.5),
+            {"op": "process_requests"},
+            {"op": "reconcile", "detected": rig_detected(2)},
+        ],
+        "contribuicao": [
+            {
+                "op": "reconcile",
+                "detected": rig_detected(2),
+                "settings": {
+                    "wallet": RIG_OTHER,
+                    "support_enabled": True,
+                    "gpu_settings": {"GPU-test-1": {"wallet": AUTHOR_WALLET}},
+                },
+            },
+            {
+                "op": "reconcile",
+                "detected": rig_detected(2),
+                "settings": {
+                    "wallet": RIG_OTHER,
+                    "support_enabled": False,
+                    "gpu_settings": {"GPU-test-1": {"wallet": AUTHOR_WALLET}},
+                },
+            },
+        ],
+        "legado_somente_leitura": [
+            *legacy,
+            {"op": "set_legacy", "started": [0, 1]},
+            {"op": "adopt_legacy"},
+            {"op": "reconcile"},
+            {"op": "stop_gpu", "uuid": "GPU-test-0"},
+        ],
+        "ordem_do_driver": [
+            {
+                "op": "reconcile",
+                "detected": rig_detected(2),
+                "settings": {**author, "gpu_settings": {"GPU-test-1": {"wallet": RIG_OTHER}}},
+            },
+            {
+                "op": "reconcile",
+                "detected": [{**rig_detected(2)[0], "index": 1}, {**rig_detected(2)[1], "index": 0}],
+                "settings": {**author, "gpu_settings": {"GPU-test-1": {"wallet": RIG_OTHER}}},
+            },
+        ],
+        "proxy_morto": [
+            {
+                "op": "reconcile",
+                "detected": rig_detected(2),
+                "settings": {"wallet": RIG_OTHER, "support_enabled": True},
+            },
+            {"op": "kill", "target": ["device", "GPU-test-1", "proxy"]},
+            {
+                "op": "reconcile",
+                "detected": rig_detected(2),
+                "settings": {"wallet": RIG_OTHER, "support_enabled": True},
+            },
+        ],
+        "troca_de_placa": [
+            {"op": "reconcile"},
+            {"op": "reconcile", "detected": [*rig_detected()[:5], {**rig_detected()[5], "uuid": "GPU-replacement-5"}]},
+            {"op": "new_manager"},
+        ],
+        "sete_gpus": [{"op": "reconcile", "detected": rig_detected(7)}],
+        "migracao_espera_supervisor": [
+            *migration,
+            {"op": "backend", "set": {"complete_pids": [103]}},
+            {"op": "migrate_legacy", "uuid": ref["uuid"], "reference": True},
+            {"op": "reconcile"},
+        ],
+        "migracao_recusada": [
+            *migration,
+            {"op": "migrate_legacy", "uuid": "GPU-another-board", "reference": True},
+            {"op": "adopt_legacy"},
+            {"op": "mutate", "target": ["started", 1], "fields": {"created_at": "9999999"}},
+            {"op": "migrate_legacy", "uuid": ref["uuid"], "reference": True},
+        ],
+        "migracao_supervisor_vivo": [*migration, {"op": "migrate_legacy", "uuid": ref["uuid"], "reference": True}],
+        "referencia_persistente": [
+            *migration,
+            {"op": "backend", "set": {"wait_mode": "complete"}},
+            {"op": "migrate_legacy", "uuid": ref["uuid"], "reference": True},
+            {"op": "reconcile"},
+            {"op": "stop_gpu", "uuid": ref["uuid"]},
+            {"op": "publish"},
+            {"op": "new_manager"},
+            {"op": "reconcile"},
+        ],
+        "referencia_limites_desconhecidos": [
+            *migration,
+            {"op": "backend", "set": {"wait_mode": "complete"}},
+            {"op": "migrate_legacy", "uuid": ref["uuid"], "reference": True},
+            {"op": "set_detector", "detected": [{**ref, "power_default_w": None}]},
+            {"op": "reconcile"},
+        ],
+        "referencia_memoria_baixa": [
+            {"op": "set_attr", "name": "reference_uuid", "value": ref["uuid"]},
+            {"op": "set_attr", "name": "miner_path", "value": "{root}\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe"},
+            {
+                "op": "reconcile",
+                "detected": [{**ref, "supported_graphics_clocks_mhz": [1560, 1740]}, other],
+                "settings": {**author, "reference_memory_mhz": 405},
+            },
+            {
+                "op": "reconcile",
+                "detected": [{**ref, "supported_graphics_clocks_mhz": [1560, 1740]}, other],
+                "settings": {**author, "reference_memory_mhz": 5001},
+            },
+        ],
+        "saude_reinicio_automatico": [
+            {"op": "reconcile", "detected": rig_detected(1)},
+            *[
+                step
+                for at in (1400.5, 1402.5, 1404.5, 1411.5, 1412.5)
+                for step in (
+                    {"op": "set_clock", "value": at},
+                    {
+                        "op": "observe_health",
+                        "snapshots": {
+                            "GPU-test-0": {"miner": stalled_miner, "miner_running": True, "gpu": gpu_sample(60, at - 1)}
+                        },
+                    },
+                )
+            ],
+            {"op": "set_clock", "value": 1415.0},
+            {"op": "reconcile", "detected": rig_detected(1)},
+            {"op": "set_attr", "name": "require_recovery_sensors", "value": True},
+            {"op": "set_clock", "value": 1800.0},
+            *[
+                step
+                for at in (1800.0, 1811.0, 1812.0)
+                for step in (
+                    {"op": "set_clock", "value": at},
+                    {
+                        "op": "observe_health",
+                        "snapshots": {
+                            "GPU-test-0": {"miner": stalled_miner, "miner_running": True, "gpu": gpu_sample(60, at - 1)}
+                        },
+                    },
+                )
+            ],
+            {"op": "set_clock", "value": 1815.0},
+            {
+                "op": "observe_health",
+                "snapshots": {
+                    "GPU-test-0": {"miner": stalled_miner, "miner_running": True, "gpu": gpu_sample(75, 1813.0)}
+                },
+            },
+            {"op": "reconcile", "detected": rig_detected(1)},
+            {"op": "set_clock", "value": 1830.0},
+            {
+                "op": "observe_health",
+                "snapshots": {
+                    "GPU-test-0": {
+                        "miner": {
+                            "hashrate": 70.0,
+                            "hashrate_at": 1829.0,
+                            "connection": "Conectado à pool",
+                            "last_share_at": 1820.0,
+                        },
+                        "miner_running": True,
+                        "gpu": gpu_sample(60, 1829.0),
+                        "log_error": None,
+                    }
+                },
+            },
+            {"op": "reconcile", "detected": rig_detected(1)},
+        ],
+        "sucessor_confirmado": [
+            {"op": "reconcile", "detected": rig_detected(1)},
+            {"op": "kill", "target": ["device", "GPU-test-0", "controller"]},
+            {"op": "spawn_successor", "uuid": "GPU-test-0", "parent": True},
+            {"op": "kill", "target": ["device", "GPU-test-0", "miner"]},
+            {"op": "reconcile", "detected": rig_detected(1)},
+        ],
+        "sucessor_sem_pai": [
+            {"op": "reconcile", "detected": rig_detected(1)},
+            {"op": "spawn_successor", "uuid": "GPU-test-0", "parent": False},
+            {"op": "kill", "target": ["device", "GPU-test-0", "miner"]},
+            {"op": "reconcile", "detected": rig_detected(1)},
+            {"op": "reconcile", "detected": rig_detected(1)},
+        ],
+        "controlador_recuperado": [
+            {"op": "reconcile", "detected": rig_detected(1)},
+            {"op": "kill", "target": ["device", "GPU-test-0", "controller"]},
+            {"op": "reconcile", "detected": rig_detected(1)},
+            {"op": "kill", "target": ["device", "GPU-test-0", "controller"]},
+            {"op": "reconcile", "detected": rig_detected(1)},
+        ],
+        "executavel_bloqueado": [
+            {
+                "op": "reconcile",
+                "detected": rig_detected(1),
+                "settings": {**author, "gpu_settings": {"GPU-test-0": {"enabled": False}}},
+            },
+            {"op": "backend", "set": {"verify_error": "Executável ausente"}},
+            {"op": "reconcile", "detected": rig_detected(1)},
+            {"op": "set_clock", "value": 1040.0},
+            {"op": "reconcile", "detected": rig_detected(1)},
+            {"op": "backend", "set": {"verify_error": None}},
+            {"op": "reconcile", "detected": rig_detected(1)},
+        ],
+        "inicio_manual_com_sensor": [
+            {
+                "op": "reconcile",
+                "detected": rig_detected(1),
+                "settings": {**author, "gpu_settings": {"GPU-test-0": {"enabled": False}}},
+            },
+            {"op": "set_attr", "name": "require_recovery_sensors", "value": True},
+            request("m1.json", id="m1", action="start", gpu_uuid="GPU-test-0", at=1000.0),
+            {"op": "process_requests"},
+            {"op": "set_attr", "name": "require_recovery_sensors", "value": False},
+            request("m2.json", id="m2", action="start", gpu_uuid="GPU-test-0", at=1000.0),
+            request("m3.json", id="m3", action="start", gpu_uuid="GPU-test-0", at=1000.1),
+            {"op": "process_requests"},
+            {"op": "reconcile", "detected": rig_detected(1)},
+        ],
+        "desconectada": [
+            {"op": "reconcile", "detected": rig_detected(3)},
+            {"op": "reconcile", "detected": rig_detected(3)[1:]},
+            {"op": "reconcile", "detected": rig_detected(3)},
+        ],
+        "sucessor_ambiguo": [
+            {"op": "reconcile", "detected": rig_detected(1)},
+            {"op": "spawn_successor", "uuid": "GPU-test-0", "parent": True},
+            {"op": "backend_start", "args": ["{miner}", "--algorithm-gpu", "pearlhash"]},
+            {"op": "add_legacy", "started": [3]},
+            {"op": "kill", "target": ["device", "GPU-test-0", "miner"]},
+            {"op": "reconcile", "detected": rig_detected(1)},
+        ],
+        "sucessor_ausente": [
+            {"op": "reconcile", "detected": rig_detected(1)},
+            {"op": "kill", "target": ["device", "GPU-test-0", "miner"]},
+            {"op": "reconcile", "detected": rig_detected(1)},
+            {"op": "reconcile", "detected": rig_detected(1)},
+            {"op": "set_clock", "value": 1016.0},
+            {"op": "reconcile", "detected": rig_detected(1)},
+        ],
+        "registro_cheio": [
+            {"op": "reconcile"},
+            {"op": "mutate", "target": ["device", "GPU-test-5", "miner"], "append_argv": "unexpected"},
+            {"op": "reconcile", "detected": [*rig_detected()[:5], {**rig_detected()[5], "uuid": "GPU-replacement-5"}]},
+        ],
+        "proxy_e_controlador_mortos": [
+            {
+                "op": "reconcile",
+                "detected": rig_detected(2),
+                "settings": {"wallet": RIG_OTHER, "support_enabled": True},
+            },
+            {"op": "kill", "target": ["device", "GPU-test-1", "proxy"]},
+            {"op": "kill", "target": ["device", "GPU-test-1", "controller"]},
+            {
+                "op": "reconcile",
+                "detected": rig_detected(2),
+                "settings": {"wallet": RIG_OTHER, "support_enabled": True},
+            },
+        ],
+    }
+
+
+class RigGoldenBackend:
+    """O `FakeBackend` do test_rig.py, com os ajustes que os cenários pedem."""
+
+    def __init__(self):
+        import test_rig
+
+        self.fake = test_rig.FakeBackend()
+        self.blocked = None
+        self.verify_error = None
+        self.wait_mode = "default"
+        self.complete_pids = []
+        self.waited = []
+
+    def __getattr__(self, name):
+        return getattr(self.fake, name)
+
+    def verify_miner(self, path):
+        if self.verify_error:
+            raise ValueError(self.verify_error)
+
+    def assert_gpu_available(self, miner_path, index):
+        if self.blocked:
+            raise RuntimeError(self.blocked)
+
+    def wait(self, identity, timeout=12):
+        self.waited.append(identity["pid"])
+        if self.wait_mode == "complete" or identity["pid"] in self.complete_pids:
+            self.fake.processes[identity["pid"]]["alive"] = False
+            return True
+        return self.fake.wait(identity, timeout)
+
+
+def rig_run(name, steps):
+    import rig
+
+    folder = Path(tempfile.mkdtemp()).resolve()
+    try:
+        return rig_run_in(folder, name, steps, rig)
+    finally:
+        import shutil
+
+        shutil.rmtree(folder, ignore_errors=True)
+
+
+def rig_run_in(root, name, steps, rig):
+    import re
+    import fsutil
+
+    fsutil.atomic_json(root / "settings.json", {"wallet": __import__("contribution").AUTHOR_WALLET})
+    backend = RigGoldenBackend()
+    state = {"clock": RIG_CLOCK, "detected": rig_detected()}
+
+    def make():
+        return rig.RigManager(
+            root / "state",
+            root / "logs",
+            root / "settings.json",
+            root / "SRBMiner-MULTI.exe",
+            root / "python.exe",
+            backend=backend,
+            detector=lambda: copy_json(state["detected"]),
+            clock=lambda: state["clock"],
+            proxy_ready=lambda entry, identity: 43210,
+        )
+
+    manager = make()
+
+    def expand(value):
+        if isinstance(value, str):
+            return (
+                value.replace("{root}", str(root))
+                .replace("{miner}", str(manager.miner_path))
+                .replace("{log_parent}", str(manager.log_dir.parent))
+            )
+        if isinstance(value, list):
+            return [expand(item) for item in value]
+        if isinstance(value, dict):
+            return {key: expand(item) for key, item in value.items()}
+        return value
+
+    stamp = re.compile(r"mining-\d{8}-\d{6}-[0-9a-f]{6}\.log")
+
+    def norm(value):
+        if isinstance(value, str):
+            return stamp.sub("mining-{stamp}.log", value.replace(str(root), "{root}").replace(str(ROOT), "{project}"))
+        if isinstance(value, list):
+            return [norm(item) for item in value]
+        if isinstance(value, dict):
+            return {norm(key): norm(item) for key, item in value.items()}
+        return value
+
+    def target(ref):
+        if ref[0] == "device":
+            return manager.devices[ref[1]][ref[2]]["pid"]
+        return backend.started[ref[1]]["pid"]
+
+    seen = 0
+    records = []
+    for step in steps:
+        op = step["op"]
+        record = {"op": op}
+        try:
+            if op == "reconcile":
+                result = manager.reconcile(
+                    detected=copy_json(step["detected"]) if "detected" in step else None,
+                    settings=copy_json(step["settings"]) if "settings" in step else None,
+                )
+                record["result"] = result
+            elif op == "new_manager":
+                manager = make()
+            elif op == "set_detector":
+                state["detected"] = step["detected"]
+            elif op == "set_clock":
+                state["clock"] = step["value"]
+            elif op == "backend":
+                for key, value in step["set"].items():
+                    if key == "fail_uuid":
+                        backend.fake.fail_uuid = value
+                    else:
+                        setattr(backend, key, value)
+            elif op == "kill":
+                backend.processes[target(step["target"])]["alive"] = False
+            elif op == "mutate":
+                identity = backend.processes[target(step["target"])]["identity"]
+                identity.update(copy_json(step.get("fields", {})))
+                if "append_argv" in step:
+                    identity["argv"].append(step["append_argv"])
+            elif op == "backend_start":
+                backend.start(expand(step["args"]), root)
+            elif op == "add_legacy":
+                backend.fake.legacy += [copy_json(backend.started[index]) for index in step["started"]]
+            elif op == "set_legacy":
+                backend.fake.legacy = [copy_json(backend.started[index]) for index in step["started"]]
+            elif op == "spawn_successor":
+                entry = manager.devices[step["uuid"]]
+                old = entry["miner"]
+                successor = backend.start(list(old["argv"]), root)
+                candidate = {**successor, "parent_pid": old["pid"] if step["parent"] else 999999}
+                backend.fake.legacy = [candidate]
+            elif op == "write_request":
+                fsutil.atomic_json(manager.state_dir / "rig-requests" / step["file"], step["payload"])
+            elif op == "process_requests":
+                manager.process_requests()
+            elif op == "stop_gpu":
+                record["result"] = manager.stop_gpu(step["uuid"], restore=step.get("restore", False))
+            elif op == "adopt_legacy":
+                record["result"] = manager.adopt_legacy()
+            elif op == "migrate_legacy":
+                record["result"] = manager.migrate_legacy(step["uuid"], reference_rtx3070=step["reference"])
+            elif op == "observe_health":
+                manager.observe_health(copy_json(step["snapshots"]))
+            elif op == "publish":
+                manager.publish()
+            elif op == "set_attr":
+                setattr(
+                    manager,
+                    step["name"],
+                    Path(expand(step["value"])) if step["name"] == "miner_path" else step["value"],
+                )
+            elif op == "corrupt_registry":
+                manager.registry_path.parent.mkdir(parents=True, exist_ok=True)
+                manager.registry_path.write_text(step["text"], encoding="utf-8")
+            else:
+                raise AssertionError(op)
+        except Exception as error:  # noqa: BLE001 — o golden registra qualquer erro do Python
+            record["error"] = str(error)
+        record["devices"] = copy_json(manager.devices)
+        record["manager"] = {
+            "error": manager.error,
+            "ignored": manager.ignored,
+            "processed_ids": manager.processed_ids,
+            "reference_uuid": manager.reference_uuid,
+            "registry_valid": manager.registry_valid,
+            "shutting_down": manager.shutting_down,
+            "miner_path": str(manager.miner_path),
+        }
+        record["backend"] = {
+            "started": [item["argv"] for item in backend.started[seen:]],
+            "stopped": list(backend.stopped),
+            "restored": list(backend.restored),
+            "waited": list(backend.waited),
+        }
+        seen = len(backend.started)
+        records.append(norm(copy_json(record)))
+    files = {}
+    for path in sorted(root.rglob("*")):
+        if not path.is_file() or path.suffix in (".sqlite3", ".log") or "-journal" in path.name:
+            continue
+        relative = path.relative_to(root).as_posix()
+        text = path.read_text(encoding="utf-8-sig")
+        if path.suffix == ".jsonl":
+            content = [json.loads(line) for line in text.splitlines() if line]
+        else:
+            try:
+                content = json.loads(text)
+            except ValueError:
+                content = {"text": text}
+        if relative == "state/rig-manager.json" and isinstance(content, dict) and "pid" in content:
+            content["pid"] = 0
+        files[norm(relative)] = norm(content)
+    database = root / "state" / "operations.sqlite3"
+    with contextlib.closing(sqlite3.connect(database)) as db:
+        dump = {
+            table: [list(row) for row in db.execute(f"SELECT * FROM {table} ORDER BY rowid")]
+            for table in ("acks", "recoveries", "incidents", "component_attempts")
+        }
+    return {"name": name, "steps": steps, "records": records, "files": files, "operations": norm(dump)}
+
+
+def rig_manager_golden():
+    sys.path.insert(0, str(ROOT))
+    cases = [rig_run(name, steps) for name, steps in rig_scenarios().items()]
+    write("rig_manager", {"cases": cases, "clock": RIG_CLOCK})
+
+
 def finance_golden():
     cases = (
         finance_model_cases()
@@ -2311,11 +2925,12 @@ GENERATORS = {
     "finance": finance_golden,
     "process": process_golden,
     "rig_support": rig_support_golden,
+    "rig_manager": rig_manager_golden,
 }
 # Goldens que não dependem do fuso nem de caminhos e podem ser gerados no Windows.
 PORTABLE = {"history", "finance", "rig_support"}
 # Goldens que usam a API real do Windows (shell32 `CommandLineToArgvW`, `GetFullPathNameW`).
-WINDOWS_ONLY = {"process"}
+WINDOWS_ONLY = {"process", "rig_manager"}
 
 
 if __name__ == "__main__":

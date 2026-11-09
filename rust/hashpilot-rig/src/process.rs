@@ -148,7 +148,7 @@ pub fn selected_gpus(argv: &[String]) -> Option<Vec<String>> {
 
 /// Decide, pela lista de mineradores já em execução, se a GPU `index` está livre.
 /// Falha fechada: minerador sem linha de comando legível também bloqueia.
-pub fn check_gpu_free(rows: &[Value], index: i64) -> Result<(), String> {
+pub fn check_gpu_free(rows: &[Value], index: &str) -> Result<(), String> {
     for row in rows {
         let argv = windows_argv(row.get("CommandLine").and_then(Value::as_str).unwrap_or(""));
         if argv.is_empty() {
@@ -157,7 +157,7 @@ pub fn check_gpu_free(rows: &[Value], index: i64) -> Result<(), String> {
                     .into(),
             );
         }
-        let busy = selected_gpus(&argv).is_none_or(|ids| ids.contains(&index.to_string()));
+        let busy = selected_gpus(&argv).is_none_or(|ids| ids.iter().any(|id| id == index));
         if busy {
             let pid = row
                 .get("ProcessId")
@@ -359,7 +359,7 @@ impl ProcessBackend {
 
     /// `assert_gpu_available`: bloqueia o início se um SRBMiner (órfão ou ilegível)
     /// pode estar usando a GPU `index`.
-    pub fn assert_gpu_available(&self, index: i64) -> Result<(), String> {
+    pub fn assert_gpu_available(&self, index: &str) -> Result<(), String> {
         let script = "@(Get-CimInstance Win32_Process -Filter \"Name='SRBMiner-MULTI.exe'\" -ErrorAction Stop | Select-Object ProcessId,CommandLine) | ConvertTo-Json -Compress";
         let output = powershell(script, Duration::from_secs(8)).map_err(|_| {
             "Não foi possível verificar mineradores existentes; início bloqueado".to_owned()
@@ -463,14 +463,14 @@ mod tests {
         assert_eq!(selected_gpus(&argv("m --gpu-id")), None);
         assert_eq!(selected_gpus(&argv("m")), None);
         let row = |line: &str| json!({"ProcessId": 42, "CommandLine": line});
-        assert!(check_gpu_free(&[row("m --gpu-id 1")], 0).is_ok());
+        assert!(check_gpu_free(&[row("m --gpu-id 1")], "0").is_ok());
         assert_eq!(
-            check_gpu_free(&[row("m --gpu-id 0,1")], 1).unwrap_err(),
+            check_gpu_free(&[row("m --gpu-id 0,1")], "1").unwrap_err(),
             "Minerador já existente para GPU 1 (PID 42); início bloqueado para evitar duplicação"
         );
-        assert!(check_gpu_free(&[row("m --algorithm x")], 3).is_err());
+        assert!(check_gpu_free(&[row("m --algorithm x")], "3").is_err());
         assert!(
-            check_gpu_free(&[json!({"ProcessId": 7, "CommandLine": null})], 0)
+            check_gpu_free(&[json!({"ProcessId": 7, "CommandLine": null})], "0")
                 .unwrap_err()
                 .starts_with("Minerador existente sem identidade legível")
         );

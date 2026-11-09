@@ -18,7 +18,7 @@ num módulo já portado vale nos dois lados, com os goldens regerados.
 | 1 | **Núcleo de lógica pura** (`hashpilot-core`) e **CLI somente leitura** (`hashpilot`) | Feita, com paridade testada |
 | 2 | **Histórico SQLite** (`hashpilot-history`): ler/gravar o `history.sqlite3` existente com a mesma chave SHA-256 e as mesmas migrações | Feita em 08/11/2026: paridade com o Python real, mutação e banco real de 2,8 GB |
 | 3 | **Finanças** (`hashpilot-finance`): Kryptex/CoinGecko com corpo limitado, cache e ciclo de 60 s | Feita em 08/11/2026: paridade com o Python real, mutação, respostas reais da API e cache real |
-| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 feita em 08/11/2026** (as dependências do `RigManager`). 4b-2 (o `RigManager`) e 4c–4d planejadas; maior risco, exigem o Renan presente a cada início |
+| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 e 4b-2 feitas em 08/11/2026** (dependências e lógica do `RigManager`, provadas com backend falso). 4b-3 (laço `serve`, backend real e teste com o minerador) e 4c–4d planejadas; maior risco, exigem o Renan presente a cada início |
 | 5 | Interface: três abas, bandeja, configurações (provável `egui`/`eframe`) | Planejada |
 | 6 | Instalador, atualizador e troca do Python | Só depois das fases 1–5 validadas |
 
@@ -90,6 +90,27 @@ Diferenças conscientes:
 - **Erro dentro de uma rodada:** no Python, encerra a thread do coletor em silêncio. No Rust, a rodada é descartada e o ciclo continua.
 - **Ordem de `forecast_missing_gpu_uuids` no portfólio consolidado:** o Python percorre as carteiras na ordem de um `set`, aleatória por processo; o Rust usa a ordem alfabética.
 - **Carteira que não é texto:** num dispositivo, cai na carteira principal.
+
+### O que a etapa 4b-2 porta (`hashpilot-rig::manager`)
+
+Porta o `RigManager` do `rig.py`, método a método:
+- `start_gpu`, `start_controller`, `recover_controller`, `stop_gpu` e `reconcile`;
+- `reconcile_successor`, `manual_start`, `adopt_legacy` e `migrate_legacy`;
+- `process_requests`, `observe_health` e `publish`;
+- as funções `write_request`, `support_configuration` e `software_identity`.
+
+O registro, os pedidos, o `settings.json` e o `operations.sqlite3` são os mesmos do
+Python, então os dois serviços leem o estado um do outro.
+
+Os processos passam pela interface `Backend`. O controlador (`gpu_agent.py`) e o
+proxy (`contribution.py`) continuam em Python, iniciados pelo Rust, até as
+etapas 4c e 4d.
+
+Ainda não portado (etapa 4b-3):
+- o laço `serve`;
+- a ação `miner_update`: o pedido é registrado como falha, com o motivo;
+- no backend real, a verificação do executável e a restauração dos padrões da
+  GPU. Por isso, por enquanto, o backend real recusa qualquer início (falha fechada).
 
 ### O que a etapa 4b-1 porta (`hashpilot-rig`)
 
@@ -264,6 +285,19 @@ Exemplo com os dados públicos (a partir da raiz do repositório):
 ```text
 rust/target/debug/hashpilot payout --state portable-data/finance-cache.json --now 1792900000
 ```
+
+## Validação da etapa 4b-2 (Windows 11, 08/11/2026)
+
+- **Golden `rig_manager`** (só Windows):
+  - 36 cenários descritos em dados, executados pelo `RigManager` Python real com o `FakeBackend` do `test_rig.py`;
+  - os cenários incluem todos os do `test_rig.py` e outros mais: pedidos de todos os tipos, inclusive inválidos, antigos e repetidos; sucessor com e sem pai, ambíguo e ausente; recuperação do controlador; executável bloqueado e liberado; reinício automático pela saúde, com e sem sensor seguro; registro cheio; GPU desconectada no meio da lista; sete GPUs;
+  - o teste Rust interpreta os mesmos passos com um backend falso idêntico;
+  - depois de cada passo, compara o resultado, o registro de GPUs (inclusive a ordem), o estado do gerenciador e o que o backend fez; no fim, compara os arquivos gravados e o `operations.sqlite3`.
+- **Mutações:** 26 mutações aplicadas à mão no `manager.rs`. As que escaparam no início ganharam cenários, e todas são detectadas agora.
+- **Diferenças conhecidas:**
+  - o texto do erro de JSON malformado (registro, pedido ou `settings.json`) vem do `serde_json`, e não do `json` do Python;
+  - um `at` não numérico num pedido gera a mensagem genérica "Pedido de rig antigo ou inválido".
+- **Nenhum processo real foi iniciado.**
 
 ## Validação da etapa 4b-1 (Windows 11, 08/11/2026)
 
