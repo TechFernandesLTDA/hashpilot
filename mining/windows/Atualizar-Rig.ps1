@@ -14,6 +14,13 @@ if(-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrat
     Start-Process -FilePath (Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe') -ArgumentList $arguments -Verb RunAs -WindowStyle Hidden
     exit
 }
+$motorFile=Join-Path $state 'rig-motor.txt'
+$rustExe=Join-Path $project 'rust\target\release\hashpilot.exe'
+if((Test-Path -LiteralPath $motorFile) -and ((Get-Content -LiteralPath $motorFile -Raw).Trim() -ieq 'Rust')){
+    # Recompila antes de parar o serviço: se falhar, a sessão atual continua.
+    Push-Location -LiteralPath (Join-Path $project 'rust')
+    try{& mise exec -- cargo build --release -q -p hashpilot-cli;if($LASTEXITCODE -ne 0){throw 'Compilacao do servico em Rust falhou. A sessao atual foi preservada.'}}finally{Pop-Location}
+}
 $registry=Join-Path $state 'rig-manager.json'
 $referenceRtx3070=$false
 if(Test-Path -LiteralPath $registry){
@@ -24,8 +31,9 @@ if(Test-Path -LiteralPath $registry){
     if($process){
         $stateArg='(?i)(?:^|\s)--state-dir\s+(?:"'+[regex]::Escape($state)+'"|'+[regex]::Escape($state)+')(?:\s|$)'
         if($running.marker -ne 'HashPilotRig-v1' -or $now-$running.sampled_at -lt 0 -or $now-$running.sampled_at -gt 15 -or
-           [IO.Path]::GetFileName($process.ExecutablePath) -notin @('python.exe','pythonw.exe') -or
-           $process.CommandLine -notmatch '(?i)[\\/]rig\.py"?(?:\s|$)' -or $process.CommandLine -notmatch $stateArg){
+           -not (([IO.Path]::GetFileName($process.ExecutablePath) -in @('python.exe','pythonw.exe') -and $process.CommandLine -match '(?i)[\\/]rig\.py"?(?:\s|$)') -or
+                 ($process.ExecutablePath -ieq $rustExe -and $process.CommandLine -match '(?i)\srig\s.*--serve')) -or
+           $process.CommandLine -notmatch $stateArg){
             throw 'Identidade do gerenciador nao confirmada. A sessao atual foi preservada.'
         }
         $created=$process.CreationDate
