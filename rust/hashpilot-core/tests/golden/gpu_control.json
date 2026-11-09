@@ -1,0 +1,639 @@
+{
+ "cases": [
+  {
+   "name": "vazio",
+   "scenario": {
+    "owner": null,
+    "steps": [
+     "acquire",
+     "assert",
+     "assert_other",
+     "close"
+    ]
+   },
+   "records": [
+    {
+     "op": "acquire",
+     "owner": {
+      "pid": "{pid}",
+      "token": "{token}",
+      "gpu_uuid": "GPU-a",
+      "at": "{at}",
+      "lease_version": 2
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "assert",
+     "owner": {
+      "pid": "{pid}",
+      "token": "{token}",
+      "gpu_uuid": "GPU-a",
+      "at": "{at}",
+      "lease_version": 2
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "assert_other",
+     "error": "Posse da GPU inválida",
+     "owner": {
+      "pid": "{pid}",
+      "token": "{token}",
+      "gpu_uuid": "GPU-a",
+      "at": "{at}",
+      "lease_version": 2
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "close",
+     "owner": "ausente",
+     "files": [
+      "gpu-control-owner.lock"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "dono_v2_antigo",
+   "scenario": {
+    "owner": "{\"pid\": 1, \"token\": \"x\", \"gpu_uuid\": \"GPU-a\", \"lease_version\": 2}",
+    "steps": [
+     "acquire",
+     "assert",
+     "close"
+    ]
+   },
+   "records": [
+    {
+     "op": "acquire",
+     "owner": {
+      "pid": "{pid}",
+      "token": "{token}",
+      "gpu_uuid": "GPU-a",
+      "at": "{at}",
+      "lease_version": 2
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "assert",
+     "owner": {
+      "pid": "{pid}",
+      "token": "{token}",
+      "gpu_uuid": "GPU-a",
+      "at": "{at}",
+      "lease_version": 2
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "close",
+     "owner": "ausente",
+     "files": [
+      "gpu-control-owner.lock"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "versao_float",
+   "scenario": {
+    "owner": "{\"pid\": \"{self}\", \"lease_version\": 2.0}",
+    "steps": [
+     "acquire",
+     "close"
+    ]
+   },
+   "records": [
+    {
+     "op": "acquire",
+     "owner": {
+      "pid": "{pid}",
+      "token": "{token}",
+      "gpu_uuid": "GPU-a",
+      "at": "{at}",
+      "lease_version": 2
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "close",
+     "owner": "ausente",
+     "files": [
+      "gpu-control-owner.lock"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "legado_pid_morto",
+   "scenario": {
+    "owner": "{\"pid\": 4294967290}",
+    "steps": [
+     "acquire",
+     "close"
+    ]
+   },
+   "records": [
+    {
+     "op": "acquire",
+     "owner": {
+      "pid": "{pid}",
+      "token": "{token}",
+      "gpu_uuid": "GPU-a",
+      "at": "{at}",
+      "lease_version": 2
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "close",
+     "owner": "ausente",
+     "files": [
+      "gpu-control-owner.lock"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "legado_pid_vivo",
+   "scenario": {
+    "owner": "{\"pid\": \"{self}\"}",
+    "steps": [
+     "acquire",
+     "close"
+    ]
+   },
+   "records": [
+    {
+     "op": "acquire",
+     "error": "Outra sessão pode deter o controle da GPU",
+     "owner": {
+      "pid": "{self}"
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "close",
+     "owner": {
+      "pid": "{self}"
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "legado_sem_pid",
+   "scenario": {
+    "owner": "{\"active\": true}",
+    "steps": [
+     "acquire",
+     "close"
+    ]
+   },
+   "records": [
+    {
+     "op": "acquire",
+     "error": "Outra sessão pode deter o controle da GPU",
+     "owner": {
+      "active": true
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "close",
+     "owner": {
+      "active": true
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "legado_pid_bool",
+   "scenario": {
+    "owner": "{\"pid\": true}",
+    "steps": [
+     "acquire"
+    ]
+   },
+   "records": [
+    {
+     "op": "acquire",
+     "error": "Outra sessão pode deter o controle da GPU",
+     "owner": {
+      "pid": true
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "legado_pid_negativo",
+   "scenario": {
+    "owner": "{\"pid\": -5}",
+    "steps": [
+     "acquire"
+    ]
+   },
+   "records": [
+    {
+     "op": "acquire",
+     "error": "Outra sessão pode deter o controle da GPU",
+     "owner": {
+      "pid": -5
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "legado_pid_float",
+   "scenario": {
+    "owner": "{\"pid\": 1.5}",
+    "steps": [
+     "acquire"
+    ]
+   },
+   "records": [
+    {
+     "op": "acquire",
+     "error": "Outra sessão pode deter o controle da GPU",
+     "owner": {
+      "pid": 1.5
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "legado_pid_grande",
+   "scenario": {
+    "owner": "{\"pid\": 4294967296}",
+    "steps": [
+     "acquire"
+    ]
+   },
+   "records": [
+    {
+     "op": "acquire",
+     "error": "Outra sessão pode deter o controle da GPU",
+     "owner": {
+      "pid": 4294967296
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "corrompido",
+   "scenario": {
+    "owner": "{",
+    "steps": [
+     "acquire",
+     "close"
+    ]
+   },
+   "records": [
+    {
+     "op": "acquire",
+     "error": "Trava legada ambígua; controle bloqueado",
+     "owner": {
+      "text": "{"
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "close",
+     "owner": {
+      "text": "{"
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "lista",
+   "scenario": {
+    "owner": "[1]",
+    "steps": [
+     "acquire",
+     "acquire"
+    ]
+   },
+   "records": [
+    {
+     "op": "acquire",
+     "error": "Trava legada ambígua; controle bloqueado",
+     "owner": [
+      1
+     ],
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "acquire",
+     "error": "Trava legada ambígua; controle bloqueado",
+     "owner": [
+      1
+     ],
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "trava_ocupada",
+   "scenario": {
+    "owner": null,
+    "hold": true,
+    "steps": [
+     "acquire",
+     "assert"
+    ]
+   },
+   "records": [
+    {
+     "op": "acquire",
+     "error": "Outra sessão detém o controle da GPU",
+     "owner": "ausente",
+     "files": [
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "assert",
+     "error": "Posse da GPU inválida",
+     "owner": "ausente",
+     "files": [
+      "gpu-control-owner.lock"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "posse_substituida",
+   "scenario": {
+    "owner": null,
+    "steps": [
+     "acquire",
+     "replace",
+     "assert",
+     "close"
+    ]
+   },
+   "records": [
+    {
+     "op": "acquire",
+     "owner": {
+      "pid": "{pid}",
+      "token": "{token}",
+      "gpu_uuid": "GPU-a",
+      "at": "{at}",
+      "lease_version": 2
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "replace",
+     "owner": {
+      "token": "outro",
+      "gpu_uuid": "GPU-a"
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "assert",
+     "error": "Posse da GPU inválida",
+     "owner": {
+      "token": "outro",
+      "gpu_uuid": "GPU-a"
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "close",
+     "owner": {
+      "token": "outro",
+      "gpu_uuid": "GPU-a"
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "posse_apagada",
+   "scenario": {
+    "owner": null,
+    "steps": [
+     "acquire",
+     "delete",
+     "assert",
+     "close"
+    ]
+   },
+   "records": [
+    {
+     "op": "acquire",
+     "owner": {
+      "pid": "{pid}",
+      "token": "{token}",
+      "gpu_uuid": "GPU-a",
+      "at": "{at}",
+      "lease_version": 2
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "delete",
+     "owner": "ausente",
+     "files": [
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "assert",
+     "error": "Posse da GPU inválida",
+     "owner": "ausente",
+     "files": [
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "close",
+     "owner": "ausente",
+     "files": [
+      "gpu-control-owner.lock"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "duas_vezes",
+   "scenario": {
+    "owner": null,
+    "steps": [
+     "acquire",
+     "acquire",
+     "close",
+     "acquire",
+     "close"
+    ]
+   },
+   "records": [
+    {
+     "op": "acquire",
+     "owner": {
+      "pid": "{pid}",
+      "token": "{token}",
+      "gpu_uuid": "GPU-a",
+      "at": "{at}",
+      "lease_version": 2
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "acquire",
+     "error": "Controle da GPU já adquirido",
+     "owner": {
+      "pid": "{pid}",
+      "token": "{token}",
+      "gpu_uuid": "GPU-a",
+      "at": "{at}",
+      "lease_version": 2
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "close",
+     "owner": "ausente",
+     "files": [
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "acquire",
+     "owner": {
+      "pid": "{pid}",
+      "token": "{token}",
+      "gpu_uuid": "GPU-a",
+      "at": "{at}",
+      "lease_version": 2
+     },
+     "files": [
+      "gpu-control-owner.json",
+      "gpu-control-owner.lock"
+     ]
+    },
+    {
+     "op": "close",
+     "owner": "ausente",
+     "files": [
+      "gpu-control-owner.lock"
+     ]
+    }
+   ]
+  },
+  {
+   "name": "sem_posse",
+   "scenario": {
+    "owner": null,
+    "steps": [
+     "assert",
+     "close"
+    ]
+   },
+   "records": [
+    {
+     "op": "assert",
+     "error": "Posse da GPU inválida",
+     "owner": "ausente",
+     "files": []
+    },
+    {
+     "op": "close",
+     "owner": "ausente",
+     "files": []
+    }
+   ]
+  }
+ ]
+}

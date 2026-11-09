@@ -7,8 +7,7 @@
 //! `test_rig.py`, e nenhum deles inicia o minerador de verdade.
 //!
 //! O laço `serve`, a ação `miner_update` e a validação com reversão automática da
-//! atualização estão aqui. Ainda falta (etapa 4b-3b) a restauração dos padrões da
-//! GPU pelo NVML no backend real, que por isso falha fechada.
+//! atualização estão aqui; o backend real restaura a GPU pelo NVML (`gpu_defaults`).
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -64,7 +63,7 @@ fn now_wall() -> f64 {
         .map_or(0.0, |elapsed| elapsed.as_secs_f64())
 }
 
-fn random_hex(length: usize) -> String {
+pub fn random_hex(length: usize) -> String {
     use std::hash::{BuildHasher, Hasher};
     let mut out = String::new();
     while out.len() < length {
@@ -105,8 +104,8 @@ pub trait Backend {
 }
 
 /// O backend real. `verify_miner` confere o executável selecionado pelo SHA-256 do
-/// catálogo. Até a etapa 4b-3b, `restore_defaults` recusa (falha fechada): a parada
-/// fica registrada com restauração incompleta.
+/// catálogo; `restore_defaults` devolve a GPU aos padrões pelo NVML, com a trava de
+/// controle da GPU (`gpu_defaults`).
 impl Backend for crate::process::ProcessBackend {
     fn verify_miner(&mut self, miner_path: &Path) -> Result<(), String> {
         let base = miner_path
@@ -157,8 +156,21 @@ impl Backend for crate::process::ProcessBackend {
             .filter_map(|uuid| map.get(uuid).map(|index| (uuid.to_owned(), json!(index))))
             .collect())
     }
-    fn restore_defaults(&mut self, _gpu: &Value, _directory: &Path) -> Result<Value, String> {
-        Err("Restauração dos padrões da GPU ainda não portada para o Rust (etapa 4b-3)".into())
+    fn restore_defaults(&mut self, gpu: &Value, directory: &Path) -> Result<Value, String> {
+        crate::gpu_defaults::restore_defaults(gpu, directory, &mut open_nvml)
+    }
+}
+
+/// Abre o NVML real da GPU (só no Windows).
+fn open_nvml(uuid: &str) -> Result<Box<dyn crate::nvml::Nvml>, String> {
+    #[cfg(windows)]
+    {
+        crate::nvml::Library::open(uuid)
+            .map(|library| Box::new(library) as Box<dyn crate::nvml::Nvml>)
+    }
+    #[cfg(not(windows))]
+    {
+        crate::nvml::Library::open(uuid).map(|_| unreachable!())
     }
 }
 

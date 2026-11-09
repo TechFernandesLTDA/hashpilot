@@ -2303,9 +2303,206 @@ def catalog_cases():
     ]
 
 
+# --- gpu_defaults: restauração pelo NVML com um driver falso (só o `call` é trocado) --------
+
+NVML_CONFIGS = [
+    {"name": "tudo_restaurado"},
+    {"name": "falha_ao_zerar_offset", "fail": ["nvmlDeviceSetClockOffsets"]},
+    {"name": "falha_na_ventoinha", "fail": ["nvmlDeviceSetDefaultFanSpeed_v2"]},
+    {"name": "offset_sem_confirmacao", "ignore": ["nvmlDeviceSetClockOffsets"]},
+    {"name": "potencia_sem_confirmacao", "ignore": ["nvmlDeviceSetPowerManagementLimit"]},
+    {"name": "ventoinha_presa_em_manual", "stuck_policy": 1},
+    {"name": "ventoinha_ignora_pedido", "ignore": ["nvmlDeviceSetDefaultFanSpeed_v2"]},
+    {"name": "offsets_ja_zerados", "offsets": {}},
+    {"name": "so_memoria_no_p2", "offsets": {"2,2": 500}},
+    {"name": "sem_pstates", "states": [32] * 16},
+    {"name": "pstates_repetidos_e_invalidos", "states": [8, 2, 2, 0, -1, 20, 32, 15, 16]},
+    {"name": "ventoinhas_demais", "fans": 17},
+    {"name": "dezesseis_ventoinhas", "fans": 16},
+    {"name": "sem_ventoinha", "fans": 0},
+    {"name": "limite_padrao_baixo", "default": 999},
+    {"name": "limite_padrao_minimo", "default": 1000, "power": 1000},
+    {"name": "limite_padrao_alto", "default": 2000001},
+    {"name": "limite_padrao_maximo", "default": 2000000},
+    {"name": "zero_fora_dos_limites", "limits": [10, 2000]},
+    {"name": "zero_no_limite", "limits": [0, 0], "offsets": {"0,0": 5}},
+    {"name": "funcao_ausente", "missing": ["nvmlDeviceResetMemoryLockedClocks"]},
+    {"name": "leitura_de_ventoinhas_falha", "fail": ["nvmlDeviceGetNumFans"]},
+    {"name": "leitura_de_offset_falha", "fail": ["nvmlDeviceGetClockOffsets"]},
+    {"name": "leitura_de_pstates_falha", "fail": ["nvmlDeviceGetSupportedPerformanceStates"]},
+    {"name": "destravar_clock_falha", "fail": ["nvmlDeviceResetGpuLockedClocks"]},
+    {"name": "potencia_ja_de_fabrica", "power": 240000},
+    {
+        "name": "tudo_falha",
+        "fail": [
+            "nvmlDeviceGetNumFans",
+            "nvmlDeviceGetSupportedPerformanceStates",
+            "nvmlDeviceResetGpuLockedClocks",
+            "nvmlDeviceResetMemoryLockedClocks",
+            "nvmlDeviceGetPowerManagementDefaultLimit",
+        ],
+    },
+]
+
+
+def nvml_cases():
+    import ctypes as c
+
+    import gpu_defaults
+
+    class GoldenNvml(gpu_defaults.NvidiaDefaults):
+        def __init__(self, config):
+            self.handle = c.c_void_p(123)
+            self.config = config
+            self.calls = []
+            self.fans = config.get("fans", 2)
+            self.policies = {index: 1 for index in range(self.fans)}
+            default_offsets = {
+                f"{domain},{state}": 150 if domain == 0 else 700 for state in (0, 2, 8) for domain in (0, 2)
+            }
+            self.offsets = {
+                tuple(map(int, key.split(","))): value for key, value in config.get("offsets", default_offsets).items()
+            }
+            self.limits = config.get("limits", [-1000, 2000])
+            self.default = config.get("default", 240000)
+            self.power = config.get("power", 170000)
+
+        def call(self, name, types, *args):
+            self.calls.append(name)
+            if name in self.config.get("fail", []):
+                raise gpu_defaults.NvmlError(name, 4)
+            if name in self.config.get("missing", []):
+                raise gpu_defaults.NvmlError(name, "API indisponível")
+            ignore = name in self.config.get("ignore", [])
+            if name == "nvmlDeviceGetNumFans":
+                args[1]._obj.value = self.fans
+            elif name == "nvmlDeviceGetFanControlPolicy_v2":
+                args[2]._obj.value = self.config.get("stuck_policy", self.policies.get(args[1], 1))
+            elif name == "nvmlDeviceSetDefaultFanSpeed_v2":
+                if not ignore:
+                    self.policies[args[1]] = 0
+            elif name == "nvmlDeviceGetSupportedPerformanceStates":
+                for position, value in enumerate(self.config.get("states", [0, 2, 8])[:16]):
+                    args[1][position] = value
+            elif name == "nvmlDeviceGetClockOffsets":
+                offset = args[1]._obj
+                offset.offset = self.offsets.get((offset.type, offset.pstate), 0)
+                offset.minimum, offset.maximum = self.limits
+            elif name == "nvmlDeviceSetClockOffsets":
+                if not ignore:
+                    offset = args[1]._obj
+                    self.offsets[offset.type, offset.pstate] = offset.offset
+            elif name == "nvmlDeviceGetPowerManagementDefaultLimit":
+                args[1]._obj.value = self.default
+            elif name == "nvmlDeviceGetPowerManagementLimit":
+                args[1]._obj.value = self.power
+            elif name == "nvmlDeviceSetPowerManagementLimit":
+                if not ignore:
+                    self.power = args[1]
+            elif name not in ("nvmlDeviceResetGpuLockedClocks", "nvmlDeviceResetMemoryLockedClocks"):
+                raise AssertionError(name)
+
+    cases = []
+    for setup in NVML_CONFIGS:
+        api = GoldenNvml(setup)
+        report = api.restore()
+        report["at"] = 0.0
+        cases.append({"kind": "nvml", "config": setup, "report": report, "calls": api.calls})
+    return cases
+
+
+# --- gpu_control: a trava de controle por GPU (`NvidiaActuator`), com trava real -------------
+
+GPU_CONTROL_SCENARIOS = {
+    "vazio": {"owner": None, "steps": ["acquire", "assert", "assert_other", "close"]},
+    "dono_v2_antigo": {
+        "owner": '{"pid": 1, "token": "x", "gpu_uuid": "GPU-a", "lease_version": 2}',
+        "steps": ["acquire", "assert", "close"],
+    },
+    "versao_float": {"owner": '{"pid": "{self}", "lease_version": 2.0}', "steps": ["acquire", "close"]},
+    "legado_pid_morto": {"owner": '{"pid": 4294967290}', "steps": ["acquire", "close"]},
+    "legado_pid_vivo": {"owner": '{"pid": "{self}"}', "steps": ["acquire", "close"]},
+    "legado_sem_pid": {"owner": '{"active": true}', "steps": ["acquire", "close"]},
+    "legado_pid_bool": {"owner": '{"pid": true}', "steps": ["acquire"]},
+    "legado_pid_negativo": {"owner": '{"pid": -5}', "steps": ["acquire"]},
+    "legado_pid_float": {"owner": '{"pid": 1.5}', "steps": ["acquire"]},
+    "legado_pid_grande": {"owner": '{"pid": 4294967296}', "steps": ["acquire"]},
+    "corrompido": {"owner": "{", "steps": ["acquire", "close"]},
+    "lista": {"owner": "[1]", "steps": ["acquire", "acquire"]},
+    "trava_ocupada": {"owner": None, "hold": True, "steps": ["acquire", "assert"]},
+    "posse_substituida": {"owner": None, "steps": ["acquire", "replace", "assert", "close"]},
+    "posse_apagada": {"owner": None, "steps": ["acquire", "delete", "assert", "close"]},
+    "duas_vezes": {"owner": None, "steps": ["acquire", "acquire", "close", "acquire", "close"]},
+    "sem_posse": {"owner": None, "steps": ["assert", "close"]},
+}
+
+
+def gpu_control_golden():
+    import gpu_agent
+
+    cases = []
+    for name, scenario in GPU_CONTROL_SCENARIOS.items():
+        folder = Path(tempfile.mkdtemp()).resolve()
+        holder = None
+        try:
+            owner_path = folder / "gpu-control-owner.json"
+            if scenario["owner"] is not None:
+                owner_path.write_text(scenario["owner"].replace('"{self}"', str(os.getpid())), encoding="utf-8")
+            if scenario.get("hold"):
+                holder = gpu_agent.NvidiaActuator(folder, enabled=True)
+                holder._lock()
+            actuator = gpu_agent.NvidiaActuator(folder, enabled=True)
+            records = []
+            for step in scenario["steps"]:
+                record = {"op": step}
+                try:
+                    if step == "acquire":
+                        actuator.acquire("GPU-a")
+                    elif step == "assert":
+                        actuator.assert_owner("GPU-a")
+                    elif step == "assert_other":
+                        actuator.assert_owner("GPU-b")
+                    elif step == "replace":
+                        owner_path.write_text('{"token": "outro", "gpu_uuid": "GPU-a"}', encoding="utf-8")
+                    elif step == "delete":
+                        owner_path.unlink()
+                    elif step == "close":
+                        actuator.close()
+                except (OSError, RuntimeError, ValueError) as error:
+                    record["error"] = str(error)
+                try:
+                    content = json.loads(owner_path.read_text(encoding="utf-8"))
+                except FileNotFoundError:
+                    content = "ausente"
+                except ValueError:
+                    content = {"text": owner_path.read_text(encoding="utf-8")}
+                if isinstance(content, dict) and content.get("token") == actuator.token:
+                    content = {**content, "token": "{token}", "pid": "{pid}", "at": "{at}"}
+                elif isinstance(content, dict) and content.get("pid") == os.getpid():
+                    content = {**content, "pid": "{self}"}
+                record["owner"] = content
+                record["files"] = sorted(item.name for item in folder.iterdir())
+                records.append(record)
+            actuator.close()
+            cases.append({"name": name, "scenario": scenario, "records": records})
+        finally:
+            if holder is not None:
+                holder._unlock()
+            import shutil
+
+            shutil.rmtree(folder, ignore_errors=True)
+    write("gpu_control", {"cases": cases})
+
+
 def rig_support_golden():
     cases = (
-        health_cases() + operations_case() + continuity_cases() + reference_cases() + indent_cases() + catalog_cases()
+        health_cases()
+        + operations_case()
+        + continuity_cases()
+        + reference_cases()
+        + indent_cases()
+        + catalog_cases()
+        + nvml_cases()
     )
     write("rig_support", {"cases": cases})
 
@@ -3161,11 +3358,12 @@ GENERATORS = {
     "process": process_golden,
     "rig_support": rig_support_golden,
     "rig_manager": rig_manager_golden,
+    "gpu_control": gpu_control_golden,
 }
 # Goldens que não dependem do fuso nem de caminhos e podem ser gerados no Windows.
 PORTABLE = {"history", "finance", "rig_support"}
 # Goldens que usam a API real do Windows (shell32 `CommandLineToArgvW`, `GetFullPathNameW`).
-WINDOWS_ONLY = {"process", "rig_manager"}
+WINDOWS_ONLY = {"process", "rig_manager", "gpu_control"}
 
 
 if __name__ == "__main__":

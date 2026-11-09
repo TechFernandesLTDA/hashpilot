@@ -18,7 +18,7 @@ num módulo já portado vale nos dois lados, com os goldens regerados.
 | 1 | **Núcleo de lógica pura** (`hashpilot-core`) e **CLI somente leitura** (`hashpilot`) | Feita, com paridade testada |
 | 2 | **Histórico SQLite** (`hashpilot-history`): ler/gravar o `history.sqlite3` existente com a mesma chave SHA-256 e as mesmas migrações | Feita em 08/11/2026: paridade com o Python real, mutação e banco real de 2,8 GB |
 | 3 | **Finanças** (`hashpilot-finance`): Kryptex/CoinGecko com corpo limitado, cache e ciclo de 60 s | Feita em 08/11/2026: paridade com o Python real, mutação, respostas reais da API e cache real |
-| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 e 4b-2 feitas em 08/11/2026** (dependências e lógica do `RigManager`, provadas com backend falso). **4b-3a feita em 09/11/2026** (laço `serve`, atualização do minerador com reversão, snapshots e trava do serviço). 4b-3b (restauração da GPU pelo NVML e teste com o minerador real) e 4c–4d planejadas; maior risco, exigem o Renan presente a cada início |
+| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 e 4b-2 feitas em 08/11/2026** (dependências e lógica do `RigManager`, provadas com backend falso). **4b-3a feita em 09/11/2026** (laço `serve`, atualização do minerador com reversão, snapshots e trava do serviço). **4b-3b-1 feita em 09/11/2026** (restauração da GPU pelo NVML, provada com driver falso e lida no driver real sem escrita). 4b-3b-2 (`rig serve` e teste com o minerador real) e 4c–4d planejadas; maior risco, exigem o Renan presente a cada início |
 | 5 | Interface: três abas, bandeja, configurações (provável `egui`/`eframe`) | Planejada |
 | 6 | Instalador, atualizador e troca do Python | Só depois das fases 1–5 validadas |
 
@@ -124,12 +124,23 @@ etapas 4c e 4d.
 - **CLI:** `hashpilot miner` mostra a versão selecionada e se o SHA-256 do
   executável confere. Só lê o arquivo; nunca o executa.
 
-Ainda falta (etapa 4b-3b):
-- a restauração dos padrões da GPU pelo NVML (`gpu_defaults.py`). Até lá o backend
-  real a recusa, e a parada fica registrada com restauração incompleta;
-- o comando `hashpilot rig serve`, que liga o laço aos sensores e ao minerador
-  reais. Ele só entra junto com a restauração e com o teste real feito com o
-  Renan presente.
+### O que a etapa 4b-3b-1 porta
+
+- **NVML** (`nvml`): só as funções do `gpu_defaults.py`, carregadas do
+  `System32\nvml.dll`, atrás da interface `Nvml`, com `nvmlClockOffset_v1` de 24
+  bytes. Todo o `unsafe` novo fica nesse arquivo.
+- **Restauração** (`gpu_defaults`): ventoinhas em política automática, offsets zero
+  em todos os P-states, clocks destravados e potência de fábrica, cada etapa
+  conferida por leitura e sem parar as outras. O backend real passa a usá-la.
+- **Trava de controle por GPU** (`ControlLease`): a mesma do `NvidiaActuator`
+  (`gpu-control-owner.lock` e `.json`). Se outra sessão controla a GPU, a
+  restauração falha sem abrir o driver.
+- **CLI:** `hashpilot nvml <uuid>` lê ventoinhas, P-states, offsets e potência.
+  Nunca chama uma função de escrita.
+
+Ainda falta (etapa 4b-3b-2): o comando `hashpilot rig serve`, que liga o laço aos
+sensores e ao minerador reais. A primeira restauração real e o primeiro início do
+minerador pelo Rust só acontecem com o Renan presente, confirmando cada um.
 
 ### O que a etapa 4b-1 porta (`hashpilot-rig`)
 
@@ -270,6 +281,7 @@ hashpilot finance fetch [--wallet W] [--replay respostas.json] [--now EPOCH]
 hashpilot process inspect <PID> [--command-line] | miners | owned [--manager rig-manager.json]
 hashpilot recovery --gpu <UUID> [--operations operations.sqlite3] [--now EPOCH]
 hashpilot miner [--base <pasta>]
+hashpilot nvml <UUID>                              # só leitura pelo NVML
 ```
 
 `process` só lê: identidade de um processo, mineradores em execução com as GPUs do
@@ -305,6 +317,19 @@ Exemplo com os dados públicos (a partir da raiz do repositório):
 ```text
 rust/target/debug/hashpilot payout --state portable-data/finance-cache.json --now 1792900000
 ```
+
+## Validação da etapa 4b-3b-1 (Windows 11, 09/11/2026)
+
+- **Golden `rig_support`, tipo `nvml`:** 27 configurações de um driver falso, executadas pelo `NvidiaDefaults.restore()` real (só o `call` é trocado). O teste Rust compara o relatório e a sequência completa de chamadas ao NVML. Cobre:
+  - falha de cada escrita e de cada leitura, função ausente e tudo falhando;
+  - escrita aceita sem efeito (ventoinha, offset e potência), conferida pela releitura;
+  - limites de ventoinhas (0, 16 e 17), de potência (999, 1000, 2000000 e 2000001) e de offset;
+  - P-states repetidos, inválidos ou ausentes, e offsets já zerados.
+- **Golden `gpu_control`** (só Windows): 17 cenários da trava por GPU contra o `NvidiaActuator` real, com trava real: arquivo legado com processo vivo, morto, sem PID ou com PID inválido, arquivo corrompido, trava ocupada, posse trocada ou apagada, versão `2.0`.
+- **Ordem:** a trava vem antes de abrir o driver; o driver é fechado antes de soltar a trava; com a trava ocupada, o driver nunca é aberto.
+- **Leitura real, sem escrita:** `hashpilot nvml` na RTX 3070 lê as mesmas políticas de ventoinha, P-states, offsets com limites e potência que o `gpu_defaults.py` real lê no mesmo driver.
+- **Mutações:** 15 mutações na restauração e na trava, todas detectadas. A que escapou no início (recusar `lease_version` 2.0) ganhou um cenário com processo vivo.
+- **Nenhuma escrita real** no NVML, e nenhum processo real foi iniciado ou parado.
 
 ## Validação da etapa 4b-3a (Windows 11, 09/11/2026)
 
