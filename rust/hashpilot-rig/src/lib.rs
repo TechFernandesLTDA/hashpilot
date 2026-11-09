@@ -9,7 +9,12 @@
 //! Nada aqui inicia mineração sozinho: `start` só cria o processo que o chamador pedir.
 
 pub mod argv;
+pub mod continuity;
+pub mod fsutil;
+pub mod health;
 pub mod process;
+pub mod reference;
+pub mod successor;
 pub mod win32;
 
 pub use argv::windows_argv;

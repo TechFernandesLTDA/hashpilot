@@ -53,6 +53,8 @@ Uso:
   hashpilot process owned [--manager <rig-manager.json>]
                                          Confere se os processos do rig-manager.json ainda são os mesmos
                                          (nunca encerra nada)
+  hashpilot recovery --gpu <uuid> [--operations <operations.sqlite3>] [--now EPOCH]
+                                         Orçamento de recuperação e incidentes recentes da GPU
   hashpilot --version | --help
 ";
 
@@ -77,6 +79,7 @@ fn main() -> ExitCode {
         Some("history") => history_command(&arguments[1..]),
         Some("finance") => finance_command(&arguments[1..]),
         Some("process") => process_command(&arguments[1..]),
+        Some("recovery") => recovery_command(&arguments[1..]),
         Some(other) => Err(Failure::Usage(format!("comando desconhecido: {other}"))),
     };
     match result {
@@ -282,6 +285,32 @@ fn finance_command(arguments: &[String]) -> Result<Value, Failure> {
             "ação de finance desconhecida: {other}"
         ))),
     }
+}
+
+/// `hashpilot recovery`: `OperationalStore.budget` e `recent_events`, só leitura (as
+/// tabelas são criadas se faltarem, como no Python, mas nada é gravado).
+fn recovery_command(arguments: &[String]) -> Result<Value, Failure> {
+    let options = Options::parse(arguments, &["gpu", "operations", "now"], &[])?;
+    let gpu = options
+        .text("gpu")
+        .ok_or_else(|| Failure::Usage("recovery exige --gpu <uuid>".into()))?;
+    let path = match options.text("operations") {
+        Some(path) => PathBuf::from(path),
+        None => state_dir()?.join("operations.sqlite3"),
+    };
+    let now = match options.text("now") {
+        Some(text) => text
+            .parse()
+            .map_err(|_| Failure::Usage("--now precisa ser número".into()))?,
+        None => std::time::SystemTime::now()
+            .duration_since(std::time::UNIX_EPOCH)
+            .map_or(0.0, |elapsed| elapsed.as_secs_f64()),
+    };
+    let store = hashpilot_rig::health::OperationalStore::new(&path).map_err(Failure::Runtime)?;
+    Ok(json!({
+        "budget": store.budget(gpu, now).map_err(Failure::Runtime)?,
+        "incidents": store.recent_events(gpu, 5).map_err(Failure::Runtime)?,
+    }))
 }
 
 /// `hashpilot process`: só leitura; nenhum processo é criado nem encerrado.

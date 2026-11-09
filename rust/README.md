@@ -18,7 +18,7 @@ num módulo já portado vale nos dois lados, com os goldens regerados.
 | 1 | **Núcleo de lógica pura** (`hashpilot-core`) e **CLI somente leitura** (`hashpilot`) | Feita, com paridade testada |
 | 2 | **Histórico SQLite** (`hashpilot-history`): ler/gravar o `history.sqlite3` existente com a mesma chave SHA-256 e as mesmas migrações | Feita em 08/11/2026: paridade com o Python real, mutação e banco real de 2,8 GB |
 | 3 | **Finanças** (`hashpilot-finance`): Kryptex/CoinGecko com corpo limitado, cache e ciclo de 60 s | Feita em 08/11/2026: paridade com o Python real, mutação, respostas reais da API e cache real |
-| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). 4b–4d planejadas; maior risco, exigem o Renan presente a cada início |
+| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 feita em 08/11/2026** (as dependências do `RigManager`). 4b-2 (o `RigManager`) e 4c–4d planejadas; maior risco, exigem o Renan presente a cada início |
 | 5 | Interface: três abas, bandeja, configurações (provável `egui`/`eframe`) | Planejada |
 | 6 | Instalador, atualizador e troca do Python | Só depois das fases 1–5 validadas |
 
@@ -90,6 +90,22 @@ Diferenças conscientes:
 - **Erro dentro de uma rodada:** no Python, encerra a thread do coletor em silêncio. No Rust, a rodada é descartada e o ciclo continua.
 - **Ordem de `forecast_missing_gpu_uuids` no portfólio consolidado:** o Python percorre as carteiras na ordem de um `set`, aleatória por processo; o Rust usa a ordem alfabética.
 - **Carteira que não é texto:** num dispositivo, cai na carteira principal.
+
+### O que a etapa 4b-1 porta (`hashpilot-rig`)
+
+São as dependências do `RigManager`, sem iniciar nem parar nada:
+
+| Módulo | Python | O que faz |
+|---|---|---|
+| `health` | `mining_health.py` | Saúde pelo ACK da pool e `OperationalStore`: orçamento de recuperação (3 por hora, espera de 60 s a 900 s), reserva de componentes e incidentes. Usa o mesmo `operations.sqlite3` e o mesmo esquema |
+| `continuity` | `mining_continuity.py` | Sensor seguro (abaixo de 70 °C, até 15 s), janela de inventário (uma GPU sumida fica 90 s) e bloqueio só da suspensão automática (`SetThreadExecutionState`) |
+| `successor` | `miner_identity.py` | Reconhece um SRBMiner reiniciado pela sessão gravada (log, carteira, pool, worker e GPU), sem confiar no PID |
+| `reference` | `reference_profile.py`, `gpu_profiles.py` | Perfil opt-in da RTX 3070 de referência e perfis de objetivo |
+| `fsutil` | `fsutil.py` | `atomic_json`: troca atômica, com novas tentativas só na troca. O `json.dumps(indent=2)` byte a byte ficou em `pyjson::encode_indented` |
+
+Os números seguem os tipos do Python, porque o painel lê esse JSON. Por exemplo,
+`max(0, x)` devolve o inteiro `0`, e os limites 900 e 7200 saem inteiros quando
+prevalecem sobre a mediana. O teste compara inteiro e `float` como coisas diferentes.
 
 ### O que a etapa 4a porta (`hashpilot-rig`)
 
@@ -212,6 +228,7 @@ hashpilot history stats|restore|gpu <UUID>|gpus [<UUID>]|finance [--db ARQ] [--w
 hashpilot finance model [--state finance-cache.json] [--hashrate TH/s] [--now EPOCH] [--wallet W]
 hashpilot finance fetch [--wallet W] [--replay respostas.json] [--now EPOCH]
 hashpilot process inspect <PID> [--command-line] | miners | owned [--manager rig-manager.json]
+hashpilot recovery --gpu <UUID> [--operations operations.sqlite3] [--now EPOCH]
 ```
 
 `process` só lê: identidade de um processo, mineradores em execução com as GPUs do
@@ -247,6 +264,16 @@ Exemplo com os dados públicos (a partir da raiz do repositório):
 ```text
 rust/target/debug/hashpilot payout --state portable-data/finance-cache.json --now 1792900000
 ```
+
+## Validação da etapa 4b-1 (Windows 11, 08/11/2026)
+
+- **Golden `rig_support`** (2.394 casos, gerado no Windows e no Linux):
+  - 2.304 combinações de `health`: estados, limites e tipos, incluindo `True`, `1` e `None` em `running`;
+  - uma sequência do `OperationalStore` com o resultado de cada operação e o banco final, tabela por tabela;
+  - a janela de continuidade, o sensor seguro, o perfil de referência, os perfis de objetivo e o JSON indentado.
+- **Golden `process`:** ganhou 24 casos de `match_successor`, que dependem de caminhos do Windows.
+- **Mutações:** 16 mutações aplicadas à mão. As que escaparam no início ganharam casos no limite exato (180 s, 60 s, 90 s e 7200 s). Duas são equivalentes e não mudam o comportamento: `>= 300`, que o limite mínimo de 900 s torna inalcançável, e `count > 1`, que com contagem zero devolve o mesmo `None`.
+- **Dados reais:** numa cópia do `operations.sqlite3` do rig (216 recuperações e 1.002 incidentes), `budget` e `recent_events` deram o mesmo resultado no Python e no Rust em 1.339 instantes. Os instantes cobrem os limites de 60 s e de 1 h em torno de cada registro real.
 
 ## Validação da etapa 4a (Windows 11, 08/11/2026)
 

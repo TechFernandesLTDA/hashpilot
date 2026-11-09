@@ -26,6 +26,50 @@ pub fn encode_spaced(value: &Value) -> String {
     out
 }
 
+/// `json.dumps(valor, ensure_ascii=False, indent=2)`, o formato do `atomic_json` para
+/// arquivos lidos por pessoas (`rig-manager.json`, `settings.json`).
+pub fn encode_indented(value: &Value) -> String {
+    let mut out = String::new();
+    write_indented(&mut out, value, 0);
+    out
+}
+
+fn write_indented(out: &mut String, value: &Value, level: usize) {
+    let newline = |out: &mut String, level: usize| {
+        out.push('\n');
+        out.push_str(&"  ".repeat(level));
+    };
+    match value {
+        Value::Array(items) if !items.is_empty() => {
+            out.push('[');
+            for (position, item) in items.iter().enumerate() {
+                if position > 0 {
+                    out.push(',');
+                }
+                newline(out, level + 1);
+                write_indented(out, item, level + 1);
+            }
+            newline(out, level);
+            out.push(']');
+        }
+        Value::Object(map) if !map.is_empty() => {
+            out.push('{');
+            for (position, (key, item)) in map.iter().enumerate() {
+                if position > 0 {
+                    out.push(',');
+                }
+                newline(out, level + 1);
+                write_text(out, key);
+                out.push_str(": ");
+                write_indented(out, item, level + 1);
+            }
+            newline(out, level);
+            out.push('}');
+        }
+        other => write_value(out, other, (", ", ": ")),
+    }
+}
+
 fn write_value(out: &mut String, value: &Value, separators: (&str, &str)) {
     match value {
         Value::Null => out.push_str("null"),

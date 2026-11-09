@@ -296,6 +296,902 @@
    "kind": "path",
    "path": "C:\\Users\\Ação\\Miner.exe",
    "expected": "c:\\users\\ação\\miner.exe"
+  },
+  {
+   "kind": "successor",
+   "name": "igual",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": true
+  },
+  {
+   "kind": "successor",
+   "name": "mesmo_pid",
+   "candidate": {
+    "pid": 10,
+    "created_at": "200",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": false
+  },
+  {
+   "kind": "successor",
+   "name": "mais_antigo",
+   "candidate": {
+    "pid": 20,
+    "created_at": "100",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": false
+  },
+  {
+   "kind": "successor",
+   "name": "created_texto_invalido",
+   "candidate": {
+    "pid": 20,
+    "created_at": "x",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": false
+  },
+  {
+   "kind": "successor",
+   "name": "created_inteiro",
+   "candidate": {
+    "pid": 20,
+    "created_at": 201,
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": true
+  },
+  {
+   "kind": "successor",
+   "name": "created_espacos",
+   "candidate": {
+    "pid": 20,
+    "created_at": " 300 ",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": true
+  },
+  {
+   "kind": "successor",
+   "name": "created_float",
+   "candidate": {
+    "pid": 20,
+    "created_at": 200.9,
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": true
+  },
+  {
+   "kind": "successor",
+   "name": "sem_created",
+   "candidate": {
+    "pid": 20,
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": false
+  },
+  {
+   "kind": "successor",
+   "name": "exe_maiusculo",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:\\MINING\\SRBMINER-MULTI-3-8-4\\SRBMINER-MULTI.EXE",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": true
+  },
+  {
+   "kind": "successor",
+   "name": "exe_barra",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:/Mining/SRBMiner-Multi-3-8-4/SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": true
+  },
+  {
+   "kind": "successor",
+   "name": "exe_outro",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:\\Outro\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": false
+  },
+  {
+   "kind": "successor",
+   "name": "argv0_outro",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\x.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": false
+  },
+  {
+   "kind": "successor",
+   "name": "log_outro",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\outro.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": false
+  },
+  {
+   "kind": "successor",
+   "name": "log_caixa",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\LOGS\\GPU-A\\MINING-1.LOG"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": true
+  },
+  {
+   "kind": "successor",
+   "name": "sem_log_anterior",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": null,
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": false
+  },
+  {
+   "kind": "successor",
+   "name": "gpu_outra",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "0",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": false
+  },
+  {
+   "kind": "successor",
+   "name": "sem_miner_index",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "0",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": true
+  },
+  {
+   "kind": "successor",
+   "name": "carteira_outra",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1x",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": false
+  },
+  {
+   "kind": "successor",
+   "name": "pool_outra",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "prl.kryptex.network:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": false
+  },
+  {
+   "kind": "successor",
+   "name": "worker_outro",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-2"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": false
+  },
+  {
+   "kind": "successor",
+   "name": "gpu_repetida",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log",
+     "--gpu-id",
+     "1"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": false
+  },
+  {
+   "kind": "successor",
+   "name": "argv_vazio",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": []
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": false
+  },
+  {
+   "kind": "successor",
+   "name": "sem_miner_anterior",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file",
+     "C:\\Logs\\GPU-a\\mining-1.log"
+    ]
+   },
+   "previous": {
+    "miner": null,
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": false
+  },
+  {
+   "kind": "successor",
+   "name": "log_sem_valor",
+   "candidate": {
+    "pid": 20,
+    "created_at": "200",
+    "executable": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+    "argv": [
+     "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+     "--gpu-id",
+     "1",
+     "--pool",
+     "127.0.0.1:7048",
+     "--wallet",
+     "prl1w",
+     "--worker",
+     "rig-1",
+     "--log-file"
+    ]
+   },
+   "previous": {
+    "miner": {
+     "pid": 10,
+     "created_at": "100"
+    },
+    "miner_log": "C:\\Logs\\GPU-a\\mining-1.log",
+    "wallet": "prl1w",
+    "pool": "127.0.0.1:7048"
+   },
+   "device": {
+    "index": 0,
+    "miner_index": 1,
+    "worker_name": "rig-1"
+   },
+   "miner_path": "C:\\Mining\\SRBMiner-Multi-3-8-4\\SRBMiner-MULTI.exe",
+   "expected": false
   }
  ]
 }
