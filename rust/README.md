@@ -18,7 +18,7 @@ num módulo já portado vale nos dois lados, com os goldens regerados.
 | 1 | **Núcleo de lógica pura** (`hashpilot-core`) e **CLI somente leitura** (`hashpilot`) | Feita, com paridade testada |
 | 2 | **Histórico SQLite** (`hashpilot-history`): ler/gravar o `history.sqlite3` existente com a mesma chave SHA-256 e as mesmas migrações | Feita em 08/11/2026: paridade com o Python real, mutação e banco real de 2,8 GB |
 | 3 | **Finanças** (`hashpilot-finance`): Kryptex/CoinGecko com corpo limitado, cache e ciclo de 60 s | Feita em 08/11/2026: paridade com o Python real, mutação, respostas reais da API e cache real |
-| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 e 4b-2 feitas em 08/11/2026** (dependências e lógica do `RigManager`, provadas com backend falso). **4b-3a feita em 09/11/2026** (laço `serve`, atualização do minerador com reversão, snapshots e trava do serviço). **4b-3b-1 feita em 09/11/2026** (restauração da GPU pelo NVML, provada com driver falso e lida no driver real sem escrita). **4b-3b-2 feita em 09/11/2026** (`hashpilot rig --serve`, com detector e sensores reais; o primeiro uso real fica para o Renan presente). **4c-1 feita em 09/11/2026** (`thermal_target`: controle por temperatura-alvo e explorador de memória). **4d feita em 09/11/2026** (proxy de contribuição `hashpilot contribution`, que o serviço em Rust já inicia). **Motor Rust em uso no PC desde 09/11/2026** (`Iniciar-Rig.ps1 -Motor Rust`). **4c-2a feita em 09/11/2026** (`gpu_agent`: leituras, planos e o `GPUAgent` sobre o mesmo SQLite, sem hardware nem IA). 4c-2b (laço do supervisor e atuador) planejada; maior risco, exigem o Renan presente a cada início |
+| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 e 4b-2 feitas em 08/11/2026** (dependências e lógica do `RigManager`, provadas com backend falso). **4b-3a feita em 09/11/2026** (laço `serve`, atualização do minerador com reversão, snapshots e trava do serviço). **4b-3b-1 feita em 09/11/2026** (restauração da GPU pelo NVML, provada com driver falso e lida no driver real sem escrita). **4b-3b-2 feita em 09/11/2026** (`hashpilot rig --serve`, com detector e sensores reais; o primeiro uso real fica para o Renan presente). **4c-1 feita em 09/11/2026** (`thermal_target`: controle por temperatura-alvo e explorador de memória). **4d feita em 09/11/2026** (proxy de contribuição `hashpilot contribution`, que o serviço em Rust já inicia). **Motor Rust em uso no PC desde 09/11/2026** (`Iniciar-Rig.ps1 -Motor Rust`). **4c-2a feita em 09/11/2026** (`gpu_agent`: leituras, planos e o `GPUAgent` sobre o mesmo SQLite, sem hardware nem IA). **4c-2b feita em 09/11/2026** (consultor de IA, atuador e laço `hashpilot gpu-agent --control`, que o serviço em Rust já inicia no lugar do `gpu_agent.py`). Com isso a fase 4 está completa |
 | 5 | Interface: três abas, bandeja, configurações (provável `egui`/`eframe`) | Planejada |
 | 6 | Instalador, atualizador e troca do Python | Só depois das fases 1–5 validadas |
 
@@ -172,8 +172,9 @@ powershell -File mining\windows\Iniciar-Rig.ps1 -Motor Rust     # troca para o R
 powershell -File mining\windows\Iniciar-Rig.ps1 -Motor Python   # volta ao Python
 ```
 
-No motor Rust, o proxy de contribuição já é o `hashpilot contribution` (etapa 4d). O supervisor
-térmico (`gpu_agent.py`) continua em Python nos dois motores até a etapa 4c-2.
+No motor Rust, o proxy de contribuição é o `hashpilot contribution` (etapa 4d) e o supervisor
+térmico é o `hashpilot gpu-agent --control` (etapa 4c-2b). O motor Python continua com o
+`contribution.py` e o `gpu_agent.py`.
 
 ### O que a etapa 4b-1 porta (`hashpilot-rig`)
 
@@ -389,6 +390,49 @@ contribution` (os mesmos argumentos do Python). O serviço em Rust inicia esse p
   - o Rust recusa inteiros maiores que 64 bits e surrogates soltos, que o Python aceitaria.
 
 **Não testado:** a contribuição ligada com mineração real. Ela está desligada neste rig, e ligar a contribuição é decisão do Renan.
+
+## Validação da etapa 4c-2b (Windows 11, 09/11/2026)
+
+Duas partes, as duas portadas para `hashpilot-rig`:
+- `ai_advisor`: o `ai_advisor.py` e os consultores `OllamaAdvisor` e `BackgroundAdvisor` do
+  `gpu_agent.py`. Só medições numéricas saem do computador, só modelos gratuitos, cota local de
+  40 consultas por dia na mesma `ai-requests.sqlite3`, e a chave lida do Cofre do Windows nunca
+  aparece em erro nem log.
+- `controller`: o `NvidiaActuator` (trava compatível com a do Python, plano revalidado antes de
+  cada escrita), a leitura do minerador e o laço `control()`, com o comando
+  `hashpilot gpu-agent --control` e os mesmos argumentos do `gpu_agent.py`. O serviço em Rust
+  (`manager.controller_command`) inicia esse comando; o `rig.py` continua iniciando o Python.
+
+- **Golden `ai_advisor`:** 117 casos do Python real. A nuvem e o OpenCode são simulados; o Ollama
+  fala HTTP de verdade com um servidor local. Mutações: 23 de 24 detectadas; a restante
+  (`ensure_ascii`) é equivalente, porque só texto ASCII passa por ali.
+- **Golden `control_loop`:** 24 roteiros do `control()` do Python real. Os dois lados usam a
+  mesma simulação:
+  - nvidia-smi falso, em que a temperatura acompanha o clock travado;
+  - relógio virtual;
+  - processo do minerador e leitura do minerador.
+
+  O teste compara cada comando nvidia-smi (leituras e escritas, na ordem), um resumo do status a
+  cada ciclo, o status final, a memória térmica, a posse da GPU e a contagem das cinco tabelas.
+  Cobrem:
+  - baseline com e sem alvo, alívio térmico, perfil `cool`, emergência com alvo (desiste depois de
+    10 s) e sem alvo;
+  - partida segura com a GPU ociosa, clock lembrado, exploração da memória, troca de alvo durante
+    o laço e subida bloqueada pelo limite suave;
+  - pedidos de parada e de benchmark (válidos, inválidos e nas fronteiras de 3600 s e 60 s),
+    telemetria velha, minerador desconhecido ou morto, outro supervisor, trava legada viva e
+    morta, falta de administrador e duração inválida.
+- **Mutações do laço:** 27, e 26 são detectadas. A restante zera o teto aprendido quando a memória
+  muda; nenhum roteiro chega a definir esse teto. Ela fica sem cobertura.
+- **Uso real:**
+  - o Ollama deste PC respondeu pelo Rust com uma ação válida;
+  - o `hashpilot gpu-agent` recusou rodar sem administrador e sem `--miner-pid`.
+- **Diferenças conhecidas:**
+  - mensagens do decodificador JSON e de SQLite têm o texto de cada linguagem;
+  - Ctrl+C sai pelo mesmo caminho do `KeyboardInterrupt` (restaura e solta a posse, sem marcar
+    falha), com código 1.
+
+**Não testado:** OpenRouter e OpenCode de verdade, porque não há chave nem cliente instalados.
 
 ## Validação da etapa 4c-2a (Windows 11, 09/11/2026)
 

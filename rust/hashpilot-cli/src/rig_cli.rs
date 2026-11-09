@@ -297,6 +297,11 @@ fn run(serve: Serve) -> Result<Value, Failure> {
         executable.to_string_lossy().into_owned(),
         "contribution".into(),
     ]);
+    // E o supervisor NVIDIA: `hashpilot gpu-agent --control`, no lugar do `gpu_agent.py`.
+    manager.controller_command = Some(vec![
+        executable.to_string_lossy().into_owned(),
+        "gpu-agent".into(),
+    ]);
     if !hashpilot_rig::win32::install_ctrl_handler() {
         // Sem console (serviço oculto) o painel ainda desliga pelo pedido `shutdown`.
         eprintln!("aviso: tratamento de Ctrl+C indisponível; use o pedido shutdown para desligar");
