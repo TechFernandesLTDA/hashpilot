@@ -4812,6 +4812,799 @@ def ai_advisor_golden():
     write("ai_advisor", {"system": ai_advisor.SYSTEM, "providers": ai_advisor.PROVIDERS, "cases": cases})
 
 
+# Agente da GPU (`gpu_agent.py`), parte sem hardware e sem IA: funções puras, leituras com
+# nvidia-smi falso e o `GPUAgent` sobre SQLite, com relógio e uuid4 determinísticos.
+AGENT_GPU = {
+    "vendor": "NVIDIA",
+    "uuid": "GPU-abc-123",
+    "index": 0,
+    "name": "NVIDIA GeForce RTX 3070 ✓",
+    "supported_graphics_clocks_mhz": [1500, 1515, 1530, 1545, 1560, 1575, 1590, 1605, 1620, 1635, 1650],
+    "power_min_w": 100.0,
+    "power_max_w": 240.0,
+    "power_default_w": 220.0,
+    "temperature_limit_c": 93,
+}
+AGENT_BAD_GPU = {"vendor": "AMD", "uuid": "GPU-x"}
+
+
+def agent_sample(temp, clock=1590, power=170.0, limit=220.0, util=100, at=None):
+    sample = {
+        "temperature_c": temp,
+        "power_w": power,
+        "power_limit_w": limit,
+        "clock_mhz": clock,
+        "utilization_pct": util,
+    }
+    if at is not None:
+        sample["sampled_at"] = at
+    return sample
+
+
+def gpu_agent_pure_cases():
+    import gpu_agent as ga
+
+    cases = []
+
+    def add(kind, args, call):
+        try:
+            out = {"out": call()}
+        except (ValueError, RuntimeError, TypeError, KeyError) as error:
+            out = {"error": f"{type(error).__name__}: {error}"}
+        cases.append({"kind": kind, "in": args, **out})
+
+    for sample in [
+        agent_sample(70, at=5.0),
+        {"temperature.gpu": "71.5", "power.draw": 160, "clocks.gr": "1600", "utilization.gpu": True},
+        {"temperature_c": None, "temperature.gpu": 80},
+        {"sampled_at": "abc"},
+        {"power_w": float("inf"), "sampled_at": 3},
+    ]:
+        add(
+            "normalize_sample",
+            {"sample": {key: finite_or_text(value) for key, value in sample.items()}, "now": 100},
+            lambda: ga.normalize_sample(sample, 100),
+        )
+    for limit in [None, 93, 50, 49, 110, 111, 0, "84", 80.5, True]:
+        add(
+            "thermal_limits",
+            {"gpu": {"temperature_limit_c": limit}},
+            lambda: list(ga.thermal_limits({"temperature_limit_c": limit})),
+        )
+
+    def rows(temps, start=0.0, step=4.0, valid=True):
+        return [
+            {"valid": valid, "stamp": start + step * index, "temperature": temp} for index, temp in enumerate(temps)
+        ]
+
+    windows = [
+        rows([70.0] * 16),
+        rows([70.0 + 0.05 * i for i in range(16)]),
+        rows([70.0] * 14),
+        rows([70.0] * 16, step=2.0),
+        rows([70.0, 71.5] * 8),
+        rows([70.0] * 16, valid=False),
+        rows([70.0] * 8 + [None] * 4 + [70.0] * 8),
+        rows([70.0] * 10, step=11.0),
+        rows([60.0 + i * 0.1 for i in range(12)], start=10.0),
+        [],
+        rows([71.0] * 20, start=-30.0),
+        # Fronteiras da estabilidade: 15 amostras, 45 s, intervalo de 10 s, 1 °C e subida de 0,2 °C.
+        rows([70.0] * 15, start=4.0),
+        rows([70.0] * 16, start=15.0, step=3.0),
+        [
+            {"valid": True, "stamp": stamp, "temperature": 70.0}
+            for stamp in [0.0, 10.0] + [12.0 + 4 * i for i in range(13)]
+        ],
+        rows([71.0] * 5 + [70.0] * 11),
+        rows([0.0] * 5 + [0.1] * 6 + [0.2] * 5),
+        rows([0.0] * 5 + [0.1] * 6 + [0.25] * 5),
+    ]
+    for window in windows:
+        add("thermal_window_summary", {"rows": window, "now": 60.0}, lambda: ga.thermal_window_summary(window, 60.0))
+    stable = {"stable": True, "peak_c": 70.0}
+    for sample, benchmark, profile, soft in [
+        (agent_sample(70), {"validated": True, "thermal_window": stable}, "performance", 76.0),
+        (agent_sample(75), {"validated": True, "thermal_window": stable}, "performance", 76.0),
+        (
+            agent_sample(74.9),
+            {"validated": True, "thermal_window": {"stable": True, "peak_c": 75.0}},
+            "performance",
+            76.0,
+        ),
+        (agent_sample(72), {"validated": False, "thermal_window": stable}, "performance", 76.0),
+        (agent_sample(73), {"validated": True}, "balanced", 76.0),
+        (agent_sample(None), {}, "cool", 70.0),
+        (agent_sample(70), {"validated": True, "thermal_window": {"stable": True}}, "performance", 76.0),
+        (agent_sample(73.5), {"validated": True}, "balanced", 76.0),
+        (agent_sample(72.5), {}, "balanced", 76.0),
+    ]:
+        add(
+            "performance_probe_gate",
+            {"sample": sample, "benchmark": benchmark, "profile": profile, "soft": soft},
+            lambda: ga.performance_probe_gate(sample, benchmark, profile, soft),
+        )
+    gpus = {
+        "gpu": AGENT_GPU,
+        "sem_clocks": {**AGENT_GPU, "supported_graphics_clocks_mhz": []},
+        "clocks_esparsos": {**AGENT_GPU, "supported_graphics_clocks_mhz": [1500.7, 1600, 0, -5, None, 1520]},
+        "sem_potencia": {**AGENT_GPU, "power_min_w": None},
+        "potencia_incoerente": {**AGENT_GPU, "power_default_w": 250.0},
+        "denso": {**AGENT_GPU, "supported_graphics_clocks_mhz": list(range(1500, 1655, 5))},
+    }
+    plans = []
+    for gpu_name in gpus:
+        for sample in [
+            agent_sample(70, 1590, limit=220.0),
+            agent_sample(70, 1500, limit=100.0),
+            agent_sample(70, 1650, limit=217.5),
+            agent_sample(70, None, limit=None),
+            agent_sample(70, 1597, limit=250.0),
+            agent_sample(70, 1580, limit=102.0),
+        ]:
+            for action in ga.ACTIONS:
+                plans.append((gpu_name, sample, action, {"clock_mhz": 1620}))
+    plans += [
+        ("gpu", agent_sample(70, 1590), "restore_best", {"clock_mhz": 1590}),
+        ("gpu", agent_sample(70, 1590), "restore_best", {"clock_mhz": 1591}),
+        ("gpu", agent_sample(70, 1590), "restore_best", None),
+        ("gpu", agent_sample(70, 1590), "restore_best", {"clock_mhz": "1500"}),
+        ("gpu", agent_sample(70), "turbo", None),
+        ("ruim", agent_sample(70), "hold", None),
+    ]
+    gpus["ruim"] = AGENT_BAD_GPU
+    for gpu_name, sample, action, best in plans:
+        add(
+            "validated_plan",
+            {"gpu": gpu_name, "device": gpus[gpu_name], "sample": sample, "action": action, "best": best},
+            lambda: ga.validated_plan(gpus[gpu_name], sample, action, best),
+        )
+    for sample, objective, profile, soft, advice in [
+        (agent_sample(70), "performance", "performance", 76.0, None),
+        (agent_sample(77), "performance", "performance", 76.0, None),
+        (agent_sample(None), "efficiency", "balanced", 76.0, None),
+        (agent_sample(70, limit=220.0), "efficiency", "balanced", 76.0, None),
+        (agent_sample(70), "performance", "performance", 76.0, {"action": "hold"}),
+        (agent_sample(70), "performance", "balanced", 76.0, {"action": "clock_up"}),
+        (agent_sample(70), "performance", "balanced", 76.0, {"action": "clock_down"}),
+        (agent_sample(70), "efficiency", "cool", 76.0, {"action": "hold"}),
+        (agent_sample(70, 1650), "performance", "performance", 76.0, {"action": "clock_up"}),
+        (agent_sample(70, limit=220.0), "efficiency", "performance", 76.0, {"action": "power_up"}),
+    ]:
+        add(
+            "control_plan",
+            {"sample": sample, "objective": objective, "profile": profile, "soft": soft, "advice": advice},
+            lambda: ga.control_plan(AGENT_GPU, sample, objective, profile, soft, advice, None),
+        )
+    # statistics.mean é a média exata: casos em que a soma ingênua de floats erra.
+    for values in [
+        [1e16, 1.0, -1e16, 1.0],
+        [0.1, 0.2, 0.3],
+        [1e308, 1e308, -1e308],
+        [74.84, 74.84, 74.85],
+        [3.0],
+        [1e-310, 3e-310],
+        [0.1] * 10,
+        [1e16, 3.0, 3.0, 3.0],
+        [2.5e15 + 0.5, 2.5e15 + 0.5, 1.0],
+    ]:
+        naive = sum(values) / len(values) if all(abs(v) < 1e300 for v in values) else None
+        add("mean", {"values": values, "naive": naive}, lambda: __import__("statistics").mean(values))
+    return cases
+
+
+def gpu_agent_read_cases():
+    import gpu_agent as ga
+
+    cases = []
+
+    def scripted(output):
+        def command(arguments):
+            if isinstance(output, Exception):
+                raise output
+            return output
+
+        return command
+
+    outputs = [
+        "70, 165.5, 220.00, 1590, 100",
+        "70,165.5,220,1590",
+        "130, 1, 2, 3, 4",
+        "120, 1, 2, 3, 4",
+        "0, 1, 2, 3, 4",
+        "[N/A], 165, 220, 1590, 100",
+        "-1, 1, 1, 1, 1",
+        "",
+        "71, 1, 2, 3, 4\n72, 9, 9, 9, 9",
+        RuntimeError("driver"),
+        " 65 , 1 , 2 , 3 , 4 ",
+    ]
+    for output in outputs:
+        label = output if isinstance(output, str) else f"RuntimeError: {output}"
+        for kind in ("read_sample", "read_fan", "read_memory_clocks", "read_memory_clock"):
+            with mock.patch.object(ga.time, "time", lambda: 1234.5):
+                try:
+                    result = {"out": getattr(ga, kind)(AGENT_GPU, scripted(output))}
+                except (RuntimeError, ValueError, IndexError) as error:
+                    result = {"error": f"{type(error).__name__}: {error}"}
+            cases.append({"kind": kind, "in": {"output": label}, **result})
+    for output in ["45", "100", "0", "101", "[N/A]", "", "50.5\n60", "7000\n6801\n405\n0\n-1\n6801\nabc\n810.9"]:
+        for kind in ("read_fan", "read_memory_clocks", "read_memory_clock"):
+            cases.append(
+                {"kind": kind, "in": {"output": output}, "out": getattr(ga, kind)(AGENT_GPU, scripted(output))}
+            )
+    with tempfile.TemporaryDirectory() as temporary:
+        settings, finance = Path(temporary) / "settings.json", Path(temporary) / "finance-latest.json"
+        for settings_text, finance_text in [
+            (None, None),
+            (
+                '{"optimize_for": "profit", "electricity_price_brl_kwh": 0.9}',
+                '{"forecast": {"brl_day": 12.0, "hashrate_ths": 80}}',
+            ),
+            (
+                '{"optimize_for": "profit", "electricity_price_brl_kwh": "0,9"}',
+                '{"forecast": {"brl_day": 12.0, "hashrate_ths": 80}}',
+            ),
+            (
+                '{"optimize_for": "profit", "electricity_price_brl_kwh": -1}',
+                '{"forecast": {"brl_day": 12, "hashrate_ths": 80}}',
+            ),
+            (
+                '{"optimize_for": "profit", "electricity_price_brl_kwh": 0}',
+                '{"forecast": {"brl_day": 0, "hashrate_ths": 80}}',
+            ),
+            ('{"optimize_for": "hashrate", "electricity_price_brl_kwh": 1}', '{"forecast": null}'),
+            ('[1]', '[1]'),
+            (
+                '\ufeff{"optimize_for": "profit", "electricity_price_brl_kwh": 1.5}',
+                '{"forecast": {"brl_day": "6", "hashrate_ths": "2"}}',
+            ),
+            ('{"target_temperature_c": 70, "gpu_settings": {"GPU-abc-123": {"target_temperature_c": "68.5"}}}', "x"),
+            ('{"target_temperature_c": 70, "gpu_settings": {"GPU-abc-123": {"target_temperature_c": null}}}', "x"),
+            ('{"target_temperature_c": "abc", "gpu_settings": []}', "x"),
+            ('{"gpu_settings": {"GPU-abc-123": 5}}', "x"),
+            ("{quebrado", "x"),
+        ]:
+            for target, content in ((settings, settings_text), (finance, finance_text)):
+                if content is None:
+                    target.unlink(missing_ok=True)
+                else:
+                    target.write_text(content, encoding="utf-8")
+            cases.append(
+                {
+                    "kind": "read_optimization",
+                    "in": {"settings": settings_text, "finance": finance_text},
+                    "out": list(ga.read_optimization(settings, finance)),
+                }
+            )
+            cases.append(
+                {
+                    "kind": "read_target_temperature",
+                    "in": {"settings": settings_text, "finance": finance_text},
+                    "out": ga.read_target_temperature(settings, "GPU-abc-123"),
+                }
+            )
+    return cases
+
+
+def gpu_agent_selection_cases():
+    import gpu_agent as ga
+
+    cases = []
+    devices = [{**AGENT_GPU, "index": 0}, {**AGENT_GPU, "uuid": "GPU-def-456", "index": 1}]
+    for uuid_value, index, miner_index in [
+        (None, None, None),
+        ("GPU-def-456", None, 3),
+        ("GPU-def-456", 0, None),
+        ("GPU-zzz", None, None),
+        (None, 1, 256),
+        (None, 5, None),
+        ("GPU-abc-123", 0, 0),
+        (None, None, -1),
+        (None, None, 255),
+    ]:
+        args = types.SimpleNamespace(uuid=uuid_value, gpu=index, miner_index=miner_index)
+        try:
+            out = {"out": ga.select_device(devices, args)}
+        except (RuntimeError, ValueError) as error:
+            out = {"error": f"{type(error).__name__}: {error}"}
+        cases.append(
+            {
+                "kind": "select_device",
+                "in": {"devices": devices, "uuid": uuid_value, "index": index, "miner_index": miner_index},
+                **out,
+            }
+        )
+    gpu = AGENT_GPU
+    for snapshot, count in [
+        ({"rig": {"devices": {"GPU-abc-123": {"miner": {"hashrate": 1}}}}}, 1),
+        ({"rig": {"devices": {"GPU-x": {}}}}, 1),
+        ({"devices": [{"identity": {"uuid": "GPU-abc-123"}, "miner": {}}]}, 2),
+        ({"devices": [5, {"gpu_uuid": "GPU-abc-123", "n": 2}]}, 2),
+        ({"devices": [{"gpu": {"uuid": "GPU-x"}}]}, 1),
+        ({"gpu": {"uuid": "GPU-abc-123"}, "miner": {}}, 3),
+        ({"gpu_agent": {"gpu": {"uuid": "GPU-abc-123"}}}, 3),
+        ({"miner": {}}, 1),
+        ({"miner": {}}, 2),
+        ({"gpu": {"uuid": "GPU-x"}}, 1),
+        ({"rig": {"devices": {"GPU-abc-123": [1]}}}, 1),
+        ({"miner": {}}, 0),
+    ]:
+        cases.append(
+            {
+                "kind": "snapshot_device_payload",
+                "in": {"snapshot": snapshot, "count": count},
+                "out": ga.snapshot_device_payload(snapshot, gpu, count),
+            }
+        )
+    with tempfile.TemporaryDirectory() as temporary:
+        stop = Path(temporary) / "gpu-agent-stop.json"
+        for content, now in [
+            (None, 100.0),
+            ('{"gpu_uuid": "GPU-abc-123", "pid": "{self}", "at": 99}', 100.0),
+            ('{"gpu_uuid": "GPU-abc-123", "pid": "{self}", "at": 30}', 100.0),
+            ('{"gpu_uuid": "GPU-abc-123", "pid": "{self}", "at": 101.5}', 100.0),
+            ('{"gpu_uuid": "GPU-abc-123", "pid": "{self}", "at": 103}', 100.0),
+            ('{"gpu_uuid": "GPU-abc-123", "pid": "{self}", "at": 40}', 100.0),
+            ('{"gpu_uuid": "GPU-x", "pid": "{self}", "at": 99}', 100.0),
+            ('{"gpu_uuid": "GPU-abc-123", "pid": 1, "at": 99}', 100.0),
+            ("[1]", 100.0),
+            ("{x", 100.0),
+            ('{"gpu_uuid": "GPU-abc-123", "pid": "{self}", "at": "99"}', 100.0),
+        ]:
+            if content is None:
+                stop.unlink(missing_ok=True)
+            else:
+                stop.write_text(content.replace('"{self}"', str(os.getpid())), encoding="utf-8")
+            cases.append(
+                {
+                    "kind": "requested_control_stop",
+                    "in": {"content": content, "now": now, "started": 50.0},
+                    "out": ga.requested_control_stop(temporary, "GPU-abc-123", 50.0, now),
+                }
+            )
+        first, second = Path(temporary) / "a", Path(temporary) / "b"
+        first.mkdir()
+        second.mkdir()
+        for files in [
+            {},
+            {"a/thermal-control.json": {"controller_pid": "{self}", "enabled": True}},
+            {"a/gpu-agent-control.json": {"controller_pid": 4294967290, "enabled": True, "gpu_uuid": "GPU-abc-123"}},
+            {"b/gpu-agent-control.json": {"controller_pid": None, "enabled": True, "gpu_uuid": "GPU-abc-123"}},
+            {"b/gpu-agent-control.json": {"controller_pid": None, "enabled": False}},
+            {"a/thermal-control.json": {"controller_pid": None, "enabled": True, "gpu": {"uuid": "GPU-x"}}},
+            {"a/thermal-control.json": {"controller_pid": None, "enabled": True, "gpu_index": 1}},
+            {"a/thermal-control.json": {"controller_pid": None, "enabled": True, "gpu_index": "abc"}},
+            {"a/thermal-control.json": {"controller_pid": None, "enabled": 1, "gpu_index": "0"}},
+            {"b/thermal-control.json": "texto"},
+        ]:
+            for folder in (first, second):
+                for name in ("thermal-control.json", "gpu-agent-control.json"):
+                    (folder / name).unlink(missing_ok=True)
+            for name, payload in files.items():
+                text = json.dumps(payload).replace('"{self}"', str(os.getpid()))
+                (Path(temporary) / name).write_text("{x" if payload == "texto" else text, encoding="utf-8")
+            for uuid_value, index in [("GPU-abc-123", 0), (None, None)]:
+                cases.append(
+                    {
+                        "kind": "external_supervisor_active",
+                        "in": {"files": files, "gpu_uuid": uuid_value, "gpu_index": index},
+                        "out": ga.external_supervisor_active(first, second, gpu_uuid=uuid_value, gpu_index=index),
+                    }
+                )
+    return cases
+
+
+class _AgentAdvisor:
+    def __init__(self, spec):
+        self.spec = spec
+        self.calls = []
+
+    def advise(self, context):
+        self.calls.append(context)
+        if self.spec.startswith("ok:"):
+            return {"action": self.spec[3:], "reason": "Sugestão da IA de teste"}
+        raise ValueError("IA de teste indisponível " + "x" * 200)
+
+
+def agent_tables(agent):
+    tables = {}
+    for table in ("benchmarks", "observations", "decisions", "trials", "adjustments"):
+        tables[table] = [list(row) for row in agent.db.execute(f"SELECT * FROM {table} ORDER BY rowid")]
+    return tables
+
+
+def run_agent_trace(name, build):
+    import uuid as uuid_module
+
+    import gpu_agent as ga
+
+    counter = itertools.count(1)
+    ops = []
+    with (
+        tempfile.TemporaryDirectory() as temporary,
+        mock.patch.object(ga.uuid, "uuid4", lambda: uuid_module.UUID(int=next(counter))),
+        mock.patch.object(ga.time, "time", lambda: 5000.0),
+    ):
+        agent = ga.GPUAgent(temporary)
+        gpus = {"gpu": AGENT_GPU, "ruim": AGENT_BAD_GPU}
+
+        def run(op, gpu="gpu", **args):
+            entry = {"op": op, "gpu": gpu, "args": args}
+            try:
+                if op == "set_advisor":
+                    agent.advisor = _AgentAdvisor(args["spec"]) if args["spec"] else None
+                    result = None
+                elif op == "status":
+                    result = agent.status(args["gpu_uuid"], now=args.get("now"))
+                elif op == "recover_interrupted_trials":
+                    result = agent.recover_interrupted_trials(
+                        gpus[gpu], ownership_check=lambda: None, now=args.get("now")
+                    )
+                elif op == "export_policy":
+                    result = agent.export_policy(gpus[gpu], Path(temporary) / "policy", now=args.get("now"))
+                    policy = Path(temporary) / "policy" / "gpu-agent-policy.json"
+                    entry["file"] = policy.read_text(encoding="utf-8") if policy.exists() else None
+                else:
+                    result = getattr(agent, op)(gpus[gpu], **args)
+                entry["out"] = result
+            except (ValueError, RuntimeError) as error:
+                entry["error"] = f"{type(error).__name__}: {error}"
+            if op == "recommend" and isinstance(agent.advisor, _AgentAdvisor) and agent.advisor.calls:
+                entry["advisor_context"] = agent.advisor.calls.pop()
+            ops.append(entry)
+            return entry.get("out")
+
+        build(run)
+        tables = agent_tables(agent)
+        agent.close()
+    return {"kind": "agent", "name": name, "ops": ops, "tables": tables}
+
+
+def trace_clean(run):
+    run("status", gpu_uuid="GPU-abc-123", now=900.0)
+    run("start_benchmark", duration_seconds=300, objective="performance", now=1000.0)
+    for step in range(34):
+        now = 1000.0 + step * 10
+        hash_at = 1000.0 + (step // 2) * 20
+        clock = 1590 if step < 17 else 1605
+        run(
+            "observe",
+            sample=agent_sample(65.0 + (step % 3) * 0.3, clock, 170.0 + step % 4, at=now - 1),
+            hashrate_ths=74.0 + (step % 5) * 0.37,
+            accepted=step * 2,
+            rejected=0,
+            now=now,
+            hash_sampled_at=hash_at,
+            hw_errors=0,
+        )
+        if step % 4 == 0:
+            run("recommend", sample=agent_sample(65.0, clock, at=now - 1), now=now + 0.5)
+    run("status", gpu_uuid="GPU-abc-123", now=1400.0)
+    run("export_policy", now=1400.0)
+    run("recommend", sample=agent_sample(65.0, 1590, at=1400.0), now=1401.0)
+    run("recommend", sample=agent_sample(65.0, 1590, at=1450.0), now=1450.0)
+
+
+def trace_unstable(run):
+    run("start_benchmark", duration_seconds=60, objective="efficiency", now=0.0)
+    run("start_benchmark", duration_seconds=120, objective="efficiency", now=10.0)
+    plan = [
+        dict(sample=agent_sample(65, at=19), hashrate_ths=70, accepted=1, rejected=0, now=20.0, hash_sampled_at=5.0),
+        dict(sample=agent_sample(65, at=29), hashrate_ths=70, accepted=2, rejected=0, now=30.0, hash_sampled_at=29.0),
+        dict(sample=agent_sample(90, at=39), hashrate_ths=70, accepted=3, rejected=0, now=40.0, hash_sampled_at=39.0),
+        dict(sample=agent_sample(65, at=20), hashrate_ths=70, accepted=4, rejected=0, now=50.0, hash_sampled_at=49.0),
+        dict(sample=agent_sample(65, at=59), hashrate_ths=None, accepted=5, rejected=0, now=60.0, hash_sampled_at=59.0),
+        dict(sample=agent_sample(65, at=69), hashrate_ths=70, accepted=6, rejected=0, now=70.0, hash_sampled_at=-200.0),
+        dict(
+            sample=agent_sample(65, power=0, at=79),
+            hashrate_ths=70,
+            accepted=7,
+            rejected=0,
+            now=80.0,
+            hash_sampled_at=79.0,
+        ),
+        dict(sample=agent_sample(65, at=89), hashrate_ths=70, accepted=7.5, rejected=0, now=90.0, hash_sampled_at=89.0),
+        dict(
+            sample=agent_sample(65, at=99),
+            hashrate_ths=70,
+            accepted=8,
+            rejected=0,
+            now=100.0,
+            hash_sampled_at=99.0,
+            hw_errors=2,
+        ),
+        dict(
+            sample=agent_sample(65, at=109), hashrate_ths=70, accepted=2, rejected=0, now=110.0, hash_sampled_at=109.0
+        ),
+        dict(
+            sample=agent_sample(65, at=119), hashrate_ths=70, accepted=9, rejected=1, now=120.0, hash_sampled_at=119.0
+        ),
+        dict(
+            sample=agent_sample(None, at=125), hashrate_ths=70, accepted=9, rejected=1, now=125.0, hash_sampled_at=124.0
+        ),
+        dict(
+            sample=agent_sample(65, at=129),
+            hashrate_ths="72.5",
+            accepted="10",
+            rejected=True,
+            now=130.0,
+            hash_sampled_at=129.0,
+        ),
+        dict(
+            sample=agent_sample(65, at=135), hashrate_ths=70, accepted=-1, rejected=0, now=135.0, hash_sampled_at=134.0
+        ),
+        dict(
+            sample=agent_sample(65, at=150), hashrate_ths=70, accepted=11, rejected=1, now=150.0, hash_sampled_at=149.0
+        ),
+    ]
+    for args in plan:
+        run("observe", **args)
+        run("recommend", sample={**args["sample"], "sampled_at": args["now"] + 31}, now=args["now"] + 31)
+    run(
+        "observe",
+        sample=agent_sample(65, at=160),
+        hashrate_ths=70,
+        accepted=12,
+        rejected=1,
+        now=160.0,
+        hash_sampled_at=159.0,
+    )
+    run("start_benchmark", duration_seconds=30, objective="performance", now=170.0)
+    run("start_benchmark", duration_seconds=300, objective="turbo", now=170.0)
+    run("start_benchmark", gpu="ruim", duration_seconds=300, objective="performance", now=170.0)
+    run("observe", gpu="ruim", sample=agent_sample(65), now=170.0)
+
+
+def trace_recommend(run):
+    run("recommend", sample=agent_sample(65, at=0), now=1.0)
+    run("recommend", sample=agent_sample(65, at=0), now=20.0)
+    run("recommend", sample=agent_sample(84, at=40), now=40.0)
+    run("recommend", sample=agent_sample(80, at=41), now=41.0)
+    run("recommend", sample=agent_sample(80, at=60), now=80.0)
+    run("recommend", sample=agent_sample(76, at=100), now=100.0)
+    run("start_benchmark", duration_seconds=300, objective="efficiency", now=200.0)
+    for step in range(10):
+        now = 200.0 + step * 10
+        run(
+            "observe",
+            sample=agent_sample(66, 1590, at=now),
+            hashrate_ths=75,
+            accepted=step,
+            rejected=0,
+            now=now,
+            hash_sampled_at=now - 1,
+        )
+    run("set_advisor", spec="ok:clock_down")
+    run("recommend", sample=agent_sample(66, 1590, limit=220.0, at=300), ollama=True, now=300.0)
+    run("recommend", sample=agent_sample(66, 1590, limit=220.0, at=340), ollama=True, now=340.0)
+    run("set_advisor", spec="fail")
+    run("recommend", sample=agent_sample(66, 1590, limit=220.0, at=380), ollama=True, now=380.0)
+    run("set_advisor", spec="")
+    run("recommend", sample=agent_sample(66, 1590, limit=220.0, at=420), ollama=True, now=420.0)
+    run("set_advisor", spec="ok:power_up")
+    run("recommend", sample=agent_sample(84, 1590, at=460), ollama=True, now=460.0)
+    run("recommend", sample=agent_sample(66, 1590, util=50, at=500), ollama=True, now=500.0)
+    run("start_benchmark", duration_seconds=300, objective="performance", now=600.0)
+    for step in range(10):
+        now = 600.0 + step * 10
+        run(
+            "observe",
+            sample=agent_sample(66, 1590, at=now),
+            hashrate_ths=75,
+            accepted=step,
+            rejected=0,
+            now=now,
+            hash_sampled_at=now - 1,
+        )
+    run("recommend", sample=agent_sample(66, 1590, at=700), now=700.0)
+    run("recommend", sample=agent_sample(74, 1590, at=740), now=740.0)
+    run("start_benchmark", duration_seconds=300, objective="performance", now=800.0)
+    for now, rejected in [(840.0, 0), (850.0, 0), (860.0, 1)]:
+        run(
+            "observe",
+            sample=agent_sample(66, 1590, at=now),
+            hashrate_ths=75,
+            accepted=5,
+            rejected=rejected,
+            now=now,
+            hash_sampled_at=now - 1,
+        )
+    run("recommend", sample=agent_sample(66, 1590, at=870), now=870.0)
+
+
+def trace_trials(run):
+    before = agent_sample(66, 1590, at=0.0)
+    plan_up = {
+        "action": "clock_up",
+        "clock_mhz": 1605,
+        "power_limit_w": None,
+        "blocked": None,
+        "gpu_uuid": "GPU-abc-123",
+        "at": 0.0,
+    }
+    run("assert_no_pending_trial")
+    run("trial_feedback", sample=before, hashrate_ths=75, hash_sampled_at=0.0, now=1.0)
+    run("record_application", plan=plan_up, before=before, baseline_hashrate=0, now=0.0)
+    run("record_application", plan={**plan_up, "gpu_uuid": "GPU-x"}, before=before, baseline_hashrate=75, now=0.0)
+    run("record_application", plan=plan_up, before=before, baseline_hashrate=75, now=0.0)
+    run("assert_no_pending_trial")
+    run("record_application", plan=plan_up, before=before, baseline_hashrate=75, now=1.0)
+    for now, rate, hash_at in [
+        (20.0, 74.0, 19.0),
+        (40.0, 74.5, 35.0),
+        (60.0, 74.5, 35.0),
+        (80.0, 76.0, 79.0),
+        (95.0, 75.0, 94.0),
+    ]:
+        run(
+            "trial_feedback", sample=agent_sample(67, 1605, at=now), hashrate_ths=rate, hash_sampled_at=hash_at, now=now
+        )
+    run("record_application", plan=plan_up, before=before, baseline_hashrate=75, now=100.0)
+    for now, rate, hash_at in [(140.0, 70.0, 139.0), (170.0, 71.0, 169.0), (200.0, 70.5, 199.0)]:
+        run(
+            "trial_feedback", sample=agent_sample(67, 1605, at=now), hashrate_ths=rate, hash_sampled_at=hash_at, now=now
+        )
+    plan_power = {
+        "action": "power_down",
+        "clock_mhz": None,
+        "power_limit_w": 215.0,
+        "blocked": None,
+        "gpu_uuid": "GPU-abc-123",
+        "at": 300.0,
+    }
+    run("record_application", plan=plan_power, before=before, baseline_hashrate=75, now=300.0)
+    run(
+        "trial_feedback",
+        sample=agent_sample(67, at=310),
+        hashrate_ths=75,
+        hash_sampled_at=309.0,
+        new_rejected_shares=1,
+        now=310.0,
+    )
+    run("record_application", plan=plan_power, before=before, baseline_hashrate=75, now=400.0)
+    run(
+        "trial_feedback",
+        sample=agent_sample(77, 1590, limit=215.0, at=410),
+        hashrate_ths=75,
+        hash_sampled_at=409.0,
+        now=410.0,
+    )
+    run("record_application", plan=plan_up, before=before, baseline_hashrate=75, now=500.0)
+    run("trial_feedback", sample=agent_sample(67, 1605, at=745), hashrate_ths=None, hash_sampled_at=None, now=745.0)
+    run(
+        "record_application", plan={**plan_up, "action": "restore_best"}, before=before, baseline_hashrate=75, now=800.0
+    )
+    run("cancel_trial", sample=agent_sample(67, 1605, at=805), now=805.0)
+    run("cancel_trial", sample=agent_sample(67, 1605, at=806), now=806.0)
+    run("record_application", plan=plan_power, before=before, baseline_hashrate=75, now=900.0)
+    run("cancel_trial", sample=agent_sample(80, 1605, limit=215.0, at=905), now=905.0)
+    run("record_application", plan=plan_up, before=before, baseline_hashrate=75, now=1000.0)
+    run("recover_interrupted_trials", now=1001.0)
+    run("recover_interrupted_trials", now=1002.0)
+    run(
+        "record_adjustment",
+        before=before,
+        after=agent_sample(68, 1605, at=1.0),
+        plan=plan_up,
+        hashrate=75.5,
+        now=1003.0,
+    )
+    run(
+        "record_adjustment",
+        before=before,
+        after=agent_sample(68, 1605, at=1.0),
+        plan={"action": "clock_down"},
+        hashrate="abc",
+        now=1004.0,
+    )
+    run("record_adjustment", gpu="ruim", before=before, after=before, plan=plan_up, now=1005.0)
+
+
+def trace_bench_bounds(run):
+    # Empate de perfis (o primeiro vence), cobertura exata de 70 % e sensor com 10 s exatos.
+    run("start_benchmark", duration_seconds=100, objective="performance", now=1000.0)
+    for step in range(8):
+        now = 1030.0 + 10 * step
+        at = now - 10 if step == 0 else now
+        run(
+            "observe",
+            sample=agent_sample(66, 1590 if step < 4 else 1605, at=at),
+            hashrate_ths=75.0,
+            accepted=step,
+            rejected=0,
+            now=now,
+            hash_sampled_at=now,
+        )
+    run("status", gpu_uuid="GPU-abc-123", now=1100.0)
+    # Sensor 2,5 s no futuro, intervalo de 15 s exatos e hashrate com 180 s exatos.
+    run("start_benchmark", duration_seconds=300, objective="performance", now=2000.0)
+    run(
+        "observe",
+        sample=agent_sample(66, at=2032.5),
+        hashrate_ths=75.0,
+        accepted=1,
+        rejected=0,
+        now=2030.0,
+        hash_sampled_at=2030.0,
+    )
+    run(
+        "observe",
+        sample=agent_sample(66, at=2045.0),
+        hashrate_ths=75.0,
+        accepted=2,
+        rejected=0,
+        now=2045.0,
+        hash_sampled_at=2045.0,
+    )
+    run(
+        "observe",
+        sample=agent_sample(66, at=2200.0),
+        hashrate_ths=75.0,
+        accepted=3,
+        rejected=0,
+        now=2200.0,
+        hash_sampled_at=2020.0,
+    )
+    run("status", gpu_uuid="GPU-abc-123", now=2200.0)
+
+
+def trace_recommend_bounds(run):
+    run("recommend", sample=agent_sample(66, at=0.0), now=10.0)
+    run("start_benchmark", duration_seconds=300, objective="performance", now=100.0)
+    for now in (130.0, 140.0):
+        run(
+            "observe",
+            sample=agent_sample(66, at=now),
+            hashrate_ths=75.0,
+            accepted=1,
+            rejected=0,
+            now=now,
+            hash_sampled_at=now,
+        )
+    # 60 s exatos de benchmark, uso de 90 % e temperatura no limite suave menos 3 °C.
+    run("recommend", sample=agent_sample(73, util=90, at=160.0), now=160.0)
+    # 30 s exatos depois do último ajuste.
+    run("recommend", sample=agent_sample(70, at=190.0), now=190.0)
+    # Acima do limite suave a sugestão da IA não vale.
+    run("set_advisor", spec="ok:power_up")
+    run("recommend", sample=agent_sample(77, at=230.0), ollama=True, now=230.0)
+
+
+def trace_trial_bounds(run):
+    before = agent_sample(66, 1590, at=0.0)
+    plan_up = {
+        "action": "clock_up",
+        "clock_mhz": 1605,
+        "power_limit_w": None,
+        "blocked": None,
+        "gpu_uuid": "GPU-abc-123",
+        "at": 0.0,
+    }
+    run("record_application", plan=plan_up, before=before, baseline_hashrate=100.0, now=0.0)
+    # Hashrate com 30 s exatos do início e 180 s exatos de idade; perda de 2,5 % é aceita.
+    run("trial_feedback", sample=agent_sample(67, 1605, at=210.0), hashrate_ths=97.5, hash_sampled_at=30.0, now=210.0)
+    run("trial_feedback", sample=agent_sample(67, 1605, at=230.0), hashrate_ths=97.5, hash_sampled_at=50.0, now=230.0)
+    run("record_application", plan=plan_up, before=before, baseline_hashrate=100.0, now=1000.0)
+    # 240 s exatos ainda é validação.
+    run("trial_feedback", sample=agent_sample(67, 1605, at=1240.0), hashrate_ths=None, hash_sampled_at=None, now=1240.0)
+
+
+def gpu_agent_golden():
+    cases = gpu_agent_pure_cases() + gpu_agent_read_cases() + gpu_agent_selection_cases()
+    for name, build in [
+        ("limpo", trace_clean),
+        ("instavel", trace_unstable),
+        ("recomendacoes", trace_recommend),
+        ("testes", trace_trials),
+        ("fronteiras_benchmark", trace_bench_bounds),
+        ("fronteiras_recomendacao", trace_recommend_bounds),
+        ("fronteiras_teste", trace_trial_bounds),
+    ]:
+        cases.append(run_agent_trace(name, build))
+    write("gpu_agent", {"gpu": AGENT_GPU, "bad_gpu": AGENT_BAD_GPU, "cases": cases})
+
+
 GENERATORS = {
     "numbers": numbers,
     "miner_log": miner_logs,
@@ -4830,11 +5623,12 @@ GENERATORS = {
     "thermal_target": thermal_target_golden,
     "contribution": contribution_golden,
     "ai_advisor": ai_advisor_golden,
+    "gpu_agent": gpu_agent_golden,
 }
 # Goldens que não dependem do fuso nem de caminhos e podem ser gerados no Windows.
 PORTABLE = {"history", "finance", "rig_support", "nvidia_detect", "thermal_target", "contribution", "ai_advisor"}
 # Goldens que usam a API real do Windows (shell32 `CommandLineToArgvW`, `GetFullPathNameW`).
-WINDOWS_ONLY = {"process", "rig_manager", "gpu_control"}
+WINDOWS_ONLY = {"process", "rig_manager", "gpu_control", "gpu_agent"}
 
 
 if __name__ == "__main__":
