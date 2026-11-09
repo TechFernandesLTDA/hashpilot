@@ -2711,6 +2711,362 @@ def nvidia_detect_golden():
     write("nvidia_detect", {"cases": cases})
 
 
+# --- thermal_target: traços do controlador por alvo e do explorador de memória ---------------
+
+
+def finite_or_text(value):
+    """JSON sem infinito: ±inf viram texto."""
+    if isinstance(value, float) and value in (float("inf"), float("-inf")):
+        return "inf" if value > 0 else "-inf"
+    return value
+
+
+CONTROLLER_SCENARIOS = [
+    {"name": "alvo_72_placa_quente", "seed": 1, "target": 72.0, "ambient": 4.0, "plateau": 1800, "steps": 3000},
+    {"name": "alvo_78_plato_de_hashrate", "seed": 2, "target": 78.0, "ambient": 0.0, "plateau": 1650, "steps": 3000},
+    {
+        "name": "alvo_65_ventoinha_fraca",
+        "seed": 3,
+        "target": 65.0,
+        "ambient": 2.0,
+        "plateau": 2000,
+        "steps": 2500,
+        "fan_cap": 80.0,
+    },
+    {
+        "name": "sensores_falhando",
+        "seed": 4,
+        "target": 75.0,
+        "ambient": 1.0,
+        "plateau": 1750,
+        "steps": 2000,
+        "missing": 0.08,
+    },
+    {
+        "name": "meio_grau_empates",
+        "seed": 5,
+        "target": 74.5,
+        "ambient": 3.0,
+        "plateau": 1720,
+        "steps": 2000,
+        "half": True,
+    },
+]
+
+
+def controller_trace(scenario):
+    import random
+
+    import thermal_target as tt
+
+    rng = random.Random(scenario["seed"])
+    controller = tt.TargetTemperatureController(target_c=scenario["target"])
+    clock, temp, now = 1635.0, 60.0, 1000.0
+    ops = []
+    reasons = []
+    for _ in range(scenario["steps"]):
+        now += 2.0
+        equilibrium = 40 + (clock - 1200) * 0.075 + scenario["ambient"]
+        temp += 0.12 * (equilibrium - temp) + rng.uniform(-0.4, 0.4)
+        fan = min(scenario.get("fan_cap", 100.0), max(30.0, round(30 + (temp - 50) * 3.2)))
+        rate = round(min(clock, scenario["plateau"]) * 0.046 + rng.uniform(-0.05, 0.05), 3)
+        sample_temp = round(temp * 2) / 2 if scenario.get("half") else round(temp, 2)
+        sample = [sample_temp, float(fan), clock, now, rate]
+        if rng.random() < scenario.get("missing", 0.0):
+            sample[rng.choice([0, 1, 2, 4])] = None
+        decision = controller.step(*sample)
+        if decision.reason not in reasons:
+            reasons.append(decision.reason)
+        ops.append(
+            {"op": "step", "in": sample, "out": [decision.action, reasons.index(decision.reason), decision.ceiling_mhz]}
+        )
+        if decision.action in ("clock_up", "clock_down") and sample[2] is not None:
+            before = clock
+            clock = clock + 15.0 if decision.action == "clock_up" else max(1200.0, clock - 15.0)
+            rate_before = controller.rates.get(round(before))
+            controller.notify_applied(decision.action, before, clock, now, rate_before=rate_before)
+            ops.append({"op": "notify", "in": [decision.action, before, clock, now, rate_before]})
+    state = {
+        "last_down_at": finite_or_text(controller.last_down_at),
+        "last_up_at": finite_or_text(controller.last_up_at),
+        "headroom_since": controller.headroom_since,
+        "ceiling_mhz": controller.ceiling_mhz,
+        "ceiling_until": finite_or_text(controller.ceiling_until),
+        "pending_up": controller.pending_up,
+        "rates": {str(key): value for key, value in sorted(controller.rates.items())},
+    }
+    return {
+        "kind": "controller",
+        "name": scenario["name"],
+        "target": scenario["target"],
+        "reasons": reasons,
+        "ops": ops,
+        "state": state,
+    }
+
+
+EXPLORER_SCENARIOS = [
+    {"name": "rtx3070_p2", "seed": 11, "candidates": [7001, 6801, 5001, 810, 405, 6801, 0, -5], "steps": 3000},
+    {
+        "name": "lucro",
+        "seed": 12,
+        "candidates": [7001, 6801, 5001, 810],
+        "steps": 2600,
+        "objective": "profit",
+        "revenue": 1.9,
+        "price": 0.95,
+    },
+    {
+        "name": "erros_e_quente",
+        "seed": 13,
+        "candidates": [6801, 5001, 810, 405],
+        "steps": 2600,
+        "errors_at": 405,
+        "hot_at": 6801,
+    },
+    {"name": "um_candidato", "seed": 14, "candidates": [810], "steps": 200},
+    {"name": "tudo_inalcancavel", "seed": 15, "candidates": [9001, 8001], "steps": 600, "cap": 6801},
+]
+
+
+def explorer_trace(scenario):
+    import random
+
+    import thermal_target as tt
+
+    rng = random.Random(scenario["seed"])
+    explorer = tt.MemoryExplorer(candidates=scenario["candidates"], target_c=76.0)
+    if scenario.get("objective"):
+        explorer.objective = scenario["objective"]
+        explorer.revenue_per_ths_day = scenario["revenue"]
+        explorer.price_kwh = scenario["price"]
+    applied, now, errors = None, 5000.0, 0
+    rows = []
+    for _ in range(scenario["steps"]):
+        now += 10.0
+        cap = scenario.get("cap", 6801.0)
+        actual = None if applied is None else min(applied, cap)
+        memory = actual or 6801.0
+        rate = round(75.2 + (memory - 810) * 0.00002 + rng.uniform(-0.15, 0.15), 3)
+        watts = round(150 + memory * 0.0018 + rng.uniform(-1, 1), 2)
+        temp = round(74.5 + rng.uniform(-0.8, 0.8) + (3.0 if applied == scenario.get("hot_at") else 0.0), 2)
+        if applied == scenario.get("errors_at") and rng.random() < 0.05:
+            errors += 1
+        hashrate = None if rng.random() < 0.03 else rate
+        sample = [now, temp, hashrate, float(errors), actual, watts]
+        out = explorer.step(*sample)
+        rows.append(sample + [out])
+        if out is not None:
+            applied = out
+    state = {
+        "best_mhz": explorer.best_mhz,
+        "scores": [[clock, score] for clock, score in explorer.scores.items()],
+        "queue": explorer.queue,
+        "current_mhz": explorer.current_mhz,
+        "unreachable": sorted(explorer.unreachable),
+        "power": {str(clock): watts for clock, watts in explorer.power.items()},
+        "explored_at": finite_or_text(explorer.explored_at),
+        "candidates": explorer.candidates,
+    }
+    return {"kind": "explorer", "name": scenario["name"], "scenario": scenario, "rows": rows, "state": state}
+
+
+# Fronteiras que os traços naturais quase nunca tocam: cada roteiro é executado pelo Python real.
+CONTROLLER_SCRIPTS = {
+    "arredondamento_par": (
+        75.0,
+        [
+            ("step", 70.0, 60.0, 1702.5, 0.0, 78.0),
+            ("step", 70.0, 60.0, 1703.5, 2.0, 79.0),
+            ("step", 70.0, 60.0, 1702.5, 4.0, 80.0),
+        ],
+    ),
+    "ventoinha_em_95": (75.0, [("step", 76.0, 95.0, 1700.0, 0.0, 78.0), ("step", 76.0, 94.9, 1700.0, 10.0, 78.0)]),
+    "estouro_fora_da_janela": (
+        75.0,
+        [
+            ("notify", "clock_up", 1700.0, 1715.0, 0.0, 78.0),
+            ("step", 76.0, 60.0, 1715.0, 91.0, 79.0),
+            ("step", 76.0, 60.0, 1715.0, 93.0, 79.0),
+        ],
+    ),
+    "estouro_dentro_da_janela": (
+        75.0,
+        [("notify", "clock_up", 1700.0, 1715.0, 0.0, 78.0), ("step", 76.0, 60.0, 1715.0, 90.0, 79.0)],
+    ),
+    "dois_tetos_vale_o_menor": (
+        75.0,
+        [
+            ("notify", "clock_up", 1700.0, 1715.0, 0.0, 78.0),
+            ("step", 76.0, 60.0, 1715.0, 2.0, 79.0),
+            ("notify", "clock_up", 1650.0, 1665.0, 10.0, 78.0),
+            ("step", 76.0, 60.0, 1665.0, 12.0, 79.0),
+            ("notify", "clock_up", 1750.0, 1765.0, 20.0, 78.0),
+            ("step", 76.0, 60.0, 1765.0, 22.0, 79.0),
+            ("step", 70.0, 60.0, 1700.0, 40.0, 79.0),
+        ],
+    ),
+    "folga_reinicia_no_notify": (
+        75.0,
+        [
+            ("step", 70.0, 60.0, 1700.0, 100.0, 78.0),
+            ("notify", "power_down", 1700.0, 1700.0, 115.0, None),
+            ("step", 70.0, 60.0, 1700.0, 125.0, 78.0),
+            ("step", 70.0, 60.0, 1700.0, 140.0, 78.0),
+            ("step", 70.0, 60.0, 1700.0, 146.0, 78.0),
+        ],
+    ),
+    "subida_espera_a_descida": (
+        75.0,
+        [
+            ("notify", "clock_down", 1715.0, 1700.0, 100.0, None),
+            ("step", 70.0, 60.0, 1700.0, 101.0, 78.0),
+            ("step", 70.0, 60.0, 1700.0, 125.0, 78.0),
+            ("step", 70.0, 60.0, 1700.0, 131.0, 78.0),
+        ],
+    ),
+    "ganho_no_limite": (
+        75.0,
+        [
+            ("step", 70.0, 60.0, 1700.0, 0.0, 100.0),
+            ("notify", "clock_up", 1700.0, 1715.0, 1.0, 100.0),
+            ("step", 70.0, 60.0, 1715.0, 2.0, 100.3),
+            ("step", 70.0, 60.0, 1715.0, 46.0, 100.3),
+        ],
+    ),
+}
+
+EXPLORER_SCRIPTS = {
+    "empate_a_0_4": {
+        "candidates": [6801, 810],
+        "rate": {6801: [100.0], 810: [99.6]},
+        "power": {6801: 152.0, 810: 140.0},
+        "steps": 140,
+    },
+    "sem_empate_a_0_6": {
+        "candidates": [6801, 810],
+        "rate": {6801: [100.0], 810: [99.4]},
+        "power": {6801: 152.0, 810: 140.0},
+        "steps": 140,
+    },
+    "duas_amostras": {
+        "candidates": [6801, 810],
+        "rate": {6801: [100.0], 810: [None] * 49 + [101.0, 101.0] + [None] * 200},
+        "power": {6801: 152.0, 810: 140.0},
+        "steps": 140,
+    },
+    "soma_compensada": {
+        "candidates": [6801, 810],
+        "rate": {6801: [None] * 49 + [1e16, 1.0, 1.0, 1.0] + [None] * 200, 810: [2500000000000000.5]},
+        "power": {6801: 150.0, 810: 150.0},
+        "steps": 140,
+        "objective": "profit",
+        "revenue": 1.0,
+        "price": 0.0,
+    },
+    "melhor_primeiro_na_reexploracao": {
+        "candidates": [7001, 6801, 810],
+        "rate": {7001: [99.0], 6801: [100.0], 810: [98.0]},
+        "power": {7001: 160.0, 6801: 152.0, 810: 140.0},
+        "steps": 2400,
+    },
+}
+
+
+def controller_script(name, target, script):
+    import thermal_target as tt
+
+    controller = tt.TargetTemperatureController(target_c=target)
+    ops, reasons = [], []
+    for item in script:
+        if item[0] == "notify":
+            controller.notify_applied(item[1], item[2], item[3], item[4], rate_before=item[5])
+            ops.append({"op": "notify", "in": list(item[1:])})
+            continue
+        decision = controller.step(*item[1:])
+        if decision.reason not in reasons:
+            reasons.append(decision.reason)
+        ops.append(
+            {
+                "op": "step",
+                "in": list(item[1:]),
+                "out": [decision.action, reasons.index(decision.reason), decision.ceiling_mhz],
+            }
+        )
+    state = {
+        "last_down_at": finite_or_text(controller.last_down_at),
+        "last_up_at": finite_or_text(controller.last_up_at),
+        "headroom_since": controller.headroom_since,
+        "ceiling_mhz": controller.ceiling_mhz,
+        "ceiling_until": finite_or_text(controller.ceiling_until),
+        "pending_up": controller.pending_up,
+        "rates": {str(key): value for key, value in sorted(controller.rates.items())},
+    }
+    return {"kind": "controller", "name": name, "target": target, "reasons": reasons, "ops": ops, "state": state}
+
+
+def explorer_script(name, scenario):
+    import thermal_target as tt
+
+    explorer = tt.MemoryExplorer(candidates=scenario["candidates"], target_c=76.0)
+    if scenario.get("objective"):
+        explorer.objective = scenario["objective"]
+        explorer.revenue_per_ths_day = scenario["revenue"]
+        explorer.price_kwh = scenario["price"]
+    rows, now, since = [], 0.0, 0
+    for _ in range(scenario["steps"]):
+        now += 10.0
+        current = explorer.current_mhz
+        series = scenario["rate"].get(int(current), [None]) if current is not None else [None]
+        rate = series[since % len(series)] if len(series) > 1 else series[0]
+        if len(series) > 1 and since >= len(series):
+            rate = None
+        power = scenario["power"].get(int(current)) if current is not None else None
+        sample = [now, 75.0, rate, 0.0, current, power]
+        out = explorer.step(*sample)
+        rows.append(sample + [out])
+        since = 0 if out is not None else since + 1
+    state = {
+        "best_mhz": explorer.best_mhz,
+        "scores": [[clock, score] for clock, score in explorer.scores.items()],
+        "queue": explorer.queue,
+        "current_mhz": explorer.current_mhz,
+        "unreachable": sorted(explorer.unreachable),
+        "power": {str(clock): watts for clock, watts in explorer.power.items()},
+        "explored_at": finite_or_text(explorer.explored_at),
+        "candidates": explorer.candidates,
+    }
+    return {"kind": "explorer", "name": name, "scenario": scenario, "rows": rows, "state": state}
+
+
+def thermal_target_golden():
+    import thermal_target as tt
+
+    cases = [controller_trace(scenario) for scenario in CONTROLLER_SCENARIOS]
+    cases += [explorer_trace(scenario) for scenario in EXPLORER_SCENARIOS]
+    cases += [controller_script(name, target, script) for name, (target, script) in CONTROLLER_SCRIPTS.items()]
+    cases += [explorer_script(name, scenario) for name, scenario in EXPLORER_SCRIPTS.items()]
+    clamps = []
+    for value, limit in [
+        (80, 93),
+        (99, 93),
+        (10, 93),
+        ("77.5", 90),
+        (None, 90),
+        ("abc", 90),
+        (float("nan"), 90),
+        (60, 40),
+    ]:
+        clamps.append(
+            {
+                "in": [finite_or_text(value) if not isinstance(value, float) or value == value else "nan", limit],
+                "out": tt.clamp_target(value, limit),
+            }
+        )
+    cases.append({"kind": "clamp", "name": "clamp_target", "cases": clamps})
+    write("thermal_target", {"cases": cases})
+
+
 def rig_support_golden():
     cases = (
         health_cases()
@@ -3577,9 +3933,10 @@ GENERATORS = {
     "rig_manager": rig_manager_golden,
     "gpu_control": gpu_control_golden,
     "nvidia_detect": nvidia_detect_golden,
+    "thermal_target": thermal_target_golden,
 }
 # Goldens que não dependem do fuso nem de caminhos e podem ser gerados no Windows.
-PORTABLE = {"history", "finance", "rig_support", "nvidia_detect"}
+PORTABLE = {"history", "finance", "rig_support", "nvidia_detect", "thermal_target"}
 # Goldens que usam a API real do Windows (shell32 `CommandLineToArgvW`, `GetFullPathNameW`).
 WINDOWS_ONLY = {"process", "rig_manager", "gpu_control"}
 

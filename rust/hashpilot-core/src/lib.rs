@@ -17,5 +17,6 @@ pub mod payout;
 pub mod rig_config;
 pub mod text;
 pub mod thermal;
+pub mod thermal_target;
 pub mod valuation;
 pub mod wallet;
