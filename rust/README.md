@@ -18,7 +18,7 @@ num módulo já portado vale nos dois lados, com os goldens regerados.
 | 1 | **Núcleo de lógica pura** (`hashpilot-core`) e **CLI somente leitura** (`hashpilot`) | Feita, com paridade testada |
 | 2 | **Histórico SQLite** (`hashpilot-history`): ler/gravar o `history.sqlite3` existente com a mesma chave SHA-256 e as mesmas migrações | Feita em 08/11/2026: paridade com o Python real, mutação e banco real de 2,8 GB |
 | 3 | **Finanças** (`hashpilot-finance`): Kryptex/CoinGecko com corpo limitado, cache e ciclo de 60 s | Feita em 08/11/2026: paridade com o Python real, mutação, respostas reais da API e cache real |
-| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 e 4b-2 feitas em 08/11/2026** (dependências e lógica do `RigManager`, provadas com backend falso). **4b-3a feita em 09/11/2026** (laço `serve`, atualização do minerador com reversão, snapshots e trava do serviço). **4b-3b-1 feita em 09/11/2026** (restauração da GPU pelo NVML, provada com driver falso e lida no driver real sem escrita). **4b-3b-2 feita em 09/11/2026** (`hashpilot rig --serve`, com detector e sensores reais; o primeiro uso real fica para o Renan presente). 4c–4d planejadas; maior risco, exigem o Renan presente a cada início |
+| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 e 4b-2 feitas em 08/11/2026** (dependências e lógica do `RigManager`, provadas com backend falso). **4b-3a feita em 09/11/2026** (laço `serve`, atualização do minerador com reversão, snapshots e trava do serviço). **4b-3b-1 feita em 09/11/2026** (restauração da GPU pelo NVML, provada com driver falso e lida no driver real sem escrita). **4b-3b-2 feita em 09/11/2026** (`hashpilot rig --serve`, com detector e sensores reais; o primeiro uso real fica para o Renan presente). **4c-1 feita em 09/11/2026** (`thermal_target`: controle por temperatura-alvo e explorador de memória). 4c-2 (laço do supervisor e atuador) e 4d planejadas; maior risco, exigem o Renan presente a cada início |
 | 5 | Interface: três abas, bandeja, configurações (provável `egui`/`eframe`) | Planejada |
 | 6 | Instalador, atualizador e troca do Python | Só depois das fases 1–5 validadas |
 
@@ -335,6 +335,24 @@ Exemplo com os dados públicos (a partir da raiz do repositório):
 ```text
 rust/target/debug/hashpilot payout --state portable-data/finance-cache.json --now 1792900000
 ```
+
+## Validação da etapa 4c-1 (Windows 11, 09/11/2026)
+
+O `thermal_target.py` foi portado para `hashpilot-core::thermal_target`. São dois componentes:
+- `TargetTemperatureController` decide subir, descer ou manter o clock do núcleo pela temperatura-alvo e aprende tetos;
+- `MemoryExplorer` mede cada clock de memória candidato e trava no melhor.
+
+- **Golden `thermal_target`:** 23 casos executados pelo Python real.
+  - **Traços longos:** 5 do controlador, cada um com uma placa simulada que esquenta conforme o clock e com as decisões aplicadas por `notify_applied`; 5 do explorador, com clock que o driver não aplica, erros de hardware, objetivo por lucro e reexploração depois de 6 h.
+  - **Roteiros de fronteira:**
+    - controlador: empate no arredondamento, ventoinha exatamente em 95 %, estouro dentro e fora da janela de 90 s, o menor de dois tetos, folga reiniciada, subida esperando a descida e ganho mínimo no limite;
+    - explorador: empate de memória a 0,4 % e a 0,6 %, só 2 amostras, soma compensada do Python 3.12 e a reexploração.
+  - O teste compara cada decisão (ação, motivo e teto) e o estado final.
+- **Paridade fina:**
+  - `round()` e `:.0f` arredondam empates para o par;
+  - a ventoinha aparece como `str(float)`;
+  - a média usa a soma compensada (Neumaier) do `sum()` do Python 3.12+.
+- **Mutações:** 21 mutações. As 7 que escaparam dos traços naturais ganharam roteiros de fronteira, e 20 são detectadas agora. A que sobra é equivalente: tirar o "melhor primeiro" da fila de reexploração não muda nada, porque o Python remove esse clock da fila logo em seguida.
 
 ## Validação da etapa 4b-3b-2 (Windows 11, 09/11/2026)
 
