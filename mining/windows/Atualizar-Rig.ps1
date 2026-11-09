@@ -16,10 +16,15 @@ if(-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrat
 }
 $motorFile=Join-Path $state 'rig-motor.txt'
 $rustExe=Join-Path $project 'rust\target\release\hashpilot.exe'
-if((Test-Path -LiteralPath $motorFile) -and ((Get-Content -LiteralPath $motorFile -Raw).Trim() -ieq 'Rust')){
+# The running service locks rust\target\release\hashpilot.exe: Windows refuses to overwrite a
+# running executable. Build into a staging target and swap the file only after the shutdown.
+$stagingTarget=Join-Path $project 'rust\target\atualizacao'
+$stagedExe=Join-Path $stagingTarget 'release\hashpilot.exe'
+$rustMotor=(Test-Path -LiteralPath $motorFile) -and ((Get-Content -LiteralPath $motorFile -Raw).Trim() -ieq 'Rust')
+if($rustMotor){
     # Recompila antes de parar o serviço: se falhar, a sessão atual continua.
     Push-Location -LiteralPath (Join-Path $project 'rust')
-    try{& mise exec -- cargo build --release -q -p hashpilot-cli;if($LASTEXITCODE -ne 0){throw 'Compilacao do servico em Rust falhou. A sessao atual foi preservada.'}}finally{Pop-Location}
+    try{& mise exec -- cargo build --release -q -p hashpilot-cli --target-dir $stagingTarget;if($LASTEXITCODE -ne 0){throw 'Compilacao do servico em Rust falhou. A sessao atual foi preservada.'}}finally{Pop-Location}
 }
 $registry=Join-Path $state 'rig-manager.json'
 $referenceRtx3070=$false
@@ -50,6 +55,14 @@ if(Test-Path -LiteralPath $registry){
         }
         if($current -and $current.CreationDate -eq $created){throw 'Servico ainda esta encerrando. Nenhum processo foi finalizado a forca; verifique o estado antes de tentar novamente.'}
     }
+}
+if($rustMotor){
+    # Service stopped (or not running): the old executable is free to be replaced.
+    $copied=$false
+    for($attempt=0;$attempt -lt 40 -and -not $copied;$attempt++){
+        try{Copy-Item -LiteralPath $stagedExe -Destination $rustExe -Force;$copied=$true}catch{Start-Sleep -Milliseconds 250}
+    }
+    if(-not $copied){throw 'Nao foi possivel substituir rust\target\release\hashpilot.exe (arquivo em uso). O servico esta parado; rode Iniciar-Rig.ps1 para voltar.'}
 }
 $startArguments=@{Python=$Python}
 if($referenceRtx3070){$startArguments.ReferenciaRTX3070=$true;$startArguments.LegacyUuid='GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75'}
