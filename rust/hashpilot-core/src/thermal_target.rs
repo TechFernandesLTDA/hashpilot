@@ -501,14 +501,10 @@ impl MemoryExplorer {
         ranked.sort_by(|a, b| b.0.total_cmp(&a.0).then(b.1.total_cmp(&a.1)));
         let mut best = match ranked.first() {
             Some((_, clock)) => *clock,
-            None => match self
+            None => self
                 .best_mhz
                 .filter(|best| *best != 0.0)
-                .or_else(|| self.candidates.first().copied())
-            {
-                Some(clock) => clock,
-                None => return None,
-            },
+                .or_else(|| self.candidates.first().copied())?,
         };
         if let Some((top, _)) = ranked.first()
             && self.objective == "hashrate"
