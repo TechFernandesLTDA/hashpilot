@@ -1,6 +1,6 @@
 [package]
 name = "hashpilot-cli"
-description = "CLI somente leitura do HashPilot: GPUs NVIDIA, log do SRBMiner e resumo do rig. Nunca inicia mineração nem altera clocks."
+description = "CLI somente leitura do HashPilot: GPUs NVIDIA, log do SRBMiner e resumo do rig. Nunca inicia mineraÃ§Ã£o nem altera clocks."
 version.workspace = true
 edition.workspace = true
 rust-version.workspace = true
@@ -14,6 +14,7 @@ path = "src/main.rs"
 [dependencies]
 hashpilot-core = { path = "../hashpilot-core" }
 hashpilot-history = { path = "../hashpilot-history" }
+hashpilot-finance = { path = "../hashpilot-finance" }
 serde_json.workspace = true
 zip.workspace = true
 sha2.workspace = true
