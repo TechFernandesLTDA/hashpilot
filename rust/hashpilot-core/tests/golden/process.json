@@ -1,0 +1,301 @@
+{
+ "cases": [
+  {
+   "kind": "argv",
+   "line": "p",
+   "expected": [
+    "p"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p a b",
+   "expected": [
+    "p",
+    "a",
+    "b"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p\ta\t\tb",
+   "expected": [
+    "p",
+    "a",
+    "b"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "  p a",
+   "expected": [
+    "",
+    "p",
+    "a"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "\"C:\\Program Files\\SRBMiner\\SRBMiner-MULTI.exe\" --algorithm pearlhash --gpu-id 0,1",
+   "expected": [
+    "C:\\Program Files\\SRBMiner\\SRBMiner-MULTI.exe",
+    "--algorithm",
+    "pearlhash",
+    "--gpu-id",
+    "0,1"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "C:\\m\\SRBMiner-MULTI.exe --gpu-id 0 --pool \"stratum+tcp://x:1\" --wallet \"prl1 abc\"",
+   "expected": [
+    "C:\\m\\SRBMiner-MULTI.exe",
+    "--gpu-id",
+    "0",
+    "--pool",
+    "stratum+tcp://x:1",
+    "--wallet",
+    "prl1 abc"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p \"a b c\" d e",
+   "expected": [
+    "p",
+    "a b c",
+    "d",
+    "e"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p \"ab\\\"c\" \"\\\\\" d",
+   "expected": [
+    "p",
+    "ab\"c",
+    "\\",
+    "d"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p a\\\\\\b d\"e f\"g h",
+   "expected": [
+    "p",
+    "a\\\\\\b",
+    "de fg",
+    "h"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p a\\\\\\\"b c d",
+   "expected": [
+    "p",
+    "a\\\"b",
+    "c",
+    "d"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p a\\\\\\\\\"b c\" d e",
+   "expected": [
+    "p",
+    "a\\\\b c",
+    "d",
+    "e"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p \"a\"\"b\"",
+   "expected": [
+    "p",
+    "a\"b"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p \"\"\"\"",
+   "expected": [
+    "p",
+    "\""
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p \"\"\"\"\"\"",
+   "expected": [
+    "p",
+    "\"\""
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p a\"b\"\"\"c d",
+   "expected": [
+    "p",
+    "ab\"c d"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p \"a\"\"\"b c",
+   "expected": [
+    "p",
+    "a\"b c"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p \"\"",
+   "expected": [
+    "p",
+    ""
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p \"\" x",
+   "expected": [
+    "p",
+    "",
+    "x"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p a\\",
+   "expected": [
+    "p",
+    "a\\"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p a\\\\",
+   "expected": [
+    "p",
+    "a\\\\"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p \"a\\\\\"",
+   "expected": [
+    "p",
+    "a\\"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p \"unterminated",
+   "expected": [
+    "p",
+    "unterminated"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p \"x\"y\"z\"",
+   "expected": [
+    "p",
+    "xyz"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p \\\"a",
+   "expected": [
+    "p",
+    "\"a"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p ação \"é ç\" 日本",
+   "expected": [
+    "p",
+    "ação",
+    "é ç",
+    "日本"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "\"\" a",
+   "expected": [
+    "",
+    "a"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "\"a\"b c",
+   "expected": [
+    "a",
+    "b",
+    "c"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "\"a b",
+   "expected": [
+    "a b"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p --gpu-id",
+   "expected": [
+    "p",
+    "--gpu-id"
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p --gpu-id \"\"",
+   "expected": [
+    "p",
+    "--gpu-id",
+    ""
+   ]
+  },
+  {
+   "kind": "argv",
+   "line": "p a   ",
+   "expected": [
+    "p",
+    "a"
+   ]
+  },
+  {
+   "kind": "path",
+   "path": "C:\\Program Files\\SRBMiner\\..\\SRBMiner\\SRBMiner-MULTI.exe",
+   "expected": "c:\\program files\\srbminer\\srbminer-multi.exe"
+  },
+  {
+   "kind": "path",
+   "path": "C:/Mining//Pearl/./SRBMiner-MULTI.EXE",
+   "expected": "c:\\mining\\pearl\\srbminer-multi.exe"
+  },
+  {
+   "kind": "path",
+   "path": "c:\\MINING\\Pearl\\",
+   "expected": "c:\\mining\\pearl"
+  },
+  {
+   "kind": "path",
+   "path": "D:\\a\\b\\..\\..\\c",
+   "expected": "d:\\c"
+  },
+  {
+   "kind": "path",
+   "path": "C:\\Users\\Ação\\Miner.exe",
+   "expected": "c:\\users\\ação\\miner.exe"
+  }
+ ]
+}

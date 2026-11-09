@@ -1,0 +1,123 @@
+//! Única parte com `unsafe` do port: as chamadas Win32 que dão a identidade de um
+//! processo (`OpenProcess`, `GetExitCodeProcess`, `GetProcessTimes`,
+//! `QueryFullProcessImageNameW`) e o encerramento (`TerminateProcess`).
+//!
+//! Cada função abre o handle, usa e fecha (`Handle` fecha no `Drop`). Os ponteiros
+//! passados apontam para variáveis locais vivas durante a chamada. Fora do Windows as
+//! funções existem e não encontram processo nenhum, para o workspace compilar.
+#![allow(unsafe_code)]
+
+/// Horário de criação (FILETIME, 100 ns desde 1601) e executável de um processo vivo.
+#[derive(Clone, Debug, PartialEq, Eq)]
+pub struct Metadata {
+    pub created_at: u64,
+    pub executable: String,
+}
+
+/// `PROCESS_QUERY_LIMITED_INFORMATION`, o mesmo `0x1000` do Python.
+pub const QUERY: u32 = 0x1000;
+/// `PROCESS_QUERY_LIMITED_INFORMATION | PROCESS_TERMINATE` (`0x1001`).
+pub const QUERY_AND_TERMINATE: u32 = 0x1001;
+
+#[cfg(windows)]
+mod imp {
+    use super::Metadata;
+    use windows_sys::Win32::Foundation::{CloseHandle, FILETIME, HANDLE};
+    use windows_sys::Win32::System::Threading::{
+        GetExitCodeProcess, GetProcessTimes, OpenProcess, QueryFullProcessImageNameW,
+        TerminateProcess,
+    };
+
+    /// `STILL_ACTIVE`: processo ainda em execução.
+    const STILL_ACTIVE: u32 = 259;
+
+    struct Handle(HANDLE);
+
+    impl Drop for Handle {
+        fn drop(&mut self) {
+            // SAFETY: o handle veio de `OpenProcess`, não é nulo e é fechado uma vez só.
+            unsafe {
+                CloseHandle(self.0);
+            }
+        }
+    }
+
+    fn open(pid: u32, access: u32) -> Option<Handle> {
+        // SAFETY: `OpenProcess` não recebe ponteiros; o retorno nulo é tratado.
+        let handle = unsafe { OpenProcess(access, 0, pid) };
+        (!handle.is_null()).then_some(Handle(handle))
+    }
+
+    fn metadata(handle: &Handle) -> Option<Metadata> {
+        let mut code = 0u32;
+        // SAFETY: `code` é uma variável local viva durante a chamada.
+        if unsafe { GetExitCodeProcess(handle.0, &mut code) } == 0 || code != STILL_ACTIVE {
+            return None;
+        }
+        let zero = FILETIME {
+            dwLowDateTime: 0,
+            dwHighDateTime: 0,
+        };
+        let (mut creation, mut exit, mut kernel, mut user) = (zero, zero, zero, zero);
+        // SAFETY: as quatro estruturas são locais e vivas durante a chamada.
+        let times =
+            unsafe { GetProcessTimes(handle.0, &mut creation, &mut exit, &mut kernel, &mut user) };
+        if times == 0 {
+            return None;
+        }
+        let mut buffer = vec![0u16; 32768];
+        let mut size = buffer.len() as u32;
+        // SAFETY: `buffer` tem `size` unidades UTF-16; a API escreve no máximo isso e
+        // devolve em `size` quantas usou (sem o nulo final).
+        let named =
+            unsafe { QueryFullProcessImageNameW(handle.0, 0, buffer.as_mut_ptr(), &mut size) };
+        if named == 0 {
+            return None;
+        }
+        Some(Metadata {
+            created_at: (u64::from(creation.dwHighDateTime) << 32)
+                | u64::from(creation.dwLowDateTime),
+            executable: String::from_utf16_lossy(&buffer[..size as usize]),
+        })
+    }
+
+    pub fn process_metadata(pid: u32) -> Option<Metadata> {
+        metadata(&open(pid, super::QUERY)?)
+    }
+
+    pub fn terminate_if(pid: u32, expected: &dyn Fn(&Metadata) -> bool) -> bool {
+        let Some(handle) = open(pid, super::QUERY_AND_TERMINATE) else {
+            return false;
+        };
+        // A identidade é conferida de novo no mesmo handle que encerra: um PID
+        // reutilizado entre a checagem e o encerramento não é atingido.
+        match metadata(&handle) {
+            // SAFETY: handle válido aberto com `PROCESS_TERMINATE`.
+            Some(current) if expected(&current) => unsafe { TerminateProcess(handle.0, 1) != 0 },
+            _ => false,
+        }
+    }
+}
+
+#[cfg(not(windows))]
+mod imp {
+    use super::Metadata;
+
+    pub fn process_metadata(_pid: u32) -> Option<Metadata> {
+        None
+    }
+
+    pub fn terminate_if(_pid: u32, _expected: &dyn Fn(&Metadata) -> bool) -> bool {
+        false
+    }
+}
+
+/// Identidade de um processo vivo; `None` se não existe, já saiu ou não pode ser lido.
+pub fn process_metadata(pid: u32) -> Option<Metadata> {
+    imp::process_metadata(pid)
+}
+
+/// Encerra `pid` só se, no handle de encerramento, a identidade ainda for a esperada.
+pub fn terminate_if(pid: u32, expected: &dyn Fn(&Metadata) -> bool) -> bool {
+    imp::terminate_if(pid, expected)
+}

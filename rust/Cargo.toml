@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["hashpilot-core", "hashpilot-history", "hashpilot-finance", "hashpilot-cli"]
+members = ["hashpilot-core", "hashpilot-history", "hashpilot-finance", "hashpilot-rig", "hashpilot-cli"]
 # O minerador depende do zk-pow oficial (git) e é compilado à parte; ver hashpilot-miner/README.md.
 exclude = ["hashpilot-miner"]
 

@@ -18,7 +18,7 @@ num módulo já portado vale nos dois lados, com os goldens regerados.
 | 1 | **Núcleo de lógica pura** (`hashpilot-core`) e **CLI somente leitura** (`hashpilot`) | Feita, com paridade testada |
 | 2 | **Histórico SQLite** (`hashpilot-history`): ler/gravar o `history.sqlite3` existente com a mesma chave SHA-256 e as mesmas migrações | Feita em 08/11/2026: paridade com o Python real, mutação e banco real de 2,8 GB |
 | 3 | **Finanças** (`hashpilot-finance`): Kryptex/CoinGecko com corpo limitado, cache e ciclo de 60 s | Feita em 08/11/2026: paridade com o Python real, mutação, respostas reais da API e cache real |
-| 4 | Serviço do rig: processos Win32 por UUID, identidade de processo, supervisor e proxy de contribuição | Planejada — maior risco, exige Windows e GPU |
+| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). 4b–4d planejadas; maior risco, exigem o Renan presente a cada início |
 | 5 | Interface: três abas, bandeja, configurações (provável `egui`/`eframe`) | Planejada |
 | 6 | Instalador, atualizador e troca do Python | Só depois das fases 1–5 validadas |
 
@@ -90,6 +90,20 @@ Diferenças conscientes:
 - **Erro dentro de uma rodada:** no Python, encerra a thread do coletor em silêncio. No Rust, a rodada é descartada e o ciclo continua.
 - **Ordem de `forecast_missing_gpu_uuids` no portfólio consolidado:** o Python percorre as carteiras na ordem de um `set`, aleatória por processo; o Rust usa a ordem alfabética.
 - **Carteira que não é texto:** num dispositivo, cai na carteira principal.
+
+### O que a etapa 4a porta (`hashpilot-rig`)
+
+Porta o `process_backend.py` inteiro. Nada nesta etapa inicia mineração sozinho:
+`start` só cria o processo que o chamador pedir.
+
+| Parte | O que é igual ao Python |
+|---|---|
+| `argv` | `CommandLineToArgvW` em Rust puro, sem FFI: o executável tem regra própria, `2n`/`2n+1` barras antes de aspas e três aspas seguidas viram uma aspa literal. Provado em 31 linhas contra a API real (golden `process`) |
+| `win32` | Única parte com `unsafe` do port (o crate usa `deny`, e o resto do workspace `forbid`). São quatro chamadas Win32 com handle fechado no `Drop`. A identidade é PID, horário de criação em FILETIME (texto) e executável, o mesmo formato do `rig-manager.json` |
+| `process` | `ProcessBackend`: `inspect` (com a linha de comando lida pelo CIM e cache de 64), `start` (sem janela, saída anexada ao log, `launch_id`), `is_owned`, `stop`, `wait`, `assert_gpu_available` (falha fechada: minerador ilegível ou sem `--gpu-id` bloqueia), `legacy_candidates` e `miner_device_map`. `stop` confere a identidade de novo no mesmo handle que encerra, então um PID reutilizado nunca é atingido |
+
+O `normalized_path` usa o `GetFullPathNameW` (via `std::path::absolute`), como o
+`ntpath.abspath`, e tira a barra final, menos na raiz da unidade (`c:\`).
 
 ## Como a equivalência com o Python é provada
 
@@ -197,7 +211,12 @@ hashpilot release inspect X.Y.Z --archive-sha256 HEX [--md5 HEX] [--file ZIP]
 hashpilot history stats|restore|gpu <UUID>|gpus [<UUID>]|finance [--db ARQ] [--wallet W] [--since EPOCH]
 hashpilot finance model [--state finance-cache.json] [--hashrate TH/s] [--now EPOCH] [--wallet W]
 hashpilot finance fetch [--wallet W] [--replay respostas.json] [--now EPOCH]
+hashpilot process inspect <PID> [--command-line] | miners | owned [--manager rig-manager.json]
 ```
+
+`process` só lê: identidade de um processo, mineradores em execução com as GPUs do
+`--gpu-id` e se os processos do `rig-manager.json` ainda são os mesmos. Nunca
+encerra nada.
 
 `finance model` calcula o modelo financeiro do painel a partir do cache:
 
@@ -228,6 +247,27 @@ Exemplo com os dados públicos (a partir da raiz do repositório):
 ```text
 rust/target/debug/hashpilot payout --state portable-data/finance-cache.json --now 1792900000
 ```
+
+## Validação da etapa 4a (Windows 11, 08/11/2026)
+
+- **Golden `process`:** 31 linhas de comando e 5 caminhos, gerados pela API real do
+  Windows. Ele só é gerado no Windows. O teste de goldens desatualizados passou a
+  rodar também no Windows, para `history`, `finance` e `process`.
+- **Processos reais inofensivos** (`PING.EXE` no loopback, nunca o minerador):
+  - `start` com log e identidade completa;
+  - um segundo backend, como o serviço depois de reiniciar, reconhece o processo pela
+    linha de comando real;
+  - identidades adulteradas são recusadas: `created_at`, `argv` e `launch_id` vazio;
+  - `stop` pelo backend que criou o processo e por outro, via `TerminateProcess`;
+  - `wait`;
+  - PIDs inválidos;
+  - o próprio processo de teste, que não é do backend, nunca é encerrado.
+- **Rig real, só leitura:** no SRBMiner e no supervisor que estão minerando, o
+  `inspect` do Rust deu PID, criação, executável e argv **idênticos** aos do Python.
+  O `created_at` bate com o gravado pelo serviço Python no `rig-manager.json`.
+  Daqui, sem elevação, os dois dizem "não é próprio": o serviço roda como
+  administrador e o Windows esconde a linha de comando de processo elevado. A
+  verificação com `owned: true` exige rodar a CLI elevada.
 
 ## Validação da fase 3 (Windows 11, 08/11/2026)
 

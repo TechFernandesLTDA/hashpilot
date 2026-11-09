@@ -47,6 +47,12 @@ Uso:
   hashpilot finance fetch [--wallet <carteira>] [--replay <arquivo>] [--now <epoch>]
                                          Consulta pública Kryptex/CoinGecko agora, sem gravar cache nem histórico
                                          (--replay: respostas gravadas {url: json}, sem rede)
+  hashpilot process inspect <pid> [--command-line]
+                                         Identidade de um processo (PID, criação, executável, argv)
+  hashpilot process miners               SRBMiner em execução e as GPUs (--gpu-id) que ocupam
+  hashpilot process owned [--manager <rig-manager.json>]
+                                         Confere se os processos do rig-manager.json ainda são os mesmos
+                                         (nunca encerra nada)
   hashpilot --version | --help
 ";
 
@@ -70,6 +76,7 @@ fn main() -> ExitCode {
         Some("release") => release_command(&arguments[1..]),
         Some("history") => history_command(&arguments[1..]),
         Some("finance") => finance_command(&arguments[1..]),
+        Some("process") => process_command(&arguments[1..]),
         Some(other) => Err(Failure::Usage(format!("comando desconhecido: {other}"))),
     };
     match result {
@@ -274,6 +281,50 @@ fn finance_command(arguments: &[String]) -> Result<Value, Failure> {
         other => Err(Failure::Usage(format!(
             "ação de finance desconhecida: {other}"
         ))),
+    }
+}
+
+/// `hashpilot process`: só leitura; nenhum processo é criado nem encerrado.
+fn process_command(arguments: &[String]) -> Result<Value, Failure> {
+    let options = Options::parse(arguments, &["manager"], &["command-line"])?;
+    let mut backend = hashpilot_rig::ProcessBackend::new();
+    match options.positional.as_slice() {
+        [action, pid] if action == "inspect" => {
+            let pid: u64 = pid
+                .parse()
+                .map_err(|_| Failure::Usage("o PID precisa ser inteiro positivo".into()))?;
+            Ok(backend
+                .inspect(&json!(pid), options.flag("command-line"))
+                .unwrap_or(Value::Null))
+        }
+        [action] if action == "miners" => {
+            let miners = hashpilot_rig::process::running_miners()?;
+            Ok(json!(miners))
+        }
+        [action] if action == "owned" => {
+            let path = match options.text("manager") {
+                Some(path) => PathBuf::from(path),
+                None => state_dir()?.join("rig-manager.json"),
+            };
+            let manager = read_json(&path)?;
+            let mut result = Map::new();
+            if let Some(Value::Object(devices)) = manager.get("devices") {
+                for (uuid, device) in devices {
+                    for role in ["miner", "controller"] {
+                        if let Some(identity) = device.get(role).filter(|value| value.is_object()) {
+                            result.insert(
+                                format!("{uuid}:{role}"),
+                                json!({"pid": identity["pid"], "owned": backend.is_owned(identity)}),
+                            );
+                        }
+                    }
+                }
+            }
+            Ok(json!({"manager": path, "processes": result}))
+        }
+        _ => Err(Failure::Usage(
+            "process exige: inspect <pid>, miners ou owned".into(),
+        )),
     }
 }
 
