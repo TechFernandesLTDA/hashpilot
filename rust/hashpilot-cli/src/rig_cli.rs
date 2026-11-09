@@ -290,6 +290,13 @@ fn run(serve: Serve) -> Result<Value, Failure> {
         hashpilot_rig::continuity::IdleSleepGuard::new(),
     )
     .map_err(Failure::Runtime)?;
+    // O proxy de contribuição também roda em Rust: `hashpilot contribution`.
+    let executable =
+        std::env::current_exe().map_err(|error| Failure::Runtime(error.to_string()))?;
+    manager.proxy_command = Some(vec![
+        executable.to_string_lossy().into_owned(),
+        "contribution".into(),
+    ]);
     if !hashpilot_rig::win32::install_ctrl_handler() {
         // Sem console (serviço oculto) o painel ainda desliga pelo pedido `shutdown`.
         eprintln!("aviso: tratamento de Ctrl+C indisponível; use o pedido shutdown para desligar");

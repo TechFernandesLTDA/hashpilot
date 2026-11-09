@@ -316,6 +316,10 @@ pub struct RigManager {
     pub continuity: ContinuityWindow,
     pub sleep_guard: IdleSleepGuard,
     pub operations: OperationalStore,
+    /// Início da linha de comando do proxy de contribuição. `None` usa o
+    /// `contribution.py` (o mesmo do `rig.py`); o serviço em Rust usa o próprio
+    /// executável (`hashpilot contribution`).
+    pub proxy_command: Option<Vec<String>>,
 }
 
 impl RigManager {
@@ -362,6 +366,7 @@ impl RigManager {
             continuity: ContinuityWindow::new(),
             sleep_guard,
             operations,
+            proxy_command: None,
         };
         manager.load_registry();
         manager.continuity.known = manager
@@ -746,9 +751,13 @@ impl RigManager {
         let (proxy_settings, proxy_path) = self.sync_proxy_settings(&entry, settings)?;
         let wallet = field(&entry, "wallet").clone();
         if support_configuration(&proxy_settings, &wallet)["enabled"] == json!(true) {
-            let arguments = vec![
-                path_text(&self.python_path),
-                path_text(&self.project_dir.join("contribution.py")),
+            let mut arguments = self.proxy_command.clone().unwrap_or_else(|| {
+                vec![
+                    path_text(&self.python_path),
+                    path_text(&self.project_dir.join("contribution.py")),
+                ]
+            });
+            arguments.extend([
                 "--wallet".into(),
                 py_str(&wallet),
                 "--settings".into(),
@@ -757,7 +766,7 @@ impl RigManager {
                 path_text(directory),
                 "--port".into(),
                 "0".into(),
-            ];
+            ]);
             let identity = self.backend.start(
                 &arguments,
                 &self.project_dir.clone(),

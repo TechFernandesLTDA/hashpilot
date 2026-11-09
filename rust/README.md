@@ -18,7 +18,7 @@ num módulo já portado vale nos dois lados, com os goldens regerados.
 | 1 | **Núcleo de lógica pura** (`hashpilot-core`) e **CLI somente leitura** (`hashpilot`) | Feita, com paridade testada |
 | 2 | **Histórico SQLite** (`hashpilot-history`): ler/gravar o `history.sqlite3` existente com a mesma chave SHA-256 e as mesmas migrações | Feita em 08/11/2026: paridade com o Python real, mutação e banco real de 2,8 GB |
 | 3 | **Finanças** (`hashpilot-finance`): Kryptex/CoinGecko com corpo limitado, cache e ciclo de 60 s | Feita em 08/11/2026: paridade com o Python real, mutação, respostas reais da API e cache real |
-| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 e 4b-2 feitas em 08/11/2026** (dependências e lógica do `RigManager`, provadas com backend falso). **4b-3a feita em 09/11/2026** (laço `serve`, atualização do minerador com reversão, snapshots e trava do serviço). **4b-3b-1 feita em 09/11/2026** (restauração da GPU pelo NVML, provada com driver falso e lida no driver real sem escrita). **4b-3b-2 feita em 09/11/2026** (`hashpilot rig --serve`, com detector e sensores reais; o primeiro uso real fica para o Renan presente). **4c-1 feita em 09/11/2026** (`thermal_target`: controle por temperatura-alvo e explorador de memória). 4c-2 (laço do supervisor e atuador) e 4d planejadas; maior risco, exigem o Renan presente a cada início |
+| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 e 4b-2 feitas em 08/11/2026** (dependências e lógica do `RigManager`, provadas com backend falso). **4b-3a feita em 09/11/2026** (laço `serve`, atualização do minerador com reversão, snapshots e trava do serviço). **4b-3b-1 feita em 09/11/2026** (restauração da GPU pelo NVML, provada com driver falso e lida no driver real sem escrita). **4b-3b-2 feita em 09/11/2026** (`hashpilot rig --serve`, com detector e sensores reais; o primeiro uso real fica para o Renan presente). **4c-1 feita em 09/11/2026** (`thermal_target`: controle por temperatura-alvo e explorador de memória). **4d feita em 09/11/2026** (proxy de contribuição `hashpilot contribution`, que o serviço em Rust já inicia). **Motor Rust em uso no PC desde 09/11/2026** (`Iniciar-Rig.ps1 -Motor Rust`). 4c-2 (laço do supervisor e atuador) planejada; maior risco, exigem o Renan presente a cada início |
 | 5 | Interface: três abas, bandeja, configurações (provável `egui`/`eframe`) | Planejada |
 | 6 | Instalador, atualizador e troca do Python | Só depois das fases 1–5 validadas |
 
@@ -173,7 +173,8 @@ powershell -File mining\windows\Iniciar-Rig.ps1 -Motor Python   # volta ao Pytho
 ```
 
 O supervisor térmico (`gpu_agent.py`) e o proxy de contribuição (`contribution.py`)
-continuam em Python nos dois motores até as etapas 4c-2 e 4d.
+No motor Rust, o proxy de contribuição já é o `hashpilot contribution` (etapa 4d). O supervisor
+térmico (`gpu_agent.py`) continua em Python nos dois motores até a etapa 4c-2.
 
 ### O que a etapa 4b-1 porta (`hashpilot-rig`)
 
@@ -352,6 +353,43 @@ Exemplo com os dados públicos (a partir da raiz do repositório):
 ```text
 rust/target/debug/hashpilot payout --state portable-data/finance-cache.json --now 1792900000
 ```
+
+## Validação da etapa 4d (Windows 11, 09/11/2026)
+
+O `contribution.py` foi portado para `hashpilot-rig::contribution`, com o comando `hashpilot
+contribution` (os mesmos argumentos do Python). O serviço em Rust inicia esse proxy no lugar do
+`contribution.py`; o `rig.py` continua iniciando o Python. Partes portadas:
+- o ledger da cota;
+- a reescrita Stratum, que troca a carteira só nos campos de autorização e de share;
+- o laço por conexão;
+- o servidor em loopback;
+- a trava do diretório, compatível com a do Python.
+
+- **Golden `contribution`:** 95 casos executados pelo Python real.
+  - **Ledger:** 20 arquivos (válidos, migração da versão 1, `NaN`, JSON quebrado e cada regra de recusa), cada um com 31 operações. O teste compara o resultado, o tipo numérico (`int` ou `float`, como no Python) e o arquivo gravado byte a byte.
+  - **Reescrita:** 60 combinações de mensagem, carteira ativa e autenticação, com saída `ensure_ascii` igual (inclusive `\x7f` e emoji).
+  - **Conexões:** 15 roteiros com sockets reais e uma pool simulada, os mesmos executados no Python. Eles cobrem:
+    - autorização principal e do autor;
+    - recusa da pool (que desliga a contribuição);
+    - share antes da autorização;
+    - outra carteira;
+    - método desconhecido;
+    - id duplicado;
+    - JSON inválido;
+    - `error: 0`, que vale como sucesso porque `0 == False` no Python.
+- **Mutações:** 14 mutações, e 12 são detectadas. As 2 que restam são equivalentes:
+  - o resto de divisão com número negativo, porque os contadores nunca são negativos;
+  - o tipo do erro do `record_route` dentro do `account`, porque o intervalo ali está sempre entre 0 e 5 s.
+- **Uso real do binário:** com a contribuição desligada, numa pasta temporária, `hashpilot contribution`:
+  - anunciou a porta com o PID certo;
+  - recusou a segunda instância pela trava;
+  - aceitou uma conexão local e conectou à pool real;
+  - encerrou como o rig encerra os filhos.
+- **Diferenças conhecidas, só no texto do erro:**
+  - JSON malformado e erros de socket têm a mensagem do decodificador de cada linguagem;
+  - o Rust recusa inteiros maiores que 64 bits e surrogates soltos, que o Python aceitaria.
+
+**Não testado:** a contribuição ligada com mineração real. Ela está desligada neste rig, e ligar a contribuição é decisão do Renan.
 
 ## Validação da etapa 4c-1 (Windows 11, 09/11/2026)
 

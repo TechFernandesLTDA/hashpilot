@@ -3918,6 +3918,402 @@ def finance_golden():
     write("finance", {"cases": cases, "author_wallet": contribution.AUTHOR_WALLET})
 
 
+# Proxy de contribuição (`contribution.py`): ledger, reescrita Stratum e conexões reais por socket.
+CONTRIBUTION_WALLET = "prl1" + "q" * 40
+CONTRIBUTION_OTHER = "prl1" + "z" * 40
+
+
+def contribution_ledger_files():
+    w = CONTRIBUTION_WALLET
+    base = {
+        "eligible_connected_seconds": 7000.5,
+        "primary_connected_seconds": 6800.0,
+        "support_connected_seconds": 200.5,
+    }
+    seeded = {
+        **base,
+        "verified_primary_seconds": 3420,
+        "reserved_support_seconds": 0,
+        "verified_support_seconds": 0,
+        "accepted_primary_shares": 3,
+        "extra": "mantido",
+    }
+    return {
+        "ausente": None,
+        "v2_valido": json.dumps({"schema_version": 2, "wallets": {w: seeded}, "nota": "chave extra"}, indent=2),
+        "v1_migra": json.dumps(
+            {
+                "schema_version": 1,
+                "wallets": {w: {**base, "verified_primary_seconds": 9999, "reserved_support_seconds": 5}},
+            }
+        ),
+        "outra_carteira": json.dumps({"schema_version": 2, "wallets": {CONTRIBUTION_OTHER: base}}),
+        "booleano": json.dumps({"schema_version": 2, "wallets": {w: {**base, "primary_connected_seconds": True}}}),
+        "negativo": json.dumps({"schema_version": 2, "wallets": {w: {**base, "accepted_support_shares": -1}}}),
+        "grande_demais": json.dumps(
+            {"schema_version": 2, "wallets": {w: {**base, "eligible_connected_seconds": 2e12}}}
+        ),
+        "sem_elegivel": json.dumps({"schema_version": 2, "wallets": {w: {"primary_connected_seconds": 1}}}),
+        "texto": json.dumps({"schema_version": 2, "wallets": {w: {**base, "support_connected_seconds": "1"}}}),
+        "reserva_excede": json.dumps(
+            {
+                "schema_version": 2,
+                "wallets": {w: {**base, "verified_primary_seconds": 3420, "reserved_support_seconds": 181}},
+            }
+        ),
+        "suporte_excede": json.dumps(
+            {
+                "schema_version": 2,
+                "wallets": {
+                    w: {
+                        **base,
+                        "verified_primary_seconds": 3420,
+                        "reserved_support_seconds": 100,
+                        "verified_support_seconds": 101,
+                    }
+                },
+            }
+        ),
+        "acumulo": json.dumps(
+            {
+                "schema_version": 2,
+                "wallets": {w: {**base, "primary_connected_seconds": 7000, "verified_primary_seconds": 6840}},
+            }
+        ),
+        "verificado_excede": json.dumps(
+            {"schema_version": 2, "wallets": {w: {**base, "verified_primary_seconds": 6800.1}}}
+        ),
+        "schema_3": json.dumps({"schema_version": 3, "wallets": {}}),
+        "wallets_lista": json.dumps({"schema_version": 2, "wallets": []}),
+        "chave_invalida": json.dumps({"schema_version": 2, "wallets": {"seed palavras": base}}),
+        "entrada_lista": json.dumps({"schema_version": 2, "wallets": {w: [1]}}),
+        "nan": '{"schema_version": 2, "wallets": {"' + w + '": {"eligible_connected_seconds": NaN}}}',
+        "json_quebrado": '{"schema_version": 2,',
+        "raiz_lista": "[]",
+    }
+
+
+LEDGER_OPS = [
+    ("seconds",),
+    ("role", True),
+    ("role", False),
+    ("until_switch", True),
+    ("until_switch", False),
+    ("available_support",),
+    ("advance", 100.25, True),
+    ("role", True),
+    ("until_switch", True),
+    ("advance", 3400, True),
+    ("role", True),
+    ("until_switch", True),
+    ("advance", 7200.5, False),
+    ("advance", -1, True),
+    ("advance", True, True),
+    ("record_route", 2.5, "primary"),
+    ("record_route", 0, "primary"),
+    ("record_route", 6, "primary"),
+    ("record_route", 1, "x"),
+    ("record_route", True, "primary"),
+    ("available_support",),
+    ("reserve_support",),
+    ("available_support",),
+    ("record_route", 4.75, "support"),
+    ("record_route", 5, "support"),
+    ("record_share", "primary", True),
+    ("record_share", "support", False),
+    ("record_share", "support", True),
+    ("reserve_support",),
+    ("seconds",),
+    ("save",),
+]
+
+
+def contribution_ledger_case(name, content):
+    with tempfile.TemporaryDirectory() as temporary:
+        ledger_path = Path(temporary) / "support-mining-ledger.json"
+        if content is not None:
+            ledger_path.write_text(content, encoding="utf-8")
+        ledger = contribution.ContributionLedger(ledger_path, CONTRIBUTION_WALLET)
+        loaded = {"healthy": ledger.healthy, "error": ledger.error}
+        ops = []
+        for op in LEDGER_OPS:
+            try:
+                value = getattr(ledger, op[0])
+                result = value if op[0] == "seconds" else value(*op[1:])
+                ops.append({"op": list(op), "result": result})
+            except (ValueError, RuntimeError) as error:
+                ops.append({"op": list(op), "error": f"{type(error).__name__}: {error}"})
+        saved = ledger_path.read_text(encoding="utf-8") if ledger_path.exists() else None
+        return {
+            "kind": "ledger",
+            "name": name,
+            "content": content,
+            "loaded": loaded,
+            "ops": ops,
+            "saved": saved,
+            "data": ledger.data,
+        }
+
+
+def contribution_rewrites():
+    w, a = CONTRIBUTION_WALLET, contribution.AUTHOR_WALLET
+    messages = [
+        {"id": 1, "method": "mining.authorize", "params": [w, "x"]},
+        {"id": 1, "method": "mining.authorize", "params": [w + ".rig1", "x"]},
+        {"id": 1, "method": "mining.authorize", "params": [w + "x", "x"]},
+        {"id": 1, "method": "mining.authorize", "params": []},
+        {"id": "a", "method": "eth_submitLogin", "params": {"login": w, "pass": "x"}},
+        {"id": 2, "method": "login", "params": {"login": w, "user": w}},
+        {"id": 2, "method": "mining.login", "params": {"wallet": w + ".r", "nome": "café ✓ 😀"}},
+        {"id": 3, "method": "mining.subscribe", "params": ["del\x7f tab\t nul\x00 \u2028"]},
+        {"id": 3, "method": "mining.subscribe", "params": ["SRBMiner/3.8.4"]},
+        {"id": 4, "method": "mining.configure", "params": [[], {}]},
+        {"id": 5, "method": "mining.submit", "params": [w + ".rig1", "job", 1.5, 1e16, None]},
+        {"id": 6, "method": "mining.submit", "params": {"user": w, "nonce": "ab"}},
+        {"id": 6, "method": "mining.submit", "params": "texto"},
+        {"id": 7, "method": "mining.extranonce.subscribe"},
+        {"id": 8, "method": "client.get_version", "params": None},
+        {"id": 9, "method": "mining.suggest_difficulty", "params": [1]},
+        {"id": 9, "params": [1]},
+        {"id": 9, "method": 5},
+        [1, 2],
+        "texto",
+    ]
+    cases = []
+    for message in messages:
+        for active, authenticated in ((w, False), (a, False), (a, True)):
+            try:
+                result, is_auth = contribution.rewrite_message(message, w, active, authenticated=authenticated)
+                out = {"line": json.dumps(result, separators=(",", ":")), "auth": is_auth}
+            except ValueError as error:
+                out = {"error": str(error)}
+            cases.append(
+                {"kind": "rewrite", "message": message, "active": active, "authenticated": authenticated, **out}
+            )
+    return cases
+
+
+def stratum(payload):
+    return (json.dumps(payload, separators=(",", ":")) + "\n").encode()
+
+
+def contribution_proxy_scenarios():
+    w = CONTRIBUTION_WALLET
+    ok = lambda identifier: stratum({"id": identifier, "result": True, "error": None})  # noqa: E731
+    seeded = {
+        "schema_version": 2,
+        "wallets": {
+            w: {
+                "eligible_connected_seconds": 3420.0,
+                "primary_connected_seconds": 3420.0,
+                "support_connected_seconds": 0.0,
+                "verified_primary_seconds": 3420,
+            }
+        },
+    }
+    subscribe = stratum({"id": 1, "method": "mining.subscribe", "params": ["SRBMiner"]})
+    authorize = stratum({"id": 2, "method": "mining.authorize", "params": [w + ".rig1", "x"]})
+    submit = lambda identifier: stratum(
+        {"id": identifier, "method": "mining.submit", "params": [w + ".rig1", "job", "nonce"]}
+    )  # noqa: E731
+    return {
+        "principal_completo": {
+            "support": False,
+            "ledger": None,
+            "client": [subscribe, authorize, submit(3), submit(4)],
+            "wait": [1, 2, 1, 1],
+            "responses": [
+                [ok(1)],
+                [ok(2), stratum({"id": None, "method": "mining.notify", "params": ["job"]})],
+                [ok(3)],
+                [stratum({"id": 4, "result": False, "error": [23, "low"]})],
+            ],
+        },
+        "suporte_completo": {
+            "support": True,
+            "ledger": seeded,
+            "client": [subscribe, authorize, submit(3)],
+            "wait": [1, 1, 1],
+            "responses": [[ok(1)], [ok(2)], [ok(3)]],
+        },
+        "suporte_auth_recusada": {
+            "support": True,
+            "ledger": seeded,
+            "client": [authorize, submit(3)],
+            "wait": [1, 0],
+            "responses": [[stratum({"id": 2, "result": False, "error": "conta"})]],
+        },
+        "principal_auth_recusada": {
+            "support": False,
+            "ledger": None,
+            "client": [authorize],
+            "responses": [[stratum({"id": 2, "result": None, "error": None})]],
+        },
+        "share_antes_da_auth": {"support": False, "ledger": None, "client": [submit(3)], "responses": []},
+        "suporte_share_sem_confirmacao": {
+            "support": True,
+            "ledger": seeded,
+            "client": [authorize + submit(3)],
+            "responses": [[]],
+        },
+        "outra_carteira": {
+            "support": False,
+            "ledger": None,
+            "client": [stratum({"id": 2, "method": "mining.authorize", "params": [CONTRIBUTION_OTHER, "x"]})],
+            "responses": [],
+        },
+        "metodo_desconhecido": {
+            "support": False,
+            "ledger": None,
+            "client": [stratum({"id": 1, "method": "eth_getWork"})],
+            "responses": [],
+        },
+        "id_duplicado": {"support": False, "ledger": None, "client": [subscribe + subscribe], "responses": [[]]},
+        "json_invalido": {"support": False, "ledger": None, "client": [b"{nao json}\n"], "responses": []},
+        "linhas_vazias_crlf": {
+            "support": False,
+            "ledger": None,
+            "client": [b"\r\n  \n" + subscribe[:-1] + b"\r\n", authorize],
+            "wait": [1, 1],
+            "responses": [[ok(1)], [ok(2)]],
+        },
+        "resposta_nao_objeto": {"support": False, "ledger": None, "client": [subscribe], "responses": [[b"[1]\n"]]},
+        "auth_sem_id": {
+            "support": False,
+            "ledger": None,
+            "client": [stratum({"method": "mining.authorize", "params": [w, "x"]})],
+            "responses": [],
+        },
+        "erro_zero_autoriza": {
+            "support": False,
+            "ledger": None,
+            "client": [authorize, submit(3), submit(4)],
+            "wait": [1, 1, 1],
+            "responses": [
+                [stratum({"id": 2, "result": True, "error": 0})],
+                [stratum({"id": 3, "result": True, "error": 0.0})],
+                [stratum({"id": 4, "result": True, "error": "x"})],
+            ],
+        },
+        "auth_duplicada": {
+            "support": False,
+            "ledger": None,
+            "client": [authorize, stratum({"id": 9, "method": "mining.authorize", "params": [w, "x"]})],
+            "wait": [1, 0],
+            "responses": [[ok(2)], []],
+        },
+    }
+
+
+def run_proxy_scenario(name, scenario):
+    import socket
+    import threading
+
+    with tempfile.TemporaryDirectory() as temporary:
+        root = Path(temporary)
+        settings = root / "proxy-settings.json"
+        settings.write_text(
+            json.dumps({"wallet": CONTRIBUTION_WALLET, "support_enabled": scenario["support"]}), encoding="utf-8"
+        )
+        state = root / "state"
+        state.mkdir()
+        if scenario["ledger"] is not None:
+            (state / "support-mining-ledger.json").write_text(json.dumps(scenario["ledger"]), encoding="utf-8")
+        proxy = contribution.LocalStratumProxy(CONTRIBUTION_WALLET, settings, state, clock=lambda: 1000.0)
+        client_end, client_proxy = socket.socketpair()
+        upstream_proxy, upstream_end = socket.socketpair()
+        received, client_bytes = [], bytearray()
+
+        def pool():
+            upstream_end.settimeout(3)
+            buffer = bytearray()
+            try:
+                for responses in scenario["responses"]:
+                    while b"\n" not in buffer:
+                        chunk = upstream_end.recv(65536)
+                        if not chunk:
+                            return
+                        buffer.extend(chunk)
+                    line, _, rest = buffer.partition(b"\n")
+                    buffer = bytearray(rest)
+                    received.append(line.decode())
+                    for response in responses:
+                        upstream_end.sendall(response)
+                time.sleep(0.4)
+                upstream_end.settimeout(0.2)
+                while True:
+                    chunk = upstream_end.recv(65536)
+                    if not chunk:
+                        break
+                    buffer.extend(chunk)
+            except OSError:
+                pass
+            finally:
+                received.extend(item.decode() for item in bytes(buffer).split(b"\n") if item)
+                upstream_end.close()
+
+        def miner():
+            client_end.settimeout(1.5)
+            seen = 0
+            try:
+                for chunk, wait in zip(scenario["client"], scenario.get("wait", [0] * len(scenario["client"]))):
+                    client_end.sendall(chunk)
+                    seen += wait
+                    while client_bytes.count(b"\n") < seen:
+                        data = client_end.recv(65536)
+                        if not data:
+                            return
+                        client_bytes.extend(data)
+                client_end.settimeout(3)
+                while True:
+                    data = client_end.recv(65536)
+                    if not data:
+                        return
+                    client_bytes.extend(data)
+            except OSError:
+                pass
+
+        threads = [threading.Thread(target=pool), threading.Thread(target=miner)]
+        for thread in threads:
+            thread.start()
+        error = None
+        try:
+            proxy.serve_connection(client_proxy, upstream_proxy)
+        except (OSError, ValueError, RuntimeError) as failure:
+            error = f"{type(failure).__name__}: {failure}"
+        client_proxy.close()
+        upstream_proxy.close()
+        for thread in threads:
+            thread.join()
+        client_end.close()
+        status = json.loads((state / "support-mining.json").read_text(encoding="utf-8"))
+        for volatile in ("pid", "sampled_at"):
+            status.pop(volatile)
+        ledger = state / "support-mining-ledger.json"
+        return {
+            "kind": "proxy",
+            "name": name,
+            "scenario": {
+                **scenario,
+                "client": [chunk.decode() for chunk in scenario["client"]],
+                "responses": [[item.decode() for item in group] for group in scenario["responses"]],
+            },
+            "upstream_received": received,
+            "client_received": client_bytes.decode(),
+            "error": error,
+            "safety_disabled": proxy.safety_disabled,
+            "status": status,
+            "ledger": ledger.read_text(encoding="utf-8") if ledger.exists() else None,
+        }
+
+
+def contribution_golden():
+    cases = [contribution_ledger_case(name, content) for name, content in contribution_ledger_files().items()]
+    cases += contribution_rewrites()
+    cases += [run_proxy_scenario(name, scenario) for name, scenario in contribution_proxy_scenarios().items()]
+    write("contribution", {"wallet": CONTRIBUTION_WALLET, "author": contribution.AUTHOR_WALLET, "cases": cases})
+
+
 GENERATORS = {
     "numbers": numbers,
     "miner_log": miner_logs,
@@ -3934,9 +4330,10 @@ GENERATORS = {
     "gpu_control": gpu_control_golden,
     "nvidia_detect": nvidia_detect_golden,
     "thermal_target": thermal_target_golden,
+    "contribution": contribution_golden,
 }
 # Goldens que não dependem do fuso nem de caminhos e podem ser gerados no Windows.
-PORTABLE = {"history", "finance", "rig_support", "nvidia_detect", "thermal_target"}
+PORTABLE = {"history", "finance", "rig_support", "nvidia_detect", "thermal_target", "contribution"}
 # Goldens que usam a API real do Windows (shell32 `CommandLineToArgvW`, `GetFullPathNameW`).
 WINDOWS_ONLY = {"process", "rig_manager", "gpu_control"}
 
