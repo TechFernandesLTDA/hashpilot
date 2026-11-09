@@ -12,6 +12,7 @@ pub mod argv;
 pub mod continuity;
 pub mod fsutil;
 pub mod health;
+pub mod manager;
 pub mod process;
 pub mod reference;
 pub mod successor;
