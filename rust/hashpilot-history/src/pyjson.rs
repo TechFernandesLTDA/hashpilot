@@ -14,11 +14,19 @@ use serde_json::Value;
 /// diferente do formato do `serde_json`; o escape de texto é o mesmo nos dois.
 pub fn encode(value: &Value) -> String {
     let mut out = String::new();
-    write_value(&mut out, value);
+    write_value(&mut out, value, (",", ":"));
     out
 }
 
-fn write_value(out: &mut String, value: &Value) {
+/// `json.dumps(valor, ensure_ascii=False)` com os separadores padrão (`", "` e `": "`),
+/// como o `finance-cache.json`.
+pub fn encode_spaced(value: &Value) -> String {
+    let mut out = String::new();
+    write_value(&mut out, value, (", ", ": "));
+    out
+}
+
+fn write_value(out: &mut String, value: &Value, separators: (&str, &str)) {
     match value {
         Value::Null => out.push_str("null"),
         Value::Bool(flag) => out.push_str(if *flag { "true" } else { "false" }),
@@ -34,9 +42,9 @@ fn write_value(out: &mut String, value: &Value) {
             out.push('[');
             for (position, item) in items.iter().enumerate() {
                 if position > 0 {
-                    out.push(',');
+                    out.push_str(separators.0);
                 }
-                write_value(out, item);
+                write_value(out, item, separators);
             }
             out.push(']');
         }
@@ -44,11 +52,11 @@ fn write_value(out: &mut String, value: &Value) {
             out.push('{');
             for (position, (key, item)) in map.iter().enumerate() {
                 if position > 0 {
-                    out.push(',');
+                    out.push_str(separators.0);
                 }
                 write_text(out, key);
-                out.push(':');
-                write_value(out, item);
+                out.push_str(separators.1);
+                write_value(out, item, separators);
             }
             out.push('}');
         }
@@ -194,6 +202,10 @@ mod tests {
         assert_eq!(
             encode(&value),
             "{\"b\":[1e+16,1e-07,-0.0,0.1,100.0,12345678901234567890,-3],\"a\":\"ação \u{2028} \\u0001 \\\"x\\\" \\\\ / \\t\",\"c\":null,\"d\":true}"
+        );
+        assert_eq!(
+            encode_spaced(&json!({"a": [1, 2.5], "b": {}})),
+            "{\"a\": [1, 2.5], \"b\": {}}"
         );
     }
 

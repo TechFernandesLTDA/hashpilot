@@ -1265,6 +1265,658 @@ def history_store():
     write("history", {"cases": cases, "now": HISTORY_NOW, "wallet": HISTORY_WALLET})
 
 
+FIN_NOW = 1794189600.5
+FIN_W1 = "prl1" + "q" * 38
+FIN_W2 = "prl1" + "z" * 40
+FIN_W3 = "prl1" + "x" * 36
+
+
+def fin_compact(value):
+    return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+
+def fin_market(at, brl=0.0123, usd=0.0021, **network):
+    data = {
+        "net_hashrate": 4.5e15,
+        "block_time": 60,
+        "block_reward": 50.0,
+        "fee": 0.01,
+        "minpay": 2,
+        "blocks_for_maturation": 100,
+    }
+    data.update(network)
+    return {
+        "price": {
+            "fetched_at": at,
+            "data": {
+                "pearl-2": {"brl": brl, "usd": usd, "last_updated_at": at - 20},
+                "bitcoin": {"brl": 600000.0, "usd": 110000.0, "last_updated_at": at - 30},
+            },
+        },
+        "network": {"fetched_at": at, "data": data},
+    }
+
+
+def fin_wallet(wallet, at, total, paid, snapshots, **sources):
+    result = {
+        "wallet": wallet,
+        "sources": {
+            **fin_market(at),
+            "balance": {
+                "fetched_at": at,
+                "data": {"total": total, "confirmed": total * 0.75, "unconfirmed": total * 0.25, "threshold": 2.0},
+            },
+            "payouts": {"fetched_at": at, "data": {"paid": paid}},
+            "rewards": {"fetched_at": at, "data": [{"date": at - 3600, "amount": 0.1}]},
+        },
+        "snapshots": snapshots,
+        "errors": {},
+    }
+    result["sources"].update(sources)
+    return result
+
+
+def fin_midnight(now):
+    import finance
+
+    local = dt.datetime.fromtimestamp(now, finance.LOCAL_TZ)
+    return local.replace(hour=0, minute=0, second=0, microsecond=0).timestamp()
+
+
+def finance_model_cases():
+    import finance
+
+    now = FIN_NOW
+    midnight = fin_midnight(now)
+    series = [
+        {"timestamp": now - 40 * 86400, "total_prl": 0.5},
+        {"timestamp": now - 8 * 86400, "total_prl": 1.0},
+        {"timestamp": midnight - 60, "total_prl": 2.0},
+        {"timestamp": midnight + 600, "total_prl": 2.1},
+        {"timestamp": now - 120, "total_prl": 2.6},
+        {"timestamp": now - 60, "total_prl": 2.65},
+    ]
+    uncovered = [
+        {"timestamp": midnight - 200, "total_prl": 2.0},
+        {"timestamp": midnight + 30, "total_prl": 2.05},
+        {"timestamp": now - 30, "total_prl": 2.5},
+    ]
+    malformed = {
+        "wallet": FIN_W1,
+        "sources": {
+            "price": {
+                "fetched_at": "1794189590",
+                "data": {"pearl-2": {"brl": "0.02", "usd": -1, "last_updated_at": "x"}, "bitcoin": "lixo"},
+            },
+            "balance": {
+                "fetched_at": None,
+                "data": {"total": "3.5", "confirmed": -2, "unconfirmed": "abc", "extra": 7},
+            },
+            "payouts": {"fetched_at": now - 10, "data": {"paid": "1e1"}},
+            "rewards": {"fetched_at": now, "data": {"not": "list"}},
+            "network": {
+                "fetched_at": now - 5,
+                "data": {"net_hashrate": "4e15", "block_time": "60", "block_reward": 50, "fee": "0.02"},
+            },
+            "payout_history": {"fetched_at": True, "data": {"results": []}},
+            "unknown": {"fetched_at": 0.0, "data": {"x": 1}},
+            "not_dict": [1, 2],
+        },
+        "snapshots": [
+            {"timestamp": now + 100, "total_prl": 9},
+            {"timestamp": now + 3, "total_prl": 1.3},
+            {"timestamp": -1, "total_prl": 1},
+            {"timestamp": now - 50, "total_prl": -1},
+            {"timestamp": now - 70, "total_prl": 1.0},
+            {"timestamp": now - 70, "total_prl": 1.25},
+            {"timestamp": "1794189500", "total_prl": "1.1"},
+            {"timestamp": -0.0, "total_prl": 0},
+            {"timestamp": 0.0, "total_prl": 0.5},
+            "lixo",
+            {"timestamp": True, "total_prl": 1},
+        ],
+        "errors": [],
+    }
+    full = fin_wallet(FIN_W1, now - 10, 1.25, 1.4, series)
+    support = {"wallet": FIN_W1, "support_enabled": True}
+    cases = []
+
+    def financial(name, state, hashrate, at=now, wallet=FIN_W1, settings=None):
+        settings = {"wallet": wallet} if settings is None else settings
+        expected = finance.financial_model(copy_json(state), hashrate, at, wallet=wallet, settings=settings)
+        cases.append(
+            {
+                "kind": "financial",
+                "name": name,
+                "state": state,
+                "hashrate": hashrate,
+                "now": at,
+                "wallet": wallet,
+                "settings": settings,
+                "expected": expected,
+            }
+        )
+
+    for name, state in (("vazio", {}), ("nao_objeto", ["x"]), ("malformado", malformed), ("completo", full)):
+        cases.append(
+            {
+                "kind": "normalize",
+                "name": name,
+                "state": state,
+                "now": now,
+                "expected": finance.normalize_finance_state(copy_json(state), now),
+            }
+        )
+    financial("vazio", {}, None)
+    financial("completo_sem_hashrate", full, None)
+    financial("completo", full, 76.5)
+    financial("hashrate_texto", full, "76.5")
+    financial("hashrate_zero", full, 0)
+    financial("hashrate_negativo", full, -3.0)
+    financial("contribuicao", full, 76.5, settings=support)
+    financial(
+        "contribuicao_autor",
+        full,
+        76.5,
+        wallet=contribution.AUTHOR_WALLET,
+        settings={"wallet": contribution.AUTHOR_WALLET, "support_enabled": True},
+    )
+    financial("malformado", malformed, 50.0)
+    financial("rede_antiga", fin_wallet(FIN_W1, now - 400, 1.25, 1.4, series), 76.5)
+    financial("rede_no_futuro", fin_wallet(FIN_W1, now + 6, 1.25, 1.4, series), 76.5)
+    stale_network = fin_wallet(FIN_W1, now - 10, 1.25, 1.4, series)
+    stale_network["sources"]["network"]["fetched_at"] = now - 181
+    financial("so_rede_antiga", stale_network, 76.5)
+    financial("erro_cotacao", {**full, "errors": {"price": "HTTP Error 429: Too Many Requests"}}, 76.5)
+    financial("erro_vazio", {**full, "errors": {"network": ""}}, 76.5)
+    for label, fee in (("taxa_nula", None), ("taxa_alta", 1.5), ("taxa_um", 1), ("taxa_texto", "0.03")):
+        financial(
+            label,
+            fin_wallet(
+                FIN_W1,
+                now - 10,
+                1.25,
+                1.4,
+                series,
+                network={"fetched_at": now - 10, "data": {**fin_market(0)["network"]["data"], "fee": fee}},
+            ),
+            76.5,
+        )
+    no_fee = fin_wallet(FIN_W1, now - 10, 1.25, 1.4, series)
+    del no_fee["sources"]["network"]["data"]["fee"]
+    financial("taxa_ausente", no_fee, 76.5)
+    financial(
+        "estouro",
+        fin_wallet(
+            FIN_W1,
+            now - 10,
+            1.25,
+            1.4,
+            series,
+            network={"fetched_at": now - 10, "data": {**fin_market(0)["network"]["data"], "net_hashrate": 1e-300}},
+        ),
+        1e300,
+    )
+    financial("sem_cobertura", fin_wallet(FIN_W1, now - 10, 1.25, 1.4, uncovered), 76.5)
+    border = [
+        {"timestamp": midnight - 150, "total_prl": 2.0},
+        {"timestamp": midnight + 90, "total_prl": 2.04},
+        {"timestamp": now - 30, "total_prl": 2.5},
+    ]
+    financial("cobertura_150_s", fin_wallet(FIN_W1, now - 10, 1.25, 1.4, border), 76.5)
+    border_ok = [{"timestamp": midnight - 120, "total_prl": 2.0}, {"timestamp": now - 30, "total_prl": 2.5}]
+    financial("cobertura_120_s", fin_wallet(FIN_W1, now - 10, 1.25, 1.4, border_ok), 76.5)
+    financial("uma_amostra", fin_wallet(FIN_W1, now - 10, 1.25, 1.4, [{"timestamp": now - 30, "total_prl": 2.5}]), 76.5)
+    no_btc = fin_wallet(FIN_W1, now - 10, 1.25, 1.4, series)
+    del no_btc["sources"]["price"]["data"]["bitcoin"]
+    del no_btc["sources"]["price"]["data"]["pearl-2"]["last_updated_at"]
+    financial("sem_bitcoin", no_btc, 76.5)
+    btc_old = fin_wallet(FIN_W1, now - 10, 1.25, 1.4, series)
+    btc_old["sources"]["price"]["data"]["bitcoin"]["last_updated_at"] = now - 500
+    financial("bitcoin_antigo", btc_old, 76.5)
+    free = fin_wallet(FIN_W1, now - 10, 1.25, 1.4, series)
+    free["sources"]["price"]["data"]["pearl-2"]["brl"] = 0
+    financial("preco_zero", free, 76.5)
+    for label, offset in (("segunda", 30), ("segunda_fim", 86400 - 0.25), ("domingo", -30)):
+        monday = midnight - ((dt.datetime.fromtimestamp(now, finance.LOCAL_TZ).weekday()) * 86400) + 7 * 86400
+        at = monday + offset
+        financial(
+            label,
+            fin_wallet(
+                FIN_W1,
+                at - 10,
+                1.25,
+                1.4,
+                [{"timestamp": monday - 7 * 86400 - 60, "total_prl": 1.0}, {"timestamp": at - 60, "total_prl": 2.0}],
+            ),
+            76.5,
+            at=at,
+        )
+    financial("microssegundo", full, 76.5, at=midnight - 0.0000004)
+    return cases
+
+
+def copy_json(value):
+    return json.loads(json.dumps(value))
+
+
+def finance_portfolio_cases():
+    import finance
+
+    now = FIN_NOW
+    midnight = fin_midnight(now)
+
+    def gpu(uuid, wallet=None, rate=40.0, age=5, **extra):
+        device = {
+            "uuid": uuid,
+            "enabled": True,
+            "miner_running": True,
+            "miner": {"hashrate": rate, "hashrate_at": now - age, "paused": False},
+        }
+        if wallet is not None:
+            device["wallet"] = wallet
+        device.update(extra)
+        return device
+
+    def snapshots(base):
+        return [{"timestamp": midnight - 30, "total_prl": base}, {"timestamp": now - 60, "total_prl": base + 0.5}]
+
+    two = {
+        "schema_version": 2,
+        "primary_wallet": FIN_W1,
+        "wallets": {
+            FIN_W1: fin_wallet(FIN_W1, now - 10, 1.25, 1.4, snapshots(1.0)),
+            FIN_W2: fin_wallet(FIN_W2, now - 100, 0.75, 0.2, snapshots(0.5)),
+        },
+    }
+    three = {
+        "schema_version": 2,
+        "primary_wallet": FIN_W1,
+        "wallets": {
+            FIN_W1: fin_wallet(FIN_W1, now - 10, 0.1, 0.1, snapshots(0.1)),
+            FIN_W2: fin_wallet(FIN_W2, now - 10, 0.2, 0.2, snapshots(0.2)),
+            FIN_W3: fin_wallet(FIN_W3, now - 10, 0.3, 0.3, snapshots(0.3)),
+        },
+    }
+    no_pool = copy_json(two)
+    del no_pool["wallets"][FIN_W2]["sources"]["balance"]
+    devices_two = [
+        gpu("GPU-a", FIN_W1, 40.25),
+        gpu("GPU-b", FIN_W1, 36.5),
+        gpu("GPU-c", FIN_W2, 30.0),
+        gpu("GPU-d", FIN_W2, 20.0, age=400),
+        gpu("GPU-e", FIN_W2, 10.0, enabled=False),
+        gpu("GPU-f", FIN_W2, 10.0, miner={"hashrate": 10.0, "hashrate_at": now, "paused": True}),
+    ]
+    mixed = [
+        gpu("GPU-1", "", 10.0),
+        {"uuid": "GPU-2", "miner_running": True, "miner": {"hashrate": "12.5", "hashrate_at": now - 1}},
+        {"uuid": "GPU-3", "enabled": None, "miner_running": True, "miner": {"hashrate": 3.0, "hashrate_at": now}},
+        {"uuid": "GPU-4", "miner_running": False, "miner": None},
+        gpu("GPU-5", None, -1.0),
+        gpu("GPU-6", None, 5.0, age=-6),
+    ]
+    cases = []
+
+    def portfolio(name, state, devices, selected=None, settings=None, default=FIN_W1):
+        settings = {"wallet": FIN_W1} if settings is None else settings
+        with mock.patch.object(finance, "WALLET", default):
+            expected = finance.portfolio_model(copy_json(state), copy_json(devices), now, selected, settings=settings)
+        # `hashrate_by_wallet` nasce de um `set` (ordem aleatória por processo): ordena para o
+        # golden ser estável. O teste Rust compara esse objeto sem depender da ordem.
+        expected["hashrate_by_wallet"] = dict(sorted(expected["hashrate_by_wallet"].items()))
+        cases.append(
+            {
+                "kind": "portfolio",
+                "name": name,
+                "state": state,
+                "devices": devices,
+                "now": now,
+                "selected": selected,
+                "settings": settings,
+                "default_wallet": default,
+                "expected": expected,
+            }
+        )
+
+    portfolio("legado_sem_gpu", fin_wallet(FIN_W1, now - 10, 1.25, 1.4, snapshots(1.0)), [])
+    portfolio("legado_sem_carteira", {"sources": {}, "snapshots": []}, [], settings={})
+    portfolio(
+        "uma_carteira",
+        {"schema_version": 2, "primary_wallet": FIN_W1, "wallets": {FIN_W1: two["wallets"][FIN_W1]}},
+        [gpu("GPU-a"), gpu("GPU-b", rate=36.5)],
+    )
+    portfolio("duas_consolidado", two, devices_two)
+    portfolio("duas_selecionada", two, devices_two, selected=FIN_W2)
+    portfolio("duas_selecao_desconhecida", two, devices_two, selected=FIN_W3)
+    portfolio("sem_saldo_numa", no_pool, devices_two)
+    portfolio(
+        "soma_compensada", three, [gpu("GPU-a", FIN_W1, 0.1), gpu("GPU-b", FIN_W2, 0.2), gpu("GPU-c", FIN_W3, 0.3)]
+    )
+    portfolio("gpus_variadas", two, mixed)
+    portfolio(
+        "carteira_sem_estado", two, [gpu("GPU-z", FIN_W3, 5.0)], settings={"wallet": FIN_W1, "support_enabled": True}
+    )
+    portfolio("versao_texto", {**two, "schema_version": 2.0}, devices_two)
+    portfolio("versao_um", {**two, "schema_version": 1}, devices_two)
+
+    def snapshots_case(name, state, wallets=None):
+        cases.append(
+            {
+                "kind": "snapshots",
+                "name": name,
+                "state": state,
+                "wallets": wallets,
+                "expected": finance.portfolio_snapshots(copy_json(state), wallets),
+            }
+        )
+
+    snapshots_case("legado", {"snapshots": [{"timestamp": 1, "total_prl": 2}]})
+    snapshots_case("legado_vazio", {})
+    snapshots_case("uma", two, [FIN_W2])
+    snapshots_case("duas", two)
+    snapshots_case("repetidas", two, [FIN_W2, FIN_W1, FIN_W2])
+    snapshots_case("lista_vazia", two, [])
+    snapshots_case("carteira_sem_amostra", two, [FIN_W1, FIN_W3])
+    interleaved = {
+        "schema_version": 2,
+        "wallets": {
+            FIN_W1: {
+                "snapshots": [
+                    {"timestamp": 10.0, "total_prl": 0.1},
+                    {"timestamp": 30.0, "total_prl": 0.7},
+                    {"timestamp": 40, "total_prl": 0.9},
+                ]
+            },
+            FIN_W2: {
+                "snapshots": [
+                    {"timestamp": 20.0, "total_prl": 0.2},
+                    {"timestamp": 30.0, "total_prl": 0.25},
+                    {"timestamp": 40.0, "total_prl": 0.3},
+                ]
+            },
+            FIN_W3: {"snapshots": [{"timestamp": 5.0, "total_prl": 0.3}, {"timestamp": 30, "total_prl": 0.1}]},
+        },
+    }
+    snapshots_case("intercaladas", interleaved)
+    snapshots_case("intercaladas_ordem", interleaved, [FIN_W3, FIN_W2, FIN_W1])
+    snapshots_case("sem_carteiras", {"schema_version": 2, "wallets": {}})
+    for values in ([0.1, 0.2, 0.3], [1, 2], [1, 0.5, 2], [1e100, 1.0, -1e100], [], [True, 1.5], [0.1] * 10, [-0.0]):
+        cases.append({"kind": "sum", "values": values, "expected": sum(values)})
+    return cases
+
+
+class FinFakeHistory:
+    def __init__(self, archived):
+        import threading
+
+        self.ready = threading.Event()
+        self.ready.set()
+        self.archived = archived
+        self.calls = []
+
+    def finance(self, state):
+        self.calls.append(fin_compact(["finance", state]))
+
+    def finance_state(self, since, wallet=None):
+        self.calls.append(fin_compact(["finance_state", since, wallet]))
+        return copy_json(self.archived.get(wallet, {"wallet": wallet, "snapshots": [], "sources": {}}))
+
+
+class FinFetcher:
+    def __init__(self):
+        self.responses = {}
+        self.calls = []
+
+    def __call__(self, url):
+        self.calls.append(url)
+        response = self.responses.get(url, {"__error__": f"sem resposta para {url}"})
+        if isinstance(response, dict) and "__error__" in response:
+            raise RuntimeError(response["__error__"])
+        return copy_json(response)
+
+
+def fin_tree(directory):
+    files = {}
+    for path in sorted(Path(directory).rglob("*")):
+        if path.is_file():
+            files[path.relative_to(directory).as_posix()] = path.read_bytes().decode("utf-8")
+    return files
+
+
+def fin_responses(wallet, at, total=1.25, paid=1.4):
+    market = fin_market(at)
+    responses = {
+        "price": {
+            "pearl-2": {"brl": "0.0123", "usd": 0.0021, "last_updated_at": at - 20},
+            "bitcoin": {"brl": 600000, "usd": 110000.5},
+        },
+        "balance": {
+            "total": str(total),
+            "confirmed": total,
+            "unconfirmed": 0,
+            "threshold": 2,
+            "maturation_time": 6000,
+            "extra": "x",
+        },
+        "payouts": {"paid": paid, "count": 3},
+        "rewards": [{"date": at - 3600, "amount": 0.1}],
+        "payout_history": {
+            "count": 1,
+            "results": [{"date": at - 9000, "received": 1.4, "txid": "abc", "status": "paid"}],
+        },
+        "network": market["network"]["data"],
+    }
+    import finance
+
+    return {url: responses[key] for key, url in finance.urls_for_wallet(wallet).items()}
+
+
+def finance_collector_case(name, wallet, rounds, cache=None, archived=None, prepare=False):
+    import finance
+
+    fetcher = FinFetcher()
+    history = FinFakeHistory(archived) if archived is not None else None
+    clock = {"now": rounds[0]["now"] if rounds else FIN_NOW}
+    case = {
+        "kind": "collector",
+        "name": name,
+        "wallet": wallet,
+        "cache": cache,
+        "archived": archived,
+        "prepare": prepare,
+        "rounds": rounds,
+    }
+    with tempfile.TemporaryDirectory() as directory, mock.patch.object(finance.time, "time", lambda: clock["now"]):
+        if cache is not None:
+            (Path(directory) / "finance-cache.json").write_bytes(cache.encode("utf-8"))
+        collector = finance.FinanceCollector(Path(directory), history, wallet=wallet, fetcher=fetcher)
+        case["initial"] = fin_compact(collector.state)
+        if prepare:
+            collector.stop.set()
+            collector.work()
+            published = []
+            while not collector.samples.empty():
+                published.append(fin_compact(collector.samples.get_nowait()))
+            case["prepared"] = published
+            case["prepared_state"] = fin_compact(collector.state)
+        outputs = []
+        for round_ in rounds:
+            clock["now"] = round_["now"]
+            fetcher.responses = round_["responses"]
+            try:
+                outputs.append({"sample": fin_compact(collector.sample())})
+            except (TypeError, ValueError, OSError) as error:
+                outputs.append({"raised": str(error), "state": fin_compact(collector.state)})
+            outputs[-1]["files"] = fin_tree(directory)
+        case["outputs"] = outputs
+        case["fetched"] = sorted(fetcher.calls)
+        case["history_calls"] = history.calls if history else []
+    return case
+
+
+def finance_collector_cases():
+    import finance
+
+    now = FIN_NOW
+    base = fin_responses(FIN_W1, now)
+    cases = []
+    cases.append(
+        finance_collector_case(
+            "completo",
+            FIN_W1,
+            [
+                {"now": now, "responses": base},
+                {"now": now + 30, "responses": fin_responses(FIN_W1, now + 30, total=1.3)},
+                {"now": now + 75, "responses": fin_responses(FIN_W1, now + 75, total=1.35)},
+            ],
+        )
+    )
+    urls = finance.urls_for_wallet(FIN_W1)
+    broken = dict(base)
+    broken[urls["price"]] = {"pearl-2": {"usd": 1}}
+    broken[urls["balance"]] = {"confirmed": 1}
+    broken[urls["payouts"]] = {"paid": "abc"}
+    broken[urls["rewards"]] = {"not": "list"}
+    broken[urls["payout_history"]] = {"results": {}}
+    broken[urls["network"]] = ["lista"]
+    broken2 = dict(base)
+    broken2[urls["price"]] = {"bitcoin": {}}
+    broken2[urls["balance"]] = "texto"
+    broken2[urls["payouts"]] = {"__error__": "HTTP Error 503: Service Unavailable"}
+    broken2[urls["rewards"]] = {"__error__": "timed out"}
+    broken2[urls["payout_history"]] = []
+    broken3 = dict(base)
+    broken3[urls["price"]] = {"pearl-2": "lixo"}
+    broken3[urls["balance"]] = {"total": -5}
+    previous = fin_compact(fin_wallet(FIN_W1, now - 3600, 1.0, 1.4, [{"timestamp": now - 3600, "total_prl": 2.4}]))
+    cases.append(
+        finance_collector_case(
+            "erros",
+            FIN_W1,
+            [
+                {"now": now, "responses": broken},
+                {"now": now + 60, "responses": broken2},
+                {"now": now + 120, "responses": broken3},
+            ],
+            cache="﻿" + previous,
+        )
+    )
+    cases.append(
+        finance_collector_case(
+            "cache_outra_carteira",
+            FIN_W1,
+            [{"now": now, "responses": base}],
+            cache=fin_compact({"wallet": FIN_W2, "sources": {}, "snapshots": []}),
+        )
+    )
+    cases.append(finance_collector_case("cache_invalido", FIN_W1, [{"now": now, "responses": base}], cache="{nao json"))
+    cases.append(finance_collector_case("cache_lista", FIN_W1, [{"now": now, "responses": base}], cache="[1, 2]"))
+    old = fin_wallet(
+        FIN_W1,
+        now - 60,
+        1.0,
+        1.4,
+        [
+            {"timestamp": now - 40 * 86400, "total_prl": 1.0},
+            {"timestamp": now - 35 * 86400 + 1, "total_prl": 1.5},
+            {"timestamp": now - 30, "total_prl": 2.0},
+        ],
+    )
+    cases.append(
+        finance_collector_case("poda_35_dias", FIN_W1, [{"now": now, "responses": base}], cache=json.dumps(old))
+    )
+    empty_cache = fin_compact(
+        {
+            "wallet": "",
+            "sources": {
+                "balance": {"fetched_at": now - 10, "data": {"total": 1.0}},
+                "payouts": {"fetched_at": now - 10, "data": {"paid": None}},
+            },
+            "snapshots": [],
+        }
+    )
+    cases.append(finance_collector_case("carteira_vazia", "", [{"now": now, "responses": fin_responses("", now)}]))
+    cases.append(
+        finance_collector_case(
+            "carteira_vazia_pago_nulo", "", [{"now": now, "responses": fin_responses("", now)}], cache=empty_cache
+        )
+    )
+    archived = {
+        FIN_W1: {
+            "wallet": FIN_W1,
+            "snapshots": [{"timestamp": now - 7200, "total_prl": 1.9}, {"timestamp": now - 3600, "total_prl": 2.0}],
+            "sources": {
+                "balance": {"fetched_at": now - 30, "data": {"total": 1.1}},
+                "price": {"fetched_at": now - 7200, "data": {"pearl-2": {"brl": 0.01}}},
+            },
+        }
+    }
+    cases.append(
+        finance_collector_case(
+            "historico", FIN_W1, [{"now": now, "responses": base}], cache="﻿" + previous, archived=archived, prepare=True
+        )
+    )
+    cases.append(finance_collector_case("historico_sem_cache", FIN_W1, [], archived={}, prepare=True))
+    return cases
+
+
+def finance_portfolio_collector_case():
+    import finance
+
+    now = FIN_NOW
+    fetcher = FinFetcher()
+    archived = {FIN_W2: {"wallet": FIN_W2, "snapshots": [{"timestamp": now - 600, "total_prl": 0.9}], "sources": {}}}
+    history = FinFakeHistory(archived)
+    clock = {"now": now}
+    rounds = []
+    responses = {**fin_responses(FIN_W1, now), **fin_responses(FIN_W2, now, total=0.75, paid=0.2)}
+    second = {**fin_responses(FIN_W1, now + 60, total=1.3), **fin_responses(FIN_W2, now + 60, total=0.8, paid=0.2)}
+    second[finance.urls_for_wallet(FIN_W2)["balance"]] = {"__error__": "HTTP Error 500: Internal Server Error"}
+    case = {
+        "kind": "portfolio_collector",
+        "wallets": [FIN_W2, FIN_W1, "invalida"],
+        "default_wallet": FIN_W1,
+        "archived": archived,
+    }
+    with (
+        tempfile.TemporaryDirectory() as directory,
+        mock.patch.object(finance.time, "time", lambda: clock["now"]),
+        mock.patch.object(finance, "WALLET", FIN_W1),
+    ):
+        collector = finance.PortfolioFinanceCollector(
+            Path(directory), history, wallets=[FIN_W2, FIN_W1], fetcher=fetcher
+        )
+        collector.configure_wallets([FIN_W2, FIN_W1, "invalida"])
+        for at, payload in ((now, responses), (now + 60, second)):
+            clock["now"] = at
+            fetcher.responses = payload
+            rounds.append(
+                {
+                    "now": at,
+                    "responses": payload,
+                    "sample": fin_compact(collector.sample()),
+                    "files": fin_tree(directory),
+                }
+            )
+        collector.configure_wallets(["invalida"])
+        case["after_invalid"] = sorted(collector.wallets)
+    case["rounds"] = rounds
+    case["fetched"] = sorted(fetcher.calls)
+    case["history_calls"] = sorted(history.calls)
+    return case
+
+
+def finance_golden():
+    cases = (
+        finance_model_cases()
+        + finance_portfolio_cases()
+        + finance_collector_cases()
+        + [finance_portfolio_collector_case()]
+    )
+    write("finance", {"cases": cases, "author_wallet": contribution.AUTHOR_WALLET})
+
+
 GENERATORS = {
     "numbers": numbers,
     "miner_log": miner_logs,
@@ -1274,7 +1926,10 @@ GENERATORS = {
     "rig_config": rig,
     "config": configs,
     "history": history_store,
+    "finance": finance_golden,
 }
+# Goldens que não dependem do fuso nem de caminhos e podem ser gerados no Windows.
+PORTABLE = {"history", "finance"}
 
 
 if __name__ == "__main__":
@@ -1282,7 +1937,7 @@ if __name__ == "__main__":
     unknown = [name for name in selected if name not in GENERATORS]
     if unknown:
         sys.exit(f"Golden desconhecido: {', '.join(unknown)}. Opções: {', '.join(GENERATORS)}")
-    if not hasattr(time, "tzset") and set(selected) - {"history"}:
-        sys.exit("Sem time.tzset (Windows): só o golden 'history' pode ser gerado aqui.")
+    if not hasattr(time, "tzset") and set(selected) - PORTABLE:
+        sys.exit(f"Sem time.tzset (Windows): só os goldens {', '.join(sorted(PORTABLE))} podem ser gerados aqui.")
     for name in selected:
         GENERATORS[name]()

@@ -1,0 +1,17 @@
+[package]
+name = "hashpilot-finance"
+description = "Finanças do HashPilot (fase 3 do port): Kryptex e CoinGecko públicas, cache e modelo financeiro."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+hashpilot-core = { path = "../hashpilot-core" }
+hashpilot-history = { path = "../hashpilot-history" }
+serde_json.workspace = true
+ureq.workspace = true
+
+[lints]
+workspace = true

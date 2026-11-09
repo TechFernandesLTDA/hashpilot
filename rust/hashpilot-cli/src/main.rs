@@ -42,6 +42,11 @@ Uso:
       gpus [<UUID>]      linhas e intervalo por GPU
       finance            pontos de saldo e a fonte financeira mais recente
       (padrões: banco da pasta de estado, carteira do settings.json, --since 0)
+  hashpilot finance model [--state <arquivo>] [--hashrate <TH/s>] [--now <epoch>] [--wallet <carteira>]
+                                         Modelo financeiro (créditos, projeção, pagamento) do finance-cache.json
+  hashpilot finance fetch [--wallet <carteira>] [--replay <arquivo>] [--now <epoch>]
+                                         Consulta pública Kryptex/CoinGecko agora, sem gravar cache nem histórico
+                                         (--replay: respostas gravadas {url: json}, sem rede)
   hashpilot --version | --help
 ";
 
@@ -64,6 +69,7 @@ fn main() -> ExitCode {
         Some("snapshot") => snapshot_command(&arguments[1..]),
         Some("release") => release_command(&arguments[1..]),
         Some("history") => history_command(&arguments[1..]),
+        Some("finance") => finance_command(&arguments[1..]),
         Some(other) => Err(Failure::Usage(format!("comando desconhecido: {other}"))),
     };
     match result {
@@ -197,6 +203,78 @@ fn payout_command(arguments: &[String]) -> Result<Value, Failure> {
 
 fn state_dir() -> Result<PathBuf, String> {
     resolve_state_dir(current_platform(), &process_env)
+}
+
+fn read_json(path: &Path) -> Result<Value, String> {
+    let text =
+        std::fs::read_to_string(path).map_err(|error| format!("{}: {error}", path.display()))?;
+    serde_json::from_str(text.trim_start_matches('\u{feff}'))
+        .map_err(|error| format!("{}: JSON inválido: {error}", path.display()))
+}
+
+/// `hashpilot finance`: nada é gravado (nem cache, nem histórico).
+fn finance_command(arguments: &[String]) -> Result<Value, Failure> {
+    let options = Options::parse(
+        arguments,
+        &["state", "hashrate", "now", "wallet", "replay"],
+        &[],
+    )?;
+    let [action] = options.positional.as_slice() else {
+        return Err(Failure::Usage(
+            "finance exige uma ação: model ou fetch".into(),
+        ));
+    };
+    let settings: Value =
+        match hashpilot_core::config::load_settings(&state_dir()?.join("settings.json")) {
+            Ok(settings) => serde_json::to_value(settings).unwrap_or(Value::Null),
+            Err(error) => return Err(Failure::Runtime(error)),
+        };
+    let wallet = match options.text("wallet") {
+        Some(wallet) => wallet.to_string(),
+        None => history::settings_wallet(&state_dir()?)?,
+    };
+    let now = options.number("now")?.unwrap_or_else(nvidia::now_epoch);
+    match action.as_str() {
+        "model" => {
+            let path = match options.text("state") {
+                Some(path) => PathBuf::from(path),
+                None => state_dir()?.join(hashpilot_finance::collector::CACHE_FILE),
+            };
+            let state = read_json(&path)?;
+            let hashrate = options.number("hashrate")?;
+            let model =
+                hashpilot_finance::financial_model(&state, hashrate, now, &wallet, &settings);
+            Ok(json!({"state_path": path, "now": now, "wallet": wallet, "model": model}))
+        }
+        "fetch" => {
+            let (fetcher, source): (hashpilot_finance::Fetcher, Value) =
+                match options.text("replay") {
+                    Some(path) => {
+                        let responses = read_json(Path::new(path))?;
+                        let fetcher: hashpilot_finance::Fetcher =
+                            std::sync::Arc::new(move |url: &str| {
+                                responses
+                                    .get(url)
+                                    .cloned()
+                                    .ok_or_else(|| format!("sem resposta gravada para {url}"))
+                            });
+                        (fetcher, json!(path))
+                    }
+                    None => (hashpilot_finance::network_fetcher(), json!("rede")),
+                };
+            let clock: hashpilot_history::Clock = match options.number("now")? {
+                Some(fixed) => std::sync::Arc::new(move || fixed),
+                None => std::sync::Arc::new(nvidia::now_epoch),
+            };
+            let mut collector =
+                hashpilot_finance::FinanceCollector::new(None, None, &wallet, fetcher, clock);
+            let state = collector.sample()?;
+            Ok(json!({"source": source, "wallet": wallet, "state": state}))
+        }
+        other => Err(Failure::Usage(format!(
+            "ação de finance desconhecida: {other}"
+        ))),
+    }
 }
 
 fn history_command(arguments: &[String]) -> Result<Value, Failure> {

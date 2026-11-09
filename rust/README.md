@@ -11,13 +11,13 @@ de que o produto atual precisa (como a entrada de uma release nova do SRBMiner n
 catálogo verificado). Ferramenta nova vira subcomando da CLI `hashpilot`. Correção
 num módulo já portado vale nos dois lados, com os goldens regerados.
 
-## Estado: fases 1 e 2 de 6
+## Estado: fases 1 a 3 de 6
 
 | Fase | Conteúdo | Estado |
 |---|---|---|
 | 1 | **Núcleo de lógica pura** (`hashpilot-core`) e **CLI somente leitura** (`hashpilot`) | Feita, com paridade testada |
 | 2 | **Histórico SQLite** (`hashpilot-history`): ler/gravar o `history.sqlite3` existente com a mesma chave SHA-256 e as mesmas migrações | Feita em 08/11/2026: paridade com o Python real, mutação e banco real de 2,8 GB |
-| 3 | Finanças: Kryptex/CoinGecko com corpo limitado, cache e ciclo de 60 s | Planejada |
+| 3 | **Finanças** (`hashpilot-finance`): Kryptex/CoinGecko com corpo limitado, cache e ciclo de 60 s | Feita em 08/11/2026: paridade com o Python real, mutação, respostas reais da API e cache real |
 | 4 | Serviço do rig: processos Win32 por UUID, identidade de processo, supervisor e proxy de contribuição | Planejada — maior risco, exige Windows e GPU |
 | 5 | Interface: três abas, bandeja, configurações (provável `egui`/`eframe`) | Planejada |
 | 6 | Instalador, atualizador e troca do Python | Só depois das fases 1–5 validadas |
@@ -73,6 +73,24 @@ Comportamento do Python que o Rust reproduz e que vale corrigir nos dois lados:
 `gpu_json` NULL. O gravador nunca grava NULL ali, então só um banco editado à mão
 chega a esse caso; o golden `migracao_gpu_v2` o cobre.
 
+### O que a fase 3 porta (`hashpilot-finance`)
+
+Porta o `finance.py` inteiro. Só endereços públicos de carteira; nenhuma conta,
+chave ou credencial.
+
+| Parte | O que é igual ao Python |
+|---|---|
+| `model` | `normalize_finance_state`, `financial_model`, `portfolio_model` e `portfolio_snapshots`. Iguais: créditos por dia, semana e 30 dias, com a fronteira local em UTC−3 e a tolerância de 120 s; projeção por rede, com taxa da pool, devfee de 2% e contribuição; equivalentes em BRL, USD e BTC; tipos inteiro e float (`fetched_at` ausente vira `0`); e o `sum()` compensado do Python 3.12+, bit a bit |
+| `fetch` | GET com `User-Agent` do HashPilot (versão lida do `app_version.py`), `Accept: application/json`, 9 s, corpo de no máximo 2 MB (o excesso é erro, nunca truncado), BOM tolerado, `HTTP Error 503: Service Unavailable` como o `urllib`, proxy do Windows e nenhuma compressão. Também igual: cotação e rede compartilhadas por 45 s entre carteiras |
+| `collector` | As seis consultas em paralelo, na ordem do Python. A validação usa as mesmas mensagens, inclusive o `TypeError` da cotação nula. O snapshot sai no máximo a cada 45 s. O cache `finance-cache.json` guarda 35 dias, com escrita atômica e o texto do `json.dumps` padrão. Também iguais: a fusão com o arquivo SQLite (o cache vence no mesmo instante), a fila de duas amostras e o portfólio, com uma pasta por carteira, três consultas por vez e carteiras inválidas descartadas |
+
+Diferenças conscientes:
+
+- **Erros de rede:** só o texto de DNS, TLS e tempo-limite difere (vem do `ureq`). HTTP com código de erro tem o mesmo texto.
+- **Erro dentro de uma rodada:** no Python, encerra a thread do coletor em silêncio. No Rust, a rodada é descartada e o ciclo continua.
+- **Ordem de `forecast_missing_gpu_uuids` no portfólio consolidado:** o Python percorre as carteiras na ordem de um `set`, aleatória por processo; o Rust usa a ordem alfabética.
+- **Carteira que não é texto:** num dispositivo, cai na carteira principal.
+
 ## Como a equivalência com o Python é provada
 
 1. `tools/rust_parity/generate_goldens.py` roda os **módulos Python reais** sobre
@@ -124,6 +142,33 @@ Duas mutações escaparam na primeira rodada e ganharam casos novos. Esse golden
 depende do fuso nem de caminhos, então também pode ser gerado no Windows:
 `python tools/rust_parity/generate_goldens.py history`.
 
+**Golden das finanças** (`finance.json`, 76 casos). Roda o `finance.py` real com
+relógio fixo por rodada, consultor falso e um histórico falso que registra cada
+chamada. Tem quatro grupos de casos:
+
+- **Normalização e `financial_model`:** estado vazio e malformado, com textos
+  numéricos, negativos, snapshots duplicados ou futuros e `-0.0`. Também cobre rede
+  antiga ou no futuro, erros, taxa nula, alta ou ausente, estouro para infinito,
+  cobertura de 120 s contra 150 s, segunda-feira, domingo e o arredondamento ao
+  microssegundo do `fromtimestamp`.
+- **`portfolio_model` e `portfolio_snapshots`:** legado, uma, duas e três
+  carteiras, seleção, GPUs paradas, pausadas, sem leitura ou com hashrate
+  negativo, e somas que dependem da compensação.
+- **Coletor:** três rodadas completas, todas as respostas inválidas, cache com BOM,
+  inválido ou de outra carteira, poda de 35 dias, carteira vazia e fusão com o
+  arquivo SQLite.
+- **Portfólio de coletores:** duas carteiras com cache compartilhado e erro HTTP.
+
+Estado, amostras, arquivos gravados e chamadas ao histórico são comparados como
+texto, byte a byte. Os modelos para a interface são comparados por valor, com o
+tipo inteiro/float exigido fora do bloco `payout`, que vem da struct da fase 1.
+
+**Mutações:** de 16 propositais, 15 foram acusadas; a que sobrou é equivalente
+(hashrate zero já é descartado dentro do `financial_model`). Três escaparam na
+primeira rodada e ganharam casos novos: cobertura de 120 s, folga de 5 s e fração
+de contribuição inteira. Gerável no Windows:
+`python tools/rust_parity/generate_goldens.py finance`.
+
 Diferenças conhecidas, só em entradas que o SRBMiner e o `settings.json` não
 produzem: dígitos não ASCII (`float("١٢")` funciona no Python), `str()` de listas e
 objetos (sai JSON) e hora local inexistente na mudança de horário de verão.
@@ -150,7 +195,20 @@ hashpilot payout [--state finance-cache.json] [--now EPOCH] [--price-brl X]
 hashpilot snapshot [--log-dir PASTA]               # sensores + log mais recente de cada GPU
 hashpilot release inspect X.Y.Z --archive-sha256 HEX [--md5 HEX] [--file ZIP]
 hashpilot history stats|restore|gpu <UUID>|gpus [<UUID>]|finance [--db ARQ] [--wallet W] [--since EPOCH]
+hashpilot finance model [--state finance-cache.json] [--hashrate TH/s] [--now EPOCH] [--wallet W]
+hashpilot finance fetch [--wallet W] [--replay respostas.json] [--now EPOCH]
 ```
+
+`finance model` calcula o modelo financeiro do painel a partir do cache:
+
+- créditos por período;
+- projeção;
+- pagamento;
+- equivalentes.
+
+`finance fetch` faz uma rodada real de consultas públicas e mostra o estado. Não
+grava cache nem histórico. Com `--replay`, usa respostas gravadas
+(`{url: json}`), sem rede.
 
 `history` abre o `history.sqlite3` **somente para leitura**. Ele não grava nem o
 evento de sessão que o painel grava. Sem `--db`, usa o banco da pasta de estado;
@@ -170,6 +228,23 @@ Exemplo com os dados públicos (a partir da raiz do repositório):
 ```text
 rust/target/debug/hashpilot payout --state portable-data/finance-cache.json --now 1792900000
 ```
+
+## Validação da fase 3 (Windows 11, 08/11/2026)
+
+- `cargo test`, `cargo clippy --all-targets -- -D warnings` e `cargo fmt --check`
+  passam no workspace inteiro.
+- **Respostas reais (teste real):** as seis respostas reais da Kryptex e da
+  CoinGecko para a carteira configurada foram gravadas pelo `fetch_json` do Python.
+  Com as mesmas respostas, o coletor Python e o Rust produziram o **mesmo estado,
+  texto idêntico**, sem erros.
+- **Consulta ao vivo pelo Rust (teste real):** seis fontes, sem erros, em 0,9 s. As
+  chaves são as mesmas do Python e a cotação também (R$ 9,27 por PRL, com segundos
+  de diferença entre as duas consultas).
+- **Cache real:** `financial_model` sobre o `finance-cache.json` em uso (20.688
+  snapshots), sem e com hashrate (76,57 TH/s), deu resultado **idêntico** ao do
+  Python.
+- Não testado: o coletor Rust rodando no lugar do Python, gravando no histórico
+  real. Isso entra na troca da fase 4.
 
 ## Validação da fase 2 (Windows 11, 08/11/2026)
 
@@ -207,4 +282,5 @@ usados: `regex`, `chrono`, `serde` e `serde_json`. A CLI acrescenta `zip` (com
 deflate em Rust puro, sem C), `sha2` e `md-5` para o `release inspect`. O histórico
 usa `rusqlite` com o recurso `bundled`, que compila o SQLite oficial (C) junto. Assim
 não depende de uma DLL do sistema, mas exige um compilador C: no Windows, as Build
-Tools do Visual Studio. O `Cargo.lock` é versionado para builds reprodutíveis. Código sob [GPL-3.0-only](../LICENSE).
+Tools do Visual Studio. As finanças usam `ureq` 3 com `rustls` (provedor `ring`) e as
+raízes `webpki-roots`, sem gzip. O `Cargo.lock` é versionado para builds reprodutíveis. Código sob [GPL-3.0-only](../LICENSE).

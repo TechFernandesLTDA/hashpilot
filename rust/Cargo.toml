@@ -1,6 +1,6 @@
 [workspace]
 resolver = "3"
-members = ["hashpilot-core", "hashpilot-history", "hashpilot-cli"]
+members = ["hashpilot-core", "hashpilot-history", "hashpilot-finance", "hashpilot-cli"]
 # O minerador depende do zk-pow oficial (git) e é compilado à parte; ver hashpilot-miner/README.md.
 exclude = ["hashpilot-miner"]
 
@@ -22,6 +22,9 @@ sha2 = "0.10"
 md-5 = "0.10"
 # Histórico: SQLite compilado junto (bundled), sem depender de uma DLL do sistema.
 rusqlite = { version = "0.41", features = ["bundled"] }
+# Finanças: HTTPS com rustls (ring) e raízes webpki; sem gzip, como o urllib (que não
+# pede compressão). O proxy do Windows vale, como no Python.
+ureq = { version = "3.5", default-features = false, features = ["rustls", "win-system-proxy"] }
 
 [workspace.lints.rust]
 unsafe_code = "forbid"
