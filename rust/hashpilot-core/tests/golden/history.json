@@ -1,0 +1,2513 @@
+{
+ "cases": [
+  {
+   "name": "basico",
+   "prepare": [],
+   "ops": [
+    {
+     "op": "telemetry",
+     "data": {
+      "collected_at": 1794100010.5,
+      "gpu": {
+       "temperature.gpu": 70,
+       "power.draw": 150.5,
+       "fan.speed": 80,
+       "name": "RTX ação"
+      },
+      "miner": {
+       "hashrate": 78.3,
+       "hashrate_at": 1794100005,
+       "paused": false,
+       "connection": "ok",
+       "recent_logs": "[2026-11-08 20:00:00] linha um\nlinha dois\r\n",
+       "rate_points": [
+        [
+         1,
+         2
+        ]
+       ]
+      },
+      "miner_running": true,
+      "log_path": "logs/mining-1.log"
+     }
+    },
+    {
+     "op": "telemetry",
+     "data": {
+      "collected_at": 1794100012,
+      "gpu": {
+       "temperature.gpu": 71
+      },
+      "miner": {
+       "hashrate": 78.4,
+       "hashrate_at": 1794100011.5,
+       "paused": false,
+       "connection": "ok"
+      },
+      "miner_running": true,
+      "log_path": "logs/mining-1.log"
+     }
+    },
+    {
+     "op": "telemetry",
+     "data": {
+      "collected_at": 1794100014.25,
+      "gpu": null,
+      "miner": {
+       "hashrate": null,
+       "paused": true
+      },
+      "miner_running": false,
+      "gpu_error": "nvidia-smi falhou",
+      "process_error": "",
+      "log_path": "logs/mining-1.log"
+     }
+    },
+    {
+     "op": "telemetry",
+     "source": "import",
+     "data": {
+      "collected_at": 1794099000.0,
+      "gpu": {
+       "temperature.gpu": 60
+      },
+      "miner": {
+       "hashrate": 70.0,
+       "hashrate_at": 1794098990.0
+      },
+      "miner_running": true
+     }
+    },
+    {
+     "op": "telemetry",
+     "data": {
+      "wallet": "prl1other",
+      "collected_at": 1794100016.0,
+      "miner": {
+       "connection": "ok",
+       "paused": false
+      },
+      "miner_running": true,
+      "log_path": "logs/mining-1.log"
+     }
+    },
+    {
+     "op": "telemetry",
+     "data": {
+      "collected_at": 1794100010.5,
+      "miner": {
+       "paused": false,
+       "connection": "ok"
+      },
+      "miner_running": true,
+      "log_path": "logs/mining-1.log"
+     }
+    },
+    {
+     "op": "rig_telemetry",
+     "rig": {
+      "collected_at": 1794100020.0,
+      "devices": [
+       {
+        "uuid": "GPU-1111",
+        "index": 0,
+        "name": "RTX 3070",
+        "identity": {
+         "vendor": "NVIDIA",
+         "extra": 1
+        },
+        "collected_at": 1794100019.5,
+        "gpu": {
+         "temperature.gpu": 76,
+         "power.draw": 167.5,
+         "fan.speed": 94
+        },
+        "miner": {
+         "hashrate": 78.37,
+         "hashrate_at": 1794100019.0,
+         "recent_logs": "x",
+         "rate_points": []
+        },
+        "miner_running": true,
+        "wallet": "prl1gpu",
+        "log_path": "gpus/GPU-1111/mining.log",
+        "driver_version": "621.14",
+        "memory_mib": 8192,
+        "serial": null
+       },
+       {
+        "uuid": "GPU-2222",
+        "index": 1,
+        "enabled": false,
+        "gpu": null,
+        "miner": null,
+        "configuration_error": "sem carteira",
+        "gpu_error": ""
+       }
+      ]
+     }
+    },
+    {
+     "op": "rig_telemetry",
+     "rig": {
+      "collected_at": 1794100030.0,
+      "devices": [
+       {
+        "uuid": "GPU-1111",
+        "index": 0,
+        "name": "RTX 3070 (2)",
+        "gpu": {
+         "temperature.gpu": 77
+        },
+        "miner": {
+         "hashrate": 79.0,
+         "hashrate_at": 1794099800.0
+        },
+        "wallet": "prl1gpu"
+       }
+      ]
+     }
+    },
+    {
+     "op": "rig_telemetry",
+     "rig": {
+      "devices": [
+       {
+        "uuid": "GPU-1111",
+        "collected_at": 1794100040.0,
+        "wallet": "prl1gpu",
+        "miner": {
+         "hashrate": 77.5,
+         "hashrate_at": 1794099860.0
+        }
+       }
+      ]
+     }
+    },
+    {
+     "op": "rig_telemetry",
+     "rig": {
+      "devices": [
+       {
+        "uuid": "GPU-1111",
+        "collected_at": 1794100041.0,
+        "wallet": "prl1gpu",
+        "miner": {
+         "hashrate": 77.6,
+         "hashrate_at": 1794099860.75
+        }
+       }
+      ]
+     }
+    },
+    {
+     "op": "rig_telemetry",
+     "rig": {
+      "devices": [
+       {
+        "uuid": "GPU-1111",
+        "collected_at": 1794100042.0,
+        "wallet": "prl1gpu",
+        "miner": {
+         "hashrate": 77.7,
+         "hashrate_at": 1794100043.0
+        }
+       }
+      ]
+     }
+    },
+    {
+     "op": "rig_telemetry",
+     "rig": {
+      "devices": [
+       {
+        "uuid": "GPU-2222",
+        "collected_at": 1794100043.0,
+        "wallet": "",
+        "enabled": true
+       }
+      ]
+     }
+    },
+    {
+     "op": "telemetry",
+     "data": {
+      "wallet": "",
+      "collected_at": 1794100018.0,
+      "miner": {
+       "paused": false,
+       "connection": "ok"
+      },
+      "miner_running": true,
+      "log_path": "logs/mining-1.log"
+     }
+    },
+    {
+     "op": "rig_telemetry",
+     "rig": {
+      "devices": [
+       {
+        "uuid": "GPU-0"
+       },
+       {
+        "uuid": "GPU-1"
+       },
+       {
+        "uuid": "GPU-2"
+       },
+       {
+        "uuid": "GPU-3"
+       },
+       {
+        "uuid": "GPU-4"
+       },
+       {
+        "uuid": "GPU-5"
+       },
+       {
+        "uuid": "GPU-6"
+       }
+      ]
+     }
+    },
+    {
+     "op": "rig_telemetry",
+     "rig": {
+      "devices": [
+       {
+        "uuid": "GPU-1111"
+       },
+       {
+        "uuid": "GPU-1111"
+       }
+      ]
+     }
+    },
+    {
+     "op": "event",
+     "timestamp": 1794100040.0,
+     "kind": "manual",
+     "data": {
+      "a": 1
+     },
+     "key": "k-1"
+    },
+    {
+     "op": "event",
+     "timestamp": 1794100041.5,
+     "kind": "sem_chave",
+     "data": {
+      "numeros": [
+       1e+16,
+       1e-07,
+       -0.0,
+       0.1,
+       12345678901234567890,
+       2.5e-05,
+       1e+22,
+       100.0
+      ],
+      "texto": "ação   \u0001 \"aspas\" \\ / \t fim",
+      "vazio": {},
+      "lista": []
+     }
+    },
+    {
+     "op": "event",
+     "timestamp": 1794100042,
+     "kind": "outra",
+     "data": null,
+     "key": "",
+     "wallet": "prl1other"
+    },
+    {
+     "op": "finance",
+     "state": {
+      "snapshots": [
+       {
+        "timestamp": 1794100000.0,
+        "total_prl": 1.5
+       },
+       {
+        "timestamp": 1794100060,
+        "total_prl": 2
+       }
+      ],
+      "sources": {
+       "kryptex": {
+        "fetched_at": 1794100050.0,
+        "data": {
+         "balance": 2.0
+        }
+       },
+       "coingecko": {
+        "fetched_at": 1794100055.5,
+        "data": {
+         "brl": 0.42
+        }
+       }
+      },
+      "errors": {
+       "coingecko": "timeout"
+      }
+     }
+    },
+    {
+     "op": "finance",
+     "state": {
+      "snapshots": [
+       {
+        "timestamp": 1794100060,
+        "total_prl": 9
+       },
+       {
+        "timestamp": 1794100065.0,
+        "total_prl": 2.25
+       }
+      ],
+      "sources": {
+       "kryptex": {
+        "fetched_at": 1794100070.0,
+        "data": {
+         "balance": 2.5
+        }
+       }
+      },
+      "errors": {},
+      "attempted_at": 1794100071
+     }
+    },
+    {
+     "op": "finance",
+     "state": {
+      "wallet": "prl1other",
+      "snapshots": [
+       {
+        "timestamp": 1794100066.0,
+        "total_prl": 0.5
+       }
+      ],
+      "sources": {},
+      "errors": {
+       "kryptex": "HTTP 503"
+      },
+      "attempted_at": 1794100072
+     }
+    },
+    {
+     "op": "preferences",
+     "data": {
+      "range": "1h",
+      "zoom": [
+       1,
+       2
+      ]
+     }
+    },
+    {
+     "op": "preferences",
+     "data": {
+      "range": "24h"
+     }
+    },
+    {
+     "op": "read",
+     "call": "restore",
+     "args": [
+      1794100011.0
+     ]
+    },
+    {
+     "op": "read",
+     "call": "restore",
+     "args": [
+      0
+     ]
+    },
+    {
+     "op": "read",
+     "call": "restore_gpu",
+     "args": [
+      "GPU-1111",
+      0,
+      "prl1gpu"
+     ]
+    },
+    {
+     "op": "read",
+     "call": "restore_gpu",
+     "args": [
+      "GPU-2222",
+      0,
+      "prl1fixture"
+     ]
+    },
+    {
+     "op": "read",
+     "call": "restore_gpu",
+     "args": [
+      "GPU-1111",
+      0,
+      ""
+     ]
+    },
+    {
+     "op": "read",
+     "call": "gpu_stats",
+     "args": []
+    },
+    {
+     "op": "read",
+     "call": "gpu_stats",
+     "args": [
+      "GPU-2222"
+     ]
+    },
+    {
+     "op": "read",
+     "call": "finance_state",
+     "args": [
+      0
+     ]
+    },
+    {
+     "op": "read",
+     "call": "finance_state",
+     "args": [
+      1794100030.0,
+      "prl1other"
+     ]
+    },
+    {
+     "op": "read",
+     "call": "stats",
+     "args": []
+    }
+   ],
+   "outputs": [
+    {
+     "raised": "Amostra do rig precisa conter até seis UUIDs únicos"
+    },
+    {
+     "raised": "Amostra do rig precisa conter até seis UUIDs únicos"
+    },
+    {
+     "read": "restore",
+     "result": {
+      "points": {
+       "hash": [
+        [
+         1794100011.5,
+         78.4
+        ]
+       ],
+       "temp": [
+        [
+         1794100012.0,
+         71
+        ]
+       ],
+       "power": [],
+       "fan": []
+      },
+      "preferences": {
+       "range": "24h",
+       "zoom": [
+        1,
+        2
+       ]
+      },
+      "count": 3
+     }
+    },
+    {
+     "read": "restore",
+     "result": {
+      "points": {
+       "hash": [
+        [
+         1794098990.0,
+         70.0
+        ],
+        [
+         1794100005,
+         78.3
+        ],
+        [
+         1794100011.5,
+         78.4
+        ]
+       ],
+       "temp": [
+        [
+         1794099000.0,
+         60
+        ],
+        [
+         1794100010.5,
+         70
+        ],
+        [
+         1794100012.0,
+         71
+        ]
+       ],
+       "power": [
+        [
+         1794100010.5,
+         150.5
+        ]
+       ],
+       "fan": [
+        [
+         1794100010.5,
+         80
+        ]
+       ]
+      },
+      "preferences": {
+       "range": "24h",
+       "zoom": [
+        1,
+        2
+       ]
+      },
+      "count": 5
+     }
+    },
+    {
+     "read": "restore_gpu",
+     "result": {
+      "points": {
+       "hash": [
+        [
+         1794099860.0,
+         77.5
+        ],
+        [
+         1794100019.0,
+         78.37
+        ]
+       ],
+       "temp": [
+        [
+         1794100019.5,
+         76
+        ],
+        [
+         1794100030.0,
+         77
+        ]
+       ],
+       "power": [
+        [
+         1794100019.5,
+         167.5
+        ]
+       ],
+       "fan": [
+        [
+         1794100019.5,
+         94
+        ]
+       ]
+      },
+      "count": 5,
+      "identity": {
+       "uuid": "GPU-1111"
+      }
+     }
+    },
+    {
+     "read": "restore_gpu",
+     "result": {
+      "points": {
+       "hash": [],
+       "temp": [],
+       "power": [],
+       "fan": []
+      },
+      "count": 2,
+      "identity": {
+       "uuid": "GPU-2222"
+      }
+     }
+    },
+    {
+     "read": "restore_gpu",
+     "result": {
+      "points": {},
+      "count": 0,
+      "identity": {},
+      "error": "Carteira da GPU obrigatória"
+     }
+    },
+    {
+     "read": "gpu_stats",
+     "result": {
+      "GPU-1111": [
+       5,
+       1794100019.5,
+       1794100042.0
+      ],
+      "GPU-2222": [
+       2,
+       1794100020.0,
+       1794100043.0
+      ]
+     }
+    },
+    {
+     "read": "gpu_stats",
+     "result": {
+      "GPU-2222": [
+       2,
+       1794100020.0,
+       1794100043.0
+      ]
+     }
+    },
+    {
+     "read": "finance_state",
+     "result": {
+      "wallet": "prl1fixture",
+      "snapshots": [
+       {
+        "timestamp": 1794100000.0,
+        "total_prl": 1.5
+       },
+       {
+        "timestamp": 1794100060.0,
+        "total_prl": 2.0
+       },
+       {
+        "timestamp": 1794100065.0,
+        "total_prl": 2.25
+       }
+      ],
+      "sources": {
+       "coingecko": {
+        "fetched_at": 1794100055.5,
+        "data": {
+         "brl": 0.42
+        }
+       },
+       "kryptex": {
+        "fetched_at": 1794100070.0,
+        "data": {
+         "balance": 2.5
+        }
+       }
+      }
+     }
+    },
+    {
+     "read": "finance_state",
+     "result": {
+      "wallet": "prl1other",
+      "snapshots": [
+       {
+        "timestamp": 1794100066.0,
+        "total_prl": 0.5
+       }
+      ],
+      "sources": {}
+     }
+    },
+    {
+     "read": "stats",
+     "result": {
+      "telemetry": [
+       5,
+       1794099000.0,
+       1794100018.0
+      ],
+      "events": [
+       8,
+       1794100000.25,
+       1794100041.5
+      ],
+      "finance_snapshots": [
+       3,
+       1794100000.0,
+       1794100065.0
+      ],
+      "finance_sources": [
+       3,
+       1794100050.0,
+       1794100070.0
+      ]
+     }
+    }
+   ],
+   "schema": [
+    [
+     "index",
+     "events_by_time",
+     "events",
+     "CREATE INDEX events_by_time ON events(wallet,timestamp)"
+    ],
+    [
+     "index",
+     "gpu_telemetry_wallet_time",
+     "gpu_telemetry",
+     "CREATE INDEX gpu_telemetry_wallet_time ON gpu_telemetry(wallet,timestamp)"
+    ],
+    [
+     "index",
+     "sqlite_autoindex_events_1",
+     "events",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_finance_snapshots_1",
+     "finance_snapshots",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_finance_sources_1",
+     "finance_sources",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_gpu_devices_1",
+     "gpu_devices",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_gpu_telemetry_1",
+     "gpu_telemetry",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_preferences_1",
+     "preferences",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_telemetry_1",
+     "telemetry",
+     null
+    ],
+    [
+     "table",
+     "events",
+     "events",
+     "CREATE TABLE events (\n            wallet TEXT NOT NULL, event_key TEXT NOT NULL, timestamp REAL NOT NULL,\n            session TEXT NOT NULL, kind TEXT NOT NULL, data_json TEXT NOT NULL,\n            PRIMARY KEY(wallet,event_key))"
+    ],
+    [
+     "table",
+     "finance_snapshots",
+     "finance_snapshots",
+     "CREATE TABLE finance_snapshots (\n            wallet TEXT NOT NULL, timestamp REAL NOT NULL, total_prl REAL NOT NULL,\n            PRIMARY KEY(wallet,timestamp))"
+    ],
+    [
+     "table",
+     "finance_sources",
+     "finance_sources",
+     "CREATE TABLE finance_sources (\n            wallet TEXT NOT NULL, source TEXT NOT NULL, fetched_at REAL NOT NULL,\n            data_json TEXT NOT NULL, PRIMARY KEY(wallet,source,fetched_at))"
+    ],
+    [
+     "table",
+     "gpu_devices",
+     "gpu_devices",
+     "CREATE TABLE gpu_devices (\n            gpu_uuid TEXT PRIMARY KEY,first_seen REAL NOT NULL,last_seen REAL NOT NULL,identity_json TEXT NOT NULL)"
+    ],
+    [
+     "table",
+     "gpu_telemetry",
+     "gpu_telemetry",
+     "CREATE TABLE gpu_telemetry (\n            gpu_uuid TEXT NOT NULL,timestamp REAL NOT NULL,wallet TEXT NOT NULL,session TEXT NOT NULL,\n            source TEXT NOT NULL,gpu_json TEXT,miner_json TEXT NOT NULL,miner_running INTEGER,\n            enabled INTEGER,errors_json TEXT,log_path TEXT,PRIMARY KEY(gpu_uuid,wallet,timestamp))"
+    ],
+    [
+     "table",
+     "preferences",
+     "preferences",
+     "CREATE TABLE preferences (\n            wallet TEXT NOT NULL, name TEXT NOT NULL, data_json TEXT NOT NULL,\n            PRIMARY KEY(wallet,name))"
+    ],
+    [
+     "table",
+     "telemetry",
+     "telemetry",
+     "CREATE TABLE telemetry (\n            wallet TEXT NOT NULL, timestamp REAL NOT NULL, session TEXT NOT NULL,\n            source TEXT NOT NULL, gpu_json TEXT, miner_json TEXT NOT NULL,\n            miner_running INTEGER, errors_json TEXT, log_path TEXT,\n            PRIMARY KEY(wallet,timestamp))"
+    ]
+   ],
+   "tables": {
+    "events": {
+     "columns": [
+      "wallet",
+      "event_key",
+      "timestamp",
+      "session",
+      "kind",
+      "data_json"
+     ],
+     "rows": [
+      [
+       "prl1fixture",
+       "00000000000000000000000000000002",
+       1794100041.5,
+       "00000000000000000000000000000001",
+       "sem_chave",
+       "{\"numeros\":[1e+16,1e-07,-0.0,0.1,12345678901234567890,2.5e-05,1e+22,100.0],\"texto\":\"ação   \\u0001 \\\"aspas\\\" \\\\ / \\t fim\",\"vazio\":{},\"lista\":[]}"
+      ],
+      [
+       "prl1fixture",
+       "00000000000000000000000000000004",
+       1794100000.25,
+       "00000000000000000000000000000001",
+       "session_closed",
+       "{\"session\":\"00000000000000000000000000000001\"}"
+      ],
+      [
+       "prl1fixture",
+       "finance-error:1794100000.25",
+       1794100000.25,
+       "00000000000000000000000000000001",
+       "finance_error",
+       "{\"coingecko\":\"timeout\"}"
+      ],
+      [
+       "prl1fixture",
+       "k-1",
+       1794100040.0,
+       "00000000000000000000000000000001",
+       "manual",
+       "{\"a\":1}"
+      ],
+      [
+       "prl1fixture",
+       "log:6ce46aed00390b81e033f1e063dd1efff859dcdd539221d584e227a28e84bbdc",
+       1794100010.5,
+       "00000000000000000000000000000001",
+       "miner_log",
+       "{\"line\":\"[2026-11-08 20:00:00] linha um\",\"path\":\"logs/mining-1.log\"}"
+      ],
+      [
+       "prl1fixture",
+       "log:a63762745fa8ee4f3fd68bfbd8350f40173e3eb7547b2c22136f9b3a814ea9f1",
+       1794100010.5,
+       "00000000000000000000000000000001",
+       "miner_log",
+       "{\"line\":\"linha dois\",\"path\":\"logs/mining-1.log\"}"
+      ],
+      [
+       "prl1fixture",
+       "session:00000000000000000000000000000001",
+       1794100000.25,
+       "00000000000000000000000000000001",
+       "session_started",
+       "{\"session\":\"00000000000000000000000000000001\"}"
+      ],
+      [
+       "prl1fixture",
+       "status:1794100010.5",
+       1794100010.5,
+       "00000000000000000000000000000001",
+       "status_changed",
+       "{\"miner_running\":true,\"paused\":false,\"connection\":\"ok\",\"errors\":{},\"log_path\":\"logs/mining-1.log\"}"
+      ],
+      [
+       "prl1fixture",
+       "status:1794100014.25",
+       1794100014.25,
+       "00000000000000000000000000000001",
+       "status_changed",
+       "{\"miner_running\":false,\"paused\":true,\"connection\":null,\"errors\":{\"gpu_error\":\"nvidia-smi falhou\"},\"log_path\":\"logs/mining-1.log\"}"
+      ],
+      [
+       "prl1other",
+       "00000000000000000000000000000003",
+       1794100042.0,
+       "00000000000000000000000000000001",
+       "outra",
+       "null"
+      ],
+      [
+       "prl1other",
+       "finance-error:1794100072",
+       1794100072.0,
+       "00000000000000000000000000000001",
+       "finance_error",
+       "{\"kryptex\":\"HTTP 503\"}"
+      ],
+      [
+       "prl1other",
+       "status:1794100016.0",
+       1794100016.0,
+       "00000000000000000000000000000001",
+       "status_changed",
+       "{\"miner_running\":true,\"paused\":false,\"connection\":\"ok\",\"errors\":{},\"log_path\":\"logs/mining-1.log\"}"
+      ]
+     ]
+    },
+    "finance_snapshots": {
+     "columns": [
+      "wallet",
+      "timestamp",
+      "total_prl"
+     ],
+     "rows": [
+      [
+       "prl1fixture",
+       1794100000.0,
+       1.5
+      ],
+      [
+       "prl1fixture",
+       1794100060.0,
+       2.0
+      ],
+      [
+       "prl1fixture",
+       1794100065.0,
+       2.25
+      ],
+      [
+       "prl1other",
+       1794100066.0,
+       0.5
+      ]
+     ]
+    },
+    "finance_sources": {
+     "columns": [
+      "wallet",
+      "source",
+      "fetched_at",
+      "data_json"
+     ],
+     "rows": [
+      [
+       "prl1fixture",
+       "coingecko",
+       1794100055.5,
+       "{\"brl\":0.42}"
+      ],
+      [
+       "prl1fixture",
+       "kryptex",
+       1794100050.0,
+       "{\"balance\":2.0}"
+      ],
+      [
+       "prl1fixture",
+       "kryptex",
+       1794100070.0,
+       "{\"balance\":2.5}"
+      ]
+     ]
+    },
+    "gpu_devices": {
+     "columns": [
+      "gpu_uuid",
+      "first_seen",
+      "last_seen",
+      "identity_json"
+     ],
+     "rows": [
+      [
+       "GPU-1111",
+       1794100019.5,
+       1794100042.0,
+       "{\"uuid\":\"GPU-1111\"}"
+      ],
+      [
+       "GPU-2222",
+       1794100020.0,
+       1794100043.0,
+       "{\"uuid\":\"GPU-2222\"}"
+      ]
+     ]
+    },
+    "gpu_telemetry": {
+     "columns": [
+      "gpu_uuid",
+      "timestamp",
+      "wallet",
+      "session",
+      "source",
+      "gpu_json",
+      "miner_json",
+      "miner_running",
+      "enabled",
+      "errors_json",
+      "log_path"
+     ],
+     "rows": [
+      [
+       "GPU-1111",
+       1794100019.5,
+       "prl1gpu",
+       "00000000000000000000000000000001",
+       "live",
+       "{\"temperature.gpu\":76,\"power.draw\":167.5,\"fan.speed\":94}",
+       "{\"hashrate\":78.37,\"hashrate_at\":1794100019.0}",
+       1,
+       1,
+       "{}",
+       "gpus/GPU-1111/mining.log"
+      ],
+      [
+       "GPU-1111",
+       1794100030.0,
+       "prl1gpu",
+       "00000000000000000000000000000001",
+       "live",
+       "{\"temperature.gpu\":77}",
+       "{\"hashrate\":79.0,\"hashrate_at\":1794099800.0}",
+       null,
+       1,
+       "{}",
+       null
+      ],
+      [
+       "GPU-1111",
+       1794100040.0,
+       "prl1gpu",
+       "00000000000000000000000000000001",
+       "live",
+       "null",
+       "{\"hashrate\":77.5,\"hashrate_at\":1794099860.0}",
+       null,
+       1,
+       "{}",
+       null
+      ],
+      [
+       "GPU-1111",
+       1794100041.0,
+       "prl1gpu",
+       "00000000000000000000000000000001",
+       "live",
+       "null",
+       "{\"hashrate\":77.6,\"hashrate_at\":1794099860.75}",
+       null,
+       1,
+       "{}",
+       null
+      ],
+      [
+       "GPU-1111",
+       1794100042.0,
+       "prl1gpu",
+       "00000000000000000000000000000001",
+       "live",
+       "null",
+       "{\"hashrate\":77.7,\"hashrate_at\":1794100043.0}",
+       null,
+       1,
+       "{}",
+       null
+      ],
+      [
+       "GPU-2222",
+       1794100020.0,
+       "prl1fixture",
+       "00000000000000000000000000000001",
+       "live",
+       "null",
+       "{}",
+       null,
+       0,
+       "{\"configuration_error\":\"sem carteira\"}",
+       null
+      ],
+      [
+       "GPU-2222",
+       1794100043.0,
+       "prl1fixture",
+       "00000000000000000000000000000001",
+       "live",
+       "null",
+       "{}",
+       null,
+       1,
+       "{}",
+       null
+      ]
+     ]
+    },
+    "preferences": {
+     "columns": [
+      "wallet",
+      "name",
+      "data_json"
+     ],
+     "rows": [
+      [
+       "prl1fixture",
+       "range",
+       "\"24h\""
+      ],
+      [
+       "prl1fixture",
+       "zoom",
+       "[1,2]"
+      ]
+     ]
+    },
+    "telemetry": {
+     "columns": [
+      "wallet",
+      "timestamp",
+      "session",
+      "source",
+      "gpu_json",
+      "miner_json",
+      "miner_running",
+      "errors_json",
+      "log_path"
+     ],
+     "rows": [
+      [
+       "prl1fixture",
+       1794099000.0,
+       "00000000000000000000000000000001",
+       "import",
+       "{\"temperature.gpu\":60}",
+       "{\"hashrate\":70.0,\"hashrate_at\":1794098990.0}",
+       1,
+       "{}",
+       null
+      ],
+      [
+       "prl1fixture",
+       1794100010.5,
+       "00000000000000000000000000000001",
+       "live",
+       "{\"temperature.gpu\":70,\"power.draw\":150.5,\"fan.speed\":80,\"name\":\"RTX ação\"}",
+       "{\"hashrate\":78.3,\"hashrate_at\":1794100005,\"paused\":false,\"connection\":\"ok\"}",
+       1,
+       "{}",
+       "logs/mining-1.log"
+      ],
+      [
+       "prl1fixture",
+       1794100012.0,
+       "00000000000000000000000000000001",
+       "live",
+       "{\"temperature.gpu\":71}",
+       "{\"hashrate\":78.4,\"hashrate_at\":1794100011.5,\"paused\":false,\"connection\":\"ok\"}",
+       1,
+       "{}",
+       "logs/mining-1.log"
+      ],
+      [
+       "prl1fixture",
+       1794100014.25,
+       "00000000000000000000000000000001",
+       "live",
+       "null",
+       "{\"hashrate\":null,\"paused\":true}",
+       0,
+       "{\"gpu_error\":\"nvidia-smi falhou\"}",
+       "logs/mining-1.log"
+      ],
+      [
+       "prl1fixture",
+       1794100018.0,
+       "00000000000000000000000000000001",
+       "live",
+       "null",
+       "{\"paused\":false,\"connection\":\"ok\"}",
+       1,
+       "{}",
+       "logs/mining-1.log"
+      ],
+      [
+       "prl1other",
+       1794100016.0,
+       "00000000000000000000000000000001",
+       "live",
+       "null",
+       "{\"connection\":\"ok\",\"paused\":false}",
+       1,
+       "{}",
+       "logs/mining-1.log"
+      ]
+     ]
+    }
+   },
+   "user_version": 3,
+   "journal_mode": "wal",
+   "offsets": "{}",
+   "rejected": [],
+   "last_error": null
+  },
+  {
+   "name": "arquivo_de_log",
+   "prepare": [],
+   "ops": [
+    {
+     "op": "write_file",
+     "path": "mining-a.log",
+     "text": "﻿[2026-11-08 20:00:00] GPU0 RTX 3070: 78.00 TH/s   \r\nlinha sem carimbo\n[2026-13-40 99:99:99] carimbo inválido\nincompleta"
+    },
+    {
+     "op": "archive_log",
+     "path": "mining-a.log",
+     "gpu_uuid": "GPU-1111",
+     "wallet": "prl1gpu"
+    },
+    {
+     "op": "archive_log",
+     "path": "mining-a.log",
+     "gpu_uuid": "GPU-1111",
+     "wallet": "prl1gpu"
+    },
+    {
+     "op": "write_file",
+     "path": "mining-a.log",
+     "append": true,
+     "text": " agora completa\n[2026-11-08 20:00:05] segunda\nlinha sem carimbo\n"
+    },
+    {
+     "op": "archive_log",
+     "path": "mining-a.log",
+     "gpu_uuid": "GPU-1111",
+     "wallet": "prl1gpu"
+    },
+    {
+     "op": "write_file",
+     "path": "mining-a.log",
+     "append": true,
+     "hex": "fffe410a"
+    },
+    {
+     "op": "write_file",
+     "path": "mining-a.log",
+     "append": true,
+     "text": "fim com separador\u001c\u001f \n"
+    },
+    {
+     "op": "archive_log",
+     "path": "mining-a.log"
+    },
+    {
+     "op": "reopen"
+    },
+    {
+     "op": "write_file",
+     "path": "mining-a.log",
+     "append": true,
+     "text": "[2026-11-08 20:01:00] depois de reabrir\n"
+    },
+    {
+     "op": "archive_log",
+     "path": "mining-a.log",
+     "gpu_uuid": "GPU-1111"
+    },
+    {
+     "op": "write_file",
+     "path": "mining-a.log",
+     "text": "[2026-11-08 20:02:00] rotacionado\n"
+    },
+    {
+     "op": "archive_log",
+     "path": "mining-a.log",
+     "gpu_uuid": "GPU-1111"
+    },
+    {
+     "op": "write_file",
+     "path": "thermal.jsonl",
+     "text": "{\"sampled_at\": 1794100100.5, \"temp\": 76}\n{\"sampled_at\": \"1794100101\", \"temp\": 77}\r\n{\"temp\": 78}\n{\"sampled_at\": -1}\n{\"sampled_at\": \"nan\"}\n{\"sampled_at\": true, \"ação\": \"sim\"}\n{\"sampled_at\": 1794"
+    },
+    {
+     "op": "archive_thermal",
+     "path": "thermal.jsonl"
+    },
+    {
+     "op": "archive_thermal",
+     "path": "thermal.jsonl"
+    },
+    {
+     "op": "archive_thermal",
+     "path": "ausente.jsonl"
+    },
+    {
+     "op": "telemetry",
+     "data": {
+      "collected_at": 1794100200.0,
+      "miner": {
+       "recent_logs": "sem caminho 1\n\nsem caminho 2"
+      },
+      "log_path": null
+     }
+    },
+    {
+     "op": "reopen",
+     "wallet": "prl1second"
+    },
+    {
+     "op": "archive_thermal",
+     "path": "thermal.jsonl"
+    },
+    {
+     "op": "read",
+     "call": "stats",
+     "args": []
+    }
+   ],
+   "outputs": [
+    {
+     "read": "stats",
+     "result": {
+      "telemetry": [
+       0,
+       null,
+       null
+      ],
+      "events": [
+       7,
+       1.0,
+       1794100101.0
+      ],
+      "finance_snapshots": [
+       0,
+       null,
+       null
+      ],
+      "finance_sources": [
+       0,
+       null,
+       null
+      ]
+     }
+    }
+   ],
+   "schema": [
+    [
+     "index",
+     "events_by_time",
+     "events",
+     "CREATE INDEX events_by_time ON events(wallet,timestamp)"
+    ],
+    [
+     "index",
+     "gpu_telemetry_wallet_time",
+     "gpu_telemetry",
+     "CREATE INDEX gpu_telemetry_wallet_time ON gpu_telemetry(wallet,timestamp)"
+    ],
+    [
+     "index",
+     "sqlite_autoindex_events_1",
+     "events",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_finance_snapshots_1",
+     "finance_snapshots",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_finance_sources_1",
+     "finance_sources",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_gpu_devices_1",
+     "gpu_devices",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_gpu_telemetry_1",
+     "gpu_telemetry",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_preferences_1",
+     "preferences",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_telemetry_1",
+     "telemetry",
+     null
+    ],
+    [
+     "table",
+     "events",
+     "events",
+     "CREATE TABLE events (\n            wallet TEXT NOT NULL, event_key TEXT NOT NULL, timestamp REAL NOT NULL,\n            session TEXT NOT NULL, kind TEXT NOT NULL, data_json TEXT NOT NULL,\n            PRIMARY KEY(wallet,event_key))"
+    ],
+    [
+     "table",
+     "finance_snapshots",
+     "finance_snapshots",
+     "CREATE TABLE finance_snapshots (\n            wallet TEXT NOT NULL, timestamp REAL NOT NULL, total_prl REAL NOT NULL,\n            PRIMARY KEY(wallet,timestamp))"
+    ],
+    [
+     "table",
+     "finance_sources",
+     "finance_sources",
+     "CREATE TABLE finance_sources (\n            wallet TEXT NOT NULL, source TEXT NOT NULL, fetched_at REAL NOT NULL,\n            data_json TEXT NOT NULL, PRIMARY KEY(wallet,source,fetched_at))"
+    ],
+    [
+     "table",
+     "gpu_devices",
+     "gpu_devices",
+     "CREATE TABLE gpu_devices (\n            gpu_uuid TEXT PRIMARY KEY,first_seen REAL NOT NULL,last_seen REAL NOT NULL,identity_json TEXT NOT NULL)"
+    ],
+    [
+     "table",
+     "gpu_telemetry",
+     "gpu_telemetry",
+     "CREATE TABLE gpu_telemetry (\n            gpu_uuid TEXT NOT NULL,timestamp REAL NOT NULL,wallet TEXT NOT NULL,session TEXT NOT NULL,\n            source TEXT NOT NULL,gpu_json TEXT,miner_json TEXT NOT NULL,miner_running INTEGER,\n            enabled INTEGER,errors_json TEXT,log_path TEXT,PRIMARY KEY(gpu_uuid,wallet,timestamp))"
+    ],
+    [
+     "table",
+     "preferences",
+     "preferences",
+     "CREATE TABLE preferences (\n            wallet TEXT NOT NULL, name TEXT NOT NULL, data_json TEXT NOT NULL,\n            PRIMARY KEY(wallet,name))"
+    ],
+    [
+     "table",
+     "telemetry",
+     "telemetry",
+     "CREATE TABLE telemetry (\n            wallet TEXT NOT NULL, timestamp REAL NOT NULL, session TEXT NOT NULL,\n            source TEXT NOT NULL, gpu_json TEXT, miner_json TEXT NOT NULL,\n            miner_running INTEGER, errors_json TEXT, log_path TEXT,\n            PRIMARY KEY(wallet,timestamp))"
+    ]
+   ],
+   "tables": {
+    "events": {
+     "columns": [
+      "wallet",
+      "event_key",
+      "timestamp",
+      "session",
+      "kind",
+      "data_json"
+     ],
+     "rows": [
+      [
+       "prl1fixture",
+       "00000000000000000000000000000002",
+       1794100000.25,
+       "00000000000000000000000000000001",
+       "session_closed",
+       "{\"session\":\"00000000000000000000000000000001\"}"
+      ],
+      [
+       "prl1fixture",
+       "00000000000000000000000000000004",
+       1794100000.25,
+       "00000000000000000000000000000003",
+       "session_closed",
+       "{\"session\":\"00000000000000000000000000000003\"}"
+      ],
+      [
+       "prl1fixture",
+       "log:01ba4719c80b6fe911b091a7c05124b64eeece964e09c058ef8f9805daca546b",
+       1794100200.0,
+       "00000000000000000000000000000003",
+       "miner_log",
+       "{\"line\":\"\",\"path\":null}"
+      ],
+      [
+       "prl1fixture",
+       "log:0da082b6640f3f939a640c4ac8d82d6b00885819861a4d25f81f4a753d4f1e12",
+       1794168060.0,
+       "00000000000000000000000000000003",
+       "miner_log",
+       "{\"line\":\"[2026-11-08 20:01:00] depois de reabrir\",\"path\":\"mining-a.log\",\"gpu_uuid\":\"GPU-1111\"}"
+      ],
+      [
+       "prl1fixture",
+       "log:434cff07f85659b9f3b8d79acfe7dcbf724d90b146af631aa852568377eb93bf",
+       1794100000.25,
+       "00000000000000000000000000000001",
+       "miner_log",
+       "{\"line\":\"��A\",\"path\":\"mining-a.log\",\"gpu_uuid\":null}"
+      ],
+      [
+       "prl1fixture",
+       "log:5a638391b24756be8aefe7a5c87a50d360a97f0bc369ce5555eaedaccdec85a5",
+       1794100200.0,
+       "00000000000000000000000000000003",
+       "miner_log",
+       "{\"line\":\"sem caminho 1\",\"path\":null}"
+      ],
+      [
+       "prl1fixture",
+       "log:d084ce8d40da93e9a10cb4a1294e6822bf3818a422854224421a75718612dc79",
+       1794100200.0,
+       "00000000000000000000000000000003",
+       "miner_log",
+       "{\"line\":\"sem caminho 2\",\"path\":null}"
+      ],
+      [
+       "prl1fixture",
+       "log:d7e446f39f6a8c6da411ece224a8f0d6b95c4602d914a024f072388ccc0ef32c",
+       1794100000.25,
+       "00000000000000000000000000000001",
+       "miner_log",
+       "{\"line\":\"fim com separador\",\"path\":\"mining-a.log\",\"gpu_uuid\":null}"
+      ],
+      [
+       "prl1fixture",
+       "log:fede9e8b42cc707f645c547cdbb778347168c5342fa64e5d3d620b93e35e7687",
+       1794168120.0,
+       "00000000000000000000000000000003",
+       "miner_log",
+       "{\"line\":\"[2026-11-08 20:02:00] rotacionado\",\"path\":\"mining-a.log\",\"gpu_uuid\":\"GPU-1111\"}"
+      ],
+      [
+       "prl1fixture",
+       "session:00000000000000000000000000000001",
+       1794100000.25,
+       "00000000000000000000000000000001",
+       "session_started",
+       "{\"session\":\"00000000000000000000000000000001\"}"
+      ],
+      [
+       "prl1fixture",
+       "session:00000000000000000000000000000003",
+       1794100000.25,
+       "00000000000000000000000000000003",
+       "session_started",
+       "{\"session\":\"00000000000000000000000000000003\"}"
+      ],
+      [
+       "prl1fixture",
+       "status:1794100200.0",
+       1794100200.0,
+       "00000000000000000000000000000003",
+       "status_changed",
+       "{\"miner_running\":null,\"paused\":null,\"connection\":null,\"errors\":{},\"log_path\":null}"
+      ],
+      [
+       "prl1fixture",
+       "thermal:01b524a5f913095250346556880e10fcaa666a94b96d66604b4b5ad0da3c2fea",
+       1794100000.25,
+       "00000000000000000000000000000003",
+       "thermal_import_error",
+       "{\"path\":\"thermal.jsonl\",\"error\":\"Timestamp térmico inválido\"}"
+      ],
+      [
+       "prl1fixture",
+       "thermal:991e2a61eb00bdcfec646a13838505e745e244ee36859431caaa05b49989b17e",
+       1794100101.0,
+       "00000000000000000000000000000003",
+       "thermal_control",
+       "{\"sampled_at\":\"1794100101\",\"temp\":77}"
+      ],
+      [
+       "prl1fixture",
+       "thermal:bfafee78177cadaf8e87f399906df54fc81df024b0537bd88349ed9006afdd6a",
+       1794100000.25,
+       "00000000000000000000000000000003",
+       "thermal_import_error",
+       "{\"path\":\"thermal.jsonl\",\"error\":\"Timestamp térmico inválido\"}"
+      ],
+      [
+       "prl1fixture",
+       "thermal:c2e1aa39e9ce4559a009f94b2f74c35839fddc6c9bd35f0b21b2003ef43b45f8",
+       1794100100.5,
+       "00000000000000000000000000000003",
+       "thermal_control",
+       "{\"sampled_at\":1794100100.5,\"temp\":76}"
+      ],
+      [
+       "prl1fixture",
+       "thermal:ca1b57089e36dd22a613e1ee66a9a2f8a55e77404c9711bd8253cda84c936cfe",
+       1.0,
+       "00000000000000000000000000000003",
+       "thermal_control",
+       "{\"sampled_at\":true,\"ação\":\"sim\"}"
+      ],
+      [
+       "prl1fixture",
+       "thermal:d55438a6c9bb5f440a73021443cc5716dabbf0e8438029e9feef21fa6658e738",
+       1794100000.25,
+       "00000000000000000000000000000003",
+       "thermal_import_error",
+       "{\"path\":\"thermal.jsonl\",\"error\":\"'sampled_at'\"}"
+      ],
+      [
+       "prl1gpu",
+       "log:1323360e15184482febe8d2c0568f155aa52a38d877cd3e3944b9aa71c034b24",
+       1794168000.0,
+       "00000000000000000000000000000001",
+       "miner_log",
+       "{\"line\":\"[2026-11-08 20:00:00] GPU0 RTX 3070: 78.00 TH/s\",\"path\":\"mining-a.log\",\"gpu_uuid\":\"GPU-1111\"}"
+      ],
+      [
+       "prl1gpu",
+       "log:30311e0cd7ce6c3284f727416fb1a292f2326f0cdedba2a30a9bad5275967e09",
+       1794100000.25,
+       "00000000000000000000000000000001",
+       "miner_log",
+       "{\"line\":\"linha sem carimbo\",\"path\":\"mining-a.log\",\"gpu_uuid\":\"GPU-1111\"}"
+      ],
+      [
+       "prl1gpu",
+       "log:8ed37a0a729e9a62214960620d12fa23002348ea3795591e615cb3d5c177c96a",
+       1794100000.25,
+       "00000000000000000000000000000001",
+       "miner_log",
+       "{\"line\":\"incompleta agora completa\",\"path\":\"mining-a.log\",\"gpu_uuid\":\"GPU-1111\"}"
+      ],
+      [
+       "prl1gpu",
+       "log:c405d1acef5eab3802d3f2ba6b287146029ef26ae23e72831a78f930d79dc3d1",
+       1794168005.0,
+       "00000000000000000000000000000001",
+       "miner_log",
+       "{\"line\":\"[2026-11-08 20:00:05] segunda\",\"path\":\"mining-a.log\",\"gpu_uuid\":\"GPU-1111\"}"
+      ],
+      [
+       "prl1gpu",
+       "log:f974ddfef38703871ee987992f6408c4723fb99715b990d75ced30fa405b5d2a",
+       1794100000.25,
+       "00000000000000000000000000000001",
+       "miner_log",
+       "{\"line\":\"[2026-13-40 99:99:99] carimbo inválido\",\"path\":\"mining-a.log\",\"gpu_uuid\":\"GPU-1111\"}"
+      ],
+      [
+       "prl1second",
+       "00000000000000000000000000000006",
+       1794100000.25,
+       "00000000000000000000000000000005",
+       "session_closed",
+       "{\"session\":\"00000000000000000000000000000005\"}"
+      ],
+      [
+       "prl1second",
+       "session:00000000000000000000000000000005",
+       1794100000.25,
+       "00000000000000000000000000000005",
+       "session_started",
+       "{\"session\":\"00000000000000000000000000000005\"}"
+      ],
+      [
+       "prl1second",
+       "thermal:01b524a5f913095250346556880e10fcaa666a94b96d66604b4b5ad0da3c2fea",
+       1794100000.25,
+       "00000000000000000000000000000005",
+       "thermal_import_error",
+       "{\"path\":\"thermal.jsonl\",\"error\":\"Timestamp térmico inválido\"}"
+      ],
+      [
+       "prl1second",
+       "thermal:991e2a61eb00bdcfec646a13838505e745e244ee36859431caaa05b49989b17e",
+       1794100101.0,
+       "00000000000000000000000000000005",
+       "thermal_control",
+       "{\"sampled_at\":\"1794100101\",\"temp\":77}"
+      ],
+      [
+       "prl1second",
+       "thermal:bfafee78177cadaf8e87f399906df54fc81df024b0537bd88349ed9006afdd6a",
+       1794100000.25,
+       "00000000000000000000000000000005",
+       "thermal_import_error",
+       "{\"path\":\"thermal.jsonl\",\"error\":\"Timestamp térmico inválido\"}"
+      ],
+      [
+       "prl1second",
+       "thermal:c2e1aa39e9ce4559a009f94b2f74c35839fddc6c9bd35f0b21b2003ef43b45f8",
+       1794100100.5,
+       "00000000000000000000000000000005",
+       "thermal_control",
+       "{\"sampled_at\":1794100100.5,\"temp\":76}"
+      ],
+      [
+       "prl1second",
+       "thermal:ca1b57089e36dd22a613e1ee66a9a2f8a55e77404c9711bd8253cda84c936cfe",
+       1.0,
+       "00000000000000000000000000000005",
+       "thermal_control",
+       "{\"sampled_at\":true,\"ação\":\"sim\"}"
+      ],
+      [
+       "prl1second",
+       "thermal:d55438a6c9bb5f440a73021443cc5716dabbf0e8438029e9feef21fa6658e738",
+       1794100000.25,
+       "00000000000000000000000000000005",
+       "thermal_import_error",
+       "{\"path\":\"thermal.jsonl\",\"error\":\"'sampled_at'\"}"
+      ]
+     ]
+    },
+    "finance_snapshots": {
+     "columns": [
+      "wallet",
+      "timestamp",
+      "total_prl"
+     ],
+     "rows": []
+    },
+    "finance_sources": {
+     "columns": [
+      "wallet",
+      "source",
+      "fetched_at",
+      "data_json"
+     ],
+     "rows": []
+    },
+    "gpu_devices": {
+     "columns": [
+      "gpu_uuid",
+      "first_seen",
+      "last_seen",
+      "identity_json"
+     ],
+     "rows": []
+    },
+    "gpu_telemetry": {
+     "columns": [
+      "gpu_uuid",
+      "timestamp",
+      "wallet",
+      "session",
+      "source",
+      "gpu_json",
+      "miner_json",
+      "miner_running",
+      "enabled",
+      "errors_json",
+      "log_path"
+     ],
+     "rows": []
+    },
+    "preferences": {
+     "columns": [
+      "wallet",
+      "name",
+      "data_json"
+     ],
+     "rows": []
+    },
+    "telemetry": {
+     "columns": [
+      "wallet",
+      "timestamp",
+      "session",
+      "source",
+      "gpu_json",
+      "miner_json",
+      "miner_running",
+      "errors_json",
+      "log_path"
+     ],
+     "rows": [
+      [
+       "prl1fixture",
+       1794100200.0,
+       "00000000000000000000000000000003",
+       "live",
+       "null",
+       "{}",
+       null,
+       "{}",
+       null
+      ]
+     ]
+    }
+   },
+   "user_version": 3,
+   "journal_mode": "wal",
+   "offsets": "{\"mining-a.log\":34}",
+   "rejected": [],
+   "last_error": null
+  },
+  {
+   "name": "rejeitadas",
+   "prepare": [],
+   "ops": [
+    {
+     "op": "telemetry",
+     "data": {
+      "miner": {}
+     }
+    },
+    {
+     "op": "last_error"
+    },
+    {
+     "op": "rig_telemetry",
+     "rig": {
+      "devices": [
+       {
+        "uuid": "GPU-3333",
+        "collected_at": null
+       }
+      ]
+     }
+    },
+    {
+     "op": "last_error"
+    },
+    {
+     "op": "finance",
+     "state": {
+      "snapshots": [
+       {
+        "timestamp": 1.0
+       }
+      ]
+     }
+    },
+    {
+     "op": "last_error"
+    },
+    {
+     "op": "telemetry",
+     "data": {
+      "miner": {
+       "recent_logs": "linha"
+      }
+     }
+    },
+    {
+     "op": "preferences",
+     "data": [
+      "não",
+      "é",
+      "objeto"
+     ]
+    },
+    {
+     "op": "last_error"
+    },
+    {
+     "op": "event",
+     "timestamp": 1794100300.0,
+     "kind": "depois",
+     "data": {},
+     "key": "ok"
+    },
+    {
+     "op": "last_error"
+    }
+   ],
+   "outputs": [
+    {
+     "last_error": "Amostra rejeitada: 'collected_at'"
+    },
+    {
+     "last_error": "Amostra rejeitada: NOT NULL constraint failed: gpu_devices.first_seen"
+    },
+    {
+     "last_error": "Amostra rejeitada: 'total_prl'"
+    },
+    {
+     "raised": "'collected_at'"
+    },
+    {
+     "last_error": "Amostra rejeitada: 'list' object has no attribute 'items'"
+    },
+    {
+     "last_error": null
+    }
+   ],
+   "schema": [
+    [
+     "index",
+     "events_by_time",
+     "events",
+     "CREATE INDEX events_by_time ON events(wallet,timestamp)"
+    ],
+    [
+     "index",
+     "gpu_telemetry_wallet_time",
+     "gpu_telemetry",
+     "CREATE INDEX gpu_telemetry_wallet_time ON gpu_telemetry(wallet,timestamp)"
+    ],
+    [
+     "index",
+     "sqlite_autoindex_events_1",
+     "events",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_finance_snapshots_1",
+     "finance_snapshots",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_finance_sources_1",
+     "finance_sources",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_gpu_devices_1",
+     "gpu_devices",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_gpu_telemetry_1",
+     "gpu_telemetry",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_preferences_1",
+     "preferences",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_telemetry_1",
+     "telemetry",
+     null
+    ],
+    [
+     "table",
+     "events",
+     "events",
+     "CREATE TABLE events (\n            wallet TEXT NOT NULL, event_key TEXT NOT NULL, timestamp REAL NOT NULL,\n            session TEXT NOT NULL, kind TEXT NOT NULL, data_json TEXT NOT NULL,\n            PRIMARY KEY(wallet,event_key))"
+    ],
+    [
+     "table",
+     "finance_snapshots",
+     "finance_snapshots",
+     "CREATE TABLE finance_snapshots (\n            wallet TEXT NOT NULL, timestamp REAL NOT NULL, total_prl REAL NOT NULL,\n            PRIMARY KEY(wallet,timestamp))"
+    ],
+    [
+     "table",
+     "finance_sources",
+     "finance_sources",
+     "CREATE TABLE finance_sources (\n            wallet TEXT NOT NULL, source TEXT NOT NULL, fetched_at REAL NOT NULL,\n            data_json TEXT NOT NULL, PRIMARY KEY(wallet,source,fetched_at))"
+    ],
+    [
+     "table",
+     "gpu_devices",
+     "gpu_devices",
+     "CREATE TABLE gpu_devices (\n            gpu_uuid TEXT PRIMARY KEY,first_seen REAL NOT NULL,last_seen REAL NOT NULL,identity_json TEXT NOT NULL)"
+    ],
+    [
+     "table",
+     "gpu_telemetry",
+     "gpu_telemetry",
+     "CREATE TABLE gpu_telemetry (\n            gpu_uuid TEXT NOT NULL,timestamp REAL NOT NULL,wallet TEXT NOT NULL,session TEXT NOT NULL,\n            source TEXT NOT NULL,gpu_json TEXT,miner_json TEXT NOT NULL,miner_running INTEGER,\n            enabled INTEGER,errors_json TEXT,log_path TEXT,PRIMARY KEY(gpu_uuid,wallet,timestamp))"
+    ],
+    [
+     "table",
+     "preferences",
+     "preferences",
+     "CREATE TABLE preferences (\n            wallet TEXT NOT NULL, name TEXT NOT NULL, data_json TEXT NOT NULL,\n            PRIMARY KEY(wallet,name))"
+    ],
+    [
+     "table",
+     "telemetry",
+     "telemetry",
+     "CREATE TABLE telemetry (\n            wallet TEXT NOT NULL, timestamp REAL NOT NULL, session TEXT NOT NULL,\n            source TEXT NOT NULL, gpu_json TEXT, miner_json TEXT NOT NULL,\n            miner_running INTEGER, errors_json TEXT, log_path TEXT,\n            PRIMARY KEY(wallet,timestamp))"
+    ]
+   ],
+   "tables": {
+    "events": {
+     "columns": [
+      "wallet",
+      "event_key",
+      "timestamp",
+      "session",
+      "kind",
+      "data_json"
+     ],
+     "rows": [
+      [
+       "prl1fixture",
+       "00000000000000000000000000000002",
+       1794100000.25,
+       "00000000000000000000000000000001",
+       "session_closed",
+       "{\"session\":\"00000000000000000000000000000001\"}"
+      ],
+      [
+       "prl1fixture",
+       "ok",
+       1794100300.0,
+       "00000000000000000000000000000001",
+       "depois",
+       "{}"
+      ],
+      [
+       "prl1fixture",
+       "session:00000000000000000000000000000001",
+       1794100000.25,
+       "00000000000000000000000000000001",
+       "session_started",
+       "{\"session\":\"00000000000000000000000000000001\"}"
+      ]
+     ]
+    },
+    "finance_snapshots": {
+     "columns": [
+      "wallet",
+      "timestamp",
+      "total_prl"
+     ],
+     "rows": []
+    },
+    "finance_sources": {
+     "columns": [
+      "wallet",
+      "source",
+      "fetched_at",
+      "data_json"
+     ],
+     "rows": []
+    },
+    "gpu_devices": {
+     "columns": [
+      "gpu_uuid",
+      "first_seen",
+      "last_seen",
+      "identity_json"
+     ],
+     "rows": []
+    },
+    "gpu_telemetry": {
+     "columns": [
+      "gpu_uuid",
+      "timestamp",
+      "wallet",
+      "session",
+      "source",
+      "gpu_json",
+      "miner_json",
+      "miner_running",
+      "enabled",
+      "errors_json",
+      "log_path"
+     ],
+     "rows": []
+    },
+    "preferences": {
+     "columns": [
+      "wallet",
+      "name",
+      "data_json"
+     ],
+     "rows": []
+    },
+    "telemetry": {
+     "columns": [
+      "wallet",
+      "timestamp",
+      "session",
+      "source",
+      "gpu_json",
+      "miner_json",
+      "miner_running",
+      "errors_json",
+      "log_path"
+     ],
+     "rows": []
+    }
+   },
+   "user_version": 3,
+   "journal_mode": "wal",
+   "offsets": "{}",
+   "rejected": [
+    "{\"at\":1794100000.25,\"kind\":\"telemetry\",\"error\":\"'collected_at'\"}",
+    "{\"at\":1794100000.25,\"kind\":\"rig_telemetry\",\"error\":\"NOT NULL constraint failed: gpu_devices.first_seen\"}",
+    "{\"at\":1794100000.25,\"kind\":\"finance\",\"error\":\"'total_prl'\"}",
+    "{\"at\":1794100000.25,\"kind\":\"telemetry\",\"error\":\"'collected_at'\"}",
+    "{\"at\":1794100000.25,\"kind\":\"preferences\",\"error\":\"'list' object has no attribute 'items'\"}"
+   ],
+   "last_error": null
+  },
+  {
+   "name": "migracao_gpu_v2",
+   "prepare": [
+    "CREATE TABLE gpu_telemetry (gpu_uuid TEXT NOT NULL,timestamp REAL NOT NULL,wallet TEXT NOT NULL,session TEXT NOT NULL,source TEXT NOT NULL,gpu_json TEXT,miner_json TEXT NOT NULL,miner_running INTEGER,enabled INTEGER,errors_json TEXT,log_path TEXT,PRIMARY KEY(gpu_uuid,timestamp))",
+    "INSERT INTO gpu_telemetry VALUES('GPU-1111',1794000000.0,'prl1old','s-old','live','{\"temperature.gpu\":70}','{}',1,1,'{}',NULL)",
+    "INSERT INTO gpu_telemetry VALUES('GPU-1111',1794000002.0,'prl1old','s-old','live',NULL,'{}',0,1,'{}','a.log')",
+    "PRAGMA user_version=2"
+   ],
+   "ops": [
+    {
+     "op": "rig_telemetry",
+     "rig": {
+      "devices": [
+       {
+        "uuid": "GPU-1111",
+        "collected_at": 1794000000.0,
+        "wallet": "prl1new",
+        "gpu": {
+         "temperature.gpu": 71
+        }
+       }
+      ]
+     }
+    },
+    {
+     "op": "read",
+     "call": "gpu_stats",
+     "args": []
+    },
+    {
+     "op": "read",
+     "call": "restore_gpu",
+     "args": [
+      "GPU-1111",
+      0,
+      "prl1old"
+     ]
+    }
+   ],
+   "outputs": [
+    {
+     "read": "gpu_stats",
+     "result": {
+      "GPU-1111": [
+       3,
+       1794000000.0,
+       1794000002.0
+      ]
+     }
+    },
+    {
+     "raised": "the JSON object must be str, bytes or bytearray, not NoneType"
+    }
+   ],
+   "schema": [
+    [
+     "index",
+     "events_by_time",
+     "events",
+     "CREATE INDEX events_by_time ON events(wallet,timestamp)"
+    ],
+    [
+     "index",
+     "gpu_telemetry_wallet_time",
+     "gpu_telemetry",
+     "CREATE INDEX gpu_telemetry_wallet_time ON gpu_telemetry(wallet,timestamp)"
+    ],
+    [
+     "index",
+     "sqlite_autoindex_events_1",
+     "events",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_finance_snapshots_1",
+     "finance_snapshots",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_finance_sources_1",
+     "finance_sources",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_gpu_devices_1",
+     "gpu_devices",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_gpu_telemetry_1",
+     "gpu_telemetry",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_preferences_1",
+     "preferences",
+     null
+    ],
+    [
+     "index",
+     "sqlite_autoindex_telemetry_1",
+     "telemetry",
+     null
+    ],
+    [
+     "table",
+     "events",
+     "events",
+     "CREATE TABLE events (\n            wallet TEXT NOT NULL, event_key TEXT NOT NULL, timestamp REAL NOT NULL,\n            session TEXT NOT NULL, kind TEXT NOT NULL, data_json TEXT NOT NULL,\n            PRIMARY KEY(wallet,event_key))"
+    ],
+    [
+     "table",
+     "finance_snapshots",
+     "finance_snapshots",
+     "CREATE TABLE finance_snapshots (\n            wallet TEXT NOT NULL, timestamp REAL NOT NULL, total_prl REAL NOT NULL,\n            PRIMARY KEY(wallet,timestamp))"
+    ],
+    [
+     "table",
+     "finance_sources",
+     "finance_sources",
+     "CREATE TABLE finance_sources (\n            wallet TEXT NOT NULL, source TEXT NOT NULL, fetched_at REAL NOT NULL,\n            data_json TEXT NOT NULL, PRIMARY KEY(wallet,source,fetched_at))"
+    ],
+    [
+     "table",
+     "gpu_devices",
+     "gpu_devices",
+     "CREATE TABLE gpu_devices (\n            gpu_uuid TEXT PRIMARY KEY,first_seen REAL NOT NULL,last_seen REAL NOT NULL,identity_json TEXT NOT NULL)"
+    ],
+    [
+     "table",
+     "gpu_telemetry",
+     "gpu_telemetry",
+     "CREATE TABLE \"gpu_telemetry\" (\n                    gpu_uuid TEXT NOT NULL,timestamp REAL NOT NULL,wallet TEXT NOT NULL,session TEXT NOT NULL,\n                    source TEXT NOT NULL,gpu_json TEXT,miner_json TEXT NOT NULL,miner_running INTEGER,\n                    enabled INTEGER,errors_json TEXT,log_path TEXT,PRIMARY KEY(gpu_uuid,wallet,timestamp))"
+    ],
+    [
+     "table",
+     "preferences",
+     "preferences",
+     "CREATE TABLE preferences (\n            wallet TEXT NOT NULL, name TEXT NOT NULL, data_json TEXT NOT NULL,\n            PRIMARY KEY(wallet,name))"
+    ],
+    [
+     "table",
+     "telemetry",
+     "telemetry",
+     "CREATE TABLE telemetry (\n            wallet TEXT NOT NULL, timestamp REAL NOT NULL, session TEXT NOT NULL,\n            source TEXT NOT NULL, gpu_json TEXT, miner_json TEXT NOT NULL,\n            miner_running INTEGER, errors_json TEXT, log_path TEXT,\n            PRIMARY KEY(wallet,timestamp))"
+    ]
+   ],
+   "tables": {
+    "events": {
+     "columns": [
+      "wallet",
+      "event_key",
+      "timestamp",
+      "session",
+      "kind",
+      "data_json"
+     ],
+     "rows": [
+      [
+       "prl1fixture",
+       "00000000000000000000000000000002",
+       1794100000.25,
+       "00000000000000000000000000000001",
+       "session_closed",
+       "{\"session\":\"00000000000000000000000000000001\"}"
+      ],
+      [
+       "prl1fixture",
+       "session:00000000000000000000000000000001",
+       1794100000.25,
+       "00000000000000000000000000000001",
+       "session_started",
+       "{\"session\":\"00000000000000000000000000000001\"}"
+      ]
+     ]
+    },
+    "finance_snapshots": {
+     "columns": [
+      "wallet",
+      "timestamp",
+      "total_prl"
+     ],
+     "rows": []
+    },
+    "finance_sources": {
+     "columns": [
+      "wallet",
+      "source",
+      "fetched_at",
+      "data_json"
+     ],
+     "rows": []
+    },
+    "gpu_devices": {
+     "columns": [
+      "gpu_uuid",
+      "first_seen",
+      "last_seen",
+      "identity_json"
+     ],
+     "rows": [
+      [
+       "GPU-1111",
+       1794000000.0,
+       1794000000.0,
+       "{\"uuid\":\"GPU-1111\"}"
+      ]
+     ]
+    },
+    "gpu_telemetry": {
+     "columns": [
+      "gpu_uuid",
+      "timestamp",
+      "wallet",
+      "session",
+      "source",
+      "gpu_json",
+      "miner_json",
+      "miner_running",
+      "enabled",
+      "errors_json",
+      "log_path"
+     ],
+     "rows": [
+      [
+       "GPU-1111",
+       1794000000.0,
+       "prl1new",
+       "00000000000000000000000000000001",
+       "live",
+       "{\"temperature.gpu\":71}",
+       "{}",
+       null,
+       1,
+       "{}",
+       null
+      ],
+      [
+       "GPU-1111",
+       1794000000.0,
+       "prl1old",
+       "s-old",
+       "live",
+       "{\"temperature.gpu\":70}",
+       "{}",
+       1,
+       1,
+       "{}",
+       null
+      ],
+      [
+       "GPU-1111",
+       1794000002.0,
+       "prl1old",
+       "s-old",
+       "live",
+       null,
+       "{}",
+       0,
+       1,
+       "{}",
+       "a.log"
+      ]
+     ]
+    },
+    "preferences": {
+     "columns": [
+      "wallet",
+      "name",
+      "data_json"
+     ],
+     "rows": []
+    },
+    "telemetry": {
+     "columns": [
+      "wallet",
+      "timestamp",
+      "session",
+      "source",
+      "gpu_json",
+      "miner_json",
+      "miner_running",
+      "errors_json",
+      "log_path"
+     ],
+     "rows": []
+    }
+   },
+   "user_version": 3,
+   "journal_mode": "wal",
+   "offsets": "{}",
+   "rejected": [],
+   "last_error": null
+  },
+  {
+   "name": "versao_futura",
+   "prepare": [
+    "PRAGMA user_version=4"
+   ],
+   "ops": [
+    {
+     "op": "event",
+     "timestamp": 1.0,
+     "kind": "x",
+     "data": {},
+     "key": "k"
+    },
+    {
+     "op": "last_error"
+    },
+    {
+     "op": "read",
+     "call": "stats",
+     "args": []
+    }
+   ],
+   "outputs": [
+    {
+     "last_error": "Histórico indisponível: Versão futura do histórico não suportada"
+    },
+    {
+     "raised": "no such table: telemetry"
+    }
+   ],
+   "schema": [],
+   "tables": {},
+   "user_version": 4,
+   "journal_mode": "wal",
+   "offsets": "{}",
+   "rejected": [],
+   "last_error": "Histórico indisponível: Versão futura do histórico não suportada"
+  },
+  {
+   "name": "esquema_gpu_desconhecido",
+   "prepare": [
+    "CREATE TABLE gpu_telemetry (gpu_uuid TEXT PRIMARY KEY, timestamp REAL)"
+   ],
+   "ops": [
+    {
+     "op": "last_error"
+    }
+   ],
+   "outputs": [
+    {
+     "last_error": "Histórico indisponível: Esquema de GPU desconhecido"
+    }
+   ],
+   "schema": [
+    [
+     "index",
+     "sqlite_autoindex_gpu_telemetry_1",
+     "gpu_telemetry",
+     null
+    ],
+    [
+     "table",
+     "gpu_telemetry",
+     "gpu_telemetry",
+     "CREATE TABLE gpu_telemetry (gpu_uuid TEXT PRIMARY KEY, timestamp REAL)"
+    ]
+   ],
+   "tables": {
+    "gpu_telemetry": {
+     "columns": [
+      "gpu_uuid",
+      "timestamp"
+     ],
+     "rows": []
+    }
+   },
+   "user_version": 0,
+   "journal_mode": "wal",
+   "offsets": "{}",
+   "rejected": [],
+   "last_error": "Histórico indisponível: Esquema de GPU desconhecido"
+  }
+ ],
+ "now": 1794100000.25,
+ "wallet": "prl1fixture"
+}

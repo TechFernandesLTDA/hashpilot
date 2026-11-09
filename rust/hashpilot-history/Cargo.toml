@@ -1,0 +1,19 @@
+[package]
+name = "hashpilot-history"
+description = "Histórico SQLite do HashPilot: lê e grava o history.sqlite3 do aplicativo Python com o mesmo esquema, as mesmas chaves SHA-256 e as mesmas migrações."
+version.workspace = true
+edition.workspace = true
+rust-version.workspace = true
+license.workspace = true
+repository.workspace = true
+
+[dependencies]
+hashpilot-core = { path = "../hashpilot-core" }
+rusqlite.workspace = true
+# preserve_order: a ordem das chaves do JSON gravado segue a do Python (dict).
+# float_roundtrip: leitura de números com arredondamento exato, como o float() do Python.
+serde_json = { workspace = true, features = ["preserve_order", "float_roundtrip"] }
+sha2.workspace = true
+
+[lints]
+workspace = true

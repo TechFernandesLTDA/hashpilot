@@ -13,6 +13,7 @@ path = "src/main.rs"
 
 [dependencies]
 hashpilot-core = { path = "../hashpilot-core" }
+hashpilot-history = { path = "../hashpilot-history" }
 serde_json.workspace = true
 zip.workspace = true
 sha2.workspace = true
