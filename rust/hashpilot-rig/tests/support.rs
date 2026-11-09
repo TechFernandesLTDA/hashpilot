@@ -1,5 +1,5 @@
 //! Paridade com `mining_health`, `mining_continuity`, `miner_identity`,
-//! `reference_profile`, `gpu_profiles` e o `json.dumps(indent=2)` do `atomic_json`
+//! `reference_profile`, `gpu_profiles`, o catálogo do `miner_update` e o `json.dumps(indent=2)` do `atomic_json`
 //! (golden `rig_support`; o `match_successor` está no golden `process`, só do Windows).
 //!
 //! A comparação é por valor **com tipo**: `0` e `0.0` são diferentes, porque o
@@ -276,4 +276,28 @@ fn match_successor_matches_python() {
         );
         assert_eq!(json!(actual), case["expected"], "{}", case["name"]);
     }
+}
+
+#[test]
+fn embedded_miner_catalog_matches_python() {
+    let golden = golden("rig_support");
+    let found = cases(&golden, "catalog");
+    assert_eq!(found.len(), 1);
+    let case = &found[0];
+    let catalog = hashpilot_rig::miner_install::Catalog::default();
+    assert!(
+        strict(&Value::Object(catalog.entries.clone()), &case["catalog"]),
+        "catálogo difere do miner_update.CATALOG"
+    );
+    assert_eq!(json!(catalog.default_version), case["default_version"]);
+    for (version, expected) in case["descriptors"].as_object().unwrap() {
+        assert!(
+            strict(&catalog.descriptor(&json!(version)).unwrap(), expected),
+            "{version}"
+        );
+    }
+    assert_eq!(
+        json!(catalog.descriptor(&json!("9.9.9")).unwrap_err()),
+        case["unknown"]
+    );
 }

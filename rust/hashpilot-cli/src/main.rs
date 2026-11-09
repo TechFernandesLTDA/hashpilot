@@ -55,6 +55,8 @@ Uso:
                                          (nunca encerra nada)
   hashpilot recovery --gpu <uuid> [--operations <operations.sqlite3>] [--now EPOCH]
                                          Orçamento de recuperação e incidentes recentes da GPU
+  hashpilot miner [--base <pasta>]      Versão selecionada do SRBMiner e conferência do SHA-256
+                                         do executável pelo catálogo (só lê; não executa nada)
   hashpilot --version | --help
 ";
 
@@ -80,6 +82,7 @@ fn main() -> ExitCode {
         Some("finance") => finance_command(&arguments[1..]),
         Some("process") => process_command(&arguments[1..]),
         Some("recovery") => recovery_command(&arguments[1..]),
+        Some("miner") => miner_command(&arguments[1..]),
         Some(other) => Err(Failure::Usage(format!("comando desconhecido: {other}"))),
     };
     match result {
@@ -310,6 +313,33 @@ fn recovery_command(arguments: &[String]) -> Result<Value, Failure> {
     Ok(json!({
         "budget": store.budget(gpu, now).map_err(Failure::Runtime)?,
         "incidents": store.recent_events(gpu, 5).map_err(Failure::Runtime)?,
+    }))
+}
+
+/// `hashpilot miner`: `miner_update.selected_version` e `active_executable`. Só lê o
+/// executável para conferir o SHA-256; nunca o executa.
+fn miner_command(arguments: &[String]) -> Result<Value, Failure> {
+    let options = Options::parse(arguments, &["base"], &[])?;
+    let base = match options.text("base") {
+        Some(path) => PathBuf::from(path),
+        None => {
+            let local = std::env::var_os("LOCALAPPDATA")
+                .ok_or_else(|| Failure::Runtime("LOCALAPPDATA não definido".into()))?;
+            PathBuf::from(local).join("Mining").join("Pearl")
+        }
+    };
+    let catalog = hashpilot_rig::miner_install::Catalog::default();
+    let version = catalog.selected_version(&base).map_err(Failure::Runtime)?;
+    let path = catalog
+        .executable(&json!(version), &base, false)
+        .map_err(Failure::Runtime)?;
+    let verified = catalog.executable(&json!(version), &base, true);
+    Ok(json!({
+        "base": base.to_string_lossy(),
+        "version": version,
+        "executable": path.to_string_lossy(),
+        "verified": verified.is_ok(),
+        "error": verified.err(),
     }))
 }
 

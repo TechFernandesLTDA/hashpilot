@@ -6,7 +6,9 @@
 //! pela interface [`Backend`]; os testes usam um backend falso, igual ao do
 //! `test_rig.py`, e nenhum deles inicia o minerador de verdade.
 //!
-//! Ainda não portado (etapa 4b-3): o laço `serve` e a ação `miner_update`.
+//! O laço `serve`, a ação `miner_update` e a validação com reversão automática da
+//! atualização estão aqui. Ainda falta (etapa 4b-3b) a restauração dos padrões da
+//! GPU pelo NVML no backend real, que por isso falha fechada.
 
 use std::collections::HashMap;
 use std::path::{Path, PathBuf};
@@ -22,6 +24,8 @@ use serde_json::{Map, Value, json};
 use crate::continuity::{ContinuityWindow, IdleSleepGuard, safe_sensor};
 use crate::fsutil::atomic_json;
 use crate::health::{OperationalStore, finite};
+use crate::lease::Lease;
+use crate::miner_install::Catalog;
 use crate::process::normalized_path;
 use crate::reference::{
     REFERENCE_RTX3070_UUID, profile, reference_device_confirmed, reference_memory_clock,
@@ -100,11 +104,20 @@ pub trait Backend {
     fn restore_defaults(&mut self, gpu: &Value, directory: &Path) -> Result<Value, String>;
 }
 
-/// O backend real. Até a etapa 4b-3, `verify_miner` e `restore_defaults` recusam
-/// (falha fechada): o `RigManager` em Rust ainda não inicia mineração real.
+/// O backend real. `verify_miner` confere o executável selecionado pelo SHA-256 do
+/// catálogo. Até a etapa 4b-3b, `restore_defaults` recusa (falha fechada): a parada
+/// fica registrada com restauração incompleta.
 impl Backend for crate::process::ProcessBackend {
-    fn verify_miner(&mut self, _miner_path: &Path) -> Result<(), String> {
-        Err("Verificação do executável ainda não portada para o Rust (etapa 4b-3); início bloqueado".into())
+    fn verify_miner(&mut self, miner_path: &Path) -> Result<(), String> {
+        let base = miner_path
+            .parent()
+            .and_then(Path::parent)
+            .unwrap_or(Path::new(""));
+        let target = Catalog::default().active_executable(base, true)?;
+        if normalized_path(&path_text(&target)) != normalized_path(&path_text(miner_path)) {
+            return Err("Minerador selecionado difere do executável solicitado".into());
+        }
+        Ok(())
     }
     fn assert_gpu_available(&mut self, _miner_path: &Path, index: &Value) -> Result<(), String> {
         crate::process::ProcessBackend::assert_gpu_available(self, &py_str(index))
@@ -286,6 +299,8 @@ pub struct RigManager {
     mapping_signature: Option<Vec<String>>,
     pub require_recovery_sensors: bool,
     pub miner_update_pending: Value,
+    pub miner_base: PathBuf,
+    pub catalog: Catalog,
     pub continuity: ContinuityWindow,
     pub sleep_guard: IdleSleepGuard,
     pub operations: OperationalStore,
@@ -301,6 +316,12 @@ impl RigManager {
         sleep_guard: IdleSleepGuard,
     ) -> Result<Self, String> {
         let operations = OperationalStore::new(&paths.state_dir.join("operations.sqlite3"))?;
+        let miner_base = paths
+            .miner_path
+            .parent()
+            .and_then(Path::parent)
+            .map(Path::to_path_buf)
+            .unwrap_or_default();
         let mut manager = Self {
             registry_path: paths.state_dir.join("rig-manager.json"),
             state_dir: paths.state_dir,
@@ -324,6 +345,8 @@ impl RigManager {
             mapping_signature: None,
             require_recovery_sensors: false,
             miner_update_pending: Value::Null,
+            miner_base,
+            catalog: Catalog::default(),
             continuity: ContinuityWindow::new(),
             sleep_guard,
             operations,
@@ -2026,16 +2049,18 @@ impl RigManager {
             }
             Some("shutdown") => self.shutting_down = true,
             Some("miner_update") => {
-                let error = "Atualização do minerador ainda não portada para o serviço em Rust (etapa 4b-3)";
-                if !truthy(&self.miner_update_pending) {
-                    atomic_json(
-                        &self.state_dir.join("miner-update.json"),
-                        &json!({"state": "failed", "request_id": identifier, "at": self.clock(), "error": error}),
-                        false,
-                        false,
-                    )?;
+                let version = field(&request, "version").clone();
+                if let Err(error) = self.activate_miner(&version, &identifier) {
+                    if !truthy(&self.miner_update_pending) {
+                        atomic_json(
+                            &self.state_dir.join("miner-update.json"),
+                            &json!({"state": "failed", "request_id": identifier, "at": self.clock(), "error": truncate(&error, 300)}),
+                            false,
+                            false,
+                        )?;
+                    }
+                    return Err(error);
                 }
-                return Err(error.into());
             }
             Some("reconcile") => {}
             _ => return Err("Ação desconhecida".into()),
@@ -2140,7 +2165,239 @@ impl RigManager {
         }
         Ok(())
     }
+    fn clear_retry(&mut self) {
+        for entry in self.devices.values_mut() {
+            if let Some(entry) = entry.as_object_mut() {
+                entry.shift_remove("retry_after");
+                entry.shift_remove("error");
+            }
+        }
+    }
+
+    fn stop_all_for_update(&mut self, message: &str) -> Result<(), String> {
+        let identifiers: Vec<String> = self.devices.keys().cloned().collect();
+        for identifier in identifiers {
+            if !self.stop_gpu(&identifier, false)? {
+                return Err(message.into());
+            }
+        }
+        Ok(())
+    }
+
+    /// `activate_miner(version, request_id)`: para tudo, registra a validação e troca a
+    /// versão selecionada. A versão anterior precisa conferir antes de qualquer parada.
+    pub fn activate_miner(&mut self, version: &Value, request_id: &Value) -> Result<(), String> {
+        if truthy(&self.miner_update_pending) {
+            return Err("Uma atualização do minerador ainda está em validação".into());
+        }
+        let base = self.miner_base.clone();
+        let target = self.catalog.executable(version, &base, true)?;
+        let old = self.catalog.selected_version(&base)?;
+        self.catalog.executable(&json!(old), &base, true)?;
+        if normalized_path(&path_text(&target)) == normalized_path(&path_text(&self.miner_path)) {
+            let record = json!({"state": "installed", "version": version, "request_id": request_id, "at": self.clock()});
+            return atomic_json(
+                &self.state_dir.join("miner-update.json"),
+                &record,
+                false,
+                false,
+            );
+        }
+        if self.devices.values().any(|entry| {
+            truthy(field(entry, "external_readonly"))
+                || truthy(field(entry, "ownership_unverified"))
+        }) {
+            return Err(
+                "Sessão externa ou sem identidade confirmada; atualização bloqueada".into(),
+            );
+        }
+        self.stop_all_for_update("Parada não confirmada; versão anterior preservada")?;
+        let clock = self.clock();
+        let pending = json!({"state": "validating", "version": version, "previous_version": old, "request_id": request_id,
+            "at": clock, "deadline": clock + 180.0});
+        atomic_json(
+            &self.state_dir.join("miner-update.json"),
+            &pending,
+            false,
+            false,
+        )?;
+        self.miner_update_pending = pending;
+        self.catalog.select(version, &base, now_wall())?;
+        self.miner_path = target;
+        self.mapping_signature = None;
+        self.clear_retry();
+        Ok(())
+    }
+
+    /// `validate_miner_update(snapshots)`: confirma a versão nova com hashrate recente
+    /// em toda GPU habilitada, ou volta à anterior depois do prazo.
+    pub fn validate_miner_update(&mut self, snapshots: &Obj) -> Result<(), String> {
+        let pending = self.miner_update_pending.clone();
+        if !truthy(&pending) {
+            return Ok(());
+        }
+        let clock = self.clock();
+        let valid = self
+            .devices
+            .iter()
+            .filter(|(_, entry)| truthy(field(entry, "enabled")))
+            .all(|(key, _)| {
+                snapshots.get(key).is_some_and(|snapshot| {
+                    let miner = field(snapshot, "miner");
+                    let stamp = field(miner, "hashrate_at");
+                    snapshot.get("miner_running") == Some(&Value::Bool(true))
+                        && !truthy(field(miner, "paused"))
+                        && py_eq(field(miner, "version"), field(&pending, "version"))
+                        && py_float(field(miner, "hashrate")).is_some_and(|rate| rate > 0.0)
+                        && finite(stamp)
+                        && stamp
+                            .as_f64()
+                            .is_some_and(|at| (0.0..=180.0).contains(&(clock - at)))
+                })
+            });
+        let path = self.state_dir.join("miner-update.json");
+        if valid {
+            let mut record = pending;
+            record["state"] = json!("installed");
+            record["validated_at"] = json!(clock);
+            atomic_json(&path, &record, false, false)?;
+            self.miner_update_pending = Value::Null;
+        } else if pending["deadline"]
+            .as_f64()
+            .is_some_and(|deadline| clock > deadline)
+        {
+            let base = self.miner_base.clone();
+            let previous = field(&pending, "previous_version").clone();
+            let old = self.catalog.executable(&previous, &base, true)?;
+            self.stop_all_for_update("Rollback aguarda confirmação de parada")?;
+            self.catalog.select(&previous, &base, now_wall())?;
+            self.miner_path = old;
+            self.mapping_signature = None;
+            self.clear_retry();
+            let mut record = pending;
+            record["state"] = json!("rolled_back");
+            record["error"] =
+                json!("Sem hashrate válido por GPU em 180 s; versão anterior selecionada");
+            record["at"] = json!(self.clock());
+            atomic_json(&path, &record, false, false)?;
+            self.miner_update_pending = Value::Null;
+        }
+        Ok(())
+    }
+
+    /// `serve(...)`: o laço do serviço, um ciclo a cada 2 s. Ao sair, por pedido ou por
+    /// erro, para todas as GPUs e libera a trava e a proteção contra suspensão.
+    pub fn serve(
+        &mut self,
+        options: &ServeOptions,
+        collect: Collector,
+        sleep: &mut dyn FnMut(std::time::Duration),
+    ) -> Result<(), String> {
+        self.require_recovery_sensors = true;
+        let mut lease = Lease::acquire(
+            &self.state_dir.join("rig-manager-owner.json"),
+            "Já existe um proxy de contribuição usando este diretório de logs",
+        )?;
+        let result = self.serve_loop(options, collect, sleep);
+        self.shutting_down = true;
+        let identifiers: Vec<String> = self.devices.keys().cloned().collect();
+        for identifier in identifiers {
+            if let Err(error) = self.stop_gpu(&identifier, false) {
+                self.set(&identifier, vec![("error", json!(truncate(&error, 300)))]);
+            }
+        }
+        let published = self.publish();
+        self.sleep_guard.update(false);
+        lease.close();
+        result.and(published)
+    }
+
+    fn serve_loop(
+        &mut self,
+        options: &ServeOptions,
+        collect: Collector,
+        sleep: &mut dyn FnMut(std::time::Duration),
+    ) -> Result<(), String> {
+        if options.reference_rtx3070 && options.migrate_legacy_uuid.is_none() {
+            let wanted = options.reference_uuid.clone();
+            let current = (self.detector)()?
+                .into_iter()
+                .find(|gpu| gpu.get("uuid").and_then(Value::as_str) == wanted.as_deref());
+            if !current.is_some_and(|gpu| reference_device_confirmed(&gpu)) {
+                return Err("UUID ou limites da GPU de referência não confirmados".into());
+            }
+            self.reference_uuid = wanted;
+        }
+        if options.adopt_legacy {
+            self.adopt_legacy(None)?;
+        }
+        if let Some(uuid) = &options.migrate_legacy_uuid {
+            self.migrate_legacy(uuid, options.reference_rtx3070)?;
+        }
+        let mut detected: Option<Vec<Value>> = None;
+        let mut last_detection: Option<std::time::Instant> = None;
+        while !self.shutting_down {
+            let started = std::time::Instant::now();
+            match self.serve_cycle(&mut detected, &mut last_detection, &mut *collect) {
+                Ok(true) => break,
+                Ok(false) => {}
+                Err(error) => {
+                    self.error = json!(truncate(&error, 300));
+                    self.publish()?;
+                }
+            }
+            sleep(std::time::Duration::from_secs_f64(
+                (2.0 - started.elapsed().as_secs_f64()).max(0.1),
+            ));
+        }
+        Ok(())
+    }
+
+    fn serve_cycle(
+        &mut self,
+        detected: &mut Option<Vec<Value>>,
+        last_detection: &mut Option<std::time::Instant>,
+        collect: Collector,
+    ) -> Result<bool, String> {
+        self.process_requests();
+        if self.shutting_down {
+            return Ok(true);
+        }
+        let clock = self.clock();
+        self.continuity.tick(clock);
+        if detected.is_none() || last_detection.is_none_or(|at| at.elapsed().as_secs_f64() >= 30.0)
+        {
+            let found = (self.detector)()?;
+            *detected = Some(self.continuity.inventory(&found, self.clock())?);
+            *last_detection = Some(std::time::Instant::now());
+        }
+        let devices = self.reconcile(detected.clone(), None)?;
+        let snapshots = collect(&devices, &self.devices)?;
+        self.validate_miner_update(&snapshots)?;
+        self.observe_health(&snapshots)?;
+        let active = self.devices.values().any(|entry| {
+            truthy(field(entry, "enabled"))
+                && truthy(field(entry, "miner_running"))
+                && truthy(field(entry, "managed"))
+                && !truthy(field(entry, "external_readonly"))
+        });
+        self.sleep_guard.update(active);
+        self.publish()?;
+        Ok(false)
+    }
 }
+
+/// Opções de `serve`, as mesmas da linha de comando do `rig.py`.
+#[derive(Clone, Debug, Default)]
+pub struct ServeOptions {
+    pub adopt_legacy: bool,
+    pub migrate_legacy_uuid: Option<String>,
+    pub reference_rtx3070: bool,
+    pub reference_uuid: Option<String>,
+}
+
+/// Leitura dos snapshots de cada ciclo: `(GPUs desejadas, registro) -> snapshots`.
+pub type Collector<'a> = &'a mut dyn FnMut(&[Value], &Obj) -> Result<Obj, String>;
 
 /// `finite` reexportado para quem monta os snapshots.
 pub fn is_finite(value: &Value) -> bool {

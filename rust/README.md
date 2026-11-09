@@ -18,7 +18,7 @@ num módulo já portado vale nos dois lados, com os goldens regerados.
 | 1 | **Núcleo de lógica pura** (`hashpilot-core`) e **CLI somente leitura** (`hashpilot`) | Feita, com paridade testada |
 | 2 | **Histórico SQLite** (`hashpilot-history`): ler/gravar o `history.sqlite3` existente com a mesma chave SHA-256 e as mesmas migrações | Feita em 08/11/2026: paridade com o Python real, mutação e banco real de 2,8 GB |
 | 3 | **Finanças** (`hashpilot-finance`): Kryptex/CoinGecko com corpo limitado, cache e ciclo de 60 s | Feita em 08/11/2026: paridade com o Python real, mutação, respostas reais da API e cache real |
-| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 e 4b-2 feitas em 08/11/2026** (dependências e lógica do `RigManager`, provadas com backend falso). 4b-3 (laço `serve`, backend real e teste com o minerador) e 4c–4d planejadas; maior risco, exigem o Renan presente a cada início |
+| 4 | Serviço do rig, em quatro etapas: **4a** processos (`hashpilot-rig`), 4b `RigManager` por UUID, 4c supervisor térmico, 4d proxy de contribuição | **4a feita em 08/11/2026** (identidade e encerramento seguro, provados contra a API do Windows e o rig real). **4b-1 e 4b-2 feitas em 08/11/2026** (dependências e lógica do `RigManager`, provadas com backend falso). **4b-3a feita em 09/11/2026** (laço `serve`, atualização do minerador com reversão, snapshots e trava do serviço). 4b-3b (restauração da GPU pelo NVML e teste com o minerador real) e 4c–4d planejadas; maior risco, exigem o Renan presente a cada início |
 | 5 | Interface: três abas, bandeja, configurações (provável `egui`/`eframe`) | Planejada |
 | 6 | Instalador, atualizador e troca do Python | Só depois das fases 1–5 validadas |
 
@@ -106,11 +106,30 @@ Os processos passam pela interface `Backend`. O controlador (`gpu_agent.py`) e o
 proxy (`contribution.py`) continuam em Python, iniciados pelo Rust, até as
 etapas 4c e 4d.
 
-Ainda não portado (etapa 4b-3):
-- o laço `serve`;
-- a ação `miner_update`: o pedido é registrado como falha, com o motivo;
-- no backend real, a verificação do executável e a restauração dos padrões da
-  GPU. Por isso, por enquanto, o backend real recusa qualquer início (falha fechada).
+### O que a etapa 4b-3a porta
+
+- **Laço `serve`** (`RigManager::serve`): um ciclo a cada 2 s, com pedidos,
+  inventário, `reconcile`, snapshots, validação da atualização, saúde e o sinal
+  contra a suspensão. Ao sair, por pedido ou por erro, para todas as GPUs. O erro
+  de um ciclo fica registrado e o laço continua.
+- **Atualização do minerador:** `activate_miner`, `validate_miner_update`, com
+  reversão automática depois de 180 s sem hashrate válido, e a ação `miner_update`.
+- **Catálogo** (`miner_install`): o mesmo `CATALOG` do `miner_update.py`, a versão
+  selecionada e o executável conferido pelo SHA-256, com junções recusadas. O
+  backend real passa a conferir o executável antes de iniciar.
+- **Snapshots** (`snapshots`): `collect_snapshots` e `read_device_payload`, com o
+  `latest.json` de cada GPU.
+- **Trava do serviço** (`lease`): a mesma trava do `ProxyLease`, no primeiro byte
+  de `rig-manager-owner.json`. O serviço em Rust e o em Python se excluem.
+- **CLI:** `hashpilot miner` mostra a versão selecionada e se o SHA-256 do
+  executável confere. Só lê o arquivo; nunca o executa.
+
+Ainda falta (etapa 4b-3b):
+- a restauração dos padrões da GPU pelo NVML (`gpu_defaults.py`). Até lá o backend
+  real a recusa, e a parada fica registrada com restauração incompleta;
+- o comando `hashpilot rig serve`, que liga o laço aos sensores e ao minerador
+  reais. Ele só entra junto com a restauração e com o teste real feito com o
+  Renan presente.
 
 ### O que a etapa 4b-1 porta (`hashpilot-rig`)
 
@@ -250,6 +269,7 @@ hashpilot finance model [--state finance-cache.json] [--hashrate TH/s] [--now EP
 hashpilot finance fetch [--wallet W] [--replay respostas.json] [--now EPOCH]
 hashpilot process inspect <PID> [--command-line] | miners | owned [--manager rig-manager.json]
 hashpilot recovery --gpu <UUID> [--operations operations.sqlite3] [--now EPOCH]
+hashpilot miner [--base <pasta>]
 ```
 
 `process` só lê: identidade de um processo, mineradores em execução com as GPUs do
@@ -285,6 +305,28 @@ Exemplo com os dados públicos (a partir da raiz do repositório):
 ```text
 rust/target/debug/hashpilot payout --state portable-data/finance-cache.json --now 1792900000
 ```
+
+## Validação da etapa 4b-3a (Windows 11, 09/11/2026)
+
+- **Golden `rig_manager`** (só Windows): 44 cenários. Os 8 novos cobrem:
+  - atualização validada, revertida, bloqueada, com GPU desabilitada, pela mesma versão e por pedido do painel;
+  - executável adulterado e seleção adulterada;
+  - coleta de snapshots com hashrate, pausa e versão lidos do log.
+  - O gerador roda com `TZ=UTC`, e o teste Rust lê o log com o mesmo fuso, então o golden não depende do fuso da máquina.
+- **Golden `rig_support`:** o catálogo embutido no Rust é igual ao `CATALOG` e ao `DEFAULT_VERSION` do `miner_update.py`.
+- **Testes do `serve`** (com o backend falso):
+  - ciclos até o pedido de desligamento, com todas as GPUs paradas e restauradas no fim;
+  - erro de ciclo registrado sem parar o laço;
+  - referência não confirmada recusada antes de qualquer processo;
+  - espera mínima de 0,1 s;
+  - sinal contra a suspensão só com mineração ativa.
+- **Testes reais (só leitura ou inofensivos):**
+  - `hashpilot miner` confere o SRBMiner 3.8.4 instalado neste PC e chega à mesma versão e ao mesmo caminho que o Python;
+  - com `HASHPILOT_PYTHON` definido, a trava do Rust e o `ProxyLease` real do Python se excluem nos dois sentidos;
+  - uma junção real criada com `mklink /J` é recusada.
+- **Mutações:** 22 mutações no código novo. As que escaparam ganharam cenários ou testes. Fica uma não detectada: gravar o `latest.json` indentado em vez de compacto, porque o teste compara o JSON interpretado e não o texto.
+- **Diferença conhecida:** no Python, só `OSError`, `RuntimeError`, `ValueError` e `SubprocessError` ficam presos no ciclo. No Rust, todo erro de um ciclo é registrado e o laço continua.
+- **Nenhum processo real foi iniciado ou parado.**
 
 ## Validação da etapa 4b-2 (Windows 11, 08/11/2026)
 

@@ -17,6 +17,7 @@ use hashpilot_history::pyjson::py_eq;
 use hashpilot_rig::continuity::IdleSleepGuard;
 use hashpilot_rig::manager::{Backend, Paths, RigManager};
 use serde_json::{Map, Value, json};
+use sha2::Digest;
 
 #[derive(Default)]
 struct Fake {
@@ -292,6 +293,9 @@ fn run_case(case: &Value, clock: f64, number: usize) {
         stamp: regex::Regex::new(r"mining-\d{8}-\d{6}-[0-9a-f]{6}\.log").unwrap(),
     };
     let mut manager = run.manager();
+    let mut catalog = manager.catalog.clone();
+    let mut desired: Vec<Value> = Vec::new();
+    let mut last_collect = Map::new();
     let mut seen = 0;
     let expand = |text: &str, manager: &RigManager| {
         text.replace("{root}", &root.to_string_lossy())
@@ -324,10 +328,114 @@ fn run_case(case: &Value, clock: f64, number: usize) {
                     step.get("detected").and_then(devices_of),
                     step.get("settings").cloned(),
                 )
-                .map(|desired| Some(json!(desired))),
+                .map(|result| {
+                    desired = result.clone();
+                    Some(json!(result))
+                }),
             "new_manager" => {
                 manager = run.manager();
+                manager.catalog = catalog.clone();
                 Ok(None)
+            }
+            "install" => {
+                let version = step["version"].as_str().unwrap();
+                let binary = root
+                    .join("miner")
+                    .join(format!("SRBMiner-Multi-{}", version.replace('.', "-")))
+                    .join("SRBMiner-MULTI.exe");
+                std::fs::create_dir_all(binary.parent().unwrap()).unwrap();
+                let content = step["content"].as_str().unwrap().as_bytes();
+                std::fs::write(&binary, content).unwrap();
+                let digest: String = sha2::Sha256::digest(content)
+                    .iter()
+                    .map(|byte| format!("{byte:02x}"))
+                    .collect();
+                catalog.entries.insert(
+                    version.into(),
+                    json!({"archive_sha256": "0".repeat(64), "exe_sha256": digest}),
+                );
+                manager.catalog = catalog.clone();
+                Ok(None)
+            }
+            "tamper" => {
+                let version = step["version"].as_str().unwrap();
+                let binary = root
+                    .join("miner")
+                    .join(format!("SRBMiner-Multi-{}", version.replace('.', "-")))
+                    .join("SRBMiner-MULTI.exe");
+                std::fs::write(binary, b"adulterado").unwrap();
+                Ok(None)
+            }
+            "set_miner" => {
+                manager.miner_base = root.join("miner");
+                catalog
+                    .executable(&step["version"], &manager.miner_base, true)
+                    .map(|path| {
+                        manager.miner_path = path;
+                        None
+                    })
+            }
+            "select" => catalog
+                .select(&step["version"], &root.join("miner"), 0.0)
+                .map(|()| None),
+            "corrupt_selection" => {
+                std::fs::write(
+                    root.join("miner").join("miner-install.json"),
+                    step["text"].as_str().unwrap(),
+                )
+                .unwrap();
+                Ok(None)
+            }
+            "activate" => manager
+                .activate_miner(
+                    &step["version"],
+                    step.get("request_id").unwrap_or(&Value::Null),
+                )
+                .map(|()| None),
+            "validate_update" => manager
+                .validate_miner_update(step["snapshots"].as_object().unwrap())
+                .map(|()| None),
+            "set_entry" => {
+                let entry = manager
+                    .devices
+                    .get_mut(step["uuid"].as_str().unwrap())
+                    .unwrap()
+                    .as_object_mut()
+                    .unwrap();
+                for (key, value) in step["fields"].as_object().unwrap() {
+                    entry.insert(key.clone(), value.clone());
+                }
+                Ok(None)
+            }
+            "collect" => {
+                for (uuid, text) in step
+                    .get("logs")
+                    .and_then(Value::as_object)
+                    .cloned()
+                    .unwrap_or_default()
+                {
+                    std::fs::write(
+                        manager.devices[&uuid]["miner_log"].as_str().unwrap(),
+                        text.as_str().unwrap(),
+                    )
+                    .unwrap();
+                }
+                let mut reader = |path: &Path| {
+                    std::fs::read_to_string(path)
+                        .map(|text| text.trim_start_matches('\u{feff}').to_owned())
+                };
+                hashpilot_rig::snapshots::collect_snapshots(
+                    &desired,
+                    &manager.devices,
+                    step["samples"].as_object().unwrap(),
+                    run.clock.get(),
+                    hashpilot_rig::snapshots::StampZone::UTC,
+                    &mut reader,
+                )
+                .map(|snapshots| {
+                    last_collect = snapshots.clone();
+                    Some(Value::Object(snapshots))
+                })
             }
             "set_detector" => {
                 *run.detected.borrow_mut() = devices_of(&step["detected"]).unwrap();
@@ -451,9 +559,14 @@ fn run_case(case: &Value, clock: f64, number: usize) {
             "migrate_legacy" => manager
                 .migrate_legacy(step["uuid"].as_str().unwrap(), step["reference"] == true)
                 .map(|done| Some(json!(done))),
-            "observe_health" => manager
-                .observe_health(step["snapshots"].as_object().unwrap())
-                .map(|()| None),
+            "observe_health" => {
+                let snapshots = if step.get("snapshots_from").is_some() {
+                    last_collect.clone()
+                } else {
+                    step["snapshots"].as_object().unwrap().clone()
+                };
+                manager.observe_health(&snapshots).map(|()| None)
+            }
             "publish" => manager.publish().map(|()| None),
             "set_attr" => {
                 let value = &step["value"];
@@ -486,6 +599,7 @@ fn run_case(case: &Value, clock: f64, number: usize) {
             "error": manager.error, "ignored": manager.ignored, "processed_ids": manager.processed_ids,
             "reference_uuid": manager.reference_uuid, "registry_valid": manager.registry_valid,
             "shutting_down": manager.shutting_down, "miner_path": manager.miner_path.to_string_lossy(),
+            "miner_base": manager.miner_base.to_string_lossy(), "miner_update_pending": manager.miner_update_pending,
         });
         {
             let fake = run.fake.borrow();
@@ -539,6 +653,11 @@ fn run_case(case: &Value, clock: f64, number: usize) {
                 && object.contains_key("pid")
             {
                 object.insert("pid".into(), json!(0));
+            }
+            if relative.ends_with("miner-install.json")
+                && let Some(object) = content.as_object_mut()
+            {
+                object.insert("selected_at".into(), json!(0));
             }
             files.insert(normalizer.text(&relative), normalizer.value(&content));
         }
@@ -598,4 +717,295 @@ fn rig_manager_matches_python_scenarios() {
         }
         run_case(case, golden["clock"].as_f64().unwrap(), number);
     }
+}
+
+// --- laço `serve` (mesmo backend falso; sem processo real) -----------------------------
+
+fn fresh(tag: &str) -> Run {
+    let root = std::path::absolute(
+        std::env::temp_dir().join(format!("hashpilot-rig-serve-{}-{tag}", std::process::id())),
+    )
+    .unwrap();
+    let _ = std::fs::remove_dir_all(&root);
+    std::fs::create_dir_all(&root).unwrap();
+    hashpilot_rig::fsutil::atomic_json(
+        &root.join("settings.json"),
+        &json!({"wallet": hashpilot_core::wallet::AUTHOR_WALLET}),
+        false,
+        false,
+    )
+    .unwrap();
+    let now = std::time::SystemTime::now()
+        .duration_since(std::time::UNIX_EPOCH)
+        .unwrap()
+        .as_secs_f64();
+    Run {
+        project: std::path::absolute(Path::new(env!("CARGO_MANIFEST_DIR")).join("..").join("..")).unwrap(),
+        root,
+        fake: Rc::new(RefCell::new(Fake { next_pid: 100, ..Fake::default() })),
+        clock: Rc::new(Cell::new(now)),
+        detected: Rc::new(RefCell::new(
+            (0..2).map(|index| json!({"vendor": "NVIDIA", "uuid": format!("GPU-test-{index}"), "index": index, "name": "NVIDIA GeForce RTX 3070"})).collect(),
+        )),
+    }
+}
+
+fn owner(run: &Run) -> Value {
+    serde_json::from_str(
+        &std::fs::read_to_string(run.root.join("state").join("rig-manager-owner.json")).unwrap(),
+    )
+    .unwrap()
+}
+
+#[test]
+fn serve_runs_cycles_and_stops_every_gpu_on_shutdown() {
+    use hashpilot_rig::manager::{ServeOptions, write_request};
+    let run = fresh("ciclos");
+    let mut manager = run.manager();
+    let flags = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let seen = flags.clone();
+    manager.sleep_guard = IdleSleepGuard::with(Box::new(move |flag| {
+        seen.lock().unwrap().push(flag);
+        1
+    }));
+    let state_dir = manager.state_dir.clone();
+    let mut sleeps = Vec::new();
+    let mut collected = 0;
+    let mut collect = |devices: &[Value], _entries: &Map<String, Value>| {
+        collected += 1;
+        assert_eq!(devices.len(), 2);
+        Ok(Map::new())
+    };
+    let mut sleep = |pause: std::time::Duration| {
+        sleeps.push(pause);
+        run.clock.set(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs_f64()
+                + 1.0,
+        );
+        if sleeps.len() == 2 {
+            write_request(&state_dir, "shutdown", None, &Map::new()).unwrap();
+        }
+    };
+    manager
+        .serve(&ServeOptions::default(), &mut collect, &mut sleep)
+        .unwrap();
+    assert_eq!(collected, 2);
+    assert_eq!(sleeps.len(), 2);
+    assert!(
+        sleeps
+            .iter()
+            .all(|pause| pause.as_secs_f64() > 1.0 && pause.as_secs_f64() <= 2.0),
+        "{sleeps:?}"
+    );
+    let fake = run.fake.borrow();
+    assert_eq!(
+        fake.started.len(),
+        4,
+        "2 mineradores e 2 controladores, só no primeiro ciclo"
+    );
+    assert_eq!(fake.stopped, vec![101, 103]);
+    assert_eq!(
+        fake.restored,
+        vec![json!("GPU-test-0"), json!("GPU-test-1")],
+        "parada com processos restaura cada GPU, como o Python"
+    );
+    assert!(
+        manager
+            .devices
+            .values()
+            .all(|entry| entry["state"] == "stopped")
+    );
+    assert!(manager.require_recovery_sensors);
+    assert_eq!(*flags.lock().unwrap(), vec![0x8000_0001, 0x8000_0000]);
+    let registry: Value =
+        serde_json::from_str(&std::fs::read_to_string(&manager.registry_path).unwrap()).unwrap();
+    assert_eq!(registry["ready"], json!(false));
+    assert_eq!(owner(&run)["active"], json!(false));
+}
+
+#[test]
+fn serve_records_cycle_error_and_keeps_running() {
+    use hashpilot_rig::manager::{ServeOptions, write_request};
+    let run = fresh("erro");
+    let mut manager = run.manager();
+    let state_dir = manager.state_dir.clone();
+    let mut calls = 0;
+    let mut collect = |_: &[Value], _: &Map<String, Value>| {
+        calls += 1;
+        if calls == 1 {
+            Err("leitura falhou".to_owned())
+        } else {
+            Ok(Map::new())
+        }
+    };
+    let mut errors = Vec::new();
+    let registry = manager.registry_path.clone();
+    let mut sleep = |_: std::time::Duration| {
+        run.clock.set(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs_f64()
+                + 1.0,
+        );
+        let published: Value =
+            serde_json::from_str(&std::fs::read_to_string(&registry).unwrap()).unwrap();
+        errors.push(published["error"].clone());
+        if errors.len() == 2 {
+            write_request(&state_dir, "shutdown", None, &Map::new()).unwrap();
+        }
+    };
+    manager
+        .serve(&ServeOptions::default(), &mut collect, &mut sleep)
+        .unwrap();
+    assert_eq!(
+        errors,
+        vec![json!("leitura falhou"), json!("leitura falhou")]
+    );
+    assert_eq!(calls, 2);
+}
+
+#[test]
+fn serve_refuses_unconfirmed_reference_before_any_process() {
+    use hashpilot_rig::manager::ServeOptions;
+    let run = fresh("referencia");
+    let mut manager = run.manager();
+    manager.shutting_down = true;
+    let options = ServeOptions {
+        reference_rtx3070: true,
+        reference_uuid: Some("GPU-test-0".into()),
+        ..ServeOptions::default()
+    };
+    let error = manager
+        .serve(&options, &mut |_, _| Ok(Map::new()), &mut |_| {})
+        .unwrap_err();
+    assert!(error.contains("não confirmados"), "{error}");
+    assert_eq!(manager.reference_uuid, None);
+    assert!(run.fake.borrow().started.is_empty());
+    assert_eq!(owner(&run)["active"], json!(false));
+}
+
+#[test]
+fn second_owner_is_refused_while_the_lease_is_held() {
+    use hashpilot_rig::lease::Lease;
+    use hashpilot_rig::manager::ServeOptions;
+    let run = fresh("trava");
+    let path = run.root.join("state").join("rig-manager-owner.json");
+    let mut first = Lease::acquire(&path, "ocupado").unwrap();
+    assert!(Lease::acquire(&path, "ocupado").is_err());
+    let mut manager = run.manager();
+    let error = manager
+        .serve(
+            &ServeOptions::default(),
+            &mut |_, _| Ok(Map::new()),
+            &mut |_| {},
+        )
+        .unwrap_err();
+    assert!(error.contains("Já existe"), "{error}");
+    assert!(run.fake.borrow().started.is_empty());
+    first.close();
+    std::fs::write(&path, r#"{"pid": 999999, "active": true}"#).unwrap();
+    let mut second = Lease::acquire(&path, "ocupado").unwrap();
+    second.close();
+    assert_eq!(owner(&run)["active"], json!(false));
+}
+
+/// Real contra o Python: com `HASHPILOT_PYTHON` apontando para o interpretador, confere
+/// que a trava do Rust e o `contribution.ProxyLease` se excluem nos dois sentidos.
+#[test]
+fn lease_excludes_the_python_service_both_ways() {
+    use std::io::{BufRead, Write};
+    let Some(python) = std::env::var_os("HASHPILOT_PYTHON") else {
+        eprintln!("HASHPILOT_PYTHON ausente: verificação contra o Python não executada");
+        return;
+    };
+    let run = fresh("python");
+    let path = run.root.join("state").join("rig-manager-owner.json");
+    let script = "import sys;sys.path.insert(0,sys.argv[1]);from contribution import ProxyLease\n\
+        try:\n lease=ProxyLease(sys.argv[2])\nexcept RuntimeError:\n print('ocupado',flush=True);raise SystemExit\n\
+        print('travado',flush=True);sys.stdin.read();lease.close()";
+    let spawn = || {
+        std::process::Command::new(&python)
+            .args([
+                "-c",
+                script,
+                &run.project.to_string_lossy(),
+                &path.to_string_lossy(),
+            ])
+            .stdin(std::process::Stdio::piped())
+            .stdout(std::process::Stdio::piped())
+            .spawn()
+            .unwrap()
+    };
+    let mut child = spawn();
+    let mut line = String::new();
+    std::io::BufReader::new(child.stdout.take().unwrap())
+        .read_line(&mut line)
+        .unwrap();
+    assert_eq!(line.trim(), "travado");
+    assert!(
+        hashpilot_rig::lease::Lease::acquire(&path, "ocupado").is_err(),
+        "Rust entrou com o Python dono"
+    );
+    child.stdin.take().unwrap().write_all(b"").unwrap();
+    child.wait().unwrap();
+    let mut mine = hashpilot_rig::lease::Lease::acquire(&path, "ocupado").unwrap();
+    let mut other = spawn();
+    let mut line = String::new();
+    std::io::BufReader::new(other.stdout.take().unwrap())
+        .read_line(&mut line)
+        .unwrap();
+    other.wait().unwrap();
+    assert_eq!(line.trim(), "ocupado", "Python entrou com o Rust dono");
+    mine.close();
+}
+#[test]
+fn serve_keeps_sleep_allowed_without_active_mining_and_waits_at_least_100ms() {
+    use hashpilot_rig::manager::{ServeOptions, write_request};
+    let run = fresh("ocioso");
+    let settings = json!({"wallet": hashpilot_core::wallet::AUTHOR_WALLET,
+        "gpu_settings": {"GPU-test-0": {"enabled": false}, "GPU-test-1": {"enabled": false}}});
+    hashpilot_rig::fsutil::atomic_json(&run.root.join("settings.json"), &settings, false, false)
+        .unwrap();
+    let mut manager = run.manager();
+    let flags = std::sync::Arc::new(std::sync::Mutex::new(Vec::new()));
+    let seen = flags.clone();
+    manager.sleep_guard = IdleSleepGuard::with(Box::new(move |flag| {
+        seen.lock().unwrap().push(flag);
+        1
+    }));
+    let state_dir = manager.state_dir.clone();
+    let mut calls = 0;
+    let mut collect = |_: &[Value], _: &Map<String, Value>| {
+        calls += 1;
+        if calls == 1 {
+            std::thread::sleep(std::time::Duration::from_millis(2100));
+        }
+        Ok(Map::new())
+    };
+    let mut pauses = Vec::new();
+    let mut sleep = |pause: std::time::Duration| {
+        pauses.push(pause);
+        write_request(&state_dir, "shutdown", None, &Map::new()).unwrap();
+        run.clock.set(
+            std::time::SystemTime::now()
+                .duration_since(std::time::UNIX_EPOCH)
+                .unwrap()
+                .as_secs_f64()
+                + 1.0,
+        );
+    };
+    manager
+        .serve(&ServeOptions::default(), &mut collect, &mut sleep)
+        .unwrap();
+    assert_eq!(pauses, vec![std::time::Duration::from_millis(100)]);
+    assert!(run.fake.borrow().started.is_empty());
+    assert!(
+        flags.lock().unwrap().is_empty(),
+        "{:?}",
+        flags.lock().unwrap()
+    );
 }
