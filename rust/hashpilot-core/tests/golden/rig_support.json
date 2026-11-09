@@ -73721,6 +73721,2693 @@
     }
    },
    "unknown": "Versão ainda não revisada pelo HashPilot; atualize o aplicativo antes de instalar esse minerador."
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "tudo_restaurado"
+   },
+   "report": {
+    "state": "restored",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "falha_ao_zerar_offset",
+    "fail": [
+     "nvmlDeviceSetClockOffsets"
+    ]
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": false,
+      "error": "nvmlDeviceSetClockOffsets: NVML 4"
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [
+     "offsets"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "falha_na_ventoinha",
+    "fail": [
+     "nvmlDeviceSetDefaultFanSpeed_v2"
+    ]
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": false,
+      "error": "nvmlDeviceSetDefaultFanSpeed_v2: NVML 4"
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [
+     "fans"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "offset_sem_confirmacao",
+    "ignore": [
+     "nvmlDeviceSetClockOffsets"
+    ]
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": false,
+      "error": "Offset não voltou a zero"
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [
+     "offsets"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "potencia_sem_confirmacao",
+    "ignore": [
+     "nvmlDeviceSetPowerManagementLimit"
+    ]
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": false,
+      "error": "Potência não confirmou o valor de fábrica"
+     }
+    },
+    "failed_components": [
+     "power"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "ventoinha_presa_em_manual",
+    "stuck_policy": 1
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": false,
+      "error": "Ventoinha 0 ainda não está em automático"
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [
+     "fans"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "ventoinha_ignora_pedido",
+    "ignore": [
+     "nvmlDeviceSetDefaultFanSpeed_v2"
+    ]
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": false,
+      "error": "Ventoinha 0 ainda não está em automático"
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [
+     "fans"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "offsets_ja_zerados",
+    "offsets": {}
+   },
+   "report": {
+    "state": "restored",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "so_memoria_no_p2",
+    "offsets": {
+     "2,2": 500
+    }
+   },
+   "report": {
+    "state": "restored",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "sem_pstates",
+    "states": [
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32,
+     32
+    ]
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": false,
+      "error": "Driver não informou P-states suportados"
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [
+     "offsets"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "pstates_repetidos_e_invalidos",
+    "states": [
+     8,
+     2,
+     2,
+     0,
+     -1,
+     20,
+     32,
+     15,
+     16
+    ]
+   },
+   "report": {
+    "state": "restored",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 15,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 15,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "ventoinhas_demais",
+    "fans": 17
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": false,
+      "error": "Quantidade de ventoinhas inválida"
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [
+     "fans"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "dezesseis_ventoinhas",
+    "fans": 16
+   },
+   "report": {
+    "state": "restored",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       },
+       {
+        "fan": 2,
+        "policy": "automatic"
+       },
+       {
+        "fan": 3,
+        "policy": "automatic"
+       },
+       {
+        "fan": 4,
+        "policy": "automatic"
+       },
+       {
+        "fan": 5,
+        "policy": "automatic"
+       },
+       {
+        "fan": 6,
+        "policy": "automatic"
+       },
+       {
+        "fan": 7,
+        "policy": "automatic"
+       },
+       {
+        "fan": 8,
+        "policy": "automatic"
+       },
+       {
+        "fan": 9,
+        "policy": "automatic"
+       },
+       {
+        "fan": 10,
+        "policy": "automatic"
+       },
+       {
+        "fan": 11,
+        "policy": "automatic"
+       },
+       {
+        "fan": 12,
+        "policy": "automatic"
+       },
+       {
+        "fan": 13,
+        "policy": "automatic"
+       },
+       {
+        "fan": 14,
+        "policy": "automatic"
+       },
+       {
+        "fan": 15,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "sem_ventoinha",
+    "fans": 0
+   },
+   "report": {
+    "state": "restored",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": []
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "limite_padrao_baixo",
+    "default": 999
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": false,
+      "error": "Limite padrão inválido"
+     }
+    },
+    "failed_components": [
+     "power"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "limite_padrao_minimo",
+    "default": 1000,
+    "power": 1000
+   },
+   "report": {
+    "state": "restored",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 1.0,
+       "actual_w": 1.0
+      }
+     }
+    },
+    "failed_components": [],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "limite_padrao_alto",
+    "default": 2000001
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": false,
+      "error": "Limite padrão inválido"
+     }
+    },
+    "failed_components": [
+     "power"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "limite_padrao_maximo",
+    "default": 2000000
+   },
+   "report": {
+    "state": "restored",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 2000.0,
+       "actual_w": 2000.0
+      }
+     }
+    },
+    "failed_components": [],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "zero_fora_dos_limites",
+    "limits": [
+     10,
+     2000
+    ]
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": false,
+      "error": "Offset zero fora dos limites do driver"
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [
+     "offsets"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "zero_no_limite",
+    "limits": [
+     0,
+     0
+    ],
+    "offsets": {
+     "0,0": 5
+    }
+   },
+   "report": {
+    "state": "restored",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "funcao_ausente",
+    "missing": [
+     "nvmlDeviceResetMemoryLockedClocks"
+    ]
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": false,
+      "error": "nvmlDeviceResetMemoryLockedClocks: NVML API indisponível"
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [
+     "memory_clock"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "leitura_de_ventoinhas_falha",
+    "fail": [
+     "nvmlDeviceGetNumFans"
+    ]
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": false,
+      "error": "nvmlDeviceGetNumFans: NVML 4"
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [
+     "fans"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "leitura_de_offset_falha",
+    "fail": [
+     "nvmlDeviceGetClockOffsets"
+    ]
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": false,
+      "error": "nvmlDeviceGetClockOffsets: NVML 4"
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [
+     "offsets"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "leitura_de_pstates_falha",
+    "fail": [
+     "nvmlDeviceGetSupportedPerformanceStates"
+    ]
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": false,
+      "error": "nvmlDeviceGetSupportedPerformanceStates: NVML 4"
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [
+     "offsets"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "destravar_clock_falha",
+    "fail": [
+     "nvmlDeviceResetGpuLockedClocks"
+    ]
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": false,
+      "error": "nvmlDeviceResetGpuLockedClocks: NVML 4"
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [
+     "graphics_clock"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "potencia_ja_de_fabrica",
+    "power": 240000
+   },
+   "report": {
+    "state": "restored",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": true,
+      "details": [
+       {
+        "fan": 0,
+        "policy": "automatic"
+       },
+       {
+        "fan": 1,
+        "policy": "automatic"
+       }
+      ]
+     },
+     "offsets": {
+      "ok": true,
+      "details": [
+       {
+        "pstate": 0,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 0,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 2,
+        "domain": 2,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 0,
+        "offset_mhz": 0
+       },
+       {
+        "pstate": 8,
+        "domain": 2,
+        "offset_mhz": 0
+       }
+      ]
+     },
+     "graphics_clock": {
+      "ok": true,
+      "details": null
+     },
+     "memory_clock": {
+      "ok": true,
+      "details": null
+     },
+     "power": {
+      "ok": true,
+      "details": {
+       "default_w": 240.0,
+       "actual_w": 240.0
+      }
+     }
+    },
+    "failed_components": [],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceSetDefaultFanSpeed_v2",
+    "nvmlDeviceGetFanControlPolicy_v2",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceSetClockOffsets",
+    "nvmlDeviceGetClockOffsets",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit",
+    "nvmlDeviceSetPowerManagementLimit",
+    "nvmlDeviceGetPowerManagementLimit"
+   ]
+  },
+  {
+   "kind": "nvml",
+   "config": {
+    "name": "tudo_falha",
+    "fail": [
+     "nvmlDeviceGetNumFans",
+     "nvmlDeviceGetSupportedPerformanceStates",
+     "nvmlDeviceResetGpuLockedClocks",
+     "nvmlDeviceResetMemoryLockedClocks",
+     "nvmlDeviceGetPowerManagementDefaultLimit"
+    ]
+   },
+   "report": {
+    "state": "partial",
+    "at": 0.0,
+    "components": {
+     "fans": {
+      "ok": false,
+      "error": "nvmlDeviceGetNumFans: NVML 4"
+     },
+     "offsets": {
+      "ok": false,
+      "error": "nvmlDeviceGetSupportedPerformanceStates: NVML 4"
+     },
+     "graphics_clock": {
+      "ok": false,
+      "error": "nvmlDeviceResetGpuLockedClocks: NVML 4"
+     },
+     "memory_clock": {
+      "ok": false,
+      "error": "nvmlDeviceResetMemoryLockedClocks: NVML 4"
+     },
+     "power": {
+      "ok": false,
+      "error": "nvmlDeviceGetPowerManagementDefaultLimit: NVML 4"
+     }
+    },
+    "failed_components": [
+     "fans",
+     "offsets",
+     "graphics_clock",
+     "memory_clock",
+     "power"
+    ],
+    "method": "NVML por UUID; política automática, offsets zero, clocks destravados e potência de fábrica"
+   },
+   "calls": [
+    "nvmlDeviceGetNumFans",
+    "nvmlDeviceGetSupportedPerformanceStates",
+    "nvmlDeviceResetGpuLockedClocks",
+    "nvmlDeviceResetMemoryLockedClocks",
+    "nvmlDeviceGetPowerManagementDefaultLimit"
+   ]
   }
  ]
 }

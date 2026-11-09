@@ -11,10 +11,12 @@
 pub mod argv;
 pub mod continuity;
 pub mod fsutil;
+pub mod gpu_defaults;
 pub mod health;
 pub mod lease;
 pub mod manager;
 pub mod miner_install;
+pub mod nvml;
 pub mod process;
 pub mod reference;
 pub mod snapshots;

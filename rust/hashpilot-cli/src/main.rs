@@ -83,6 +83,7 @@ fn main() -> ExitCode {
         Some("process") => process_command(&arguments[1..]),
         Some("recovery") => recovery_command(&arguments[1..]),
         Some("miner") => miner_command(&arguments[1..]),
+        Some("nvml") => nvml_command(&arguments[1..]),
         Some(other) => Err(Failure::Usage(format!("comando desconhecido: {other}"))),
     };
     match result {
@@ -341,6 +342,55 @@ fn miner_command(arguments: &[String]) -> Result<Value, Failure> {
         "verified": verified.is_ok(),
         "error": verified.err(),
     }))
+}
+
+/// `hashpilot nvml <uuid>`: só leitura pelo NVML (ventoinhas, P-states, offsets e
+/// potência). Nunca chama uma função `set_*` ou `reset_*`.
+fn nvml_command(arguments: &[String]) -> Result<Value, Failure> {
+    use hashpilot_rig::nvml::Nvml;
+    let options = Options::parse(arguments, &[], &[])?;
+    let [uuid] = options.positional.as_slice() else {
+        return Err(Failure::Usage("uso: hashpilot nvml <uuid>".into()));
+    };
+    let mut api = hashpilot_rig::nvml::Library::open(uuid).map_err(Failure::Runtime)?;
+    let read = |result: Result<Value, hashpilot_rig::nvml::NvmlError>| {
+        result.unwrap_or_else(|error| json!({"error": error.to_string()}))
+    };
+    let fans = read(api.get_num_fans().map(|count| {
+        json!(
+            (0..count)
+                .map(|fan| api_policy(&mut api, fan))
+                .collect::<Vec<_>>()
+        )
+    }));
+    let states = hashpilot_rig::gpu_defaults::states(&mut api);
+    let offsets = match &states {
+        Ok(states) => json!(states
+            .iter()
+            .flat_map(|state| [0, 2].map(|domain| (*state, domain)))
+            .map(|(state, domain)| match api.get_clock_offsets(domain, state) {
+                Ok(value) => json!({"pstate": state, "domain": domain, "offset_mhz": value.offset, "min": value.minimum, "max": value.maximum}),
+                Err(error) => json!({"pstate": state, "domain": domain, "error": error.to_string()}),
+            })
+            .collect::<Vec<_>>()),
+        Err(error) => json!({"error": error}),
+    };
+    let power = json!({
+        "default_mw": read(api.get_power_default_limit().map(|value| json!(value))),
+        "current_mw": read(api.get_power_limit().map(|value| json!(value))),
+    });
+    let closed = api.close().map_err(|error| error.to_string());
+    Ok(
+        json!({"uuid": uuid, "fans": fans, "pstates": states.ok(), "offsets": offsets, "power": power, "shutdown_error": closed.err()}),
+    )
+}
+
+fn api_policy(api: &mut hashpilot_rig::nvml::Library, fan: u32) -> Value {
+    use hashpilot_rig::nvml::Nvml;
+    match api.get_fan_control_policy(fan) {
+        Ok(policy) => json!({"fan": fan, "policy": policy}),
+        Err(error) => json!({"fan": fan, "error": error.to_string()}),
+    }
 }
 
 /// `hashpilot process`: só leitura; nenhum processo é criado nem encerrado.

@@ -163,3 +163,38 @@ pub fn unlock_first_byte(file: &std::fs::File) {
 
 #[cfg(not(windows))]
 pub fn unlock_first_byte(_file: &std::fs::File) {}
+
+/// `gpu_agent.process_state`: `"alive"`, `"dead"` (PID inexistente, erro 87, ou já
+/// encerrado) ou `"unknown"` (acesso negado ou falha de leitura nunca provam a morte).
+#[cfg(windows)]
+pub fn process_state(pid: u32) -> &'static str {
+    use windows_sys::Win32::Foundation::{CloseHandle, GetLastError};
+    use windows_sys::Win32::System::Threading::{GetExitCodeProcess, OpenProcess};
+    // SAFETY: OpenProcess só recebe inteiros; o handle devolvido é fechado abaixo.
+    let handle = unsafe { OpenProcess(0x1000, 0, pid) };
+    if handle.is_null() {
+        // SAFETY: lê o último erro desta thread, logo após a chamada que falhou.
+        return if unsafe { GetLastError() } == 87 {
+            "dead"
+        } else {
+            "unknown"
+        };
+    }
+    let mut code = 0u32;
+    // SAFETY: handle válido e ponteiro para um u32 desta pilha.
+    let read = unsafe { GetExitCodeProcess(handle, &mut code) };
+    // SAFETY: handle aberto acima, fechado uma única vez.
+    unsafe { CloseHandle(handle) };
+    if read == 0 {
+        "unknown"
+    } else if code == 259 {
+        "alive"
+    } else {
+        "dead"
+    }
+}
+
+#[cfg(not(windows))]
+pub fn process_state(_pid: u32) -> &'static str {
+    "unknown"
+}
