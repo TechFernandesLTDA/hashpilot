@@ -62,6 +62,9 @@ Uso:
   hashpilot rig --serve --state-dir D --log-dir L --settings S --miner-path M --python PY
                 [--project-dir P] [--adopt-legacy] [--migrate-legacy] [--legacy-uuid U]
                 [--reference-rtx3070] [--check]
+  hashpilot contribution --wallet W --settings S --state-dir D [--port N]
+                                         Proxy Stratum local da contribuição opcional (como
+                                         contribution.py); roda até Ctrl+C
   hashpilot --version | --help
 ";
 
@@ -90,6 +93,7 @@ fn main() -> ExitCode {
         Some("miner") => miner_command(&arguments[1..]),
         Some("nvml") => nvml_command(&arguments[1..]),
         Some("rig") => rig_cli::rig_command(&arguments[1..]),
+        Some("contribution") => contribution_command(&arguments[1..]),
         Some(other) => Err(Failure::Usage(format!("comando desconhecido: {other}"))),
     };
     match result {
@@ -352,6 +356,43 @@ fn miner_command(arguments: &[String]) -> Result<Value, Failure> {
 
 /// `hashpilot nvml <uuid>`: só leitura pelo NVML (ventoinhas, P-states, offsets e
 /// potência). Nunca chama uma função `set_*` ou `reset_*`.
+/// `contribution.py main()`: o proxy roda até Ctrl+C (ou até o rig encerrar o processo).
+fn contribution_command(arguments: &[String]) -> Result<Value, Failure> {
+    use std::sync::atomic::Ordering;
+    let options = Options::parse(arguments, &["wallet", "settings", "state-dir", "port"], &[])?;
+    let required = |name: &str| {
+        options
+            .text(name)
+            .ok_or_else(|| Failure::Usage(format!("--{name} é obrigatório")))
+    };
+    let port = match options.text("port") {
+        None => 0,
+        Some(text) => text
+            .parse::<u16>()
+            .map_err(|_| Failure::Usage("--port precisa ser um inteiro de 0 a 65535".into()))?,
+    };
+    let mut proxy = hashpilot_rig::contribution::Proxy::new(
+        required("wallet")?,
+        std::path::Path::new(required("settings")?),
+        std::path::Path::new(required("state-dir")?),
+        port,
+        None,
+        None,
+    )
+    .map_err(Failure::Usage)?;
+    if hashpilot_rig::win32::install_ctrl_handler() {
+        let stop = proxy.stop.clone();
+        std::thread::spawn(move || {
+            while !hashpilot_rig::win32::CTRL_STOP.load(Ordering::SeqCst) {
+                std::thread::sleep(std::time::Duration::from_millis(100));
+            }
+            stop.store(true, Ordering::SeqCst);
+        });
+    }
+    proxy.run().map_err(Failure::Runtime)?;
+    Ok(json!({"stopped": true, "status": proxy.status}))
+}
+
 fn nvml_command(arguments: &[String]) -> Result<Value, Failure> {
     use hashpilot_rig::nvml::Nvml;
     let options = Options::parse(arguments, &[], &[])?;

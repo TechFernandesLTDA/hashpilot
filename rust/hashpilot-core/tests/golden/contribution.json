@@ -1,0 +1,6647 @@
+{
+ "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+ "author": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+ "cases": [
+  {
+   "kind": "ledger",
+   "name": "ausente",
+   "content": null,
+   "loaded": {
+    "healthy": true,
+    "error": null
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": 3420.0
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": 3319.75
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "support"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": 99.75
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "error": "ValueError: Intervalo de roteamento inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "error": "ValueError: Papel de roteamento inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "error": "ValueError: Intervalo de roteamento inválido"
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 3502.75
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 3502.75,\n      \"primary_connected_seconds\": 3422.5,\n      \"support_connected_seconds\": 80.25,\n      \"verified_primary_seconds\": 2.5,\n      \"reserved_support_seconds\": 0.0,\n      \"verified_support_seconds\": 0,\n      \"accepted_primary_shares\": 1,\n      \"rejected_support_shares\": 1,\n      \"accepted_support_shares\": 1\n    }\n  }\n}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 3502.75,
+      "primary_connected_seconds": 3422.5,
+      "support_connected_seconds": 80.25,
+      "verified_primary_seconds": 2.5,
+      "reserved_support_seconds": 0.0,
+      "verified_support_seconds": 0,
+      "accepted_primary_shares": 1,
+      "rejected_support_shares": 1,
+      "accepted_support_shares": 1
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "v2_valido",
+   "content": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 7000.5,\n      \"primary_connected_seconds\": 6800.0,\n      \"support_connected_seconds\": 200.5,\n      \"verified_primary_seconds\": 3420,\n      \"reserved_support_seconds\": 0,\n      \"verified_support_seconds\": 0,\n      \"accepted_primary_shares\": 3,\n      \"extra\": \"mantido\"\n    }\n  },\n  \"nota\": \"chave extra\"\n}",
+   "loaded": {
+    "healthy": true,
+    "error": null
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 7000.5
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": 19.5
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 180.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "support"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": 99.25
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": 119.25
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "error": "ValueError: Intervalo de roteamento inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "error": "ValueError: Papel de roteamento inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "error": "ValueError: Intervalo de roteamento inválido"
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 180.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 180.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 10513.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 10513.0,\n      \"primary_connected_seconds\": 10122.75,\n      \"support_connected_seconds\": 390.25,\n      \"verified_primary_seconds\": 3422.5,\n      \"reserved_support_seconds\": 180.0,\n      \"verified_support_seconds\": 9.75,\n      \"accepted_primary_shares\": 4,\n      \"extra\": \"mantido\",\n      \"rejected_support_shares\": 1,\n      \"accepted_support_shares\": 1\n    }\n  },\n  \"nota\": \"chave extra\"\n}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 10513.0,
+      "primary_connected_seconds": 10122.75,
+      "support_connected_seconds": 390.25,
+      "verified_primary_seconds": 3422.5,
+      "reserved_support_seconds": 180.0,
+      "verified_support_seconds": 9.75,
+      "accepted_primary_shares": 4,
+      "extra": "mantido",
+      "rejected_support_shares": 1,
+      "accepted_support_shares": 1
+     }
+    },
+    "nota": "chave extra"
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "v1_migra",
+   "content": "{\"schema_version\": 1, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": 6800.0, \"support_connected_seconds\": 200.5, \"verified_primary_seconds\": 9999, \"reserved_support_seconds\": 5}}}",
+   "loaded": {
+    "healthy": true,
+    "error": null
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 7000.5
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": 19.5
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "support"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": 99.25
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": 119.25
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "error": "ValueError: Intervalo de roteamento inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "error": "ValueError: Papel de roteamento inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "error": "ValueError: Intervalo de roteamento inválido"
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 10503.25
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 10503.25,\n      \"primary_connected_seconds\": 10122.75,\n      \"support_connected_seconds\": 380.5,\n      \"verified_primary_seconds\": 2.5,\n      \"reserved_support_seconds\": 0.0,\n      \"verified_support_seconds\": 0,\n      \"accepted_primary_shares\": 1,\n      \"accepted_support_shares\": 1,\n      \"rejected_primary_shares\": 0,\n      \"rejected_support_shares\": 1\n    }\n  }\n}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 10503.25,
+      "primary_connected_seconds": 10122.75,
+      "support_connected_seconds": 380.5,
+      "verified_primary_seconds": 2.5,
+      "reserved_support_seconds": 0.0,
+      "verified_support_seconds": 0,
+      "accepted_primary_shares": 1,
+      "accepted_support_shares": 1,
+      "rejected_primary_shares": 0,
+      "rejected_support_shares": 1
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "outra_carteira",
+   "content": "{\"schema_version\": 2, \"wallets\": {\"prl1zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": 6800.0, \"support_connected_seconds\": 200.5}}}",
+   "loaded": {
+    "healthy": true,
+    "error": null
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": 3420.0
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": 3319.75
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "support"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": 99.75
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "error": "ValueError: Intervalo de roteamento inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "error": "ValueError: Papel de roteamento inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "error": "ValueError: Intervalo de roteamento inválido"
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 3502.75
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\": {\n      \"eligible_connected_seconds\": 7000.5,\n      \"primary_connected_seconds\": 6800.0,\n      \"support_connected_seconds\": 200.5\n    },\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 3502.75,\n      \"primary_connected_seconds\": 3422.5,\n      \"support_connected_seconds\": 80.25,\n      \"verified_primary_seconds\": 2.5,\n      \"reserved_support_seconds\": 0.0,\n      \"verified_support_seconds\": 0,\n      \"accepted_primary_shares\": 1,\n      \"rejected_support_shares\": 1,\n      \"accepted_support_shares\": 1\n    }\n  }\n}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz": {
+      "eligible_connected_seconds": 7000.5,
+      "primary_connected_seconds": 6800.0,
+      "support_connected_seconds": 200.5
+     },
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 3502.75,
+      "primary_connected_seconds": 3422.5,
+      "support_connected_seconds": 80.25,
+      "verified_primary_seconds": 2.5,
+      "reserved_support_seconds": 0.0,
+      "verified_support_seconds": 0,
+      "accepted_primary_shares": 1,
+      "rejected_support_shares": 1,
+      "accepted_support_shares": 1
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "booleano",
+   "content": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": true, \"support_connected_seconds\": 200.5}}}",
+   "loaded": {
+    "healthy": false,
+    "error": "Contador de roteamento do ledger inválido"
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": true, \"support_connected_seconds\": 200.5}}}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 0.0,
+      "primary_connected_seconds": 0.0,
+      "support_connected_seconds": 0.0,
+      "reserved_support_seconds": 0.0
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "negativo",
+   "content": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": 6800.0, \"support_connected_seconds\": 200.5, \"accepted_support_shares\": -1}}}",
+   "loaded": {
+    "healthy": false,
+    "error": "Contador de proteção da contribuição inválido"
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": 6800.0, \"support_connected_seconds\": 200.5, \"accepted_support_shares\": -1}}}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 0.0,
+      "primary_connected_seconds": 0.0,
+      "support_connected_seconds": 0.0,
+      "reserved_support_seconds": 0.0
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "grande_demais",
+   "content": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 2000000000000.0, \"primary_connected_seconds\": 6800.0, \"support_connected_seconds\": 200.5}}}",
+   "loaded": {
+    "healthy": false,
+    "error": "Contador do ledger inválido"
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 2000000000000.0, \"primary_connected_seconds\": 6800.0, \"support_connected_seconds\": 200.5}}}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 0.0,
+      "primary_connected_seconds": 0.0,
+      "support_connected_seconds": 0.0,
+      "reserved_support_seconds": 0.0
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "sem_elegivel",
+   "content": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"primary_connected_seconds\": 1}}}",
+   "loaded": {
+    "healthy": false,
+    "error": "Contador do ledger inválido"
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"primary_connected_seconds\": 1}}}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 0.0,
+      "primary_connected_seconds": 0.0,
+      "support_connected_seconds": 0.0,
+      "reserved_support_seconds": 0.0
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "texto",
+   "content": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": 6800.0, \"support_connected_seconds\": \"1\"}}}",
+   "loaded": {
+    "healthy": false,
+    "error": "Contador de roteamento do ledger inválido"
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": 6800.0, \"support_connected_seconds\": \"1\"}}}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 0.0,
+      "primary_connected_seconds": 0.0,
+      "support_connected_seconds": 0.0,
+      "reserved_support_seconds": 0.0
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "reserva_excede",
+   "content": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": 6800.0, \"support_connected_seconds\": 200.5, \"verified_primary_seconds\": 3420, \"reserved_support_seconds\": 181}}}",
+   "loaded": {
+    "healthy": false,
+    "error": "Reserva da contribuição excede o tempo verificado do usuário"
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": 6800.0, \"support_connected_seconds\": 200.5, \"verified_primary_seconds\": 3420, \"reserved_support_seconds\": 181}}}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 0.0,
+      "primary_connected_seconds": 0.0,
+      "support_connected_seconds": 0.0,
+      "reserved_support_seconds": 0.0
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "suporte_excede",
+   "content": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": 6800.0, \"support_connected_seconds\": 200.5, \"verified_primary_seconds\": 3420, \"reserved_support_seconds\": 100, \"verified_support_seconds\": 101}}}",
+   "loaded": {
+    "healthy": false,
+    "error": "Reserva da contribuição excede o tempo verificado do usuário"
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": 6800.0, \"support_connected_seconds\": 200.5, \"verified_primary_seconds\": 3420, \"reserved_support_seconds\": 100, \"verified_support_seconds\": 101}}}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 0.0,
+      "primary_connected_seconds": 0.0,
+      "support_connected_seconds": 0.0,
+      "reserved_support_seconds": 0.0
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "acumulo",
+   "content": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": 7000, \"support_connected_seconds\": 200.5, \"verified_primary_seconds\": 6840}}}",
+   "loaded": {
+    "healthy": false,
+    "error": "Acúmulo de janelas de contribuição inválido"
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": 7000, \"support_connected_seconds\": 200.5, \"verified_primary_seconds\": 6840}}}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 0.0,
+      "primary_connected_seconds": 0.0,
+      "support_connected_seconds": 0.0,
+      "reserved_support_seconds": 0.0
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "verificado_excede",
+   "content": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": 6800.0, \"support_connected_seconds\": 200.5, \"verified_primary_seconds\": 6800.1}}}",
+   "loaded": {
+    "healthy": false,
+    "error": "Tempo verificado excede roteamento principal"
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": 6800.0, \"support_connected_seconds\": 200.5, \"verified_primary_seconds\": 6800.1}}}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 0.0,
+      "primary_connected_seconds": 0.0,
+      "support_connected_seconds": 0.0,
+      "reserved_support_seconds": 0.0
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "schema_3",
+   "content": "{\"schema_version\": 3, \"wallets\": {}}",
+   "loaded": {
+    "healthy": false,
+    "error": "Formato do ledger inválido"
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\"schema_version\": 3, \"wallets\": {}}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 0.0,
+      "primary_connected_seconds": 0.0,
+      "support_connected_seconds": 0.0,
+      "reserved_support_seconds": 0.0
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "wallets_lista",
+   "content": "{\"schema_version\": 2, \"wallets\": []}",
+   "loaded": {
+    "healthy": false,
+    "error": "Formato do ledger inválido"
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\"schema_version\": 2, \"wallets\": []}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 0.0,
+      "primary_connected_seconds": 0.0,
+      "support_connected_seconds": 0.0,
+      "reserved_support_seconds": 0.0
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "chave_invalida",
+   "content": "{\"schema_version\": 2, \"wallets\": {\"seed palavras\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": 6800.0, \"support_connected_seconds\": 200.5}}}",
+   "loaded": {
+    "healthy": false,
+    "error": "Contador do ledger inválido"
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\"schema_version\": 2, \"wallets\": {\"seed palavras\": {\"eligible_connected_seconds\": 7000.5, \"primary_connected_seconds\": 6800.0, \"support_connected_seconds\": 200.5}}}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 0.0,
+      "primary_connected_seconds": 0.0,
+      "support_connected_seconds": 0.0,
+      "reserved_support_seconds": 0.0
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "entrada_lista",
+   "content": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": [1]}}",
+   "loaded": {
+    "healthy": false,
+    "error": "Contador do ledger inválido"
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": [1]}}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 0.0,
+      "primary_connected_seconds": 0.0,
+      "support_connected_seconds": 0.0,
+      "reserved_support_seconds": 0.0
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "nan",
+   "content": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": NaN}}}",
+   "loaded": {
+    "healthy": false,
+    "error": "Contador do ledger inválido"
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\"schema_version\": 2, \"wallets\": {\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\"eligible_connected_seconds\": NaN}}}",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 0.0,
+      "primary_connected_seconds": 0.0,
+      "support_connected_seconds": 0.0,
+      "reserved_support_seconds": 0.0
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "json_quebrado",
+   "content": "{\"schema_version\": 2,",
+   "loaded": {
+    "healthy": false,
+    "error": "Expecting property name enclosed in double quotes: line 1 column 22 (char 21)"
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "{\"schema_version\": 2,",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 0.0,
+      "primary_connected_seconds": 0.0,
+      "support_connected_seconds": 0.0,
+      "reserved_support_seconds": 0.0
+     }
+    }
+   }
+  },
+  {
+   "kind": "ledger",
+   "name": "raiz_lista",
+   "content": "[]",
+   "loaded": {
+    "healthy": false,
+    "error": "Formato do ledger inválido"
+   },
+   "ops": [
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "role",
+      false
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "until_switch",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "advance",
+      100.25,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      3400,
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "role",
+      true
+     ],
+     "result": "primary"
+    },
+    {
+     "op": [
+      "until_switch",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      7200.5,
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "advance",
+      -1,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "advance",
+      true,
+      true
+     ],
+     "error": "ValueError: Intervalo conectado inválido"
+    },
+    {
+     "op": [
+      "record_route",
+      2.5,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      0,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      6,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      1,
+      "x"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      true,
+      "primary"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "available_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "record_route",
+      4.75,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_route",
+      5,
+      "support"
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "primary",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      false
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "record_share",
+      "support",
+      true
+     ],
+     "result": null
+    },
+    {
+     "op": [
+      "reserve_support"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "seconds"
+     ],
+     "result": 0.0
+    },
+    {
+     "op": [
+      "save"
+     ],
+     "result": null
+    }
+   ],
+   "saved": "[]",
+   "data": {
+    "schema_version": 2,
+    "wallets": {
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+      "eligible_connected_seconds": 0.0,
+      "primary_connected_seconds": 0.0,
+      "support_connected_seconds": 0.0,
+      "reserved_support_seconds": 0.0
+     }
+    }
+   }
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 1,
+    "method": "mining.authorize",
+    "params": [
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "x"
+    ]
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "line": "{\"id\":1,\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\",\"x\"]}",
+   "auth": true
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 1,
+    "method": "mining.authorize",
+    "params": [
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "x"
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "line": "{\"id\":1,\"method\":\"mining.authorize\",\"params\":[\"prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t\",\"x\"]}",
+   "auth": true
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 1,
+    "method": "mining.authorize",
+    "params": [
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "x"
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "line": "{\"id\":1,\"method\":\"mining.authorize\",\"params\":[\"prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t\",\"x\"]}",
+   "auth": true
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 1,
+    "method": "mining.authorize",
+    "params": [
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1",
+     "x"
+    ]
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "line": "{\"id\":1,\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"x\"]}",
+   "auth": true
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 1,
+    "method": "mining.authorize",
+    "params": [
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1",
+     "x"
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "line": "{\"id\":1,\"method\":\"mining.authorize\",\"params\":[\"prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t.rig1\",\"x\"]}",
+   "auth": true
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 1,
+    "method": "mining.authorize",
+    "params": [
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1",
+     "x"
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "line": "{\"id\":1,\"method\":\"mining.authorize\",\"params\":[\"prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t.rig1\",\"x\"]}",
+   "auth": true
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 1,
+    "method": "mining.authorize",
+    "params": [
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqx",
+     "x"
+    ]
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "error": "Autorização incompatível com a carteira principal; conexão encerrada"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 1,
+    "method": "mining.authorize",
+    "params": [
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqx",
+     "x"
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "error": "Autorização incompatível com a carteira principal; conexão encerrada"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 1,
+    "method": "mining.authorize",
+    "params": [
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqx",
+     "x"
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "error": "Autorização incompatível com a carteira principal; conexão encerrada"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 1,
+    "method": "mining.authorize",
+    "params": []
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "error": "Autorização incompatível com a carteira principal; conexão encerrada"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 1,
+    "method": "mining.authorize",
+    "params": []
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "error": "Autorização incompatível com a carteira principal; conexão encerrada"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 1,
+    "method": "mining.authorize",
+    "params": []
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "error": "Autorização incompatível com a carteira principal; conexão encerrada"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": "a",
+    "method": "eth_submitLogin",
+    "params": {
+     "login": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "pass": "x"
+    }
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "line": "{\"id\":\"a\",\"method\":\"eth_submitLogin\",\"params\":{\"login\":\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\",\"pass\":\"x\"}}",
+   "auth": true
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": "a",
+    "method": "eth_submitLogin",
+    "params": {
+     "login": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "pass": "x"
+    }
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "line": "{\"id\":\"a\",\"method\":\"eth_submitLogin\",\"params\":{\"login\":\"prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t\",\"pass\":\"x\"}}",
+   "auth": true
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": "a",
+    "method": "eth_submitLogin",
+    "params": {
+     "login": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "pass": "x"
+    }
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "line": "{\"id\":\"a\",\"method\":\"eth_submitLogin\",\"params\":{\"login\":\"prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t\",\"pass\":\"x\"}}",
+   "auth": true
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 2,
+    "method": "login",
+    "params": {
+     "login": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "user": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+    }
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "error": "Autorização incompatível com a carteira principal; conexão encerrada"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 2,
+    "method": "login",
+    "params": {
+     "login": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "user": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+    }
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "error": "Autorização incompatível com a carteira principal; conexão encerrada"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 2,
+    "method": "login",
+    "params": {
+     "login": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "user": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq"
+    }
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "error": "Autorização incompatível com a carteira principal; conexão encerrada"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 2,
+    "method": "mining.login",
+    "params": {
+     "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.r",
+     "nome": "café ✓ 😀"
+    }
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "line": "{\"id\":2,\"method\":\"mining.login\",\"params\":{\"wallet\":\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.r\",\"nome\":\"caf\\u00e9 \\u2713 \\ud83d\\ude00\"}}",
+   "auth": true
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 2,
+    "method": "mining.login",
+    "params": {
+     "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.r",
+     "nome": "café ✓ 😀"
+    }
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "line": "{\"id\":2,\"method\":\"mining.login\",\"params\":{\"wallet\":\"prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t.r\",\"nome\":\"caf\\u00e9 \\u2713 \\ud83d\\ude00\"}}",
+   "auth": true
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 2,
+    "method": "mining.login",
+    "params": {
+     "wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.r",
+     "nome": "café ✓ 😀"
+    }
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "line": "{\"id\":2,\"method\":\"mining.login\",\"params\":{\"wallet\":\"prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t.r\",\"nome\":\"caf\\u00e9 \\u2713 \\ud83d\\ude00\"}}",
+   "auth": true
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 3,
+    "method": "mining.subscribe",
+    "params": [
+     "del tab\t nul\u0000  "
+    ]
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "line": "{\"id\":3,\"method\":\"mining.subscribe\",\"params\":[\"del\\u007f tab\\t nul\\u0000 \\u2028\"]}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 3,
+    "method": "mining.subscribe",
+    "params": [
+     "del tab\t nul\u0000  "
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "line": "{\"id\":3,\"method\":\"mining.subscribe\",\"params\":[\"del\\u007f tab\\t nul\\u0000 \\u2028\"]}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 3,
+    "method": "mining.subscribe",
+    "params": [
+     "del tab\t nul\u0000  "
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "line": "{\"id\":3,\"method\":\"mining.subscribe\",\"params\":[\"del\\u007f tab\\t nul\\u0000 \\u2028\"]}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 3,
+    "method": "mining.subscribe",
+    "params": [
+     "SRBMiner/3.8.4"
+    ]
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "line": "{\"id\":3,\"method\":\"mining.subscribe\",\"params\":[\"SRBMiner/3.8.4\"]}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 3,
+    "method": "mining.subscribe",
+    "params": [
+     "SRBMiner/3.8.4"
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "line": "{\"id\":3,\"method\":\"mining.subscribe\",\"params\":[\"SRBMiner/3.8.4\"]}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 3,
+    "method": "mining.subscribe",
+    "params": [
+     "SRBMiner/3.8.4"
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "line": "{\"id\":3,\"method\":\"mining.subscribe\",\"params\":[\"SRBMiner/3.8.4\"]}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 4,
+    "method": "mining.configure",
+    "params": [
+     [],
+     {}
+    ]
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "line": "{\"id\":4,\"method\":\"mining.configure\",\"params\":[[],{}]}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 4,
+    "method": "mining.configure",
+    "params": [
+     [],
+     {}
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "line": "{\"id\":4,\"method\":\"mining.configure\",\"params\":[[],{}]}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 4,
+    "method": "mining.configure",
+    "params": [
+     [],
+     {}
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "line": "{\"id\":4,\"method\":\"mining.configure\",\"params\":[[],{}]}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 5,
+    "method": "mining.submit",
+    "params": [
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1",
+     "job",
+     1.5,
+     1e+16,
+     null
+    ]
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "error": "Autenticação Stratum desconhecida; conexão encerrada antes de minerar"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 5,
+    "method": "mining.submit",
+    "params": [
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1",
+     "job",
+     1.5,
+     1e+16,
+     null
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "error": "Autenticação Stratum desconhecida; conexão encerrada antes de minerar"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 5,
+    "method": "mining.submit",
+    "params": [
+     "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1",
+     "job",
+     1.5,
+     1e+16,
+     null
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "line": "{\"id\":5,\"method\":\"mining.submit\",\"params\":[\"prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t.rig1\",\"job\",1.5,1e+16,null]}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 6,
+    "method": "mining.submit",
+    "params": {
+     "user": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "nonce": "ab"
+    }
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "error": "Autenticação Stratum desconhecida; conexão encerrada antes de minerar"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 6,
+    "method": "mining.submit",
+    "params": {
+     "user": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "nonce": "ab"
+    }
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "error": "Autenticação Stratum desconhecida; conexão encerrada antes de minerar"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 6,
+    "method": "mining.submit",
+    "params": {
+     "user": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+     "nonce": "ab"
+    }
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "line": "{\"id\":6,\"method\":\"mining.submit\",\"params\":{\"user\":\"prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t\",\"nonce\":\"ab\"}}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 6,
+    "method": "mining.submit",
+    "params": "texto"
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "error": "Autenticação Stratum desconhecida; conexão encerrada antes de minerar"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 6,
+    "method": "mining.submit",
+    "params": "texto"
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "error": "Autenticação Stratum desconhecida; conexão encerrada antes de minerar"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 6,
+    "method": "mining.submit",
+    "params": "texto"
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "line": "{\"id\":6,\"method\":\"mining.submit\",\"params\":\"texto\"}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 7,
+    "method": "mining.extranonce.subscribe"
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "line": "{\"id\":7,\"method\":\"mining.extranonce.subscribe\"}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 7,
+    "method": "mining.extranonce.subscribe"
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "line": "{\"id\":7,\"method\":\"mining.extranonce.subscribe\"}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 7,
+    "method": "mining.extranonce.subscribe"
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "line": "{\"id\":7,\"method\":\"mining.extranonce.subscribe\"}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 8,
+    "method": "client.get_version",
+    "params": null
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "line": "{\"id\":8,\"method\":\"client.get_version\",\"params\":null}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 8,
+    "method": "client.get_version",
+    "params": null
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "line": "{\"id\":8,\"method\":\"client.get_version\",\"params\":null}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 8,
+    "method": "client.get_version",
+    "params": null
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "line": "{\"id\":8,\"method\":\"client.get_version\",\"params\":null}",
+   "auth": false
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 9,
+    "method": "mining.suggest_difficulty",
+    "params": [
+     1
+    ]
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "error": "Mensagem Stratum desconhecida; método fora do protocolo de mineração permitido"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 9,
+    "method": "mining.suggest_difficulty",
+    "params": [
+     1
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "error": "Mensagem Stratum desconhecida; método fora do protocolo de mineração permitido"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 9,
+    "method": "mining.suggest_difficulty",
+    "params": [
+     1
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "error": "Mensagem Stratum desconhecida; método fora do protocolo de mineração permitido"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 9,
+    "params": [
+     1
+    ]
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "error": "Mensagem Stratum não reconhecida"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 9,
+    "params": [
+     1
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "error": "Mensagem Stratum não reconhecida"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 9,
+    "params": [
+     1
+    ]
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "error": "Mensagem Stratum não reconhecida"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 9,
+    "method": 5
+   },
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "error": "Mensagem Stratum não reconhecida"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 9,
+    "method": 5
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "error": "Mensagem Stratum não reconhecida"
+  },
+  {
+   "kind": "rewrite",
+   "message": {
+    "id": 9,
+    "method": 5
+   },
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "error": "Mensagem Stratum não reconhecida"
+  },
+  {
+   "kind": "rewrite",
+   "message": [
+    1,
+    2
+   ],
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "error": "Mensagem Stratum não reconhecida"
+  },
+  {
+   "kind": "rewrite",
+   "message": [
+    1,
+    2
+   ],
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "error": "Mensagem Stratum não reconhecida"
+  },
+  {
+   "kind": "rewrite",
+   "message": [
+    1,
+    2
+   ],
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "error": "Mensagem Stratum não reconhecida"
+  },
+  {
+   "kind": "rewrite",
+   "message": "texto",
+   "active": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+   "authenticated": false,
+   "error": "Mensagem Stratum não reconhecida"
+  },
+  {
+   "kind": "rewrite",
+   "message": "texto",
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": false,
+   "error": "Mensagem Stratum não reconhecida"
+  },
+  {
+   "kind": "rewrite",
+   "message": "texto",
+   "active": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+   "authenticated": true,
+   "error": "Mensagem Stratum não reconhecida"
+  },
+  {
+   "kind": "proxy",
+   "name": "principal_completo",
+   "scenario": {
+    "support": false,
+    "ledger": null,
+    "client": [
+     "{\"id\":1,\"method\":\"mining.subscribe\",\"params\":[\"SRBMiner\"]}\n",
+     "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"x\"]}\n",
+     "{\"id\":3,\"method\":\"mining.submit\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"job\",\"nonce\"]}\n",
+     "{\"id\":4,\"method\":\"mining.submit\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"job\",\"nonce\"]}\n"
+    ],
+    "wait": [
+     1,
+     2,
+     1,
+     1
+    ],
+    "responses": [
+     [
+      "{\"id\":1,\"result\":true,\"error\":null}\n"
+     ],
+     [
+      "{\"id\":2,\"result\":true,\"error\":null}\n",
+      "{\"id\":null,\"method\":\"mining.notify\",\"params\":[\"job\"]}\n"
+     ],
+     [
+      "{\"id\":3,\"result\":true,\"error\":null}\n"
+     ],
+     [
+      "{\"id\":4,\"result\":false,\"error\":[23,\"low\"]}\n"
+     ]
+    ]
+   },
+   "upstream_received": [
+    "{\"id\":1,\"method\":\"mining.subscribe\",\"params\":[\"SRBMiner\"]}",
+    "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"x\"]}",
+    "{\"id\":3,\"method\":\"mining.submit\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"job\",\"nonce\"]}",
+    "{\"id\":4,\"method\":\"mining.submit\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"job\",\"nonce\"]}"
+   ],
+   "client_received": "{\"id\":1,\"result\":true,\"error\":null}\n{\"id\":2,\"result\":true,\"error\":null}\n{\"id\":null,\"method\":\"mining.notify\",\"params\":[\"job\"]}\n{\"id\":3,\"result\":true,\"error\":null}\n{\"id\":4,\"result\":false,\"error\":[23,\"low\"]}\n",
+   "error": null,
+   "safety_disabled": false,
+   "status": {
+    "ready": false,
+    "connected": false,
+    "pool_authorized": false,
+    "port": null,
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "active_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "active_role": "primary",
+    "percent": 5,
+    "method": "mining_time",
+    "upstream": "prl.kryptex.network:7048",
+    "error": null,
+    "configuration_valid": true,
+    "reason": "Contribuição opcional desligada",
+    "eligible_connected_seconds": 0.0,
+    "seconds_until_switch": null,
+    "ledger_error": null,
+    "routing_active": false,
+    "scheduled_role": "primary",
+    "quota_accounting": "verified_primary_prepaid_support_v2",
+    "verified_primary_seconds": 0,
+    "reserved_support_seconds": 0,
+    "verified_support_seconds": 0,
+    "share_responses": {
+     "accepted_primary_shares": 1,
+     "accepted_support_shares": 0,
+     "rejected_primary_shares": 1,
+     "rejected_support_shares": 0
+    }
+   },
+   "ledger": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 0.0,\n      \"primary_connected_seconds\": 0.0,\n      \"support_connected_seconds\": 0.0,\n      \"accepted_primary_shares\": 1,\n      \"rejected_primary_shares\": 1\n    }\n  }\n}"
+  },
+  {
+   "kind": "proxy",
+   "name": "suporte_completo",
+   "scenario": {
+    "support": true,
+    "ledger": {
+     "schema_version": 2,
+     "wallets": {
+      "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+       "eligible_connected_seconds": 3420.0,
+       "primary_connected_seconds": 3420.0,
+       "support_connected_seconds": 0.0,
+       "verified_primary_seconds": 3420
+      }
+     }
+    },
+    "client": [
+     "{\"id\":1,\"method\":\"mining.subscribe\",\"params\":[\"SRBMiner\"]}\n",
+     "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"x\"]}\n",
+     "{\"id\":3,\"method\":\"mining.submit\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"job\",\"nonce\"]}\n"
+    ],
+    "wait": [
+     1,
+     1,
+     1
+    ],
+    "responses": [
+     [
+      "{\"id\":1,\"result\":true,\"error\":null}\n"
+     ],
+     [
+      "{\"id\":2,\"result\":true,\"error\":null}\n"
+     ],
+     [
+      "{\"id\":3,\"result\":true,\"error\":null}\n"
+     ]
+    ]
+   },
+   "upstream_received": [
+    "{\"id\":1,\"method\":\"mining.subscribe\",\"params\":[\"SRBMiner\"]}",
+    "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t.rig1\",\"x\"]}",
+    "{\"id\":3,\"method\":\"mining.submit\",\"params\":[\"prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t.rig1\",\"job\",\"nonce\"]}"
+   ],
+   "client_received": "{\"id\":1,\"result\":true,\"error\":null}\n{\"id\":2,\"result\":true,\"error\":null}\n{\"id\":3,\"result\":true,\"error\":null}\n",
+   "error": null,
+   "safety_disabled": false,
+   "status": {
+    "ready": false,
+    "connected": false,
+    "pool_authorized": false,
+    "port": null,
+    "enabled": true,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "active_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "active_role": "primary",
+    "percent": 5,
+    "method": "mining_time",
+    "upstream": "prl.kryptex.network:7048",
+    "error": null,
+    "configuration_valid": true,
+    "reason": "Contribuição opcional habilitada: 57 min para sua carteira / 3 min para o autor",
+    "eligible_connected_seconds": 3420.0,
+    "seconds_until_switch": 3420,
+    "ledger_error": null,
+    "routing_active": false,
+    "scheduled_role": "primary",
+    "quota_accounting": "verified_primary_prepaid_support_v2",
+    "verified_primary_seconds": 3420,
+    "reserved_support_seconds": 180.0,
+    "verified_support_seconds": 0,
+    "share_responses": {
+     "accepted_primary_shares": 0,
+     "accepted_support_shares": 1,
+     "rejected_primary_shares": 0,
+     "rejected_support_shares": 0
+    }
+   },
+   "ledger": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 3420.0,\n      \"primary_connected_seconds\": 3420.0,\n      \"support_connected_seconds\": 0.0,\n      \"verified_primary_seconds\": 3420,\n      \"reserved_support_seconds\": 180.0,\n      \"verified_support_seconds\": 0,\n      \"accepted_support_shares\": 1\n    }\n  }\n}"
+  },
+  {
+   "kind": "proxy",
+   "name": "suporte_auth_recusada",
+   "scenario": {
+    "support": true,
+    "ledger": {
+     "schema_version": 2,
+     "wallets": {
+      "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+       "eligible_connected_seconds": 3420.0,
+       "primary_connected_seconds": 3420.0,
+       "support_connected_seconds": 0.0,
+       "verified_primary_seconds": 3420
+      }
+     }
+    },
+    "client": [
+     "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"x\"]}\n",
+     "{\"id\":3,\"method\":\"mining.submit\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"job\",\"nonce\"]}\n"
+    ],
+    "wait": [
+     1,
+     0
+    ],
+    "responses": [
+     [
+      "{\"id\":2,\"result\":false,\"error\":\"conta\"}\n"
+     ]
+    ]
+   },
+   "upstream_received": [
+    "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t.rig1\",\"x\"]}"
+   ],
+   "client_received": "",
+   "error": null,
+   "safety_disabled": true,
+   "status": {
+    "ready": false,
+    "connected": false,
+    "pool_authorized": false,
+    "port": null,
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "active_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "active_role": "primary",
+    "percent": 5,
+    "method": "mining_time",
+    "upstream": "prl.kryptex.network:7048",
+    "error": null,
+    "configuration_valid": true,
+    "reason": "Contribuição desativada por falha de segurança/protocolo; usando carteira principal",
+    "eligible_connected_seconds": 3420.0,
+    "seconds_until_switch": null,
+    "ledger_error": null,
+    "routing_active": false,
+    "scheduled_role": "primary",
+    "quota_accounting": "verified_primary_prepaid_support_v2",
+    "verified_primary_seconds": 3420,
+    "reserved_support_seconds": 180.0,
+    "verified_support_seconds": 0,
+    "share_responses": {
+     "accepted_primary_shares": 0,
+     "accepted_support_shares": 0,
+     "rejected_primary_shares": 0,
+     "rejected_support_shares": 0
+    }
+   },
+   "ledger": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 3420.0,\n      \"primary_connected_seconds\": 3420.0,\n      \"support_connected_seconds\": 0.0,\n      \"verified_primary_seconds\": 3420,\n      \"reserved_support_seconds\": 180.0\n    }\n  }\n}"
+  },
+  {
+   "kind": "proxy",
+   "name": "principal_auth_recusada",
+   "scenario": {
+    "support": false,
+    "ledger": null,
+    "client": [
+     "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"x\"]}\n"
+    ],
+    "responses": [
+     [
+      "{\"id\":2,\"result\":null,\"error\":null}\n"
+     ]
+    ]
+   },
+   "upstream_received": [
+    "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"x\"]}"
+   ],
+   "client_received": "",
+   "error": null,
+   "safety_disabled": false,
+   "status": {
+    "ready": false,
+    "connected": false,
+    "pool_authorized": false,
+    "port": null,
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "active_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "active_role": "primary",
+    "percent": 5,
+    "method": "mining_time",
+    "upstream": "prl.kryptex.network:7048",
+    "error": null,
+    "configuration_valid": true,
+    "reason": "Contribuição opcional desligada",
+    "eligible_connected_seconds": 0.0,
+    "seconds_until_switch": null,
+    "ledger_error": null,
+    "routing_active": false,
+    "scheduled_role": "primary",
+    "quota_accounting": "verified_primary_prepaid_support_v2",
+    "verified_primary_seconds": 0,
+    "reserved_support_seconds": 0,
+    "verified_support_seconds": 0,
+    "share_responses": {
+     "accepted_primary_shares": 0,
+     "accepted_support_shares": 0,
+     "rejected_primary_shares": 0,
+     "rejected_support_shares": 0
+    }
+   },
+   "ledger": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 0.0,\n      \"primary_connected_seconds\": 0.0,\n      \"support_connected_seconds\": 0.0\n    }\n  }\n}"
+  },
+  {
+   "kind": "proxy",
+   "name": "share_antes_da_auth",
+   "scenario": {
+    "support": false,
+    "ledger": null,
+    "client": [
+     "{\"id\":3,\"method\":\"mining.submit\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"job\",\"nonce\"]}\n"
+    ],
+    "responses": []
+   },
+   "upstream_received": [],
+   "client_received": "",
+   "error": "ValueError: Autenticação Stratum desconhecida; conexão encerrada antes de minerar",
+   "safety_disabled": false,
+   "status": {
+    "ready": false,
+    "connected": false,
+    "pool_authorized": false,
+    "port": null,
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "active_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "active_role": "primary",
+    "percent": 5,
+    "method": "mining_time",
+    "upstream": "prl.kryptex.network:7048",
+    "error": null,
+    "configuration_valid": true,
+    "reason": "Contribuição opcional desligada",
+    "eligible_connected_seconds": 0.0,
+    "seconds_until_switch": null,
+    "ledger_error": null,
+    "routing_active": false,
+    "scheduled_role": "primary",
+    "quota_accounting": "verified_primary_prepaid_support_v2",
+    "verified_primary_seconds": 0,
+    "reserved_support_seconds": 0,
+    "verified_support_seconds": 0,
+    "share_responses": {
+     "accepted_primary_shares": 0,
+     "accepted_support_shares": 0,
+     "rejected_primary_shares": 0,
+     "rejected_support_shares": 0
+    }
+   },
+   "ledger": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 0.0,\n      \"primary_connected_seconds\": 0.0,\n      \"support_connected_seconds\": 0.0\n    }\n  }\n}"
+  },
+  {
+   "kind": "proxy",
+   "name": "suporte_share_sem_confirmacao",
+   "scenario": {
+    "support": true,
+    "ledger": {
+     "schema_version": 2,
+     "wallets": {
+      "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq": {
+       "eligible_connected_seconds": 3420.0,
+       "primary_connected_seconds": 3420.0,
+       "support_connected_seconds": 0.0,
+       "verified_primary_seconds": 3420
+      }
+     }
+    },
+    "client": [
+     "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"x\"]}\n{\"id\":3,\"method\":\"mining.submit\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"job\",\"nonce\"]}\n"
+    ],
+    "responses": [
+     []
+    ]
+   },
+   "upstream_received": [
+    "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t.rig1\",\"x\"]}"
+   ],
+   "client_received": "",
+   "error": "ValueError: Contribuição sem autorização confirmada",
+   "safety_disabled": true,
+   "status": {
+    "ready": false,
+    "connected": false,
+    "pool_authorized": false,
+    "port": null,
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "active_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "active_role": "primary",
+    "percent": 5,
+    "method": "mining_time",
+    "upstream": "prl.kryptex.network:7048",
+    "error": null,
+    "configuration_valid": true,
+    "reason": "Contribuição desativada por falha de segurança/protocolo; usando carteira principal",
+    "eligible_connected_seconds": 3420.0,
+    "seconds_until_switch": null,
+    "ledger_error": null,
+    "routing_active": false,
+    "scheduled_role": "primary",
+    "quota_accounting": "verified_primary_prepaid_support_v2",
+    "verified_primary_seconds": 3420,
+    "reserved_support_seconds": 180.0,
+    "verified_support_seconds": 0,
+    "share_responses": {
+     "accepted_primary_shares": 0,
+     "accepted_support_shares": 0,
+     "rejected_primary_shares": 0,
+     "rejected_support_shares": 0
+    }
+   },
+   "ledger": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 3420.0,\n      \"primary_connected_seconds\": 3420.0,\n      \"support_connected_seconds\": 0.0,\n      \"verified_primary_seconds\": 3420,\n      \"reserved_support_seconds\": 180.0\n    }\n  }\n}"
+  },
+  {
+   "kind": "proxy",
+   "name": "outra_carteira",
+   "scenario": {
+    "support": false,
+    "ledger": null,
+    "client": [
+     "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1zzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzzz\",\"x\"]}\n"
+    ],
+    "responses": []
+   },
+   "upstream_received": [],
+   "client_received": "",
+   "error": "ValueError: Autorização incompatível com a carteira principal; conexão encerrada",
+   "safety_disabled": false,
+   "status": {
+    "ready": false,
+    "connected": false,
+    "pool_authorized": false,
+    "port": null,
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "active_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "active_role": "primary",
+    "percent": 5,
+    "method": "mining_time",
+    "upstream": "prl.kryptex.network:7048",
+    "error": null,
+    "configuration_valid": true,
+    "reason": "Contribuição opcional desligada",
+    "eligible_connected_seconds": 0.0,
+    "seconds_until_switch": null,
+    "ledger_error": null,
+    "routing_active": false,
+    "scheduled_role": "primary",
+    "quota_accounting": "verified_primary_prepaid_support_v2",
+    "verified_primary_seconds": 0,
+    "reserved_support_seconds": 0,
+    "verified_support_seconds": 0,
+    "share_responses": {
+     "accepted_primary_shares": 0,
+     "accepted_support_shares": 0,
+     "rejected_primary_shares": 0,
+     "rejected_support_shares": 0
+    }
+   },
+   "ledger": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 0.0,\n      \"primary_connected_seconds\": 0.0,\n      \"support_connected_seconds\": 0.0\n    }\n  }\n}"
+  },
+  {
+   "kind": "proxy",
+   "name": "metodo_desconhecido",
+   "scenario": {
+    "support": false,
+    "ledger": null,
+    "client": [
+     "{\"id\":1,\"method\":\"eth_getWork\"}\n"
+    ],
+    "responses": []
+   },
+   "upstream_received": [],
+   "client_received": "",
+   "error": "ValueError: Mensagem Stratum desconhecida; método fora do protocolo de mineração permitido",
+   "safety_disabled": false,
+   "status": {
+    "ready": false,
+    "connected": false,
+    "pool_authorized": false,
+    "port": null,
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "active_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "active_role": "primary",
+    "percent": 5,
+    "method": "mining_time",
+    "upstream": "prl.kryptex.network:7048",
+    "error": null,
+    "configuration_valid": true,
+    "reason": "Contribuição opcional desligada",
+    "eligible_connected_seconds": 0.0,
+    "seconds_until_switch": null,
+    "ledger_error": null,
+    "routing_active": false,
+    "scheduled_role": "primary",
+    "quota_accounting": "verified_primary_prepaid_support_v2",
+    "verified_primary_seconds": 0,
+    "reserved_support_seconds": 0,
+    "verified_support_seconds": 0,
+    "share_responses": {
+     "accepted_primary_shares": 0,
+     "accepted_support_shares": 0,
+     "rejected_primary_shares": 0,
+     "rejected_support_shares": 0
+    }
+   },
+   "ledger": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 0.0,\n      \"primary_connected_seconds\": 0.0,\n      \"support_connected_seconds\": 0.0\n    }\n  }\n}"
+  },
+  {
+   "kind": "proxy",
+   "name": "id_duplicado",
+   "scenario": {
+    "support": false,
+    "ledger": null,
+    "client": [
+     "{\"id\":1,\"method\":\"mining.subscribe\",\"params\":[\"SRBMiner\"]}\n{\"id\":1,\"method\":\"mining.subscribe\",\"params\":[\"SRBMiner\"]}\n"
+    ],
+    "responses": [
+     []
+    ]
+   },
+   "upstream_received": [
+    "{\"id\":1,\"method\":\"mining.subscribe\",\"params\":[\"SRBMiner\"]}"
+   ],
+   "client_received": "",
+   "error": "ValueError: Identificador Stratum duplicado ou excesso de pedidos pendentes",
+   "safety_disabled": false,
+   "status": {
+    "ready": false,
+    "connected": false,
+    "pool_authorized": false,
+    "port": null,
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "active_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "active_role": "primary",
+    "percent": 5,
+    "method": "mining_time",
+    "upstream": "prl.kryptex.network:7048",
+    "error": null,
+    "configuration_valid": true,
+    "reason": "Contribuição opcional desligada",
+    "eligible_connected_seconds": 0.0,
+    "seconds_until_switch": null,
+    "ledger_error": null,
+    "routing_active": false,
+    "scheduled_role": "primary",
+    "quota_accounting": "verified_primary_prepaid_support_v2",
+    "verified_primary_seconds": 0,
+    "reserved_support_seconds": 0,
+    "verified_support_seconds": 0,
+    "share_responses": {
+     "accepted_primary_shares": 0,
+     "accepted_support_shares": 0,
+     "rejected_primary_shares": 0,
+     "rejected_support_shares": 0
+    }
+   },
+   "ledger": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 0.0,\n      \"primary_connected_seconds\": 0.0,\n      \"support_connected_seconds\": 0.0\n    }\n  }\n}"
+  },
+  {
+   "kind": "proxy",
+   "name": "json_invalido",
+   "scenario": {
+    "support": false,
+    "ledger": null,
+    "client": [
+     "{nao json}\n"
+    ],
+    "responses": []
+   },
+   "upstream_received": [],
+   "client_received": "",
+   "error": "ValueError: Protocolo Stratum não reconhecido; nenhum redirecionamento permitido",
+   "safety_disabled": false,
+   "status": {
+    "ready": false,
+    "connected": false,
+    "pool_authorized": false,
+    "port": null,
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "active_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "active_role": "primary",
+    "percent": 5,
+    "method": "mining_time",
+    "upstream": "prl.kryptex.network:7048",
+    "error": null,
+    "configuration_valid": true,
+    "reason": "Contribuição opcional desligada",
+    "eligible_connected_seconds": 0.0,
+    "seconds_until_switch": null,
+    "ledger_error": null,
+    "routing_active": false,
+    "scheduled_role": "primary",
+    "quota_accounting": "verified_primary_prepaid_support_v2",
+    "verified_primary_seconds": 0,
+    "reserved_support_seconds": 0,
+    "verified_support_seconds": 0,
+    "share_responses": {
+     "accepted_primary_shares": 0,
+     "accepted_support_shares": 0,
+     "rejected_primary_shares": 0,
+     "rejected_support_shares": 0
+    }
+   },
+   "ledger": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 0.0,\n      \"primary_connected_seconds\": 0.0,\n      \"support_connected_seconds\": 0.0\n    }\n  }\n}"
+  },
+  {
+   "kind": "proxy",
+   "name": "linhas_vazias_crlf",
+   "scenario": {
+    "support": false,
+    "ledger": null,
+    "client": [
+     "\r\n  \n{\"id\":1,\"method\":\"mining.subscribe\",\"params\":[\"SRBMiner\"]}\r\n",
+     "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"x\"]}\n"
+    ],
+    "wait": [
+     1,
+     1
+    ],
+    "responses": [
+     [
+      "{\"id\":1,\"result\":true,\"error\":null}\n"
+     ],
+     [
+      "{\"id\":2,\"result\":true,\"error\":null}\n"
+     ]
+    ]
+   },
+   "upstream_received": [
+    "{\"id\":1,\"method\":\"mining.subscribe\",\"params\":[\"SRBMiner\"]}",
+    "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"x\"]}"
+   ],
+   "client_received": "{\"id\":1,\"result\":true,\"error\":null}\n{\"id\":2,\"result\":true,\"error\":null}\n",
+   "error": null,
+   "safety_disabled": false,
+   "status": {
+    "ready": false,
+    "connected": false,
+    "pool_authorized": false,
+    "port": null,
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "active_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "active_role": "primary",
+    "percent": 5,
+    "method": "mining_time",
+    "upstream": "prl.kryptex.network:7048",
+    "error": null,
+    "configuration_valid": true,
+    "reason": "Contribuição opcional desligada",
+    "eligible_connected_seconds": 0.0,
+    "seconds_until_switch": null,
+    "ledger_error": null,
+    "routing_active": false,
+    "scheduled_role": "primary",
+    "quota_accounting": "verified_primary_prepaid_support_v2",
+    "verified_primary_seconds": 0,
+    "reserved_support_seconds": 0,
+    "verified_support_seconds": 0,
+    "share_responses": {
+     "accepted_primary_shares": 0,
+     "accepted_support_shares": 0,
+     "rejected_primary_shares": 0,
+     "rejected_support_shares": 0
+    }
+   },
+   "ledger": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 0.0,\n      \"primary_connected_seconds\": 0.0,\n      \"support_connected_seconds\": 0.0\n    }\n  }\n}"
+  },
+  {
+   "kind": "proxy",
+   "name": "resposta_nao_objeto",
+   "scenario": {
+    "support": false,
+    "ledger": null,
+    "client": [
+     "{\"id\":1,\"method\":\"mining.subscribe\",\"params\":[\"SRBMiner\"]}\n"
+    ],
+    "responses": [
+     [
+      "[1]\n"
+     ]
+    ]
+   },
+   "upstream_received": [
+    "{\"id\":1,\"method\":\"mining.subscribe\",\"params\":[\"SRBMiner\"]}"
+   ],
+   "client_received": "",
+   "error": "ValueError: Resposta Stratum inválida",
+   "safety_disabled": false,
+   "status": {
+    "ready": false,
+    "connected": false,
+    "pool_authorized": false,
+    "port": null,
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "active_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "active_role": "primary",
+    "percent": 5,
+    "method": "mining_time",
+    "upstream": "prl.kryptex.network:7048",
+    "error": null,
+    "configuration_valid": true,
+    "reason": "Contribuição opcional desligada",
+    "eligible_connected_seconds": 0.0,
+    "seconds_until_switch": null,
+    "ledger_error": null,
+    "routing_active": false,
+    "scheduled_role": "primary",
+    "quota_accounting": "verified_primary_prepaid_support_v2",
+    "verified_primary_seconds": 0,
+    "reserved_support_seconds": 0,
+    "verified_support_seconds": 0,
+    "share_responses": {
+     "accepted_primary_shares": 0,
+     "accepted_support_shares": 0,
+     "rejected_primary_shares": 0,
+     "rejected_support_shares": 0
+    }
+   },
+   "ledger": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 0.0,\n      \"primary_connected_seconds\": 0.0,\n      \"support_connected_seconds\": 0.0\n    }\n  }\n}"
+  },
+  {
+   "kind": "proxy",
+   "name": "auth_sem_id",
+   "scenario": {
+    "support": false,
+    "ledger": null,
+    "client": [
+     "{\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\",\"x\"]}\n"
+    ],
+    "responses": []
+   },
+   "upstream_received": [],
+   "client_received": "",
+   "error": "ValueError: Autorização duplicada ou sem identificador verificável",
+   "safety_disabled": false,
+   "status": {
+    "ready": false,
+    "connected": false,
+    "pool_authorized": false,
+    "port": null,
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "active_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "active_role": "primary",
+    "percent": 5,
+    "method": "mining_time",
+    "upstream": "prl.kryptex.network:7048",
+    "error": null,
+    "configuration_valid": true,
+    "reason": "Contribuição opcional desligada",
+    "eligible_connected_seconds": 0.0,
+    "seconds_until_switch": null,
+    "ledger_error": null,
+    "routing_active": false,
+    "scheduled_role": "primary",
+    "quota_accounting": "verified_primary_prepaid_support_v2",
+    "verified_primary_seconds": 0,
+    "reserved_support_seconds": 0,
+    "verified_support_seconds": 0,
+    "share_responses": {
+     "accepted_primary_shares": 0,
+     "accepted_support_shares": 0,
+     "rejected_primary_shares": 0,
+     "rejected_support_shares": 0
+    }
+   },
+   "ledger": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 0.0,\n      \"primary_connected_seconds\": 0.0,\n      \"support_connected_seconds\": 0.0\n    }\n  }\n}"
+  },
+  {
+   "kind": "proxy",
+   "name": "erro_zero_autoriza",
+   "scenario": {
+    "support": false,
+    "ledger": null,
+    "client": [
+     "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"x\"]}\n",
+     "{\"id\":3,\"method\":\"mining.submit\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"job\",\"nonce\"]}\n",
+     "{\"id\":4,\"method\":\"mining.submit\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"job\",\"nonce\"]}\n"
+    ],
+    "wait": [
+     1,
+     1,
+     1
+    ],
+    "responses": [
+     [
+      "{\"id\":2,\"result\":true,\"error\":0}\n"
+     ],
+     [
+      "{\"id\":3,\"result\":true,\"error\":0.0}\n"
+     ],
+     [
+      "{\"id\":4,\"result\":true,\"error\":\"x\"}\n"
+     ]
+    ]
+   },
+   "upstream_received": [
+    "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"x\"]}",
+    "{\"id\":3,\"method\":\"mining.submit\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"job\",\"nonce\"]}",
+    "{\"id\":4,\"method\":\"mining.submit\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"job\",\"nonce\"]}"
+   ],
+   "client_received": "{\"id\":2,\"result\":true,\"error\":0}\n{\"id\":3,\"result\":true,\"error\":0.0}\n{\"id\":4,\"result\":true,\"error\":\"x\"}\n",
+   "error": null,
+   "safety_disabled": false,
+   "status": {
+    "ready": false,
+    "connected": false,
+    "pool_authorized": false,
+    "port": null,
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "active_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "active_role": "primary",
+    "percent": 5,
+    "method": "mining_time",
+    "upstream": "prl.kryptex.network:7048",
+    "error": null,
+    "configuration_valid": true,
+    "reason": "Contribuição opcional desligada",
+    "eligible_connected_seconds": 0.0,
+    "seconds_until_switch": null,
+    "ledger_error": null,
+    "routing_active": false,
+    "scheduled_role": "primary",
+    "quota_accounting": "verified_primary_prepaid_support_v2",
+    "verified_primary_seconds": 0,
+    "reserved_support_seconds": 0,
+    "verified_support_seconds": 0,
+    "share_responses": {
+     "accepted_primary_shares": 1,
+     "accepted_support_shares": 0,
+     "rejected_primary_shares": 1,
+     "rejected_support_shares": 0
+    }
+   },
+   "ledger": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 0.0,\n      \"primary_connected_seconds\": 0.0,\n      \"support_connected_seconds\": 0.0,\n      \"accepted_primary_shares\": 1,\n      \"rejected_primary_shares\": 1\n    }\n  }\n}"
+  },
+  {
+   "kind": "proxy",
+   "name": "auth_duplicada",
+   "scenario": {
+    "support": false,
+    "ledger": null,
+    "client": [
+     "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"x\"]}\n",
+     "{\"id\":9,\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\",\"x\"]}\n"
+    ],
+    "wait": [
+     1,
+     0
+    ],
+    "responses": [
+     [
+      "{\"id\":2,\"result\":true,\"error\":null}\n"
+     ],
+     []
+    ]
+   },
+   "upstream_received": [
+    "{\"id\":2,\"method\":\"mining.authorize\",\"params\":[\"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq.rig1\",\"x\"]}"
+   ],
+   "client_received": "{\"id\":2,\"result\":true,\"error\":null}\n",
+   "error": "ValueError: Autorização duplicada ou sem identificador verificável",
+   "safety_disabled": false,
+   "status": {
+    "ready": false,
+    "connected": false,
+    "pool_authorized": false,
+    "port": null,
+    "enabled": false,
+    "primary_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "support_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+    "active_wallet": "prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq",
+    "active_role": "primary",
+    "percent": 5,
+    "method": "mining_time",
+    "upstream": "prl.kryptex.network:7048",
+    "error": null,
+    "configuration_valid": true,
+    "reason": "Contribuição opcional desligada",
+    "eligible_connected_seconds": 0.0,
+    "seconds_until_switch": null,
+    "ledger_error": null,
+    "routing_active": false,
+    "scheduled_role": "primary",
+    "quota_accounting": "verified_primary_prepaid_support_v2",
+    "verified_primary_seconds": 0,
+    "reserved_support_seconds": 0,
+    "verified_support_seconds": 0,
+    "share_responses": {
+     "accepted_primary_shares": 0,
+     "accepted_support_shares": 0,
+     "rejected_primary_shares": 0,
+     "rejected_support_shares": 0
+    }
+   },
+   "ledger": "{\n  \"schema_version\": 2,\n  \"wallets\": {\n    \"prl1qqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqqq\": {\n      \"eligible_connected_seconds\": 0.0,\n      \"primary_connected_seconds\": 0.0,\n      \"support_connected_seconds\": 0.0\n    }\n  }\n}"
+  }
+ ]
+}
