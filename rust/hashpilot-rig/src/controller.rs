@@ -29,9 +29,9 @@ use serde_json::{Map, Value, json};
 use crate::ai_advisor::{BackgroundAdvisor, RoutedAdvisor};
 use crate::gpu_agent::{
     ACTIONS, Advisor, AgentError, AgentResult, GpuAgent, control_plan, external_supervisor_active,
-    normalize_sample, performance_probe_gate, read_fan, read_memory_clock, read_memory_clocks,
-    read_optimization, read_sample, read_target_temperature, requested_control_stop, select_device,
-    snapshot_device_payload, thermal_limits, validated_plan,
+    normalize_sample, performance_probe_gate, read_core_clock_limit, read_fan, read_memory_clock,
+    read_memory_clocks, read_optimization, read_sample, read_target_temperature,
+    requested_control_stop, select_device, snapshot_device_payload, thermal_limits, validated_plan,
 };
 use crate::nvidia::SmiCommand;
 use crate::snapshots::LogReader;
@@ -472,6 +472,8 @@ pub struct Hooks {
     pub advisor: Option<Arc<RoutedAdvisor>>,
     /// Ctrl+C: o Python sai por `KeyboardInterrupt`, que pula o `except` e passa pelo `finally`.
     pub interrupted: Box<dyn Fn() -> bool>,
+    /// Espaçamento crescente das reexplorações de memória (só do Rust; desligado nos goldens).
+    pub memory_backoff: bool,
 }
 
 /// `process_identity` real: horário de criação e executável (minúsculo).
@@ -533,6 +535,7 @@ impl Hooks {
             interrupted: Box::new(|| {
                 crate::win32::CTRL_STOP.load(std::sync::atomic::Ordering::SeqCst)
             }),
+            memory_backoff: true,
             is_admin: Box::new(crate::win32::is_user_an_admin),
             identity: Box::new(process_identity),
             alive: Box::new(|pid| crate::win32::process_state(pid) == "alive"),
@@ -743,6 +746,7 @@ impl Loop<'_> {
         let settings_path = self.hooks.settings_path.clone();
         let mut target_controller: Option<TargetTemperatureController> = None;
         let mut target_checked_at = f64::NEG_INFINITY;
+        let mut clock_limit: Option<f64> = None;
         let mut hot_since: Option<f64> = None;
         let mut memory_supported: Vec<i64> = Vec::new();
         let device_count = self
@@ -806,6 +810,7 @@ impl Loop<'_> {
                 // Relido periodicamente: mudar o alvo nas Configurações vale sem reiniciar.
                 target_checked_at = now;
                 let target = clamp_target(read_target_temperature(&settings_path, &uuid), hard);
+                clock_limit = read_core_clock_limit(&settings_path, &uuid);
                 match (target, target_controller.as_mut()) {
                     (None, _) => target_controller = None,
                     (Some(target), None) => {
@@ -819,6 +824,8 @@ impl Loop<'_> {
                                 memory_supported.iter().map(|value| *value as f64).collect();
                             let mut explorer = MemoryExplorer::new(&candidates, target);
                             explorer.best_mhz = best.filter(|best| candidates.contains(best));
+                            // Só no serviço: reexplorar cada vez menos enquanto o melhor se confirma.
+                            explorer.reexplore_backoff = self.hooks.memory_backoff;
                             self.memory_explorer = Some(explorer);
                         }
                         // Partida segura: trava no último clock bom antes do boost de fábrica.
@@ -961,6 +968,42 @@ impl Loop<'_> {
                         self.writes_plus();
                         applied = json!({"action": "clock_down", "clock_mhz": locked});
                     }
+                } else if let (Some(limit), Some(current)) = (clock_limit, clock)
+                    && current > limit + 1.0
+                    && decision.action != "clock_down"
+                {
+                    // Acima do limite configurado (limite novo ou boost): trava nele.
+                    let locked = self.actuator.apply_reduction(
+                        &self.gpu,
+                        &sample,
+                        limit,
+                        false,
+                        now,
+                        &mut *self.hooks.smi,
+                    )?;
+                    decision.action = "clock_down";
+                    decision.reason =
+                        format!("Acima do limite de clock de {limit:.0} MHz: reduzindo");
+                    if let Some(locked) = locked {
+                        controller.notify_applied(
+                            "clock_down",
+                            Some(current),
+                            Some(locked as f64),
+                            now,
+                            rate,
+                        );
+                        self.remember(vec![("clock_mhz", json!(locked))]);
+                        self.writes_plus();
+                        applied = json!({"action": "clock_down", "clock_mhz": locked});
+                    }
+                } else if decision.action == "clock_up"
+                    && clock_limit
+                        .is_some_and(|limit| clock.is_some_and(|clock| clock >= limit - 1.0))
+                {
+                    decision.reason = format!(
+                        "No limite de clock configurado de {:.0} MHz",
+                        clock_limit.unwrap_or_default()
+                    );
                 } else if decision.action == "clock_up" && temperature >= soft_hw {
                     decision.reason =
                         "Folga em relação ao alvo, mas acima do limite de subida segura do atuador"
@@ -970,7 +1013,16 @@ impl Loop<'_> {
                     plan["gpu_uuid"] = json!(uuid);
                     plan["at"] = json!(now);
                     plan["reason"] = json!(decision.reason);
-                    if plan["action"] != json!("hold") {
+                    let over_limit = plan["action"] == json!("clock_up")
+                        && clock_limit.is_some_and(|limit| {
+                            numeric(&plan["clock_mhz"]).is_some_and(|wanted| wanted > limit + 1.0)
+                        });
+                    if over_limit {
+                        decision.reason = format!(
+                            "Subir passaria do limite de clock de {:.0} MHz",
+                            clock_limit.unwrap_or_default()
+                        );
+                    } else if plan["action"] != json!("hold") {
                         self.apply_recorded(&sample, &plan, &rate_value)?;
                         let action = text(&plan["action"]);
                         let controller = target_controller.as_mut().expect("alvo ativo");

@@ -781,6 +781,22 @@ pub fn read_target_temperature(settings_path: &Path, gpu_uuid: &str) -> Option<f
     num(value)
 }
 
+/// Limite de clock do núcleo (`max_core_clock_mhz`), por GPU em `gpu_settings`, senão o
+/// global. Só do Rust: o controle por alvo nunca sobe acima dele. Valores fora de
+/// 300–3000 MHz são ignorados (dado inválido não vira limite).
+pub fn read_core_clock_limit(settings_path: &Path, gpu_uuid: &str) -> Option<f64> {
+    let settings = read_json(settings_path).filter(Value::is_object)?;
+    let entry = field(&settings, "gpu_settings")
+        .as_object()
+        .and_then(|map| map.get(gpu_uuid))
+        .and_then(Value::as_object);
+    let value = entry
+        .and_then(|entry| entry.get("max_core_clock_mhz"))
+        .filter(|value| !value.is_null())
+        .unwrap_or_else(|| field(&settings, "max_core_clock_mhz"));
+    num(value).filter(|limit| (300.0..=3000.0).contains(limit))
+}
+
 // --- seleção do dispositivo e coordenação ----------------------------------------------
 
 /// `select_device(devices, args)`: pelo UUID (o índice, se vier, precisa bater) ou pelo
