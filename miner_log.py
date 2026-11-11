@@ -22,6 +22,13 @@ DEVICE_BUS = re.compile(r"\bBUS\s*:\s*([0-9a-f]{1,2})\b", re.I)
 DEVICE_INDEX = re.compile(r"\bGPU\s*(\d+)\s*[:\[]", re.I)
 UNITS = {"H": 1e-12, "kH": 1e-9, "MH": 1e-6, "GH": 1e-3, "TH": 1, "PH": 1e3, "EH": 1e6}
 CONNECTION_LOST = ("disconnected", "connection failed", "reconnecting", "connection lost")
+# Bloco de status que o SRBMiner repete a cada poucos minutos enquanto minera:
+# "Connection: 0d 15:18:22" (há quanto tempo a conexão atual com a pool está de pé)
+# e "Last job: 51 sec ago" (idade do último job recebido). A linha "Connected to"
+# só aparece ao conectar, e o SRBMiner 3.8 não grava "Job received".
+CONNECTION_UPTIME = re.compile(r"\bConnection:\s*\d+d\s+\d+:\d\d:\d\d\b")
+# Até 9 dígitos ASCII: a idade sempre cabe num float exato (e no i64 do port em Rust).
+LAST_JOB = re.compile(r"\bLast job:\s*([0-9]{1,9})\s*sec ago\b")
 
 _STAMPS: dict[str, float | None] = {}
 

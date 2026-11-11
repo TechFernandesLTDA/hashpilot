@@ -7,7 +7,7 @@ import subprocess
 import time
 
 from gpu_agent import numeric, smi_command, validate_device
-from miner_log import AVERAGE, COUNTERS, GPU_LABEL, RATE, STAMP, UNITS, log_timestamp  # noqa: F401 (reexportados)
+from miner_log import AVERAGE, CONNECTION_UPTIME, COUNTERS, GPU_LABEL, LAST_JOB, RATE, STAMP, UNITS, log_timestamp  # noqa: F401 (reexportados)
 
 FIELDS=("uuid","index","name","driver_version","temperature.gpu","power.draw","power.limit",
         "clocks.gr","clocks.mem","utilization.gpu","utilization.memory","memory.used","memory.total","fan.speed","pstate")
@@ -106,10 +106,19 @@ def _parse_gpu_log(text,gpu_uuid,index,stamp_now,allow_local_gpu0):
                           connection='Aguardando conexão',connection_at=None,last_job_at=None,pause_at=None)
             result["started_at"]=stamp
             result['version']=line.split('Miner version:',1)[1].strip()
-        if "Job received" in line and (result['last_job_at'] is None or stamp>=result['last_job_at']):
-            result['last_job_at']=stamp
+        job=LAST_JOB.search(line)
+        job_at=stamp-int(job[1]) if job else stamp if "Job received" in line else None
+        if job_at is not None and (result['last_job_at'] is None or job_at>=result['last_job_at']):
+            result['last_job_at']=job_at
+        # Regra do estado da conexão: vale a evidência mais recente da janela lida.
+        # "Connected to", "Job received", o "Connection: Nd hh:mm:ss" do bloco de status
+        # e qualquer "share accepted" (a pool respondeu nesta conexão) provam conexão;
+        # as palavras de CONNECTION_LOST provam queda. A leitura é só do fim do log, e
+        # "Connected to" sai da janela horas depois de conectar: sem as provas periódicas
+        # o estado voltava a "Aguardando conexão" com a pool aceitando shares. Hashrate
+        # mede a GPU, não a pool, e não conta; sem nenhuma prova, fica "Aguardando conexão".
         if result['connection_at'] is None or stamp>=result['connection_at']:
-            if "Connected to " in line or "Job received" in line:
+            if "Connected to " in line or "Job received" in line or "share accepted" in line or CONNECTION_UPTIME.search(line):
                 result["connection"],result['connection_at']="Conectado à pool",stamp
             if any(word in line.lower() for word in ("disconnected","connection failed","reconnecting","connection lost")):
                 result["connection"],result['connection_at']="Reconectando à pool",stamp

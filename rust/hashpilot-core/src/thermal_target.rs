@@ -30,6 +30,8 @@ pub const SAFE_START_CLOCK_MHZ: f64 = 1635.0;
 pub const MEMORY_SETTLE_S: f64 = 480.0;
 pub const MEMORY_MEASURE_S: f64 = 180.0;
 pub const MEMORY_REEXPLORE_S: f64 = 6.0 * 3600.0;
+/// Teto do espaçamento crescente das reexplorações (só com `reexplore_backoff`).
+pub const MEMORY_REEXPLORE_MAX_S: f64 = 72.0 * 3600.0;
 pub const MEMORY_MIN_SAMPLES: usize = 3;
 pub const MEMORY_TIE_FRACTION: f64 = 0.005;
 
@@ -315,6 +317,15 @@ pub struct MemoryExplorer {
     pub watts: Vec<f64>,
     /// Clock → potência média medida.
     pub power: HashMap<u64, f64>,
+    /// Melhoria só do Rust, desligada por padrão (o Python reexplora a cada 6 h, sempre):
+    /// cada rodada que confirma o mesmo melhor dobra o intervalo até a próxima, até 72 h;
+    /// uma rodada que troca o melhor volta a 6 h. Medido em 09–10/11/2026: as reexplorações
+    /// a cada 6 h custavam ~22 min de hashrate menor por rodada sem nunca mudar o resultado.
+    pub reexplore_backoff: bool,
+    /// Intervalo atual entre reexplorações.
+    pub reexplore_after_s: f64,
+    /// O melhor conhecido quando a rodada atual começou.
+    pub round_best_before: Option<f64>,
 }
 
 impl MemoryExplorer {
@@ -344,6 +355,9 @@ impl MemoryExplorer {
             price_kwh: None,
             watts: Vec::new(),
             power: HashMap::new(),
+            reexplore_backoff: false,
+            reexplore_after_s: MEMORY_REEXPLORE_S,
+            round_best_before: None,
         }
     }
 
@@ -391,6 +405,7 @@ impl MemoryExplorer {
             .collect();
         self.scores.clear();
         self.explored_at = now;
+        self.round_best_before = self.best_mhz;
     }
 
     /// O clock de memória a aplicar agora, ou `None` para manter. `actual_mhz` é o clock
@@ -429,7 +444,7 @@ impl MemoryExplorer {
             return self.next(now);
         };
         if self.queue.is_empty() && Some(current) == self.best_mhz {
-            if now - self.explored_at >= MEMORY_REEXPLORE_S {
+            if now - self.explored_at >= self.reexplore_after_s {
                 self.start_round(now);
                 self.queue.retain(|clock| *clock != current);
                 self.begin(current, now);
@@ -536,6 +551,13 @@ impl MemoryExplorer {
             if let Some((clock, _)) = chosen {
                 best = clock;
             }
+        }
+        if self.reexplore_backoff {
+            self.reexplore_after_s = if self.round_best_before == Some(best) {
+                (self.reexplore_after_s * 2.0).min(MEMORY_REEXPLORE_MAX_S)
+            } else {
+                MEMORY_REEXPLORE_S
+            };
         }
         self.best_mhz = Some(best);
         let changed = Some(best) != self.current_mhz;

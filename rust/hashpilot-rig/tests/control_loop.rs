@@ -81,11 +81,15 @@ fn run(case: &Value, gpu: &Value, t0: f64) -> Value {
     std::fs::create_dir_all(&state_dir).unwrap();
     std::fs::create_dir_all(&global_dir).unwrap();
     let settings = global_dir.join("settings.json");
-    let base = if spec["target"].is_null() {
+    let mut base = if spec["target"].is_null() {
         json!({})
     } else {
         json!({"target_temperature_c": spec["target"]})
     };
+    // Só nos testes do Rust (o Python não tem limite de clock).
+    if !spec["clock_limit"].is_null() {
+        base["max_core_clock_mhz"] = spec["clock_limit"].clone();
+    }
     std::fs::write(&settings, base.to_string()).unwrap();
     if let Some(files) = spec["files"].as_object() {
         for (file, payload) in files {
@@ -254,6 +258,7 @@ fn run(case: &Value, gpu: &Value, t0: f64) -> Value {
         interrupted: Box::new(|| false),
         // Paridade: o Python grava toda decisão; a deduplicação do serviço fica desligada.
         hold_heartbeat: None,
+        memory_backoff: false,
     };
     let args = ControlArgs {
         miner_pid: 4242,
@@ -333,6 +338,82 @@ fn first_difference(path: &str, actual: &Value, expected: &Value) -> Option<Stri
             }),
         _ => (actual != expected).then(|| format!("{path}: {actual} != esperado {expected}")),
     }
+}
+
+/// Clocks travados por `-lgc`, na ordem.
+fn locks(result: &Value) -> Vec<i64> {
+    result["smi"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .filter_map(|call| {
+            let text = call.to_string();
+            let rest = text.split("-lgc").nth(1)?;
+            let digits: String = rest
+                .chars()
+                .skip_while(|c| !c.is_ascii_digit())
+                .take_while(char::is_ascii_digit)
+                .collect();
+            digits.parse().ok()
+        })
+        .collect()
+}
+
+fn golden_case(name: &str) -> (Value, Value, f64) {
+    let golden = golden();
+    let case = golden["cases"]
+        .as_array()
+        .unwrap()
+        .iter()
+        .find(|case| case["name"] == json!(name))
+        .unwrap()
+        .clone();
+    (case, golden["gpu"].clone(), golden["t0"].as_f64().unwrap())
+}
+
+#[test]
+fn limite_de_clock_impede_subir_acima() {
+    // `alvo_frio` sobe de 1590 a 1680 MHz sem limite; com 1650 MHz para no limite.
+    let (mut case, gpu, t0) = golden_case("alvo_frio");
+    let free = locks(&run(&case, &gpu, t0));
+    assert!(
+        free.iter().any(|clock| *clock > 1650),
+        "sem limite devia passar de 1650: {free:?}"
+    );
+    case["name"] = json!("alvo_frio_limite");
+    case["spec"]["clock_limit"] = json!(1650);
+    let result = run(&case, &gpu, t0);
+    let capped = locks(&result);
+    assert!(
+        capped.iter().all(|clock| *clock <= 1650),
+        "passou do limite: {capped:?}"
+    );
+    assert_eq!(capped.last(), Some(&1650));
+    assert!(
+        result["trace"].to_string().contains("limite de clock"),
+        "a razão devia citar o limite"
+    );
+}
+
+#[test]
+fn limite_novo_abaixo_do_clock_reduz_ate_ele() {
+    // O limite chega pelas Configurações no meio do laço, com o clock já acima dele.
+    let (mut case, gpu, t0) = golden_case("alvo_frio");
+    case["name"] = json!("alvo_frio_limite_novo");
+    let target = case["spec"]["target"].clone();
+    case["spec"]["events"] = json!({"60": [["<settings>", {"target_temperature_c": target, "max_core_clock_mhz": 1610}]]});
+    let result = run(&case, &gpu, t0);
+    let all = locks(&result);
+    let peak = all.iter().copied().max().unwrap();
+    assert!(
+        peak > 1610,
+        "o clock devia ter subido antes do limite: {all:?}"
+    );
+    // 1610 não é um clock suportado (degraus de 15 MHz): o atuador arredonda para baixo, 1605.
+    assert_eq!(all.last(), Some(&1605), "devia travar no limite: {all:?}");
+    // Depois da redução, nunca volta a subir acima do limite.
+    let reduced = all.iter().rposition(|clock| *clock > 1610).unwrap() + 1;
+    assert!(all[reduced..].iter().all(|clock| *clock <= 1610));
 }
 
 #[test]

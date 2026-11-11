@@ -102,6 +102,49 @@ class RigTelemetryTests(unittest.TestCase):
             self.assertIsNotNone(result["log_error"])
             self.assertFalse(result["miner_running"])
 
+    def test_tail_without_connect_line_keeps_connection_from_shares_and_status(self):
+        # Caso real (SRBMiner 3.8.4, 10/11/2026): "Connected to" só no início do log; depois de
+        # ~200 kB o fim lido não a contém mais, mas a pool segue aceitando shares e o bloco de
+        # status repete "Connection:"/"Last job:". 43% das amostras de 48 h saíam "Aguardando conexão".
+        block=lambda hour,minute,accepted:"\n".join([
+            line(0,"72.63",accepted,3,f"2026-11-10 {hour:02}:{minute:02}:08"),
+            f"[2026-11-10 {hour:02}:{minute:02}:10] GPU0[t0] share accepted [  219ms] [pearlhash][0]",
+            f"[2026-11-10 {hour:02}:{minute:02}:20] Pool: prl.kryptex.network:7048",
+            f"[2026-11-10 {hour:02}:{minute:02}:20] Connection: 0d {hour:02}:{minute:02}:16",
+            f"[2026-11-10 {hour:02}:{minute:02}:20] Last job: 51 sec ago"])
+        head="[2026-11-10 00:00:00] Miner version: 3.8.4\n[2026-11-10 00:00:04] Connected to prl.kryptex.network:7048 [0]\n"
+        body="\n".join(block(hour,minute,hour*60+minute) for hour in range(23) for minute in range(0,60,2))
+        now=dt.datetime(2026,11,10,22,59,0).timestamp()
+        with tempfile.TemporaryDirectory() as temporary:
+            path=Path(temporary)/"mining.log"
+            path.write_text(head+body+"\n",encoding="utf-8")
+            self.assertGreater(path.stat().st_size,200_000)
+            miner=read_device_payload(device(0),path,now=now)["miner"]
+        self.assertIsNone(miner["started_at"])  # a janela lida não tem mais o início do processo
+        self.assertEqual(miner["connection"],"Conectado à pool")
+        self.assertEqual(miner["connection_at"],dt.datetime(2026,11,10,22,58,20).timestamp())
+        self.assertEqual(miner["last_job_at"],dt.datetime(2026,11,10,22,57,29).timestamp())
+        self.assertEqual(miner["accepted"],22*60+58)
+
+    def test_connection_needs_pool_evidence_and_honors_later_drop(self):
+        now=dt.datetime(2026,11,10,23,0,0).timestamp()
+        hashing=line(0,"72.63",440,3,"2026-11-10 22:58:00")
+        only_hash=parse_gpu_log(hashing,"GPU-test-0",0,now)
+        # Hashrate mede a GPU, não a pool: sem prova de conexão o estado continua explícito.
+        self.assertEqual(only_hash["connection"],"Aguardando conexão")
+        self.assertIsNone(only_hash["connection_at"])
+        self.assertIsNone(only_hash["last_job_at"])
+        share="[2026-11-10 22:58:10] GPU0[t0] share accepted [  219ms] [pearlhash][0]"
+        drop="[2026-11-10 22:59:00] Reconnecting to prl.kryptex.network:7048 in 5 seconds [0]"
+        dropped=parse_gpu_log("\n".join([hashing,share,drop]),"GPU-test-0",0,now)
+        self.assertEqual(dropped["connection"],"Reconectando à pool")
+        back=parse_gpu_log("\n".join([hashing,share,drop,share.replace("22:58:10","22:59:30")]),"GPU-test-0",0,now)
+        self.assertEqual(back["connection"],"Conectado à pool")
+        self.assertEqual(back["connection_at"],dt.datetime(2026,11,10,22,59,30).timestamp())
+        # Status sem duração (formato desconhecido) não vale como prova.
+        unknown=parse_gpu_log(hashing+"\n[2026-11-10 22:58:20] Connection: -","GPU-test-0",0,now)
+        self.assertEqual(unknown["connection"],"Aguardando conexão")
+
     def test_srbminer_index_can_differ_from_driver_index(self):
         with tempfile.TemporaryDirectory() as temporary:
             path=Path(temporary)/"mining.log"
