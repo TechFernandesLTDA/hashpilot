@@ -37,6 +37,14 @@ pub static COUNTERS: LazyLock<Regex> = LazyLock::new(|| regex(r"([A-Z]+):([\d.]+
 pub static DEVICE_BUS: LazyLock<Regex> =
     LazyLock::new(|| regex(r"(?i)\bBUS\s*:\s*([0-9a-f]{1,2})\b"));
 pub static DEVICE_INDEX: LazyLock<Regex> = LazyLock::new(|| regex(r"(?i)\bGPU\s*(\d+)\s*[:\[]"));
+/// Bloco de status que o SRBMiner repete a cada poucos minutos enquanto minera:
+/// `Connection: 0d 15:18:22` (idade da conexão atual com a pool) e `Last job: 51 sec ago`.
+/// `Connected to` só aparece ao conectar, e o SRBMiner 3.8 não grava `Job received`.
+pub static CONNECTION_UPTIME: LazyLock<Regex> =
+    LazyLock::new(|| regex(r"\bConnection:\s*\d+d\s+\d+:\d\d:\d\d\b"));
+/// Até 9 dígitos ASCII: a idade sempre cabe num `f64` exato, como no Python.
+pub static LAST_JOB: LazyLock<Regex> =
+    LazyLock::new(|| regex(r"\bLast job:\s*([0-9]{1,9})\s*sec ago\b"));
 static PCI: LazyLock<Regex> =
     LazyLock::new(|| regex(r"^[0-9a-fA-F]{4,8}:([0-9a-fA-F]{2}):[0-9a-fA-F]{2}\.[0-7]$"));
 
@@ -240,11 +248,32 @@ pub fn parse_gpu_log(
             state.started_at = Some(stamp);
             state.version = Some(version.trim().to_string());
         }
-        if line.contains("Job received") && not_before(state.last_job_at, stamp) {
-            state.last_job_at = Some(stamp);
+        let job_at = match LAST_JOB.captures(line) {
+            Some(captures) => captures[1]
+                .parse::<i64>()
+                .ok()
+                .map(|age| stamp - age as f64),
+            None if line.contains("Job received") => Some(stamp),
+            None => None,
+        };
+        if let Some(job_at) = job_at {
+            if not_before(state.last_job_at, job_at) {
+                state.last_job_at = Some(job_at);
+            }
         }
+        // Regra do estado da conexão: vale a evidência mais recente da janela lida.
+        // `Connected to`, `Job received`, o `Connection: Nd hh:mm:ss` do bloco de status
+        // e qualquer `share accepted` (a pool respondeu nesta conexão) provam conexão;
+        // as palavras de CONNECTION_LOST provam queda. A leitura é só do fim do log, e
+        // `Connected to` sai da janela horas depois de conectar: sem as provas periódicas
+        // o estado voltava a "Aguardando conexão" com a pool aceitando shares. Hashrate
+        // mede a GPU, não a pool, e não conta; sem nenhuma prova, fica "Aguardando conexão".
         if not_before(state.connection_at, stamp) {
-            if line.contains("Connected to ") || line.contains("Job received") {
+            if line.contains("Connected to ")
+                || line.contains("Job received")
+                || line.contains("share accepted")
+                || CONNECTION_UPTIME.is_match(line)
+            {
                 state.connection = CONNECTED.into();
                 state.connection_at = Some(stamp);
             }
