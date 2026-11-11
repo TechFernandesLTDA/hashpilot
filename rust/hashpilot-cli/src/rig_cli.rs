@@ -129,6 +129,7 @@ fn parse_serve(options: &Options, state_dir: &Path) -> Result<Serve, Failure> {
             },
             reference_rtx3070: options.flag("reference-rtx3070"),
             reference_uuid: legacy,
+            retention: true,
         },
     })
 }

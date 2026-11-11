@@ -20,7 +20,7 @@ import sys
 import math
 from tkinter import ttk
 from finance import financial_model, PortfolioFinanceCollector, portfolio_model, portfolio_snapshots
-from history import HistoryStore, log_key
+from history import HistoryStore, history_samples, log_key
 from miner_log import COUNTERS, RATE, log_timestamp
 from app_logging import configure as configure_logging, exception_once, get_logger
 from config import WALLET, POOL, LOG_DIR, STATE_DIR, SETTINGS_PATH
@@ -158,11 +158,15 @@ class Collector:
             started = time.monotonic()
             data = self.sample()
             if self.history:
-                if hasattr(self.history,'rig_telemetry'):
+                rig_archived=hasattr(self.history,'rig_telemetry')
+                if rig_archived:
                     self.history.rig_telemetry(data['rig'])
                 legacy=next((d for d in data['rig']['devices'] if d['index']==0),None)
                 if legacy:
-                    self.history.telemetry({**data,'wallet':legacy['wallet'],**{k:legacy.get(k) for k in ('gpu','miner','miner_running','log_path')}},source='live')
+                    # A GPU0 já foi gravada em gpu_telemetry; a tabela legada só recebe os
+                    # eventos de status (a cópia da linha dobrava o tamanho do banco).
+                    self.history.telemetry({**data,'wallet':legacy['wallet'],**{k:legacy.get(k) for k in ('gpu','miner','miner_running','log_path')}},
+                                           source='live',archive=not rig_archived)
                 try:
                     self.history.archive_thermal(LOG_DIR / "thermal-control-events.jsonl")
                 except OSError as error:
@@ -567,7 +571,7 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
             "payout_eta": payout.get("eta_label") or "Aguardando dados da pool",
             "payout_remaining": format_prl(payout.get("remaining_prl")),
             "thermal": 'Inativo · minerador parado' if data.get('miner_running') is False else thermal_description(data.get("thermal_control"), compact=True),
-            "history": f"{self.history.info.get('telemetry', (0,))[0]} amostras · {'gravando' if not self.history.last_error else 'aguardando'}",
+            "history": f"{history_samples(self.history.info)} amostras · {'gravando' if not self.history.last_error else 'aguardando'}",
         }
         if data.get('rig'):
             rig=data['rig'];aggregate=rig.get('totals') or {}
@@ -1212,7 +1216,7 @@ def console_text(snapshot, finance):
         "Proximo pagamento - estimativa: " + str(payout.get("eta_label") or "aguardando dados da pool"),
         "Falta gerar: " + format_prl(payout.get("remaining_prl")) + "  |  Confirmado: " + format_prl(payout.get("confirmed_prl")) + "  |  Pendente: " + format_prl(payout.get("unconfirmed_prl")),
         "Envio automatico a cada hora apos minimo confirmado; credito depende da rede.",
-        f"Historico: {history.get('counts', {}).get('telemetry', [0])[0]} amostras  |  Fila: {history.get('pending_jobs', 'N/D')}  |  Banco: {'OK' if not history.get('error') else history['error']}",
+        f"Historico: {history_samples(history.get('counts', {}))} amostras  |  Fila: {history.get('pending_jobs', 'N/D')}  |  Banco: {'OK' if not history.get('error') else history['error']}",
         f"Registro do painel: {int(age)} s atras. Sensores 2 s / cotacao e pool 60 s.",
         "="*82,
     ])

@@ -78,7 +78,7 @@ Testes das regras monetárias: `python -m unittest -v test_finance.py`.
 
 ## Histórico permanente e reinícios
 
-O arquivo `%LOCALAPPDATA%\PearlMonitor\history.sqlite3` arquiva permanentemente as amostras de sensores, hashrate, médias, shares, erros, estado do minerador, mudanças de estado, novas linhas de log e dados financeiros, separados por carteira e sessão do aplicativo. **Não existe expurgo automático de registros antigos.** Os gráficos mostram uma janela de 15 minutos, mas isso não apaga os dados anteriores do banco.
+O arquivo `%LOCALAPPDATA%\PearlMonitor\history.sqlite3` arquiva permanentemente as amostras de sensores, hashrate, médias, shares, erros, estado do minerador, mudanças de estado, novas linhas de log e dados financeiros, separados por carteira e sessão do aplicativo. As amostras de 2 s ficam completas por 30 dias; depois o serviço em Rust reduz cada minuto a uma linha com a média dos sensores e do hashrate (os eventos, logs e dados financeiros não mudam). Os gráficos mostram uma janela de 15 minutos, mas isso não apaga os dados anteriores do banco.
 
 Ao abrir, o aplicativo restaura as séries dos gráficos, o histórico financeiro, a aba e a posição/tamanho da janela. Os caches anteriores e as medições existentes nos logs são migrados sem duplicação; pontos recuperados de logs conservam a origem `imported_miner_log`, sem inventar medições NVIDIA que não foram coletadas. O banco não cria amostras dos períodos em que o monitor ficou fechado.
 

@@ -25,6 +25,20 @@ def encode(value):
     return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
 
 
+def history_samples(counts):
+    """Amostras de telemetria da carteira para o painel, a partir de `HistoryStore.stats()`.
+
+    Desde que a GPU0 deixou de ser copiada para a tabela legada, `gpu_telemetry` é a
+    que cresce; a legada ainda pode ter mais linhas num banco antigo. Fica a maior.
+    """
+    values = []
+    for table in ("gpu_telemetry", "telemetry"):
+        row = (counts or {}).get(table)
+        if isinstance(row, (list, tuple)) and row and isinstance(row[0], int) and not isinstance(row[0], bool):
+            values.append(row[0])
+    return max(values, default=0)
+
+
 class HistorySchemaError(RuntimeError):
     """The database layout cannot be safely written by this version."""
 
@@ -134,12 +148,21 @@ class HistoryStore:
                 return True
         return False
 
-    def telemetry(self, data, source="live"):
+    def telemetry(self, data, source="live", *, archive=True):
+        """Amostra da GPU0 na tabela legada `telemetry` e eventos `status_changed`.
+
+        `archive=False`: a mesma amostra já foi gravada em `gpu_telemetry` por
+        `rig_telemetry`; só os eventos de status e as linhas de log são gravados,
+        sem a cópia duplicada da linha (que dobrava o crescimento do banco).
+        """
         # Raw log lines are archived separately once, not copied on every 2 s sample.
         clean = dict(data)
         miner = {k: v for k, v in data.get("miner", {}).items() if k not in RAW_MINER_FIELDS}
         clean["miner"] = miner
-        self.submit("telemetry", {"data": clean, "source": source})
+        job = {"data": clean, "source": source}
+        if not archive:
+            job["archive"] = False
+        self.submit("telemetry", job)
         events = [{"timestamp": data["collected_at"], "key": log_key(data.get("log_path") or "", line),
                    "kind": "miner_log", "wallet": data.get("wallet"), "data": {"line": line, "path": data.get("log_path")}}
                   for line in data.get("miner", {}).get("recent_logs", "").splitlines()]
@@ -226,14 +249,16 @@ class HistoryStore:
         if kind == "telemetry":
             data, source = payload["data"], payload["source"]
             errors = {k: data.get(k) for k in ("gpu_error", "process_error", "log_error") if data.get(k)}
-            connection.execute("INSERT OR IGNORE INTO telemetry VALUES(?,?,?,?,?,?,?,?,?)", (
-                data.get('wallet') or self.wallet, data["collected_at"], self.session, source,
-                encode(data.get("gpu")), encode(data.get("miner", {})),
-                data.get("miner_running"), encode(errors), data.get("log_path")))
+            stamp = data["collected_at"]  # Sem carimbo a amostra é rejeitada, arquivada ou não.
+            if payload.get("archive", True):
+                connection.execute("INSERT OR IGNORE INTO telemetry VALUES(?,?,?,?,?,?,?,?,?)", (
+                    data.get('wallet') or self.wallet, stamp, self.session, source,
+                    encode(data.get("gpu")), encode(data.get("miner", {})),
+                    data.get("miner_running"), encode(errors), data.get("log_path")))
             miner = data.get("miner", {})
             status = (data.get("miner_running"), miner.get("paused"), miner.get("connection"), bool(errors), data.get("log_path"),data.get('wallet') or self.wallet)
             if source == "live" and status != self.last_status:
-                self.write(connection, "event", {"timestamp": data["collected_at"], "key": "status:"+str(data["collected_at"]),
+                self.write(connection, "event", {"timestamp": stamp, "key": "status:"+str(stamp),
                     "kind": "status_changed", "wallet":status[5], "data": {"miner_running": status[0], "paused": status[1], "connection": status[2], "errors": errors, "log_path": status[4]}})
                 self.last_status = status
         elif kind == 'rig_telemetry':
@@ -422,4 +447,4 @@ class HistoryStore:
 
     def stats(self):
         return {table: self.read(f"SELECT COUNT(*),MIN({column}),MAX({column}) FROM {table} WHERE wallet=?", (self.wallet,))[0]
-                for table, column in (("telemetry", "timestamp"), ("events", "timestamp"), ("finance_snapshots", "timestamp"), ("finance_sources", "fetched_at"))}
+                for table, column in (("telemetry", "timestamp"), ("gpu_telemetry", "timestamp"), ("events", "timestamp"), ("finance_snapshots", "timestamp"), ("finance_sources", "fetched_at"))}

@@ -359,6 +359,7 @@ pub(crate) fn stats(connection: Option<&Connection>, wallet: &str) -> Result<Val
     let mut out = Map::new();
     for (table, column) in [
         ("telemetry", "timestamp"),
+        ("gpu_telemetry", "timestamp"),
         ("events", "timestamp"),
         ("finance_snapshots", "timestamp"),
         ("finance_sources", "fetched_at"),

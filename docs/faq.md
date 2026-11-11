@@ -34,7 +34,7 @@ O aplicativo não possui observações suficientes para todo o período. Ele nã
 
 ## O histórico some ao fechar ou atualizar?
 
-O banco permanente fica fora da pasta do aplicativo e não tem expurgo automático. Reinícios restauram séries e preferências. A instalação preserva os dados existentes; o snapshot incluído só é restaurado quando o destino não existe. [Arquitetura e caminhos](architecture.md#persistência).
+O banco permanente fica fora da pasta do aplicativo e guarda as amostras completas por 30 dias; depois o serviço em Rust as reduz a uma média por minuto, sem apagar o histórico. Reinícios restauram séries e preferências. A instalação preserva os dados existentes; o snapshot incluído só é restaurado quando o destino não existe. [Arquitetura e caminhos](architecture.md#persistência).
 
 ## Os números do snapshot são do meu computador?
 

@@ -217,21 +217,25 @@ impl Writer {
         let miner = get(data, "miner")?.cloned().unwrap_or_else(|| json!({}));
         let miner_running = get_or_null(data, "miner_running")?;
         let log_path = get_or_null(data, "log_path")?;
-        execute(
-            connection,
-            "INSERT OR IGNORE INTO telemetry VALUES(?,?,?,?,?,?,?,?,?)",
-            &[
-                wallet.clone(),
-                collected_at.clone(),
-                self.session(),
-                source.clone(),
-                Value::String(encode(&get_or_null(data, "gpu")?)),
-                Value::String(encode(&miner)),
-                miner_running.clone(),
-                Value::String(encode(&errors)),
-                log_path.clone(),
-            ],
-        )?;
+        // `payload.get("archive", True)`: só o gravador do painel manda `false`.
+        let archive = get(payload, "archive")?.is_none_or(truthy);
+        if archive {
+            execute(
+                connection,
+                "INSERT OR IGNORE INTO telemetry VALUES(?,?,?,?,?,?,?,?,?)",
+                &[
+                    wallet.clone(),
+                    collected_at.clone(),
+                    self.session(),
+                    source.clone(),
+                    Value::String(encode(&get_or_null(data, "gpu")?)),
+                    Value::String(encode(&miner)),
+                    miner_running.clone(),
+                    Value::String(encode(&errors)),
+                    log_path.clone(),
+                ],
+            )?;
+        }
         let has_errors = errors.as_object().is_some_and(|map| !map.is_empty());
         let status = [
             miner_running,

@@ -850,7 +850,10 @@ def history_apply(history, store, op):
     kind = op["op"]
     try:
         if kind == "telemetry":
-            store.telemetry(op["data"], op.get("source", "live"))
+            if "archive" in op:
+                store.telemetry(op["data"], op.get("source", "live"), archive=op["archive"])
+            else:
+                store.telemetry(op["data"], op.get("source", "live"))
         elif kind == "rig_telemetry":
             store.rig_telemetry(op["rig"])
         elif kind == "event":
@@ -1132,6 +1135,35 @@ def history_basic_ops():
         },
         {"op": "rig_telemetry", "rig": {"devices": [{"uuid": f"GPU-{n}"} for n in range(7)]}},
         {"op": "rig_telemetry", "rig": {"devices": [{"uuid": "GPU-1111"}, {"uuid": "GPU-1111"}]}},
+        # archive=False (GPU0 já gravada em gpu_telemetry): sem linha na tabela legada, mas o
+        # status_changed continua; status repetido não gera evento; sem collected_at é rejeitada.
+        {
+            "op": "telemetry",
+            "archive": False,
+            "data": {
+                "collected_at": 1794100019.5,
+                "gpu": {"temperature.gpu": 72},
+                "miner": {
+                    "paused": False,
+                    "connection": "perdida",
+                    "recent_logs": "[2026-11-08 20:00:19] sem arquivo\n",
+                },
+                "miner_running": True,
+                "log_path": "logs/mining-1.log",
+            },
+        },
+        {
+            "op": "telemetry",
+            "archive": False,
+            "data": {
+                "collected_at": 1794100021.5,
+                "miner": {"paused": False, "connection": "perdida"},
+                "miner_running": True,
+                "log_path": "logs/mining-1.log",
+            },
+        },
+        {"op": "telemetry", "archive": False, "data": {"miner": {"connection": "x"}}},
+        {"op": "telemetry", "archive": True, "data": {"collected_at": 1794100022.0, "miner": {"connection": "ok"}}},
         {"op": "event", "timestamp": 1794100040.0, "kind": "manual", "data": {"a": 1}, "key": "k-1"},
         {
             "op": "event",

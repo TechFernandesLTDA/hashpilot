@@ -68,7 +68,11 @@ fn apply(
     let raised = |message: String| Some(json!({"raised": message}));
     match op["op"].as_str().expect("op") {
         "telemetry" => store
-            .telemetry(&op["data"], text(op, "source").unwrap_or("live"))
+            .telemetry_with(
+                &op["data"],
+                text(op, "source").unwrap_or("live"),
+                op.get("archive").and_then(Value::as_bool).unwrap_or(true),
+            )
             .err()
             .and_then(raised),
         "rig_telemetry" => store.rig_telemetry(&op["rig"]).err().and_then(raised),

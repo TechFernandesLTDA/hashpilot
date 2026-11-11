@@ -256,6 +256,8 @@ fn run(case: &Value, gpu: &Value, t0: f64) -> Value {
         settings_path: settings.clone(),
         advisor: Some(advisor),
         interrupted: Box::new(|| false),
+        // Paridade: o Python grava toda decisão; a deduplicação do serviço fica desligada.
+        hold_heartbeat: None,
         memory_backoff: false,
     };
     let args = ControlArgs {

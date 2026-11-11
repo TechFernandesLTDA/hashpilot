@@ -34,9 +34,17 @@ def stats(values):
 
 def build(database, minutes, end, thermal_path):
     start=end-minutes*60
-    sql="SELECT timestamp,gpu_json,miner_json,miner_running,log_path FROM telemetry WHERE wallet=? AND source='live' AND timestamp>=? AND timestamp<=? ORDER BY timestamp"
+    # Desde que o painel deixou de copiar a GPU0 para a tabela legada, as amostras
+    # novas só existem em gpu_telemetry; janelas antigas continuam na legada.
+    sql=("SELECT timestamp,gpu_json,miner_json,miner_running,log_path FROM gpu_telemetry WHERE wallet=? AND source='live' "
+         "AND timestamp>=? AND timestamp<=? AND json_extract(gpu_json,'$.index')=0 ORDER BY timestamp")
+    table="gpu_telemetry"
     with sqlite3.connect(database.resolve().as_uri()+"?mode=ro",uri=True,timeout=2) as db:
         rows=db.execute(sql,(WALLET,start,end)).fetchall()
+        if not rows:
+            sql="SELECT timestamp,gpu_json,miner_json,miner_running,log_path FROM telemetry WHERE wallet=? AND source='live' AND timestamp>=? AND timestamp<=? ORDER BY timestamp"
+            table="telemetry"
+            rows=db.execute(sql,(WALLET,start,end)).fetchall()
     selected=[]
     excluded={"wrong_or_missing_gpu":0,"inactive_or_paused":0,"stale_gpu":0}
     for at,gpu_json,miner_json,running,log in rows:
@@ -86,7 +94,7 @@ def build(database, minutes, end, thermal_path):
     return {"schema_version":1,"generated_at":stamp(time.time()),"device":{"index":0,
         "names":sorted({r[1]['name'] for r in selected}),
         "driver_versions":sorted({str(r[1].get('driver_version')) for r in selected})},
-        "source":{"table":"telemetry","filter":"source=live, configured wallet, GPU0 parser",
+        "source":{"table":table,"filter":"source=live, configured wallet, GPU0 parser",
         "sql":sql,"evidence_projection_sha256":digest,"digest_scope":"canonical filtered evidence projection; not full database hash"},
         "window":{"requested_minutes":minutes,"requested_start":stamp(start),"requested_end":stamp(end),
         "observed_start":stamp(times[0]),"observed_end":stamp(times[-1]),"observed_span_seconds":times[-1]-times[0],

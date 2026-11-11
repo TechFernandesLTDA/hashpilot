@@ -69,7 +69,10 @@ def main():
                 evidence['errors'].append(str(error))
             if root.winfo_exists(): root.after(2000,refresh)
         with closing(sqlite3.connect((real_state/'history.sqlite3').as_uri()+'?mode=ro',uri=True)) as database:
-            rows=database.execute('SELECT timestamp,gpu_json,miner_json FROM telemetry WHERE wallet=? AND timestamp>=? ORDER BY timestamp',(WALLET,time.time()-900)).fetchall()
+            # As amostras novas da GPU0 só existem em gpu_telemetry; a legada fica de reserva.
+            rows=database.execute("SELECT timestamp,gpu_json,miner_json FROM gpu_telemetry WHERE wallet=? AND timestamp>=? AND json_extract(gpu_json,'$.index')=0 ORDER BY timestamp",(WALLET,time.time()-900)).fetchall()
+            if not rows:
+                rows=database.execute('SELECT timestamp,gpu_json,miner_json FROM telemetry WHERE wallet=? AND timestamp>=? ORDER BY timestamp',(WALLET,time.time()-900)).fetchall()
         for stamp,gpu_json,miner_json in rows:
             gpu,miner=json.loads(gpu_json) or {},json.loads(miner_json)
             rate_stamp=miner.get('hashrate_at')

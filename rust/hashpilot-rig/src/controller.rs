@@ -472,6 +472,9 @@ pub struct Hooks {
     pub advisor: Option<Arc<RoutedAdvisor>>,
     /// Ctrl+C: o Python sai por `KeyboardInterrupt`, que pula o `except` e passa pelo `finally`.
     pub interrupted: Box<dyn Fn() -> bool>,
+    /// [`GpuAgent::hold_heartbeat`]: o serviço deduplica os `hold` repetidos; o roteiro
+    /// de paridade usa `None` para gravar cada decisão como o Python.
+    pub hold_heartbeat: Option<f64>,
     /// Espaçamento crescente das reexplorações de memória (só do Rust; desligado nos goldens).
     pub memory_backoff: bool,
 }
@@ -554,6 +557,7 @@ impl Hooks {
             pid: std::process::id(),
             settings_path: global.join("settings.json"),
             advisor: Some(advisor),
+            hold_heartbeat: Some(crate::gpu_agent::HOLD_HEARTBEAT_SECONDS),
         })
     }
 }
@@ -1456,6 +1460,7 @@ pub fn control(
         .clone()
         .map(|advisor| Box::new(SharedAdvisor(advisor)) as Box<dyn Advisor>);
     let mut agent = GpuAgent::open(state_dir, advisor)?;
+    agent.hold_heartbeat = hooks.hold_heartbeat;
     let ids = Rc::new(RefCell::new(std::mem::replace(
         &mut hooks.ids,
         Box::new(crate::gpu_agent::uuid4_hex),

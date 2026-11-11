@@ -372,6 +372,18 @@ impl HistoryStore {
     /// enfileirada antes das linhas, como no Python: sem `collected_at`, ela é
     /// rejeitada pelo gravador e o erro também volta para quem chamou.
     pub fn telemetry(&mut self, data: &Value, source: &str) -> Result<(), String> {
+        self.telemetry_with(data, source, true)
+    }
+
+    /// `HistoryStore.telemetry(..., archive=...)`. Com `archive = false` a amostra (que já
+    /// está em `gpu_telemetry`) não ganha a linha duplicada na tabela legada: só o evento
+    /// `status_changed` e as linhas do log são gravados.
+    pub fn telemetry_with(
+        &mut self,
+        data: &Value,
+        source: &str,
+        archive: bool,
+    ) -> Result<(), String> {
         let Value::Object(map) = data else {
             return Err(format!("'{}' object is not iterable", type_name(data)));
         };
@@ -388,7 +400,11 @@ impl HistoryStore {
         };
         let mut clean = map.clone();
         clean.insert("miner".into(), Value::Object(without_raw(miner)));
-        self.submit("telemetry", json!({"data": clean, "source": source}));
+        let mut job = json!({"data": clean, "source": source});
+        if !archive {
+            job["archive"] = Value::Bool(false);
+        }
+        self.submit("telemetry", job);
         let recent = match miner.get("recent_logs") {
             None => "",
             Some(Value::String(text)) => text.as_str(),
