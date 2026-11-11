@@ -473,3 +473,141 @@ fn json_ascii_como_o_python() {
         "{\"a\": \"\u{e7}\"}"
     );
 }
+
+/// Linhas de `decisions` como `(stamp, ação, motivo)`, na ordem de inserção.
+fn decisions(agent: &GpuAgent) -> Vec<(f64, String, String)> {
+    agent
+        .table("decisions")
+        .unwrap()
+        .into_iter()
+        .map(|row| {
+            let payload: Value = serde_json::from_str(row[4].as_str().unwrap()).unwrap();
+            (
+                row[2].as_f64().unwrap(),
+                payload["action"].as_str().unwrap().to_owned(),
+                payload["reason"].as_str().unwrap().to_owned(),
+            )
+        })
+        .collect()
+}
+
+const SEM_SENSOR: &str = "Sensor ausente ou antigo: ajuste bloqueado";
+
+#[test]
+fn sem_deduplicacao_cada_hold_vira_linha_como_no_python() {
+    let golden = golden();
+    let gpu = &golden["gpu"];
+    let folder = scratch("hold-sem-dedup");
+    let mut agent = GpuAgent::open(&folder, None).unwrap();
+    assert_eq!(agent.hold_heartbeat, None);
+    for at in [1000.0, 1002.0, 1004.0] {
+        agent.recommend(gpu, &json!({}), false, Some(at)).unwrap();
+    }
+    assert_eq!(decisions(&agent).len(), 3);
+    drop(agent);
+    let _ = std::fs::remove_dir_all(&folder);
+}
+
+#[test]
+fn hold_repetido_so_grava_a_batida_de_cinco_minutos() {
+    let golden = golden();
+    let gpu = &golden["gpu"];
+    let folder = scratch("hold-batida");
+    let mut agent = GpuAgent::open(&folder, None).unwrap();
+    agent.hold_heartbeat = Some(ga::HOLD_HEARTBEAT_SECONDS);
+    let mut returned = Vec::new();
+    for at in [1000.0, 1002.0, 1004.0, 1299.0, 1300.0, 1302.0] {
+        returned.push(agent.recommend(gpu, &json!({}), false, Some(at)).unwrap());
+    }
+    // O plano devolvido não muda: só a gravação repetida é poupada.
+    assert!(
+        returned
+            .iter()
+            .all(|plan| plan["action"] == "hold" && plan["reason"] == SEM_SENSOR)
+    );
+    assert_eq!(returned[2]["at"], json!(1004.0));
+    let rows = decisions(&agent);
+    let stamps: Vec<f64> = rows.iter().map(|row| row.0).collect();
+    assert_eq!(stamps, [1000.0, 1300.0], "uma linha e a batida após 300 s");
+    // `status` continua vendo a última decisão (mesmo conteúdo, carimbo da batida).
+    let status = agent
+        .status(gpu["uuid"].as_str().unwrap(), Some(1302.0))
+        .unwrap();
+    assert!(status["last_decision"].is_null() || status["last_decision"]["reason"] == SEM_SENSOR);
+    drop(agent);
+    let _ = std::fs::remove_dir_all(&folder);
+}
+
+#[test]
+fn mudanca_de_motivo_relogio_para_tras_e_acao_sempre_gravam() {
+    let golden = golden();
+    let gpu = &golden["gpu"];
+    let folder = scratch("hold-mudancas");
+    let mut agent = GpuAgent::open(&folder, None).unwrap();
+    agent.hold_heartbeat = Some(ga::HOLD_HEARTBEAT_SECONDS);
+    let sensor = |at: f64, temp: f64| {
+        json!({"temperature.gpu": temp, "utilization.gpu": 100, "clocks.gr": 1650,
+               "power.draw": 150, "power.limit": 240, "sampled_at": at})
+    };
+    agent
+        .recommend(gpu, &json!({}), false, Some(2000.0))
+        .unwrap();
+    agent
+        .recommend(gpu, &json!({}), false, Some(2002.0))
+        .unwrap();
+    // Outro motivo (sensor de volta): grava, e a repetição seguinte não.
+    let waiting = agent
+        .recommend(gpu, &sensor(2004.0, 60.0), false, Some(2004.0))
+        .unwrap();
+    assert_eq!(waiting["action"], "hold");
+    assert_ne!(waiting["reason"], SEM_SENSOR);
+    agent
+        .recommend(gpu, &sensor(2006.0, 60.0), false, Some(2006.0))
+        .unwrap();
+    // Relógio para trás: não dá para provar a repetição; grava.
+    agent
+        .recommend(gpu, &sensor(1990.0, 60.0), false, Some(1990.0))
+        .unwrap();
+    // Ações que mudam algo nunca são poupadas, nem iguais e seguidas (emergência térmica).
+    let hot = agent
+        .recommend(gpu, &sensor(2010.0, 99.0), false, Some(2010.0))
+        .unwrap();
+    assert_eq!(hot["action"], "clock_down", "{hot}");
+    agent
+        .recommend(gpu, &sensor(2012.0, 99.0), false, Some(2012.0))
+        .unwrap();
+    // Depois do ajuste: o primeiro "validando" grava, os seguintes iguais não.
+    for at in [2014.0, 2016.0, 2018.0] {
+        let plan = agent
+            .recommend(gpu, &sensor(at, 60.0), false, Some(at))
+            .unwrap();
+        assert_eq!(
+            plan["reason"],
+            "Validando o ajuste anterior por pelo menos 30 segundos"
+        );
+    }
+    // Emergência bloqueada (sem clock atual) é `hold`, mas pede pausa: sempre grava.
+    let blocked = json!({"temperature.gpu": 99, "sampled_at": 2100.0});
+    for at in [2100.0, 2102.0] {
+        let plan = agent.recommend(gpu, &blocked, false, Some(at)).unwrap();
+        assert_eq!(plan["action"], "hold");
+        assert_eq!(plan["pause_required"], true);
+    }
+    let rows = decisions(&agent);
+    let summary: Vec<(f64, &str)> = rows.iter().map(|row| (row.0, row.1.as_str())).collect();
+    assert_eq!(
+        summary,
+        [
+            (2000.0, "hold"),
+            (2004.0, "hold"),
+            (1990.0, "hold"),
+            (2010.0, "clock_down"),
+            (2012.0, "clock_down"),
+            (2014.0, "hold"),
+            (2100.0, "hold"),
+            (2102.0, "hold"),
+        ]
+    );
+    drop(agent);
+    let _ = std::fs::remove_dir_all(&folder);
+}

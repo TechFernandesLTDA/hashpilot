@@ -284,6 +284,55 @@
      }
     },
     {
+     "op": "telemetry",
+     "archive": false,
+     "data": {
+      "collected_at": 1794100019.5,
+      "gpu": {
+       "temperature.gpu": 72
+      },
+      "miner": {
+       "paused": false,
+       "connection": "perdida",
+       "recent_logs": "[2026-11-08 20:00:19] sem arquivo\n"
+      },
+      "miner_running": true,
+      "log_path": "logs/mining-1.log"
+     }
+    },
+    {
+     "op": "telemetry",
+     "archive": false,
+     "data": {
+      "collected_at": 1794100021.5,
+      "miner": {
+       "paused": false,
+       "connection": "perdida"
+      },
+      "miner_running": true,
+      "log_path": "logs/mining-1.log"
+     }
+    },
+    {
+     "op": "telemetry",
+     "archive": false,
+     "data": {
+      "miner": {
+       "connection": "x"
+      }
+     }
+    },
+    {
+     "op": "telemetry",
+     "archive": true,
+     "data": {
+      "collected_at": 1794100022.0,
+      "miner": {
+       "connection": "ok"
+      }
+     }
+    },
+    {
      "op": "event",
      "timestamp": 1794100040.0,
      "kind": "manual",
@@ -517,7 +566,7 @@
         2
        ]
       },
-      "count": 3
+      "count": 4
      }
     },
     {
@@ -572,7 +621,7 @@
         2
        ]
       },
-      "count": 5
+      "count": 6
      }
     },
     {
@@ -718,12 +767,17 @@
      "read": "stats",
      "result": {
       "telemetry": [
-       5,
+       6,
        1794099000.0,
-       1794100018.0
+       1794100022.0
+      ],
+      "gpu_telemetry": [
+       2,
+       1794100020.0,
+       1794100043.0
       ],
       "events": [
-       8,
+       11,
        1794100000.25,
        1794100041.5
       ],
@@ -899,6 +953,14 @@
       ],
       [
        "prl1fixture",
+       "log:fab3f8185f7d369e16d662203b8c77f08da5a5c4815d1f457dd7fd5d91b86186",
+       1794100019.5,
+       "00000000000000000000000000000001",
+       "miner_log",
+       "{\"line\":\"[2026-11-08 20:00:19] sem arquivo\",\"path\":\"logs/mining-1.log\"}"
+      ],
+      [
+       "prl1fixture",
        "session:00000000000000000000000000000001",
        1794100000.25,
        "00000000000000000000000000000001",
@@ -920,6 +982,22 @@
        "00000000000000000000000000000001",
        "status_changed",
        "{\"miner_running\":false,\"paused\":true,\"connection\":null,\"errors\":{\"gpu_error\":\"nvidia-smi falhou\"},\"log_path\":\"logs/mining-1.log\"}"
+      ],
+      [
+       "prl1fixture",
+       "status:1794100019.5",
+       1794100019.5,
+       "00000000000000000000000000000001",
+       "status_changed",
+       "{\"miner_running\":true,\"paused\":false,\"connection\":\"perdida\",\"errors\":{},\"log_path\":\"logs/mining-1.log\"}"
+      ],
+      [
+       "prl1fixture",
+       "status:1794100022.0",
+       1794100022.0,
+       "00000000000000000000000000000001",
+       "status_changed",
+       "{\"miner_running\":null,\"paused\":null,\"connection\":\"ok\",\"errors\":{},\"log_path\":null}"
       ],
       [
        "prl1other",
@@ -1222,6 +1300,17 @@
        "logs/mining-1.log"
       ],
       [
+       "prl1fixture",
+       1794100022.0,
+       "00000000000000000000000000000001",
+       "live",
+       "null",
+       "{\"connection\":\"ok\"}",
+       null,
+       "{}",
+       null
+      ],
+      [
        "prl1other",
        1794100016.0,
        "00000000000000000000000000000001",
@@ -1238,7 +1327,9 @@
    "user_version": 3,
    "journal_mode": "wal",
    "offsets": "{}",
-   "rejected": [],
+   "rejected": [
+    "{\"at\":1794100000.25,\"kind\":\"telemetry\",\"error\":\"'collected_at'\"}"
+   ],
    "last_error": null
   },
   {
@@ -1360,6 +1451,11 @@
      "read": "stats",
      "result": {
       "telemetry": [
+       0,
+       null,
+       null
+      ],
+      "gpu_telemetry": [
        0,
        null,
        null

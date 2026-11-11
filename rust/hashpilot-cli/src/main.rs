@@ -43,6 +43,11 @@ Uso:
       gpus [<UUID>]      linhas e intervalo por GPU
       finance            pontos de saldo e a fonte financeira mais recente
       (padrões: banco da pasta de estado, carteira do settings.json, --since 0)
+  hashpilot history retention [--apply] [--days N] [--state-dir D] [--log-dir L] [--db F] [--now EPOCH]
+                                         Retenção: telemetria com mais de N dias (padrão 30) vira uma
+                                         média por minuto; decisões `hold` sem escrita mais velhas que
+                                         isso saem dos gpu-agent.sqlite3. Sem --apply só conta (somente
+                                         leitura); com --apply grava em transações curtas, sem VACUUM
   hashpilot finance model [--state <arquivo>] [--hashrate <TH/s>] [--now <epoch>] [--wallet <carteira>]
                                          Modelo financeiro (créditos, projeção, pagamento) do finance-cache.json
   hashpilot finance fetch [--wallet <carteira>] [--replay <arquivo>] [--now <epoch>]
@@ -604,6 +609,9 @@ fn process_command(arguments: &[String]) -> Result<Value, Failure> {
 }
 
 fn history_command(arguments: &[String]) -> Result<Value, Failure> {
+    if arguments.first().map(String::as_str) == Some("retention") {
+        return retention_command(&arguments[1..]);
+    }
     let options = Options::parse(arguments, &["db", "wallet", "since"], &[])?;
     let (query, rest) = options
         .positional
@@ -620,6 +628,57 @@ fn history_command(arguments: &[String]) -> Result<Value, Failure> {
     let since = options.number("since")?.unwrap_or(0.0);
     let query = history::Query::parse(query, rest).map_err(Failure::Usage)?;
     Ok(history::run(&database, &wallet, since, &query)?)
+}
+
+/// `hashpilot history retention`: a única consulta de `history` que pode gravar, e só
+/// com `--apply`.
+fn retention_command(arguments: &[String]) -> Result<Value, Failure> {
+    use hashpilot_history::retention::{self, DEFAULT_MAX_AGE_DAYS, Policy};
+    let options = Options::parse(
+        arguments,
+        &["db", "state-dir", "log-dir", "days", "now"],
+        &["apply"],
+    )?;
+    if !options.positional.is_empty() {
+        return Err(Failure::Usage(
+            "history retention não aceita argumentos posicionais".into(),
+        ));
+    }
+    let apply = options.flag("apply");
+    let days = options.number("days")?.unwrap_or(DEFAULT_MAX_AGE_DAYS);
+    if days < 1.0 {
+        return Err(Failure::Usage("--days precisa ser pelo menos 1".into()));
+    }
+    // Um relógio inventado só serve para simular; gravar usa sempre a hora real.
+    let now = match options.number("now")? {
+        Some(_) if apply => {
+            return Err(Failure::Usage(
+                "--now só vale sem --apply (simulação)".into(),
+            ));
+        }
+        Some(now) => now,
+        None => nvidia::now_epoch(),
+    };
+    let state = match options.text("state-dir") {
+        Some(path) => PathBuf::from(path),
+        None => state_dir()?,
+    };
+    let database = options
+        .text("db")
+        .map_or_else(|| hashpilot_history::default_path(&state), PathBuf::from);
+    let log_dir = match options.text("log-dir") {
+        Some(path) => PathBuf::from(path),
+        None => {
+            let settings = load_settings(&state.join("settings.json"))?;
+            config::log_dir(&state, &settings, &process_env)
+        }
+    };
+    let policy = Policy {
+        max_age_seconds: days * 86_400.0,
+        ..Policy::default()
+    };
+    let agents = retention::agent_databases(&state, &log_dir);
+    Ok(retention::run(&database, &agents, now, &policy, apply))
 }
 
 fn default_log_dir() -> Result<PathBuf, String> {
@@ -719,4 +778,60 @@ fn release_command(arguments: &[String]) -> Result<Value, Failure> {
         digest,
         options.text("md5"),
     )?)
+}
+
+#[cfg(test)]
+mod retention_tests {
+    use super::*;
+
+    fn args(items: &[&str]) -> Vec<String> {
+        items.iter().map(|item| (*item).to_string()).collect()
+    }
+
+    #[test]
+    fn retencao_simulada_nao_cria_banco_e_recusa_relogio_falso_ao_gravar() {
+        let folder = std::env::temp_dir().join(format!("hp-cli-retention-{}", std::process::id()));
+        std::fs::create_dir_all(&folder).unwrap();
+        let state = folder.to_string_lossy().into_owned();
+        let Ok(report) = history_command(&args(&[
+            "retention",
+            "--state-dir",
+            &state,
+            "--log-dir",
+            &state,
+            "--now",
+            "1800000000",
+        ])) else {
+            panic!("retenção simulada falhou");
+        };
+        assert_eq!(report["applied"], false);
+        assert_eq!(report["history"]["exists"], false);
+        assert_eq!(report["agents"], json!([]));
+        assert!(!folder.join("history.sqlite3").exists());
+        for bad in [
+            args(&[
+                "retention",
+                "--apply",
+                "--now",
+                "1",
+                "--state-dir",
+                &state,
+                "--log-dir",
+                &state,
+            ]),
+            args(&[
+                "retention",
+                "--days",
+                "0",
+                "--state-dir",
+                &state,
+                "--log-dir",
+                &state,
+            ]),
+            args(&["retention", "extra"]),
+        ] {
+            assert!(matches!(history_command(&bad), Err(Failure::Usage(_))));
+        }
+        let _ = std::fs::remove_dir_all(&folder);
+    }
 }

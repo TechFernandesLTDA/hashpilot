@@ -310,6 +310,7 @@ hashpilot payout [--state finance-cache.json] [--now EPOCH] [--price-brl X]
 hashpilot snapshot [--log-dir PASTA]               # sensores + log mais recente de cada GPU
 hashpilot release inspect X.Y.Z --archive-sha256 HEX [--md5 HEX] [--file ZIP]
 hashpilot history stats|restore|gpu <UUID>|gpus [<UUID>]|finance [--db ARQ] [--wallet W] [--since EPOCH]
+hashpilot history retention [--apply] [--days N] [--state-dir D] [--log-dir L] [--db ARQ] [--now EPOCH]
 hashpilot finance model [--state finance-cache.json] [--hashrate TH/s] [--now EPOCH] [--wallet W]
 hashpilot finance fetch [--wallet W] [--replay respostas.json] [--now EPOCH]
 hashpilot process inspect <PID> [--command-line] | miners | owned [--manager rig-manager.json]
@@ -338,6 +339,40 @@ grava cache nem histórico. Com `--replay`, usa respostas gravadas
 `history` abre o `history.sqlite3` **somente para leitura**. Ele não grava nem o
 evento de sessão que o painel grava. Sem `--db`, usa o banco da pasta de estado;
 sem `--wallet`, a carteira do `settings.json`, como o `config.WALLET` do Python.
+A exceção é `history retention --apply` (próxima seção); sem `--apply` ela também só
+lê e conta o que mudaria. `--now` só vale sem `--apply` (simulação).
+
+### Retenção e deduplicação dos bancos (10/11/2026)
+
+Medido nos bancos reais (17 dias de dados): o `history.sqlite3` crescia ~180 MB/dia e o
+`gpu-agent.sqlite3` ~36 mil decisões/dia, 95% delas `hold` repetido.
+
+- **Telemetria duplicada.** O painel gravava cada amostra de 2 s duas vezes: em
+  `gpu_telemetry` e, para a GPU0, na tabela legada `telemetry`. Agora a GPU0 já gravada
+  em `gpu_telemetry` vai para a legada com `archive=False` (`history.py` e
+  `HistoryStore::telemetry_with`): só o evento `status_changed` e as linhas do log; a
+  linha não é copiada. A legada segue legível (`restore`, dados antigos, importação de
+  logs e `legacy_snapshot` continuam gravando nela). `stats` passou a contar também
+  `gpu_telemetry`, que o painel usa no total de amostras; `tools/build_performance_report.py`
+  e `tools/capture_public_demo.py` leem a GPU0 de `gpu_telemetry`, com a legada de reserva.
+- **Decisões repetidas.** Com `GpuAgent::hold_heartbeat = Some(300.0)`, um `hold` sem
+  escrita igual à última linha da GPU (todos os campos menos `at`) não é gravado de novo
+  por até 5 minutos; a batida de 5 min distingue "agente parado" de "nada mudou".
+  Ação diferente, outro motivo, clock, potência, `writes_hardware`, emergência (pedido de
+  pausa, mesmo bloqueada) e relógio para trás sempre gravam. O plano devolvido não muda.
+  O supervisor do serviço (`Hooks::real`) liga; o padrão (`None`) e o golden
+  `control_loop`/`gpu_agent` gravam tudo, como o `gpu_agent.py`, que fica sem mudança.
+- **Retenção** (`hashpilot_history::retention`). Telemetria com mais de 30 dias
+  (`gpu_telemetry` e a legada) vira uma linha por minuto, GPU, carteira e origem: a última
+  amostra do minuto com a média dos sensores do `nvidia-smi` e do hashrate medido no
+  minuto, e `miner_json.retention` com quantas amostras ela resume. Decisões `hold` sem
+  escrita e sem pausa, com mais de 30 dias, saem de cada `gpu-agent.sqlite3` (o da pasta
+  de estado e os de `LOG_DIR/gpus/GPU-*`); a última decisão de cada GPU fica. Cada hora de
+  uma GPU (ou bloco de 2 000 ids) é uma transação `BEGIN IMMEDIATE` de milissegundos, com
+  pausa entre elas; rodar de novo não muda nada; nunca há `VACUUM` (o espaço volta para
+  o próprio SQLite reaproveitar). O `rig --serve` roda a retenção numa thread à parte
+  (`retention_task`): 15 min depois de subir e depois uma vez por dia (1 h se falhar), com
+  o relatório em `retention-status.json`. Ela só toca SQLite; o laço de 2 s não espera.
 
 `release inspect` levanta a entrada do catálogo de uma release nova do SRBMiner
 (`miner_update.CATALOG`). Valida os argumentos antes de baixar e confere o SHA-256

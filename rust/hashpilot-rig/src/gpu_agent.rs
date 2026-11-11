@@ -1016,9 +1016,22 @@ pub fn uuid4_hex() -> String {
 }
 
 /// `GPUAgent`: um banco SQLite, GPUs e sessões separadas; o histórico só cresce.
+/// Intervalo máximo entre duas linhas `hold` repetidas no `decisions` quando a
+/// deduplicação está ligada ([`GpuAgent::hold_heartbeat`]).
+///
+/// Cinco minutos: o laço do supervisor decide a cada 2 s, e uma batida a cada 300 s
+/// (~288 linhas/dia por GPU parada no mesmo motivo, contra ~43 mil) ainda deixa uma
+/// lacuna de supervisor parado (sem nenhuma linha) visível em poucos minutos.
+pub const HOLD_HEARTBEAT_SECONDS: f64 = 300.0;
+
 pub struct GpuAgent {
     pub path: PathBuf,
     db: Connection,
+    /// `Some(segundos)`: não grava uma decisão `hold` sem escrita no hardware idêntica à
+    /// última linha desta GPU (todos os campos menos `at`) se ela tiver menos de
+    /// `segundos`. `None` (padrão, e o dos goldens do Python) grava todas, como o Python.
+    /// O plano devolvido a quem chamou é o mesmo nos dois casos.
+    pub hold_heartbeat: Option<f64>,
     pub advisor: Option<Box<dyn Advisor>>,
     /// Gerador do id do benchmark (`uuid4().hex`); os testes o trocam por uma sequência.
     pub id_source: Box<dyn FnMut() -> String>,
@@ -1041,6 +1054,7 @@ impl GpuAgent {
         Ok(Self {
             path,
             db,
+            hold_heartbeat: None,
             advisor,
             id_source: Box::new(uuid4_hex),
             clock: Box::new(wall_clock),
@@ -1592,17 +1606,54 @@ impl GpuAgent {
             plan["power_limit_w"] = Value::Null;
             plan["reason"] = json!("Validando o ajuste anterior por pelo menos 30 segundos");
         }
-        self.execute(
-            "INSERT INTO decisions(gpu_uuid,stamp,session,payload_json) VALUES(?,?,?,?)",
-            &[
-                json!(uuid),
-                json!(stamp),
-                field(&benchmark, "id").clone(),
-                json!(py_dumps(&plan, false)),
-            ],
-        )?;
+        if !self.repeated_hold(&uuid, &plan, stamp)? {
+            self.execute(
+                "INSERT INTO decisions(gpu_uuid,stamp,session,payload_json) VALUES(?,?,?,?)",
+                &[
+                    json!(uuid),
+                    json!(stamp),
+                    field(&benchmark, "id").clone(),
+                    json!(py_dumps(&plan, false)),
+                ],
+            )?;
+        }
         transaction.commit().map_err(AgentError::sql)?;
         Ok(plan)
+    }
+
+    /// `true` quando `plan` é um `hold` sem escrita igual à última decisão gravada desta
+    /// GPU, mais nova que [`GpuAgent::hold_heartbeat`]. Ação diferente, outro motivo,
+    /// clock ou potência, `writes_hardware`, emergência (pedido de pausa, mesmo bloqueada),
+    /// relógio para trás ou batida vencida: grava.
+    fn repeated_hold(&self, uuid: &str, plan: &Value, stamp: f64) -> AgentResult<bool> {
+        let Some(heartbeat) = self.hold_heartbeat else {
+            return Ok(false);
+        };
+        if plan["action"] != "hold"
+            || truthy(&plan["writes_hardware"])
+            || truthy(&plan["pause_required"])
+            || plan["source"] == "emergency"
+        {
+            return Ok(false);
+        }
+        let Some(last) = self.row(
+            "SELECT stamp,payload_json FROM decisions WHERE gpu_uuid=? ORDER BY id DESC LIMIT 1",
+            &[json!(uuid)],
+        )?
+        else {
+            return Ok(false);
+        };
+        let age = stamp - num(&last["stamp"]).unwrap_or(f64::NEG_INFINITY);
+        if !(0.0..heartbeat).contains(&age) {
+            return Ok(false);
+        }
+        let Some(previous) = last["payload_json"]
+            .as_str()
+            .and_then(|text| serde_json::from_str::<Value>(text).ok())
+        else {
+            return Ok(false);
+        };
+        Ok(same_except_at(&previous, plan))
     }
 
     pub fn assert_no_pending_trial(&self, gpu: &Value) -> AgentResult<()> {
@@ -1886,6 +1937,23 @@ impl GpuAgent {
 
 /// Usado pelos testes: a soma de floats da esquerda para a direita, para mostrar que ela
 /// erra onde `exact_mean` acerta.
+/// Dois planos iguais em todos os campos menos o carimbo `at`.
+fn same_except_at(previous: &Value, plan: &Value) -> bool {
+    let (Value::Object(previous), Value::Object(plan)) = (previous, plan) else {
+        return false;
+    };
+    let keys = |map: &Map<String, Value>| {
+        let mut keys: Vec<String> = map.keys().filter(|key| *key != "at").cloned().collect();
+        keys.sort();
+        keys
+    };
+    keys(previous) == keys(plan)
+        && plan
+            .iter()
+            .filter(|(key, _)| *key != "at")
+            .all(|(key, value)| previous.get(key) == Some(value))
+}
+
 pub fn naive_mean(values: &[f64]) -> f64 {
     values.iter().sum::<f64>() / values.len() as f64
 }

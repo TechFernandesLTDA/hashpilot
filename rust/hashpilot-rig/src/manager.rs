@@ -2334,6 +2334,14 @@ impl RigManager {
             &self.state_dir.join("rig-manager-owner.json"),
             "Já existe um proxy de contribuição usando este diretório de logs",
         )?;
+        // Retenção diária dos bancos numa thread à parte (nunca bloqueia este laço);
+        // termina junto com o serviço.
+        let _retention = options.retention.then(|| {
+            crate::retention_task::DailyRetention::spawn(
+                self.state_dir.clone(),
+                self.log_dir.clone(),
+            )
+        });
         let result = self.serve_loop(options, collect, sleep);
         self.shutting_down = true;
         let identifiers: Vec<String> = self.devices.keys().cloned().collect();
@@ -2430,6 +2438,9 @@ pub struct ServeOptions {
     pub migrate_legacy_uuid: Option<String>,
     pub reference_rtx3070: bool,
     pub reference_uuid: Option<String>,
+    /// Retenção diária de `history.sqlite3` e dos `gpu-agent.sqlite3`
+    /// ([`crate::retention_task`]). O serviço real liga; os testes não.
+    pub retention: bool,
 }
 
 /// Leitura dos snapshots de cada ciclo: `(GPUs desejadas, registro) -> snapshots`.

@@ -55,7 +55,7 @@ The video and screenshots document **v0.1.0 with one GPU**, rendered from real l
 | GPU and mining | NVIDIA sensors, clocks, fans, thermal control, charts and recent events |
 | Earnings | Observed periods, pool balances, PRL/BRL/USD/BTC equivalents and projections |
 
-SQLite history survives restarts and has no automatic expiry. Windows includes a tray icon, compact summary and text console. Local collection runs every 2 seconds; public pool/price requests run every 60 seconds with timestamps and cache status.
+SQLite history survives restarts; samples older than 30 days are reduced to one averaged row per minute, never deleted outright. Windows includes a tray icon, compact summary and text console. Local collection runs every 2 seconds; public pool/price requests run every 60 seconds with timestamps and cache status.
 
 Currency values are current-price equivalents, not executed exchanges. **Pool payouts remain in PRL.** Projections are estimates, and incomplete observation periods are marked partial.
 

@@ -104,6 +104,58 @@ class HistoryRules(unittest.TestCase):
         finally:
             connection.close()
 
+    def test_gpu0_already_in_gpu_telemetry_is_not_copied_to_legacy_table(self):
+        stamp = time.time()-20
+        device = {"uuid": "GPU-0000", "index": 0, "wallet": "test-wallet", "collected_at": stamp,
+                  "gpu": sample(stamp)["gpu"], "miner": sample(stamp)["miner"], "miner_running": True}
+        self.store.rig_telemetry({"collected_at": stamp, "devices": [device]})
+        self.store.telemetry(sample(stamp), archive=False)
+        changed = sample(stamp+2)
+        changed["miner"]["connection"] = "Reconectando"
+        self.store.telemetry(changed, archive=False)
+        self.store.telemetry(sample(stamp+4), archive=False)
+        self.assertTrue(self.store.flush())
+        counts = self.store.stats()
+        self.assertEqual(counts["telemetry"][0], 0)
+        self.assertEqual(counts["gpu_telemetry"][0], 1)
+        # Os eventos de status continuam: início, mudança de conexão e volta.
+        kinds = [row[0] for row in self.store.read("SELECT kind FROM events WHERE kind='status_changed' ORDER BY timestamp")]
+        self.assertEqual(len(kinds), 3)
+        # O painel conta as amostras pela maior tabela.
+        from history import history_samples
+        self.assertEqual(history_samples(counts), 1)
+        self.assertEqual(history_samples({"telemetry": [5, 1, 2], "gpu_telemetry": [3, 1, 2]}), 5)
+        self.assertEqual(history_samples({}), 0)
+        # Sem carimbo a amostra é rejeitada também sem arquivar.
+        self.store.telemetry({"miner": {}}, archive=False)
+        self.assertTrue(self.store.flush())
+        self.assertIn("collected_at", self.store.last_error or "")
+
+
+class PanelWritesGpu0Once(unittest.TestCase):
+    def test_collector_sends_gpu0_to_legacy_table_only_as_status(self):
+        import monitor
+        calls = []
+
+        class FakeHistory:
+            def rig_telemetry(self, rig):
+                calls.append(("rig", len(rig["devices"])))
+
+            def telemetry(self, data, source="live", *, archive=True):
+                calls.append(("telemetry", source, archive, data["wallet"]))
+
+            def archive_thermal(self, path):
+                collector.stop.set()
+
+            def event(self, *args, **kwargs):
+                pass
+
+        collector = monitor.Collector(history=FakeHistory())
+        device = {"uuid": "GPU-0", "index": 0, "wallet": "w", "gpu": {}, "miner": {}, "miner_running": True, "log_path": None}
+        collector.sample = lambda: {"collected_at": 1.0, "rig": {"devices": [device]}}
+        collector.work()
+        self.assertEqual(calls, [("rig", 1), ("telemetry", "live", False, "w")])
+
 
 if __name__ == "__main__":
     unittest.main()

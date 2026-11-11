@@ -24,6 +24,7 @@ pub mod nvidia;
 pub mod nvml;
 pub mod process;
 pub mod reference;
+pub mod retention_task;
 pub mod snapshots;
 pub mod successor;
 pub mod win32;

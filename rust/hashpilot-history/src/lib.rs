@@ -7,10 +7,12 @@
 //!
 //! - [`HistoryStore`]: gravação por fila e thread, como o `history.HistoryStore`.
 //! - [`HistoryReader`]: leitura somente leitura (CLI), que nunca cria nem altera o banco.
+//! - [`retention`]: redução da telemetria antiga e limpeza dos `hold` velhos do agente.
 
 pub mod keys;
 pub mod pyjson;
 pub mod read;
+pub mod retention;
 pub mod schema;
 mod store;
 mod write;

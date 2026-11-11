@@ -68,7 +68,7 @@ Leituras locais normalmente ocorrem a cada 2 s. A taxa de hash mantém o horári
 Com o serviço do rig ativo, o painel usa o `latest.json` recém-gravado por GPU (até 5 s) em vez de consultar o driver e reprocessar o log; sem esse snapshot, faz a consulta direta. Capacidades fixas da GPU são consultadas uma vez por placa e reaproveitadas por até 10 min.
 
 
-Os registros são separados por carteira e sessão; as tabelas `gpu_devices` e `gpu_telemetry` preservam também a identidade e as observações por UUID. O histórico anterior de uma GPU permanece disponível e sua importação não deve duplicar linhas. Não há expurgo automático. A janela de 15 minutos dos gráficos e o cache financeiro de trabalho de 35 dias não apagam o arquivo permanente. `latest.json` e `finance-latest.json` são resumos, não substitutos do banco.
+Os registros são separados por carteira e sessão; as tabelas `gpu_devices` e `gpu_telemetry` preservam também a identidade e as observações por UUID. O histórico anterior de uma GPU permanece disponível e sua importação não deve duplicar linhas. As amostras de 2 s ficam completas por 30 dias; depois, o serviço em Rust as reduz a uma média por minuto e apaga as decisões `hold` repetidas do agente (veja a retenção em [rust/README.md](../rust/README.md)). A GPU0 não é mais copiada para a tabela legada `telemetry`, que segue legível. A janela de 15 minutos dos gráficos e o cache financeiro de trabalho de 35 dias não apagam o arquivo permanente. `latest.json` e `finance-latest.json` são resumos, não substitutos do banco.
 
 O snapshot em `portable-data/` é do autor e tem um manifesto datado. O bootstrap o restaura somente em um perfil sem banco/cache de destino. Restaurar não mescla bancos diferentes nem sobrescreve um banco existente.
 

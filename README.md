@@ -59,7 +59,7 @@ O vídeo e estas capturas documentam a **versão v0.1.0, com uma GPU**, em uma j
 | **GPU e mineração** | Sensores NVIDIA, clocks, ventoinhas, controle térmico, gráficos e eventos |
 | **Rendimentos** | Períodos observados, saldo da pool, valores em PRL/BRL/USD/BTC e projeções |
 
-- Histórico SQLite preservado após reinícios; sem expurgo automático.
+- Histórico SQLite preservado após reinícios; amostras com mais de 30 dias viram uma média por minuto, sem apagar o histórico.
 - Bandeja do Windows, resumo compacto e console textual.
 - Coleta local a cada 2 s; pool e cotações públicas a cada 60 s, com idade/cache visíveis.
 - Projeções são estimativas. Valores em USD/BTC são equivalentes; **o pagamento continua em PRL**.

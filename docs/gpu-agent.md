@@ -53,7 +53,7 @@ As respostas são sugestões JSON com ação enumerada e justificativa. O contro
 
 ## Histórico e propriedade do controle
 
-Cada diretório `LOG_DIR/gpus/<UUID>/` possui seu `gpu-agent.sqlite3`, em WAL e `synchronous=FULL`. As tabelas `benchmarks`, `observations`, `decisions` e `trials` preservam sessões, medições, recomendações, cancelamentos e resultados por UUID. Novo benchmark não apaga sessões anteriores. O banco legado permanece preservado; resultados não são transferidos automaticamente para outra identidade física.
+Cada diretório `LOG_DIR/gpus/<UUID>/` possui seu `gpu-agent.sqlite3`, em WAL e `synchronous=FULL`. As tabelas `benchmarks`, `observations`, `decisions` e `trials` preservam sessões, medições, recomendações, cancelamentos e resultados por UUID. Novo benchmark não apaga sessões anteriores. No supervisor em Rust, um `hold` sem escrita idêntico ao anterior só é gravado de novo a cada 5 minutos, e a retenção apaga `hold` sem escrita com mais de 30 dias (ajustes, emergências e a última decisão de cada GPU ficam). O banco legado permanece preservado; resultados não são transferidos automaticamente para outra identidade física.
 
 `gpu-control-owner.json` funciona como trava exclusiva. Se o processo for encerrado abruptamente e deixar a trava, o sistema bloqueia outro controlador. Antes de recuperar, confirme que o PID registrado não está mais executando, que o minerador foi parado e que nenhum utilitário está ajustando a GPU; então arquive a trava para permitir nova sessão. O aplicativo não apaga automaticamente uma trava cuja posse esteja em dúvida.
 
