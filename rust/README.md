@@ -354,6 +354,29 @@ Exemplo com os dados públicos (a partir da raiz do repositório):
 rust/target/debug/hashpilot payout --state portable-data/finance-cache.json --now 1792900000
 ```
 
+## Melhorias só do Rust (11/11/2026)
+
+O Python está em manutenção; estas mudanças existem só no supervisor em Rust e ficam
+desligadas nos goldens, para a paridade continuar provada.
+
+- **Reexploração da memória espaçada** (`MemoryExplorer::reexplore_backoff`): cada rodada que
+  confirma o mesmo melhor clock de memória dobra o intervalo até a próxima (6, 12, 24, 48 e
+  72 h, o teto); uma rodada que troca o melhor volta a 6 h. Motivo, no histórico de 09–10/11:
+  as reexplorações a cada 6 h passavam ~22 min na memória a 6801 MHz, com hashrate menor e
+  ~10 W a mais, sem nunca mudar o resultado (810 MHz). O intervalo não é gravado: depois de
+  reiniciar, a primeira rodada completa acontece de qualquer forma.
+- **Limite de clock do núcleo** (`max_core_clock_mhz` no `settings.json`, global ou por GPU em
+  `gpu_settings`): o controle por alvo não sobe acima dele, e um limite novo abaixo do clock
+  atual reduz até o degrau suportado logo abaixo. Valores fora de 300–3000 MHz são ignorados.
+  Motivo: a 1710 MHz a RTX 3070 rendia +0,8 % de hashrate com +6 % de energia em relação a
+  1695 MHz (0,449 contra 0,474 TH/W).
+
+- **Testes:** `hashpilot-core/tests/memory_backoff.rs` (sem o espaçamento: a cada 6 h; com ele:
+  12, 24, 48, 72, 72 h; melhor novo volta a 6 h) e dois roteiros em
+  `hashpilot-rig/tests/control_loop.rs` sobre o roteiro `alvo_frio` do golden (com limite de
+  1650 MHz para em 1650; limite de 1610 MHz no meio do laço reduz de 1650 para 1605 e não sobe
+  mais). Os 24 roteiros do golden continuam iguais ao Python.
+
 ## Validação da etapa 4d (Windows 11, 09/11/2026)
 
 O `contribution.py` foi portado para `hashpilot-rig::contribution`, com o comando `hashpilot
