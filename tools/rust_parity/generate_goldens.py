@@ -241,6 +241,58 @@ SYNTHETIC = [
         "[2026-11-03 09:46:00] GPU0 X: 70.00 TH/s [A:1 R:0 HW:0]\n[2026-11-03 09:45:59] GPU0 X: 69.00 TH/s [A:1 R:0 HW:0]\n",
         "2026-11-03 10:01:00",
     ),
+    # Fim do log (janela de ~200 kB) sem "Connected to": a pool aceitando shares e o bloco de
+    # status do SRBMiner 3.8.4 provam a conexão (bug real de 10/11/2026: "Aguardando conexão").
+    (
+        "tail_without_connect_line_shares_and_status",
+        0,
+        True,
+        "[2026-11-10 23:53:08] GPU0 RTX 3070: 68.10 TH/s [T:74C FAN:93% P:150.2W EFF:0.453 CC:1695 MC:810 A:440 R:3 HW:0]\n"
+        "[2026-11-10 23:53:08] Total: 68.10 TH/s [P:150.2W EFF:0.453 A:440 R:3 HW:0]\n"
+        "[2026-11-10 23:54:04] GPU0[t0] share accepted [  214ms] [pearlhash][0]\n"
+        "[2026-11-10 23:54:08] Uptime: 0d 15:18:26\n[2026-11-10 23:54:08] Pool: prl.kryptex.network:7048\n"
+        "[2026-11-10 23:54:08] Connection: 0d 15:18:22\n[2026-11-10 23:54:08] Latency: ~215 ms\n"
+        "[2026-11-10 23:54:08] Last job: 51 sec ago\n",
+        "2026-11-10 23:55:00",
+    ),
+    # Só shares (sem bloco de status), com share de outra GPU num log compartilhado.
+    (
+        "tail_without_connect_line_shares_only",
+        1,
+        True,
+        "[2026-11-10 23:50:00] GPU0 X: 70.00 TH/s [A:5 R:0 HW:0]\n[2026-11-10 23:50:00] GPU1 Y: 71.00 TH/s [A:6 R:0 HW:0]\n"
+        "[2026-11-10 23:51:00] GPU0[t0] share accepted [  214ms] [pearlhash][0]\n",
+        "2026-11-10 23:55:00",
+    ),
+    # Hashrate sozinho não prova conexão; status sem duração também não; idade de job enorme é ignorada.
+    (
+        "tail_hashrate_without_pool_evidence",
+        0,
+        True,
+        "[2026-11-10 23:53:08] GPU0 X: 68.10 TH/s [A:440 R:3 HW:0]\n[2026-11-10 23:53:10] Connection: -\n"
+        "[2026-11-10 23:53:10] Last job: 12345678901 sec ago\n",
+        "2026-11-10 23:55:00",
+    ),
+    # Queda depois do último share vence; share depois da queda reconecta; "Last job" mais velho
+    # que um job já visto não volta o relógio.
+    (
+        "tail_drop_after_share_then_back",
+        0,
+        True,
+        "[2026-11-10 23:50:00] GPU0 X: 70.00 TH/s [A:5 R:0 HW:0]\n[2026-11-10 23:50:10] GPU0[t0] share accepted\n"
+        "[2026-11-10 23:50:20] Last job: 5 sec ago\n[2026-11-10 23:50:30] Last job: 40 sec ago\n"
+        "[2026-11-10 23:51:00] Reconnecting to prl.kryptex.network:7048 in 5 seconds [0]\n",
+        "2026-11-10 23:55:00",
+    ),
+    (
+        "tail_drop_then_share_reconnects",
+        0,
+        True,
+        "[2026-11-10 23:50:00] GPU0 X: 70.00 TH/s [A:5 R:0 HW:0]\n"
+        "[2026-11-10 23:51:00] Reconnecting to prl.kryptex.network:7048 in 5 seconds [0]\n"
+        "[2026-11-10 23:51:30] GPU0[t0] share accepted\n",
+        "2026-11-10 23:55:00",
+    ),
 ]
 
 

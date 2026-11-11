@@ -20,8 +20,8 @@
     "started_at": 1792872235.0,
     "last_share_at": 1792872848.0,
     "connection": "Conectado à pool",
-    "connection_at": 1792872238.0,
-    "last_job_at": null,
+    "connection_at": 1792872848.0,
+    "last_job_at": 1792872556.0,
     "last_log_at": 1792872896.0,
     "paused": false,
     "rate_points": [
@@ -109,7 +109,7 @@
     "started_at": 1792871745.0,
     "last_share_at": 1792871961.0,
     "connection": "Conectado à pool",
-    "connection_at": 1792871749.0,
+    "connection_at": 1792871961.0,
     "last_job_at": null,
     "last_log_at": 1792872046.0,
     "paused": false,
@@ -219,8 +219,8 @@
     "started_at": 1792873008.0,
     "last_share_at": 1792875343.0,
     "connection": "Conectado à pool",
-    "connection_at": 1792873012.0,
-    "last_job_at": null,
+    "connection_at": 1792875343.0,
+    "last_job_at": 1792875162.0,
     "last_log_at": 1792875343.0,
     "paused": false,
     "rate_points": [
@@ -292,8 +292,8 @@
     "started_at": 1792875384.0,
     "last_share_at": 1792883071.0,
     "connection": "Conectado à pool",
-    "connection_at": 1792875388.0,
-    "last_job_at": null,
+    "connection_at": 1792883071.0,
+    "last_job_at": 1792882931.0,
     "last_log_at": 1792883074.0,
     "paused": false,
     "rate_points": [
@@ -365,7 +365,7 @@
     "started_at": 1792872062.0,
     "last_share_at": 1792872095.0,
     "connection": "Conectado à pool",
-    "connection_at": 1792872065.0,
+    "connection_at": 1792872095.0,
     "last_job_at": null,
     "last_log_at": 1792872212.0,
     "paused": false,
@@ -486,8 +486,8 @@
     "average_15m": null,
     "started_at": 1793700000.0,
     "last_share_at": 1793700011.0,
-    "connection": "Aguardando conexão",
-    "connection_at": null,
+    "connection": "Conectado à pool",
+    "connection_at": 1793700011.0,
     "last_job_at": null,
     "last_log_at": 1793700012.0,
     "paused": false,
@@ -553,8 +553,8 @@
     "average_15m": null,
     "started_at": null,
     "last_share_at": 1793700012.0,
-    "connection": "Aguardando conexão",
-    "connection_at": null,
+    "connection": "Conectado à pool",
+    "connection_at": 1793700012.0,
     "last_job_at": null,
     "last_log_at": 1793700012.0,
     "paused": false,
@@ -795,8 +795,8 @@
     "average_15m": 70.0,
     "started_at": null,
     "last_share_at": 1793700031.0,
-    "connection": "Aguardando conexão",
-    "connection_at": null,
+    "connection": "Conectado à pool",
+    "connection_at": 1793700031.0,
     "last_job_at": null,
     "last_log_at": 1793700032.0,
     "paused": false,
@@ -977,6 +977,181 @@
     ],
     "isolated_log": true,
     "recent_logs": "[2026-11-03 09:46:00] GPU0 X: 70.00 TH/s [A:1 R:0 HW:0]\n[2026-11-03 09:45:59] GPU0 X: 69.00 TH/s [A:1 R:0 HW:0]"
+   },
+   "future": null
+  },
+  {
+   "name": "tail_without_connect_line_shares_and_status",
+   "text": "[2026-11-10 23:53:08] GPU0 RTX 3070: 68.10 TH/s [T:74C FAN:93% P:150.2W EFF:0.453 CC:1695 MC:810 A:440 R:3 HW:0]\n[2026-11-10 23:53:08] Total: 68.10 TH/s [P:150.2W EFF:0.453 A:440 R:3 HW:0]\n[2026-11-10 23:54:04] GPU0[t0] share accepted [  214ms] [pearlhash][0]\n[2026-11-10 23:54:08] Uptime: 0d 15:18:26\n[2026-11-10 23:54:08] Pool: prl.kryptex.network:7048\n[2026-11-10 23:54:08] Connection: 0d 15:18:22\n[2026-11-10 23:54:08] Latency: ~215 ms\n[2026-11-10 23:54:08] Last job: 51 sec ago\n",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1794354900.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 68.1,
+    "hashrate_at": 1794354788.0,
+    "accepted": 440,
+    "rejected": 3,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": 1794354844.0,
+    "connection": "Conectado à pool",
+    "connection_at": 1794354848.0,
+    "last_job_at": 1794354797.0,
+    "last_log_at": 1794354848.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1794354788.0,
+      68.1
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-11-10 23:53:08] GPU0 RTX 3070: 68.10 TH/s [T:74C FAN:93% P:150.2W EFF:0.453 CC:1695 MC:810 A:440 R:3 HW:0]\n[2026-11-10 23:53:08] Total: 68.10 TH/s [P:150.2W EFF:0.453 A:440 R:3 HW:0]\n[2026-11-10 23:54:04] GPU0[t0] share accepted [  214ms] [pearlhash][0]\n[2026-11-10 23:54:08] Uptime: 0d 15:18:26\n[2026-11-10 23:54:08] Pool: prl.kryptex.network:7048\n[2026-11-10 23:54:08] Connection: 0d 15:18:22\n[2026-11-10 23:54:08] Latency: ~215 ms\n[2026-11-10 23:54:08] Last job: 51 sec ago"
+   },
+   "future": null
+  },
+  {
+   "name": "tail_without_connect_line_shares_only",
+   "text": "[2026-11-10 23:50:00] GPU0 X: 70.00 TH/s [A:5 R:0 HW:0]\n[2026-11-10 23:50:00] GPU1 Y: 71.00 TH/s [A:6 R:0 HW:0]\n[2026-11-10 23:51:00] GPU0[t0] share accepted [  214ms] [pearlhash][0]\n",
+   "index": 1,
+   "allow_local_gpu0": true,
+   "now": 1794354900.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 1,
+    "log_gpu_index": 1,
+    "hashrate": 71.0,
+    "hashrate_at": 1794354600.0,
+    "accepted": 6,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": null,
+    "connection": "Conectado à pool",
+    "connection_at": 1794354660.0,
+    "last_job_at": null,
+    "last_log_at": 1794354660.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1794354600.0,
+      71.0
+     ]
+    ],
+    "isolated_log": false,
+    "recent_logs": "[2026-11-10 23:50:00] GPU0 X: 70.00 TH/s [A:5 R:0 HW:0]\n[2026-11-10 23:50:00] GPU1 Y: 71.00 TH/s [A:6 R:0 HW:0]\n[2026-11-10 23:51:00] GPU0[t0] share accepted [  214ms] [pearlhash][0]"
+   },
+   "future": null
+  },
+  {
+   "name": "tail_hashrate_without_pool_evidence",
+   "text": "[2026-11-10 23:53:08] GPU0 X: 68.10 TH/s [A:440 R:3 HW:0]\n[2026-11-10 23:53:10] Connection: -\n[2026-11-10 23:53:10] Last job: 12345678901 sec ago\n",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1794354900.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 68.1,
+    "hashrate_at": 1794354788.0,
+    "accepted": 440,
+    "rejected": 3,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": null,
+    "connection": "Aguardando conexão",
+    "connection_at": null,
+    "last_job_at": null,
+    "last_log_at": 1794354790.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1794354788.0,
+      68.1
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-11-10 23:53:08] GPU0 X: 68.10 TH/s [A:440 R:3 HW:0]\n[2026-11-10 23:53:10] Connection: -\n[2026-11-10 23:53:10] Last job: 12345678901 sec ago"
+   },
+   "future": null
+  },
+  {
+   "name": "tail_drop_after_share_then_back",
+   "text": "[2026-11-10 23:50:00] GPU0 X: 70.00 TH/s [A:5 R:0 HW:0]\n[2026-11-10 23:50:10] GPU0[t0] share accepted\n[2026-11-10 23:50:20] Last job: 5 sec ago\n[2026-11-10 23:50:30] Last job: 40 sec ago\n[2026-11-10 23:51:00] Reconnecting to prl.kryptex.network:7048 in 5 seconds [0]\n",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1794354900.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 70.0,
+    "hashrate_at": 1794354600.0,
+    "accepted": 5,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": 1794354610.0,
+    "connection": "Reconectando à pool",
+    "connection_at": 1794354660.0,
+    "last_job_at": 1794354615.0,
+    "last_log_at": 1794354660.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1794354600.0,
+      70.0
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-11-10 23:50:00] GPU0 X: 70.00 TH/s [A:5 R:0 HW:0]\n[2026-11-10 23:50:10] GPU0[t0] share accepted\n[2026-11-10 23:50:20] Last job: 5 sec ago\n[2026-11-10 23:50:30] Last job: 40 sec ago\n[2026-11-10 23:51:00] Reconnecting to prl.kryptex.network:7048 in 5 seconds [0]"
+   },
+   "future": null
+  },
+  {
+   "name": "tail_drop_then_share_reconnects",
+   "text": "[2026-11-10 23:50:00] GPU0 X: 70.00 TH/s [A:5 R:0 HW:0]\n[2026-11-10 23:51:00] Reconnecting to prl.kryptex.network:7048 in 5 seconds [0]\n[2026-11-10 23:51:30] GPU0[t0] share accepted\n",
+   "index": 0,
+   "allow_local_gpu0": true,
+   "now": 1794354900.0,
+   "result": {
+    "gpu_uuid": "GPU-test",
+    "gpu_index": 0,
+    "log_gpu_index": 0,
+    "hashrate": 70.0,
+    "hashrate_at": 1794354600.0,
+    "accepted": 5,
+    "rejected": 0,
+    "hw_errors": 0,
+    "average_1m": null,
+    "average_15m": null,
+    "started_at": null,
+    "last_share_at": 1794354690.0,
+    "connection": "Conectado à pool",
+    "connection_at": 1794354690.0,
+    "last_job_at": null,
+    "last_log_at": 1794354690.0,
+    "paused": false,
+    "rate_points": [
+     [
+      1794354600.0,
+      70.0
+     ]
+    ],
+    "isolated_log": true,
+    "recent_logs": "[2026-11-10 23:50:00] GPU0 X: 70.00 TH/s [A:5 R:0 HW:0]\n[2026-11-10 23:51:00] Reconnecting to prl.kryptex.network:7048 in 5 seconds [0]\n[2026-11-10 23:51:30] GPU0[t0] share accepted"
    },
    "future": null
   }
