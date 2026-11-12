@@ -73674,6 +73674,10 @@
     "3.8.6": {
      "archive_sha256": "d44aa90bf857e526805c95e153b8c089c2188dae5ba0c4fad83d516168fb424b",
      "exe_sha256": "d072fc7012fe1d56f27253d7e41931afd0e3df349fbcc947f2243151baa6ab29"
+    },
+    "3.8.7": {
+     "archive_sha256": "cbfc6fa4daf22641e0f845922f8fbccff7ff1dc144af7316061bca06b76cfb1f",
+     "exe_sha256": "dde3740fd6ee9e7fd3832edd98c9fb838df2344ef05b5ecbcd87997dfb5d3348"
     }
    },
    "default_version": "3.8.0",
@@ -73718,6 +73722,14 @@
      "folder": "SRBMiner-Multi-3-8-6",
      "asset": "SRBMiner-Multi-3-8-6-win64.zip",
      "url": "https://github.com/doktor83/SRBMiner-Multi/releases/download/3.8.6/SRBMiner-Multi-3-8-6-win64.zip"
+    },
+    "3.8.7": {
+     "archive_sha256": "cbfc6fa4daf22641e0f845922f8fbccff7ff1dc144af7316061bca06b76cfb1f",
+     "exe_sha256": "dde3740fd6ee9e7fd3832edd98c9fb838df2344ef05b5ecbcd87997dfb5d3348",
+     "version": "3.8.7",
+     "folder": "SRBMiner-Multi-3-8-7",
+     "asset": "SRBMiner-Multi-3-8-7-win64.zip",
+     "url": "https://github.com/doktor83/SRBMiner-Multi/releases/download/3.8.7/SRBMiner-Multi-3-8-7-win64.zip"
     }
    },
    "unknown": "Versão ainda não revisada pelo HashPilot; atualize o aplicativo antes de instalar esse minerador."
