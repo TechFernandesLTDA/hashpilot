@@ -3,7 +3,7 @@
 # Versoes permitidas, carteira padrao e UUID espelham miner_update.CATALOG,
 # contribution.AUTHOR_WALLET e reference_profile.REFERENCE_RTX3070_UUID;
 # test_reference_scripts.py confere a coerencia.
-$ReferenceAllowedMinerVersions=@('3.8.0','3.8.1','3.8.3','3.8.4','3.8.6')
+$ReferenceAllowedMinerVersions=@('3.8.0','3.8.1','3.8.3','3.8.4','3.8.6','3.8.7')
 $ReferenceDefaultMinerVersion='3.8.0'
 $ReferenceAuthorWallet='prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t'
 $ReferenceRtx3070Uuid='GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75'

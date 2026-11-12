@@ -94,3 +94,5 @@ As duas versões rodaram em sequência, com o controle por temperatura-alvo em 7
 - **Rejeições:** 2 de 5 shares da 3.8.6 foram *stale* (solução enviada depois da troca de trabalho); a 3.8.4 não teve nenhuma. A amostra é pequena, mas pelo critério acima já basta para voltar à 3.8.4.
 
 Limites honestos: cerca de 10 minutos por versão, uma sessão, sem repetição em ordem inversa. A diferença de potência está perto do ruído térmico; a de rejeições, não, mas tem poucas shares. Um novo A/B mais longo (≥ 30 min por versão, ordem alternada) pode reabrir a decisão.
+
+Revisão seguinte: [SRBMiner 3.8.7](srbminer-3.8.7.md).

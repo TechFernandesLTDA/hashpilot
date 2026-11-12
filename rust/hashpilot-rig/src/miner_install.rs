@@ -13,7 +13,7 @@ use sha2::{Digest, Sha256};
 use crate::fsutil::atomic_json;
 
 pub const DEFAULT_VERSION: &str = "3.8.0";
-const EMBEDDED: [(&str, &str, &str, Option<&str>); 5] = [
+const EMBEDDED: [(&str, &str, &str, Option<&str>); 6] = [
     (
         "3.8.0",
         "33eef5f8946259290013ce370a746a85f91c2bbcd81fcefa1aad904dd9a912f8",
@@ -42,6 +42,12 @@ const EMBEDDED: [(&str, &str, &str, Option<&str>); 5] = [
         "3.8.6",
         "d44aa90bf857e526805c95e153b8c089c2188dae5ba0c4fad83d516168fb424b",
         "d072fc7012fe1d56f27253d7e41931afd0e3df349fbcc947f2243151baa6ab29",
+        None,
+    ),
+    (
+        "3.8.7",
+        "cbfc6fa4daf22641e0f845922f8fbccff7ff1dc144af7316061bca06b76cfb1f",
+        "dde3740fd6ee9e7fd3832edd98c9fb838df2344ef05b5ecbcd87997dfb5d3348",
         None,
     ),
 ];
