@@ -165,6 +165,23 @@ class RigContinuityTests(unittest.TestCase):
             self.clock[0]=now;snapshot['gpu']['sampled_at']=now;self.manager.observe_health({'GPU-test-0':snapshot})
         self.assertFalse(self.backend.stopped)
 
+    def test_brief_pool_reconnect_does_not_restart_miner(self):
+        # 21/11/2026: uma reconexão de 15 s com a pool reiniciou o minerador, que voltaria sozinho em 5 s.
+        snapshot={'miner':{'hashrate':78,'hashrate_at':3000,'connection':'Reconectando à pool'},'miner_running':True,'gpu':{'temperature.gpu':60,'sampled_at':3000}}
+        for now in (3000,3005,3010,3020,3060,3110):
+            self.clock[0]=now;snapshot['gpu']['sampled_at']=now;self.manager.observe_health({'GPU-test-0':snapshot})
+        self.assertFalse(self.backend.stopped)
+        self.clock[0]=3121;snapshot['gpu']['sampled_at']=3121;self.manager.observe_health({'GPU-test-0':snapshot})
+        self.assertTrue(self.backend.stopped)
+
+    def test_reconnect_that_recovers_resets_the_stall_window(self):
+        down={'miner':{'hashrate':78,'hashrate_at':3000,'connection':'Reconectando à pool'},'miner_running':True,'gpu':{'temperature.gpu':60,'sampled_at':3000}}
+        for now in range(3000,3400,50):
+            self.clock[0]=now;down['gpu']['sampled_at']=now
+            up={'miner':{'hashrate':78,'hashrate_at':now,'connection':'Conectado à pool','last_share_at':now},'miner_running':True,'gpu':{'temperature.gpu':60,'sampled_at':now}}
+            self.manager.observe_health({'GPU-test-0':down if now%100 else up})
+        self.assertFalse(self.backend.stopped)
+
     def test_resume_grace_prevents_immediate_restart_of_stale_log(self):
         self.manager.continuity.tick(1000);self.manager.continuity.tick(3000)
         snapshot={'miner':{},'miner_running':True,'gpu':{'temperature.gpu':60,'sampled_at':3000}}
