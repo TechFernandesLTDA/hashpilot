@@ -6,6 +6,8 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 
 ## Read first
 
+- [v0.5.17 release notes](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/releases/v0.5.17.md): the memory-clock explorer no longer repeats a full round on every controller restart; the time of the last round is stored in `thermal-target.json` (`memory_explored_at`) and a restart inside the 6-hour window resumes the remembered best clock. Fixed in the Rust rig service and in Python.
+
 - [v0.5.16 release notes](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/releases/v0.5.16.md): automatic recovery no longer restarts the miner on a short pool reconnect; with no connection or no hashrate the restart now requires 120 continuous seconds in that state (it used to fire after 10 s once the miner had 5 minutes of uptime). Fixed in the Rust rig service and in Python.
 
 - [v0.5.15 release notes](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/releases/v0.5.15.md): redesigned interface (neutral graphite surfaces, left sidebar with three pages instead of top tabs, thin-bordered cards, brand teal as the single accent) across the main window, Settings, Operations Center and every secondary window; colors and fonts centralized in `monitor_theme.py` and the new `ui_kit.py`; no behavior, data or mining-control change; public screenshots now use simulated demo data.
