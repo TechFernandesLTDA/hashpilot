@@ -25,6 +25,7 @@ CATALOG={
           'archive_member':'SRBMiner-Multi-3-8-4/Win/SRBMiner-Multi-3-8-4/SRBMiner-MULTI.exe'},
  '3.8.6':{'archive_sha256':'d44aa90bf857e526805c95e153b8c089c2188dae5ba0c4fad83d516168fb424b','exe_sha256':'d072fc7012fe1d56f27253d7e41931afd0e3df349fbcc947f2243151baa6ab29'},
  '3.8.7':{'archive_sha256':'cbfc6fa4daf22641e0f845922f8fbccff7ff1dc144af7316061bca06b76cfb1f','exe_sha256':'dde3740fd6ee9e7fd3832edd98c9fb838df2344ef05b5ecbcd87997dfb5d3348'},
+ '3.8.9':{'archive_sha256':'4bee6f04077b59275ff227864d2ebb231543c758480baf928446c011fe87b5f9','exe_sha256':'9d1da3dc8697480d468244bb8e46e2e2a9e432f551454384023c9fdb7267dbb3'},
 }
 
 def base_directory():return Path(os.environ['LOCALAPPDATA'])/'Mining/Pearl'

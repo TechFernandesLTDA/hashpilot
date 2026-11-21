@@ -89,12 +89,12 @@ pub fn inspect(
         let entry = archive
             .by_index_raw(index)
             .map_err(|error| format!("ZIP inválido: {error}"))?;
-        if !entry.is_dir() && basename(entry.name()) == EXECUTABLE {
-            members.push((
-                index,
-                entry.name().to_string(),
-                entry.enclosed_name().is_some(),
-            ));
+        let name = entry
+            .name()
+            .map_err(|error| format!("ZIP inválido: {error}"))?
+            .into_owned();
+        if !entry.is_dir() && basename(&name) == EXECUTABLE {
+            members.push((index, name, entry.enclosed_name().is_some()));
         }
     }
     let [(index, name, safe)] = members.as_slice() else {
