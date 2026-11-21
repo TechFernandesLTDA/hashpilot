@@ -30,7 +30,7 @@ with tempfile.TemporaryDirectory() as temporary:
         assert root.overview_values['today'].cget('text')=='R$ 10,00'
         assert 'rig local parado' in root.finance_explanation.cget('text')
         assert 'Sem previsão local' in root.payout_eta.cget('text')
-        assert 'Segurança do minerador' in root.footer.cget('text')
+        assert 'Configurações > Segurança' in root.footer.cget('text')
         assert any(getattr(w,'cget',lambda k:None)('text')=='HashPilot '+monitor.APP_BUILD['version'] for w in descendants(root) if w.winfo_class()=='Label')
         snapshot=json.loads((folder/'latest.json').read_text(encoding='utf-8'))
         assert snapshot['app']['version']==monitor.APP_BUILD['version']

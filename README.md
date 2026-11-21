@@ -6,7 +6,7 @@ Monitor desktop de mineração Pearl (PRL) para Windows, com telemetria NVIDIA, 
 
 **Antes de minerar:** a carteira padrão pertence ao autor; pagamentos enviados a ela vão para o autor. Use seu endereço público para receber em sua carteira. A contribuição opcional de até 5% do tempo conectado pode ser desativada. Não informe seed ou chave privada.
 
-**[Baixar v0.5.14 — pré-lançamento](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.5.14)** · [Todas as releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verificar SHA-256 e evidências](docs/verification.md)
+**[Baixar v0.5.15 — pré-lançamento](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.5.15)** · [Todas as releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verificar SHA-256 e evidências](docs/verification.md)
 
 <img src="assets/brand/logo-header-source.png" alt="Tech Fernandes" width="280">
 
@@ -16,7 +16,7 @@ Monitor desktop de mineração Pearl (PRL) para Windows, com telemetria NVIDIA, 
 No PowerShell do **Windows 10/11 x64**, com `winget` disponível:
 
 ```powershell
-irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.5.14/install.ps1 | iex
+irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.5.15/install.ps1 | iex
 ```
 
 O instalador prepara o mise/Python, instala o aplicativo em `%LOCALAPPDATA%\Programs\HashPilot`, cria atalhos e abre o assistente de configuração. Configurações e histórico existentes são preservados. [Passos, requisitos e solução de problemas](docs/installation.md).
@@ -27,9 +27,9 @@ Em **Configurações**, consulte [Atualizações](docs/update.md) para instalar 
 
 ## Veja o aplicativo
 
-![Visão geral da interface v0.5.3 com uma RTX 3070](media/current/overview.png)
+![Visão geral da interface com dados simulados de uma GPU](media/current/overview.png)
 
-Captura isolada da v0.5.3, com telemetria real de uma RTX 3070; saldos, previsões, carteira e identificadores foram ocultados para privacidade. [GPU e mineração](media/current/gpu-mining.png) · [Origem e alterações da captura](media/current/README.md).
+Captura do visual atual com dados simulados de demonstração (uma GPU fictícia, sem saldos); não são medições de hardware. A carteira exibida é a padrão do autor, já pública neste repositório. [GPU e mineração](media/current/gpu-mining.png) · [Origem e alterações da captura](media/current/README.md).
 
 <details>
 <summary>Historical media / Arquivo de demonstracoes</summary>
@@ -53,13 +53,14 @@ O vídeo e estas capturas documentam a **versão v0.1.0, com uma GPU**, em uma j
 
 ## O que acompanha
 
-| Aba | Informações |
+| Página (barra lateral) | Informações |
 |---|---|
 | **Visão geral** | Hashrate, temperatura, consumo, créditos observados, carteira e próximo pagamento |
 | **GPU e mineração** | Sensores NVIDIA, clocks, ventoinhas, controle térmico, gráficos e eventos |
 | **Rendimentos** | Períodos observados, saldo da pool, valores em PRL/BRL/USD/BTC e projeções |
 
 - Histórico SQLite preservado após reinícios; amostras com mais de 30 dias viram uma média por minuto, sem apagar o histórico.
+- Barra lateral com as três páginas e **Configurações** (`Ctrl+,`); **Iniciar todas**, **Parar** e o menu **⋯** (benchmark, resumo, console) ficam no cabeçalho.
 - Bandeja do Windows, resumo compacto e console textual.
 - Coleta local a cada 2 s; pool e cotações públicas a cada 60 s, com idade/cache visíveis.
 - Projeções são estimativas. Valores em USD/BTC são equivalentes; **o pagamento continua em PRL**.
@@ -84,7 +85,7 @@ Com uma carteira diferente da do autor, a contribuição opcional e desativável
 
 ## Verificação e evidências
 
-[Verificar a release e reproduzir o pacote](docs/verification.md) · [Protocolo de estabilidade de 24/72 horas](docs/verification.md#protocolo-de-estabilidade-de-24-e-72-horas) · [Notas da v0.5.14](docs/releases/v0.5.14.md). Hashes não substituem assinatura de publicador ou revisão independente.
+[Verificar a release e reproduzir o pacote](docs/verification.md) · [Protocolo de estabilidade de 24/72 horas](docs/verification.md#protocolo-de-estabilidade-de-24-e-72-horas) · [Notas da v0.5.15](docs/releases/v0.5.15.md). Hashes não substituem assinatura de publicador ou revisão independente.
 
 ## Código e dados
 

@@ -18,6 +18,8 @@ from gpu_profiles import PROFILES
 from mining_health import health
 from contribution import read_settings
 from fsutil import atomic_json
+import ui_kit as ui
+from monitor_theme import ACCENT_TEXT, BORDER, CARD, SURFACE, TEXT, TEXT_SECONDARY, WARNING
 from rig import write_request,ProcessBackend
 from contribution_audit import audit,audit_text
 
@@ -67,20 +69,15 @@ def show_operations(parent,container=None):
     window.geometry('980x620')
     window.minsize(760,500)
     window.transient(parent)
-    window.configure(bg='#0A1628')
+    window.configure(bg=SURFACE)
     root=parent._root()
-    style=ttk.Style(window)
-    style.configure('Ops.TFrame',background='#0A1628')
-    style.configure('Ops.TLabel',background='#0A1628',foreground='#E8EDF5',font=('Segoe UI',10))
-    style.configure('Ops.TNotebook',background='#0A1628',borderwidth=0)
-    style.configure('Ops.TNotebook.Tab',padding=(12,8),background='#10213B',foreground='#E8EDF5')
-    style.map('Ops.TNotebook.Tab',background=[('selected','#23446D')],foreground=[('selected','#12A98E')])
-    style.configure('Ops.Treeview',background='#10213B',fieldbackground='#10213B',foreground='#E8EDF5',rowheight=25)
-    style.configure('Ops.TButton',background='#10213B',foreground='#FFFFFF',padding=(12,6))
-    style.map('Ops.TButton',background=[('active','#23446D')])
+    ui.apply_styles(window)
 
-    book=ttk.Notebook(window);book.pack(fill='both',expand=True,padx=12,pady=12)
-    pages={name:ttk.Frame(book,padding=12) for name in ('Saúde e versões','Perfis e ajustes','Ajuda de 5%','Backup e diagnóstico')}
+    # Embutida nas Configurações, abas e conteúdo seguem a margem de 32 px das outras seções.
+    inside=embedded(window)
+    book=ttk.Notebook(window);book.pack(fill='both',expand=True,padx=ui.px(window,32 if inside else 16),pady=(ui.px(window,24 if inside else 16),ui.px(window,16)))
+    page_padding=(0,ui.px(window,16),0,0) if inside else ui.px(window,16)
+    pages={name:ttk.Frame(book,padding=page_padding) for name in ('Saúde e versões','Perfis e ajustes','Ajuda de 5%','Backup e diagnóstico')}
     for name,page in pages.items():book.add(page,text=name)
     selected=tk.StringVar();identifiers=[]
     window.selected_gpu_variable=selected
@@ -105,16 +102,16 @@ def show_operations(parent,container=None):
         def follow():
             if not window.winfo_exists():return
             state,text=service_update_progress(before,read_json(STATE_DIR/'rig-manager.json'),time.monotonic()-started)
-            service_status.configure(text=text,foreground={'done':'#12A98E','failed':'#ffbc66'}.get(state,'#E8EDF5'))
+            service_status.configure(text=text,foreground={'done':ACCENT_TEXT,'failed':WARNING}.get(state,TEXT_SECONDARY))
             if state=='waiting':window.after(2000,follow)
         follow()
     if embedded(window):
-        ttk.Button(buttons,text='Atualizar painel →',command=lambda:window.navigate('Atualizações')).pack(side='left')
+        ttk.Button(buttons,text='Atualizar painel →',style='Ghost.TButton',command=lambda:window.navigate('Atualizações')).pack(side='left')
     else:
         ttk.Button(buttons,text='Atualizar painel',command=lambda:__import__('app_update').show_update_setup(window)).pack(side='left')
     ttk.Button(buttons,text='Atualizar serviço (UAC)',command=update_service).pack(side='left',padx=8)
     if embedded(window):
-        ttk.Button(buttons,text='Atualizar minerador →',command=lambda:window.navigate('Minerador')).pack(side='left')
+        ttk.Button(buttons,text='Atualizar minerador →',style='Ghost.TButton',command=lambda:window.navigate('Minerador')).pack(side='left')
     else:
         ttk.Button(buttons,text='Atualizar minerador',command=lambda:__import__('miner_update_ui').show_miner_update(window)).pack(side='left')
     service_status.pack(fill='x',pady=(8,0))
@@ -217,7 +214,7 @@ def show_operations(parent,container=None):
     ttk.Button(page,text='Validar e restaurar backup…',command=lambda:error_call(restore_now)).pack(anchor='w',pady=8)
     ttk.Separator(page).pack(fill='x',pady=8)
     ttk.Label(page,text='Diagnóstico compartilhável: apenas modelo, driver, sensores e contadores. Revise antes de salvar. Não envia dados pela internet.',wraplength=850).pack(fill='x')
-    preview=tk.Text(page,height=8,wrap='word',bg='#192633',fg='#e7edf3',insertbackground='#e7edf3',font=('Consolas',10));preview.pack(fill='both',expand=True,pady=8)
+    preview=tk.Text(page,height=8,wrap='word',bg=CARD,fg=TEXT,insertbackground=TEXT,font=ui.font('small',mono=True),relief='flat',highlightthickness=1,highlightbackground=BORDER,padx=ui.px(window,10),pady=ui.px(window,8));preview.pack(fill='both',expand=True,pady=8)
     diagnostic=[{}]
     def prepare_diagnostic():
         from tools.validation_capture import capture
@@ -264,7 +261,8 @@ def show_operations(parent,container=None):
             kind=child.winfo_class()
             mapping={'TFrame':'Ops.TFrame','TLabel':'Ops.TLabel','TNotebook':'Ops.TNotebook','Treeview':'Ops.Treeview','TButton':'Ops.TButton'}
 
-            if kind in mapping:child.configure(style=mapping[kind])
+            if kind=='TButton' and str(child.cget('style'))=='Ghost.TButton':pass
+            elif kind in mapping:child.configure(style=mapping[kind])
             theme(child)
     theme(window)
     refresh()

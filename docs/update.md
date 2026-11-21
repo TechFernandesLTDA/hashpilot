@@ -6,7 +6,7 @@ Abra **Configurações → Atualizações** para verificar manualmente. Na ausê
 
 A versão em execução vem do `RELEASE-MANIFEST.json` ao lado do aplicativo instalado. Em um clone de desenvolvimento, usa `app_version.py`; o ponteiro `installation.json` não é usado para afirmar qual interface está em execução.
 
-A partir da v0.3.6, a versão também aparece no cabeçalho e no título da janela, no resumo e no console. O snapshot local inclui `app.version`, `app.revision` e `app.source`. Instalar uma release com a interface antiga aberta mantém essa interface na revisão anterior até fechá-la pelo menu **Sair** e abrir a nova. Atualizar somente o painel não troca a versão do serviço de mineração que estiver em execução.
+A partir da v0.3.6, a versão também aparece na barra lateral (antes, no cabeçalho) e no título da janela, no resumo e no console. O snapshot local inclui `app.version`, `app.revision` e `app.source`. Instalar uma release com a interface antiga aberta mantém essa interface na revisão anterior até fechá-la pelo menu **Sair** e abrir a nova. Atualizar somente o painel não troca a versão do serviço de mineração que estiver em execução.
 
 ## Instalar e reabrir
 

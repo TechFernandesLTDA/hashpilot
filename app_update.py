@@ -21,6 +21,8 @@ from urllib.request import Request, urlopen
 import webbrowser
 
 from app_version import VERSION, RELEASE_CHANNEL
+from monitor_theme import SURFACE
+import ui_kit as ui
 
 ROOT=Path(__file__).resolve().parent
 REPOSITORY='TechFernandesLTDA/hashpilot'
@@ -203,32 +205,39 @@ def reopen_after_close(parent,app):
 
 def show_update_setup(parent,container=None):
     from ui_host import open_window,present,embedded
-    window=open_window(parent,container,'Atualizações — HashPilot');window.configure(bg='#0A1628')
-    width=min(720,window.winfo_screenwidth()-60);height=min(460,window.winfo_screenheight()-80)
-    window.geometry(f'{width}x{height}');window.minsize(width,height);window.columnconfigure(0,weight=1);window.rowconfigure(4,weight=1)
-    def label(text,row,color='#B9C7DC',size=14):
-        widget=tk.Label(window,text=text,bg='#0A1628',fg=color,font=('Segoe UI',-size),wraplength=width-40,justify='left',anchor='w')
-        widget.grid(row=row,column=0,sticky='ew',padx=20,pady=8);return widget
-    label('Atualizar a interface preservando seus dados',0,'#12A98E',22)
-    if embedded(window):tk.Button(window,text='Atualizações do minerador SRBMiner →',command=lambda:window.navigate('Minerador')).grid(row=6,column=0,sticky='w',padx=20,pady=(0,12))
-    else:tk.Button(window,text='Atualizações do minerador SRBMiner…',command=lambda:__import__('miner_update_ui').show_miner_update(window)).grid(row=6,column=0,sticky='w',padx=20,pady=(0,12))
+    window=open_window(parent,container,'Atualizações — HashPilot');ui.apply_styles(window);window.configure(bg=SURFACE)
+    width=min(ui.px(window,720),window.winfo_screenwidth()-60);height=min(ui.px(window,520),window.winfo_screenheight()-80)
+    margin=ui.px(window,32 if embedded(window) else 24)
+    window.geometry(f'{width}x{height}');window.minsize(width,height);window.columnconfigure(0,weight=1);window.rowconfigure(4,weight=0 if embedded(window) else 1)
+    wrapped=[]
+    def label(text,row,tone='secondary',role='body'):
+        widget=ui.label(window,text,role,tone=tone,wraplength=width-2*margin)
+        widget.grid(row=row,column=0,sticky='ew',padx=margin,pady=ui.px(window,6));wrapped.append((widget,0));return widget
+    label('Atualizar a interface preservando seus dados',0,'primary','h1').grid_configure(pady=(ui.px(window,24 if embedded(window) else 20),ui.px(window,6)))
+    if embedded(window):ui.Button(window,'Atualizações do minerador SRBMiner →',lambda:window.navigate('Minerador'),variant='ghost').grid(row=5,column=0,sticky='w',padx=margin-ui.px(window,15),pady=(0,ui.px(window,12)))
+    else:ui.Button(window,'Atualizações do minerador SRBMiner…',lambda:__import__('miner_update_ui').show_miner_update(window),variant='ghost').grid(row=5,column=0,sticky='w',padx=margin-ui.px(window,15),pady=(0,ui.px(window,12)))
     try:version,source=current_version();version_text=f'Em execução: {version} · {source}'
     except (OSError,ValueError) as error:version_text=str(error)
     label(version_text+'\nCanal desta versão: '+('pré-lançamento' if RELEASE_CHANNEL=='prerelease' else 'estável'),1)
     label('Carteiras, preferências, bancos e logs permanecem nos diretórios atuais. A atualização baixa código verificado e mantém a versão anterior. O serviço e os mineradores não são reiniciados; continuam com seu código atual. Voltar à pasta anterior não desfaz migrações de banco.',2)
     checker=UpdateChecker();channel=tk.BooleanVar(value=read_preferences()['include_prereleases'])
+    def say(text,tone='primary'):status.configure(text=text,fg=ui.TONES[tone])
     def channel_changed():
         try:save_preferences(channel.get());checker.next_check=0;check()
-        except OSError as error:status.configure(text=str(error))
-    tk.Checkbutton(window,text='Incluir pré-lançamentos (versões experimentais)',variable=channel,command=channel_changed,
-        bg='#0A1628',fg='white',selectcolor='#10213B',activebackground='#0A1628',activeforeground='white',font=('Segoe UI',-14)).grid(row=3,column=0,sticky='w',padx=20)
-    status=label('Consultando releases oficiais…',4)
-    actions=tk.Frame(window,bg='#0A1628');actions.grid(row=5,column=0,sticky='ew',padx=20,pady=16)
+        except OSError as error:say(str(error),'warning')
+    ui.check(window,'Incluir pré-lançamentos (versões experimentais)',channel,command=channel_changed).grid(row=3,column=0,sticky='w',padx=margin,pady=ui.px(window,6))
+    status=label('Consultando releases oficiais…',4,'primary');status.configure(anchor='nw');status.grid_configure(sticky='new')
+    def fit(event):
+        if event.widget is window:
+            for item,extra in wrapped:item.configure(wraplength=max(ui.px(window,240),event.width-2*margin-extra))
+    if embedded(window):window.bind('<Configure>',fit,add='+')
+    if not embedded(window):ui.Separator(window).grid(row=6,column=0,sticky='ew')
+    actions=tk.Frame(window,bg=SURFACE);actions.grid(row=7,column=0,sticky='ew',padx=margin,pady=ui.px(window,16))
     selected=None;installed=None;result_queue=queue.Queue();installing=False
     def check():
         nonlocal selected
         if installing:return
-        selected=None;install.configure(state='disabled');status.configure(text='Consultando releases oficiais…')
+        selected=None;install.configure(state='disabled');say('Consultando releases oficiais…')
         checker.start(force=True)
     def update():
         nonlocal installing
@@ -236,7 +245,7 @@ def show_update_setup(parent,container=None):
         release=selected.copy()
         if not messagebox.askyesno('Atualizar HashPilot',f"Instalar {release['version']}?\n\nSerá baixado o pacote oficial, com verificação de SHA-256 e inventário. Seus dados permanecem no local atual. Depois você poderá reabrir a interface. A mineração não será reiniciada.",parent=window):return
         installing=True;parent._root().update_install_busy=True
-        install.configure(state='disabled');refresh.configure(state='disabled');status.configure(text='Baixando, verificando e instalando… mantenha esta janela aberta.')
+        install.configure(state='disabled');refresh.configure(state='disabled');say('Baixando, verificando e instalando… mantenha esta janela aberta.')
         def work():
             try:result_queue.put({'app':install_release(release['version']),'error':None})
             except (OSError,ValueError,RuntimeError,KeyError,TypeError,subprocess.SubprocessError) as error:result_queue.put({'app':None,'error':str(error)[:300]})
@@ -249,10 +258,10 @@ def show_update_setup(parent,container=None):
             if not messagebox.askyesno('Reabrir HashPilot','Salvar e fechar a interface atual para abrir a nova versão? Alterações ainda não salvas em assistentes serão descartadas. A mineração não será reiniciada.',parent=window):return
             try:reopen_after_close(root,installed);window.destroy()
             except (OSError,ValueError,KeyError,TypeError) as error:messagebox.showerror('Reabrir HashPilot',str(error),parent=window)
-    refresh=tk.Button(actions,text='Verificar agora',command=check);refresh.pack(side='left')
-    install=tk.Button(actions,text='Instalar atualização',state='disabled',command=update);install.pack(side='left',padx=8)
-    reopen=tk.Button(actions,text='Reabrir versão instalada',state='disabled',command=restart);reopen.pack(side='left')
-    tk.Button(actions,text='Releases',command=lambda:webbrowser.open(RELEASES_URL)).pack(side='right')
+    refresh=ui.Button(actions,'Verificar agora',check,variant='secondary');refresh.pack(side='left')
+    install=ui.Button(actions,'Instalar atualização',update,variant='primary',state='disabled');install.pack(side='left',padx=ui.px(window,8))
+    reopen=ui.Button(actions,'Reabrir versão instalada',restart,variant='secondary',state='disabled');reopen.pack(side='left')
+    ui.Button(actions,'Releases',lambda:webbrowser.open(RELEASES_URL),variant='ghost').pack(side='right')
     def poll():
         nonlocal selected,installed,installing
         if not window.winfo_exists():return
@@ -260,15 +269,16 @@ def show_update_setup(parent,container=None):
             result=checker.results.get_nowait();selected=result['release']
             if result['include_prereleases']!=channel.get():
                 checker.next_check=0;check();window.after(250,poll);return
-            status.configure(text=('Não foi possível verificar: '+result['error']) if result['error'] else
+            say(('Não foi possível verificar: '+result['error']) if result['error'] else
                 f"Disponível: {selected['version']}"+(' · pré-lançamento' if selected['prerelease'] else ' · estável') if selected else
-                'Nenhuma versão mais nova neste canal. Pré-lançamentos são ignorados quando a opção acima está desmarcada.')
+                'Nenhuma versão mais nova neste canal. Pré-lançamentos são ignorados quando a opção acima está desmarcada.',
+                'warning' if result['error'] else 'accent' if selected else 'primary')
             install.configure(state='normal' if selected and not installing else 'disabled')
         except queue.Empty:pass
         try:
             result=result_queue.get_nowait();installed=result['app'];installing=False
             parent._root().update_install_busy=False
-            status.configure(text=result['error'] or 'Instalação verificada. Clique em Reabrir versão instalada para salvar e fechar esta interface normalmente.')
+            say(result['error'] or 'Instalação verificada. Clique em Reabrir versão instalada para salvar e fechar esta interface normalmente.','error' if result['error'] else 'accent')
             refresh.configure(state='normal');reopen.configure(state='normal' if installed else 'disabled')
         except queue.Empty:pass
         window.after(250,poll)

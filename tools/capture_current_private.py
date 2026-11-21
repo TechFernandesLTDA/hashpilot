@@ -7,11 +7,12 @@ import subprocess
 import sys
 import tempfile
 import time
-import tkinter as tk
 from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 import monitor
+import monitor_theme as theme
+import ui_kit as ui
 from app_version import VERSION
 from config import STATE_DIR
 from test_responsive_ui import build_harness
@@ -44,7 +45,7 @@ def main():
             root.overview_values['today'].configure(text='Oculto')
             root.overview_notes['today'].configure(text='Oculto para privacidade')
             payout=root.payout_threshold.master
-            overlay=tk.Label(payout,text='Pagamento e saldos ocultos para privacidade',bg=monitor.PANEL,fg=monitor.MUTED,font=('Segoe UI',12),anchor='w')
+            overlay=ui.label(payout,'Pagamento e saldos ocultos para privacidade','h3',tone='secondary',bg=theme.CARD)
             overlay.place(relx=0,rely=0,relwidth=1,relheight=1)
             root.wallet_var.set('Oculto para privacidade')
             for card in root.rig_cards.cards: card[3].configure(text='Identificador oculto para privacidade')

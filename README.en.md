@@ -8,23 +8,23 @@ A Windows desktop monitor for Pearl (PRL) mining, with NVIDIA telemetry, history
 
 The setup dialog includes [verified application updates](docs/update.md), preserving existing data, and [miner security guidance](docs/defender.md) with an optional administrator-confirmed exception for one executable path. An official hash is not a safety certification; Defender settings never change automatically.
 
-**[Download v0.5.14 — prerelease](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.5.14)** · [All releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verify SHA-256 and evidence](docs/verification.md)
+**[Download v0.5.15 — prerelease](https://github.com/TechFernandesLTDA/hashpilot/releases/tag/v0.5.15)** · [All releases](https://github.com/TechFernandesLTDA/hashpilot/releases) · [Verify SHA-256 and evidence](docs/verification.md)
 
 ## Windows installation
 
 Run in PowerShell on **Windows 10/11 x64**, with `winget` available:
 
 ```powershell
-irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.5.14/install.ps1 | iex
+irm https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/v0.5.15/install.ps1 | iex
 ```
 
 The installer prepares mise/Python, installs into `%LOCALAPPDATA%\Programs\HashPilot`, creates shortcuts, and opens setup. Existing local settings and history are preserved. See the [installation guide](docs/installation.md) for requirements and troubleshooting.
 
 **The author's receiving address is the default.** Keeping it sends mining payouts to the author. Enter your own public receiving address in setup before mining; setup can be reopened. No seed phrase or private key is needed. Miner installation is a separate option; installing the dashboard alone does not start mining.
 
-![v0.5.3 overview, one RTX 3070](media/current/overview.png)
+![Overview with simulated data for one GPU](media/current/overview.png)
 
-Isolated v0.5.3 capture with real RTX 3070 telemetry; balances, forecasts, wallet and identifiers are hidden for privacy. [GPU and mining](media/current/gpu-mining.png) · [Capture provenance](media/current/README.md).
+Capture of the current interface with simulated demo data (one fictitious GPU, no balances); these are not hardware measurements. The wallet shown is the author's default, already public in this repository. [GPU and mining](media/current/gpu-mining.png) · [Capture provenance](media/current/README.md).
 
 <details>
 <summary>Historical media / Arquivo de demonstracoes</summary>
@@ -49,13 +49,13 @@ The video and screenshots document **v0.1.0 with one GPU**, rendered from real l
 
 ## Dashboard
 
-| Tab | Contents |
+| Page (sidebar) | Contents |
 |---|---|
 | Overview | Hashrate, temperature, power, observed credits, receiving address and next payout |
 | GPU and mining | NVIDIA sensors, clocks, fans, thermal control, charts and recent events |
 | Earnings | Observed periods, pool balances, PRL/BRL/USD/BTC equivalents and projections |
 
-SQLite history survives restarts; samples older than 30 days are reduced to one averaged row per minute, never deleted outright. Windows includes a tray icon, compact summary and text console. Local collection runs every 2 seconds; public pool/price requests run every 60 seconds with timestamps and cache status.
+A sidebar holds the three pages and **Settings** (`Ctrl+,`); **Start all**, **Stop** and the **⋯** menu (benchmark, summary, console) stay in the header. SQLite history survives restarts; samples older than 30 days are reduced to one averaged row per minute, never deleted outright. Windows includes a tray icon, compact summary and text console. Local collection runs every 2 seconds; public pool/price requests run every 60 seconds with timestamps and cache status.
 
 Currency values are current-price equivalents, not executed exchanges. **Pool payouts remain in PRL.** Projections are estimates, and incomplete observation periods are marked partial.
 
@@ -95,6 +95,6 @@ AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e O
 
 ## Verification and evidence
 
-[Release verification, deterministic source packaging, diagnostic export and 24/72-hour observation protocol](docs/verification.md). Physical evidence still covers one RTX 3070; multi-GPU tests are simulated. Checksums are not publisher signatures or an independent security audit. [v0.5.14 notes](docs/releases/v0.5.14.md).
+[Release verification, deterministic source packaging, diagnostic export and 24/72-hour observation protocol](docs/verification.md). Physical evidence still covers one RTX 3070; multi-GPU tests are simulated. Checksums are not publisher signatures or an independent security audit. [v0.5.15 notes](docs/releases/v0.5.15.md).
 
 [Discussions and Q&A](https://github.com/TechFernandesLTDA/hashpilot/discussions) | [External testing](docs/external-testing.md) | [Adoption and metrics](docs/adoption.md)

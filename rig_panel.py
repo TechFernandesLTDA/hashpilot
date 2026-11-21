@@ -6,8 +6,8 @@ from pathlib import Path
 import tkinter as tk
 import time
 from valuation import numeric
-
-BG,PANEL,BORDER,TEXT,MUTED,TEAL,ORANGE='#0A1628','#10213B','#23446D','#FFFFFF','#E8EDF5','#12A98E','#ffbc66'
+import ui_kit as ui
+from monitor_theme import SURFACE, TEXT, TEXT_TERTIARY
 
 def fresh_hash(device,now=None):
     now=time.time() if now is None else now
@@ -56,21 +56,23 @@ def save_enabled(settings_path,identifier,enabled):
 
 class RigCards(tk.Frame):
     def __init__(self,parent,on_select,on_toggle,on_config):
-        super().__init__(parent,bg=BG)
+        super().__init__(parent,bg=SURFACE)
         self.on_select,self.on_toggle,self.on_config=on_select,on_toggle,on_config
         self.cards=[]; self.devices=[]; self.selected=None
+        self.font_scale=1.0  # px multiplicador definido por Monitor.adapt_layout (corpo da janela / 12)
         for slot in range(6):
-            frame=tk.Frame(self,bg=PANEL,highlightthickness=1,highlightbackground=BORDER,padx=8,pady=4)
-            title=tk.Label(frame,text='',bg=PANEL,fg=TEXT,anchor='w',font=('Segoe UI',-12,'bold'))
+            frame=ui.Card(self,padding='md',hover=True)
+            bg=frame.bg
+            title=tk.Label(frame,text='',bg=bg,fg=TEXT,anchor='w',font=ui.font('label',size=-12))
             title.pack(fill='x')
-            values=tk.Label(frame,text='',bg=PANEL,fg=TEAL,anchor='w',font=('Segoe UI',-14,'bold'))
+            values=tk.Label(frame,text='',bg=bg,fg=TEXT,anchor='w',font=ui.font('label',size=-14))
             values.pack(fill='x',pady=(2,0))
-            note=tk.Label(frame,text='',bg=PANEL,fg=MUTED,anchor='w',font=('Segoe UI',-11))
+            note=tk.Label(frame,text='',bg=bg,fg=TEXT_TERTIARY,anchor='w',font=ui.font('caption',size=-11))
             note.pack(fill='x')
-            buttons=tk.Frame(frame,bg=PANEL);buttons.pack(fill='x',pady=(3,0))
-            toggle=tk.Button(buttons,text='Parar',command=lambda s=slot:self.toggle(s),bg=BG,fg=TEXT,relief='flat',font=('Segoe UI',-11),padx=5,pady=1)
+            buttons=tk.Frame(frame,bg=bg);buttons.pack(fill='x',pady=(3,0))
+            toggle=ui.Button(buttons,'Parar',lambda s=slot:self.toggle(s),variant='secondary',size='sm',bg=bg)
             toggle.pack(side='left')
-            config=tk.Button(buttons,text='Carteira',command=lambda s=slot:self.configure_gpu(s),bg=BG,fg=TEXT,relief='flat',font=('Segoe UI',-11),padx=5,pady=1)
+            config=ui.Button(buttons,'Carteira',lambda s=slot:self.configure_gpu(s),variant='ghost',size='sm',bg=bg)
             config.pack(side='right')
             for widget in (frame,title,values,note):widget.bind('<Button-1>',lambda e,s=slot:self.select(s))
             self.cards.append((frame,title,values,note,toggle,config))
@@ -93,37 +95,39 @@ class RigCards(tk.Frame):
             stopped_note='Padrão restaurado' if restoration.get('state')=='restored' else 'Restauração incompleta' if restoration.get('state') in ('partial','failed') else 'Restaurando' if restoration.get('state')=='restoring' else 'Parada'
             note.configure(text=(stopped_note if not d.get('enabled') else f"{d['uuid'][-8:]} · {'Global' if d.get('uses_default_wallet') else 'Própria'} · {'ON' if rate is not None else 'Aguarda'}"))
             toggle.configure(text='Parar' if d.get('enabled') or d.get('miner_running') else 'Iniciar')
-            frame.configure(highlightbackground=TEAL if d['uuid']==selected else BORDER)
+            frame.set_selected(d['uuid']==selected)
         self.adapt(self.winfo_width())
     def adapt(self,width):
         columns=min(max(1,len(self.devices)),6 if width>=1800 else 3 if width>=900 else 2)
         for i in range(6):self.columnconfigure(i,weight=1 if i<columns else 0,uniform='gpu' if i<columns else '')
         for slot,card in enumerate(self.cards):
             if slot<len(self.devices):
-                card[0].grid(row=slot//columns,column=slot%columns,sticky='nsew',padx=3,pady=3)
-                for widget,size in zip(card[1:],(11,13,10,10,10)):widget.configure(font=('Segoe UI',-size,'bold' if widget in card[1:3] else 'normal'))
+                column=slot%columns;row=slot//columns;half=ui.px(self,6);rows=-(-len(self.devices)//columns)
+                card[0].grid(row=row,column=column,sticky='nsew',padx=(0 if column==0 else half,0 if column==columns-1 else half),pady=(0 if row==0 else half,0 if row==rows-1 else half))
+                for widget,role,size in zip(card[1:6],('label','label','caption','label','label'),(13,15,11,12,12)):widget.configure(font=ui.font(role,size=-round(size*self.font_scale)))
                 title,values,note=card[1:4];buttons=card[4].master
                 for widget in (title,values,note,buttons):widget.pack_forget()
                 title.grid(row=0,column=0,columnspan=2,sticky='ew')
                 values.grid(row=1,column=0,columnspan=2,sticky='ew')
                 note.grid(row=2,column=0,sticky='w');buttons.grid(row=2,column=1,sticky='e')
                 card[0].columnconfigure(0,weight=1)
-                card[0].configure(pady=2)
                 for widget in (title,values,note):widget.configure(pady=0)
         self.configure(height=1)
 
 def show_identity(parent,device):
-    window=tk.Toplevel(parent);window.title('Identificação completa da GPU');window.configure(bg=BG)
-    window.geometry('760x500');window.minsize(540,390)
+    window=tk.Toplevel(parent);window.title('Identificação completa da GPU');window.configure(bg=SURFACE)
+    ui.apply_styles(window)
+    window.geometry(f'{ui.px(window,760)}x{ui.px(window,440)}');window.minsize(ui.px(window,540),ui.px(window,420))
     identity=device.get('identity') or device
     fields=[('Índice atual','index'),('Nome','name'),('UUID','uuid'),('PCI bus','pci_bus_id'),('PCI device','pci_device_id'),
             ('PCI subsystem','pci_sub_device_id'),('Serial','serial'),('VBIOS','vbios_version'),('Driver','driver_version'),
             ('VRAM MiB','memory_mib'),('Arquitetura','architecture'),('Carteira efetiva','wallet')]
     for row,(label,key) in enumerate(fields):
-        tk.Label(window,text=label,bg=BG,fg=MUTED,font=('Segoe UI',-12)).grid(row=row,column=0,sticky='w',padx=12,pady=3)
+        top=(ui.px(window,20) if row==0 else ui.px(window,2),ui.px(window,2))  # respiro do topo da janela só na primeira linha
+        ui.label(window,label,'small',tone='secondary').grid(row=row,column=0,sticky='w',padx=(ui.px(window,24),ui.px(window,12)),pady=top)
         value=identity.get(key,device.get(key))
-        entry=tk.Entry(window,readonlybackground=PANEL,fg=TEXT,relief='flat',font=('Consolas',-12))
-        entry.insert(0,str(value) if value is not None else 'N/D');entry.configure(state='readonly');entry.grid(row=row,column=1,sticky='ew',padx=10,pady=3)
+        entry=ui.TextField(window,mono=True)
+        entry.insert(0,str(value) if value is not None else 'N/D');entry.configure(state='readonly');entry.grid(row=row,column=1,sticky='ew',padx=(0,ui.px(window,24)),pady=top)
     window.columnconfigure(1,weight=1)
-    tk.Button(window,text='Fechar',command=window.destroy).grid(row=len(fields),column=1,sticky='e',padx=10,pady=10)
+    ui.Button(window,'Fechar',window.destroy,variant='ghost').grid(row=len(fields),column=1,sticky='e',padx=ui.px(window,24),pady=ui.px(window,12))
     return window

@@ -16,10 +16,13 @@ from fsutil import atomic_json
 from file_cache import cached_load
 from onboarding import read_settings, save_settings
 from ui_host import Section
+import ui_kit as ui
+from monitor_theme import (ACCENT, ACCENT_TEXT, BRAND_NAVY, ERROR, BORDER, CONTROL, FIELD, SIDEBAR, SURFACE, TEAL,
+                           TEXT, TEXT_SECONDARY, TEXT_TERTIARY, WARNING, ASSET_DIR)
 
-BG, PANEL, BORDER, TEXT, MUTED = "#0A1628", "#10213B", "#23446D", "#FFFFFF", "#B9C7DC"
-TEAL, BLUE, ORANGE, DANGER = "#12A98E", "#1C64C8", "#ffbc66", "#9E3333"
-FONT = "Segoe UI"
+ICON = {"Carteira e ajuda": "wallet", "GPUs": "gpu", "Temperatura": "temperature", "Minerador": "play",
+        "Segurança": "shield", "IA": "sparkle", "Atualizações": "update", "Operação": "chart", "Sobre": "info"}
+ROLE_TO_VARIANT = {"primary": "primary", "danger": "danger_ghost", "secondary": "secondary"}
 NARROW = 900
 PREFERENCES = STATE_DIR / "settings-ui.json"
 WALLET_PATTERN = re.compile(r"prl1[ac-hj-np-z02-9]{30,100}")
@@ -62,24 +65,21 @@ def button_role(text, background):
 
 def apply_theme(widget):
     """Um só estilo para os botões das seções, com foco de teclado visível."""
+    ui.theme_buttons(widget, role=lambda text, bg: ROLE_TO_VARIANT[button_role(text, bg)])
+    apply_theme_menus(widget)
+
+
+def apply_theme_menus(widget):
     for child in widget.winfo_children():
-        if child.winfo_class() == "Button":
-            role = button_role(child.cget("text"), child.cget("bg"))
-            color = {"primary": TEAL, "danger": DANGER, "secondary": PANEL}[role]
-            child.configure(bg=color, fg=TEXT, activebackground=BORDER if role == "secondary" else BLUE,
-                            activeforeground=TEXT, relief="flat", bd=0, padx=12, pady=6, cursor="hand2",
-                            highlightthickness=2, highlightbackground=BG, highlightcolor=TEAL,
-                            disabledforeground=MUTED, font=(FONT, -13, "bold" if role == "primary" else "normal"))
-        elif child.winfo_class() == "Menubutton":
-            child.configure(bg=PANEL, fg=TEXT, activebackground=BORDER, activeforeground=TEXT, relief="flat",
-                            highlightthickness=0)
-        apply_theme(child)
+        if child.winfo_class() == "Menubutton":
+            ui.style_option_menu(child)
+        apply_theme_menus(child)
 
 
 class Slot(tk.Frame):
     """Contêiner de uma seção; recebe pedidos de fechar e de navegar das telas montadas nele."""
     def __init__(self, master, settings, name):
-        super().__init__(master, bg=BG)
+        super().__init__(master, bg=SURFACE)
         self.settings, self.name = settings, name
 
     def section_closed(self, _section):
@@ -94,7 +94,8 @@ class SettingsWindow(tk.Toplevel):
         super().__init__(root)
         self.root = root
         self.title("Configurações — HashPilot")
-        self.configure(bg=BG)
+        self.configure(bg=SURFACE)
+        ui.apply_styles(self)
         try:
             self.iconbitmap(str(os.path.join(os.path.dirname(__file__), "assets/brand/hashpilot.ico")))
         except tk.TclError:
@@ -104,8 +105,7 @@ class SettingsWindow(tk.Toplevel):
         self.geometry(preferences.get("geometry") or f"{width}x{height}")
         self.minsize(min(560, width), min(440, height))
         self.slots, self.nav, self.current, self.narrow = {}, {}, None, None
-        self.style_ttk()
-        self.columnconfigure(1, weight=1)
+        self.columnconfigure(2, weight=1)
         self.rowconfigure(1, weight=1)
         self.build_navigation()
         self.build_content()
@@ -118,59 +118,40 @@ class SettingsWindow(tk.Toplevel):
         self.refresh_status()
         self.focus_force()
 
-    def style_ttk(self):
-        """ttk segue os mesmos tokens; o painel principal já usa o tema clam."""
-        style = ttk.Style(self)
-        style.theme_use("clam")
-        style.configure("TCombobox", fieldbackground=PANEL, background=PANEL, foreground=TEXT, arrowcolor=TEXT,
-                        bordercolor=BORDER, lightcolor=PANEL, darkcolor=PANEL, selectbackground=BORDER, selectforeground=TEXT)
-        style.map("TCombobox", fieldbackground=[("readonly", PANEL)], foreground=[("readonly", TEXT)],
-                  bordercolor=[("focus", TEAL)])
-        style.configure("Ops.TButton", background=PANEL, foreground=TEXT, bordercolor=BORDER, lightcolor=PANEL,
-                        darkcolor=PANEL, focuscolor=TEAL, padding=(12, 6), font=(FONT, 10))
-        style.map("Ops.TButton", background=[("active", BORDER), ("disabled", BG)], foreground=[("disabled", MUTED)])
-        style.configure("Ops.TNotebook", background=BG, bordercolor=BORDER, lightcolor=BG, darkcolor=BG, tabmargins=0)
-        style.configure("Ops.TNotebook.Tab", background=PANEL, foreground=TEXT, bordercolor=BORDER, lightcolor=PANEL,
-                        darkcolor=PANEL, padding=(14, 8), font=(FONT, 10))
-        style.map("Ops.TNotebook.Tab", background=[("selected", BORDER)], foreground=[("selected", TEAL)])
-        style.configure("Vertical.TScrollbar", background=PANEL, troughcolor=BG, bordercolor=BG, arrowcolor=TEXT,
-                        lightcolor=PANEL, darkcolor=PANEL)
-        for option, value in (("background", PANEL), ("foreground", TEXT), ("selectBackground", BORDER), ("selectForeground", TEXT)):
-            self.option_add(f"*TCombobox*Listbox.{option}", value)
-
     # Layout ---------------------------------------------------------------
 
     def build_navigation(self):
-        self.sidebar = tk.Frame(self, bg=PANEL, width=230)
+        self.sidebar = tk.Frame(self, bg=SIDEBAR, width=ui.px(self, 240))
         self.sidebar.grid(row=0, column=0, rowspan=2, sticky="nsw")
         self.sidebar.grid_propagate(False)
-        tk.Label(self.sidebar, text="Configurações", bg=PANEL, fg=TEAL, font=(FONT, -20, "bold"), anchor="w").pack(fill="x", padx=16, pady=(16, 10))
+        self.sidebar_line = ui.Separator(self, vertical=True)
+        self.sidebar_line.grid(row=0, column=1, rowspan=2, sticky="ns")
+        ui.label(self.sidebar, "Configurações", "h2", bg=SIDEBAR).pack(fill="x", padx=ui.px(self, 16), pady=(ui.px(self, 18), ui.px(self, 12)))
         for name in SECTIONS:
-            item = tk.Button(self.sidebar, text=name, anchor="w", justify="left", bg=PANEL, fg=TEXT, relief="flat", bd=0,
-                             activebackground=BORDER, activeforeground=TEXT, cursor="hand2", padx=16, pady=7,
-                             highlightthickness=2, highlightbackground=PANEL, highlightcolor=TEAL,
-                             font=(FONT, -14), command=lambda name=name: self.show(name))
-            item.pack(fill="x")
+            item = ui.SidebarItem(self.sidebar, name, lambda name=name: self.show(name), icon=ICON[name])
+            item.pack(fill="x", padx=ui.px(self, 8), pady=1)
             self.nav[name] = item
-        tk.Label(self.sidebar, text="Esc fecha · Ctrl+S salva", bg=PANEL, fg=MUTED, font=(FONT, -11), anchor="w").pack(side="bottom", fill="x", padx=16, pady=12)
-        self.topbar = tk.Frame(self, bg=PANEL)
-        tk.Label(self.topbar, text="Configurações", bg=PANEL, fg=TEAL, font=(FONT, -16, "bold")).pack(side="left", padx=(12, 8), pady=8)
+        ui.label(self.sidebar, "Esc fecha · Ctrl+S salva", "caption", tone="tertiary", bg=SIDEBAR).pack(
+            side="bottom", fill="x", padx=ui.px(self, 16), pady=ui.px(self, 12))
+        self.topbar = tk.Frame(self, bg=SIDEBAR)
+        ui.label(self.topbar, "Configurações", "h3", bg=SIDEBAR).pack(side="left", padx=(ui.px(self, 12), ui.px(self, 8)), pady=ui.px(self, 8))
         self.section_choice = tk.StringVar()
         chooser = ttk.Combobox(self.topbar, textvariable=self.section_choice, values=SECTIONS, state="readonly")
-        chooser.pack(side="left", fill="x", expand=True, padx=(0, 12), pady=8)
+        chooser.pack(side="left", fill="x", expand=True, padx=(0, ui.px(self, 12)), pady=ui.px(self, 8))
         chooser.bind("<<ComboboxSelected>>", lambda _: self.show(self.section_choice.get()))
+        self.topbar_line = ui.Separator(self)
 
     def build_content(self):
-        holder = self.holder = tk.Frame(self, bg=BG)
-        holder.grid(row=1, column=1, sticky="nsew")
+        holder = self.holder = tk.Frame(self, bg=SURFACE)
+        holder.grid(row=1, column=2, sticky="nsew")
         holder.rowconfigure(0, weight=1)
         holder.columnconfigure(0, weight=1)
-        self.canvas = tk.Canvas(holder, bg=BG, highlightthickness=0, bd=0)
+        self.canvas = tk.Canvas(holder, bg=SURFACE, highlightthickness=0, bd=0)
         self.canvas.grid(row=0, column=0, sticky="nsew")
         self.scrollbar = ttk.Scrollbar(holder, orient="vertical", command=self.canvas.yview)
         self.scrollbar.grid(row=0, column=1, sticky="ns")
         self.canvas.configure(yscrollcommand=self.scrollbar.set)
-        self.inner = tk.Frame(self.canvas, bg=BG)
+        self.inner = tk.Frame(self.canvas, bg=SURFACE)
         self.inner_id = self.canvas.create_window(0, 0, anchor="nw", window=self.inner)
         self.inner.bind("<Configure>", lambda _: self.fit_content())
         self.canvas.bind("<Configure>", lambda _: self.fit_content())
@@ -203,12 +184,16 @@ class SettingsWindow(tk.Toplevel):
             self.narrow = narrow
             if narrow:
                 self.sidebar.grid_remove()
-                self.topbar.grid(row=0, column=0, columnspan=2, sticky="ew")
-                self.holder.grid_configure(row=1, column=0, columnspan=2)
+                self.sidebar_line.grid_remove()
+                self.topbar.grid(row=0, column=0, columnspan=3, sticky="ew")
+                self.topbar_line.grid(row=0, column=0, columnspan=3, sticky="sew")
+                self.holder.grid_configure(row=1, column=0, columnspan=3)
             else:
                 self.topbar.grid_remove()
+                self.topbar_line.grid_remove()
                 self.sidebar.grid()
-                self.holder.grid_configure(row=1, column=1, columnspan=1)
+                self.sidebar_line.grid()
+                self.holder.grid_configure(row=1, column=2, columnspan=1)
         self.after_idle(self.wrap_labels)
 
 
@@ -216,16 +201,24 @@ class SettingsWindow(tk.Toplevel):
         """Textos acompanham a largura útil; antes ficavam presos à largura inicial da janela."""
         if not self.current or not self.winfo_exists():
             return
-        width = max(280, self.canvas.winfo_width()-64)
-        def walk(widget):
+        self.update_idletasks()
+        right = self.canvas.winfo_rootx() + self.canvas.winfo_width() - self.margin() - ui.px(self, 4)
+        def walk(widget, limit=right):
+            if isinstance(widget, tk.Frame):  # respiro interno (cartões) reduz a largura útil dos filhos
+                try:
+                    inner = int(str(widget.cget("padx"))) + int(str(widget.cget("highlightthickness")))
+                    limit = min(limit, widget.winfo_rootx() + widget.winfo_width() - inner)
+                except (tk.TclError, ValueError):
+                    pass
             for child in widget.winfo_children():
                 if child.winfo_class() in ("Label", "TLabel", "Checkbutton"):
                     try:
                         if int(str(child.cget("wraplength")) or 0) > 0:
-                            child.configure(wraplength=width)
+                            # Largura disponível a partir da posição real do texto (cartões têm respiro interno).
+                            child.configure(wraplength=max(280, limit - child.winfo_rootx()))
                     except (tk.TclError, ValueError):
                         pass
-                walk(child)
+                walk(child, limit)
         walk(self.slots[self.current])
         self.fit_content()
 
@@ -241,8 +234,7 @@ class SettingsWindow(tk.Toplevel):
         self.current = name
         self.section_choice.set(name)
         for key, item in self.nav.items():
-            item.configure(bg=BORDER if key == name else PANEL, fg=TEAL if key == name else TEXT,
-                           font=(FONT, -14, "bold" if key == name else "normal"))
+            item.set_selected(key == name)
         self.canvas.yview_moveto(0)
         self.after_idle(self.wrap_labels)
         self.save_preferences()
@@ -259,8 +251,7 @@ class SettingsWindow(tk.Toplevel):
         try:
             content = builders[name](slot)
         except Exception as error:  # A broken section must not take the whole window down.
-            content = tk.Label(slot, text=f"Não foi possível abrir {name}: {error}", bg=BG, fg=ORANGE,
-                               font=(FONT, -14), wraplength=600, justify="left")
+            content = ui.label(slot, f"Não foi possível abrir {name}: {error}", "body", tone="warning", bg=SURFACE, wraplength=600)
         if content is not None and content.winfo_manager() == "":
             content.pack(fill="both", expand=True)
         apply_theme(slot)
@@ -283,56 +274,66 @@ class SettingsWindow(tk.Toplevel):
             SettingsWindow.release(child)
 
     def heading(self, parent, title, text=None):
-        tk.Label(parent, text=title, bg=BG, fg=TEAL, font=(FONT, -22, "bold"), anchor="w").pack(fill="x", padx=24, pady=(18, 4))
+        ui.label(parent, title, "h1").pack(fill="x", padx=self.margin(), pady=(ui.px(self, 24), ui.px(self, 4)))
         if text:
-            tk.Label(parent, text=text, bg=BG, fg=MUTED, font=(FONT, -14), anchor="w", justify="left", wraplength=640).pack(fill="x", padx=24, pady=(0, 8))
+            ui.label(parent, text, "body", tone="secondary", wraplength=640).pack(fill="x", padx=self.margin(), pady=(0, ui.px(self, 8)))
+
+    def margin(self):
+        return ui.px(self, 32)
+
+    def field_label(self, parent, text, **pack):
+        pack.setdefault("padx", self.margin())
+        pack.setdefault("pady", (ui.px(self, 12), ui.px(self, 6)))
+        label = ui.label(parent, text, "label")
+        label.pack(fill="x", **pack)
+        return label
 
     def build_wallet(self, slot):
-        frame = tk.Frame(slot, bg=BG)
+        frame = tk.Frame(slot, bg=SURFACE)
         settings = read_settings()
+        m = self.margin()
         loaded = {"wallet": settings.get("wallet", DEFAULT_WALLET), "log_dir": settings.get("log_dir") or str(LOG_DIR)}
         wallet, logs = tk.StringVar(value=loaded["wallet"]), tk.StringVar(value=loaded["log_dir"])
         support = tk.BooleanVar(value=settings.get("support_enabled", True) is True)
         self.heading(frame, "Carteira e ajuda", "Endereço que recebe os pagamentos da pool. GPUs sem carteira própria usam este endereço. O monitor nunca precisa de seed ou chave privada.")
-        tk.Label(frame, text="Carteira global", bg=BG, fg=TEXT, font=(FONT, -14, "bold"), anchor="w").pack(fill="x", padx=24, pady=(8, 2))
-        row = tk.Frame(frame, bg=BG)
-        row.pack(fill="x", padx=24)
-        entry = tk.Entry(row, textvariable=wallet, font=("Consolas", -14), bg=PANEL, fg=TEXT, insertbackground=TEXT, relief="flat",
-                         highlightthickness=2, highlightbackground=BORDER, highlightcolor=TEAL)
-        entry.pack(side="left", fill="x", expand=True, ipady=8)
+        self.field_label(frame, "Carteira global", pady=(ui.px(self, 8), ui.px(self, 6)))
+        row = tk.Frame(frame, bg=SURFACE)
+        row.pack(fill="x", padx=m)
+        entry = ui.TextField(row, wallet, mono=True)
+        entry.pack(side="left", fill="x", expand=True, ipady=ui.px(self, 1))
         def paste():
             try:
                 wallet.set(self.clipboard_get().strip())
             except tk.TclError:
                 pass
-        tk.Button(row, text="Colar", command=paste).pack(side="left", padx=(8, 0))
-        feedback = tk.Label(frame, bg=BG, font=(FONT, -13), anchor="w", justify="left", wraplength=640)
-        feedback.pack(fill="x", padx=24, pady=(4, 8))
-        support_frame = tk.Frame(frame, bg=PANEL, padx=12, pady=8)
-        tk.Checkbutton(support_frame, text="Contribuir até 5% do tempo conectado para ajudar pela ferramenta", variable=support,
-                       bg=PANEL, fg=TEXT, selectcolor=BG, activebackground=PANEL, activeforeground=TEXT, anchor="w",
-                       font=(FONT, -14), wraplength=600, justify="left").pack(fill="x")
-        tk.Label(support_frame, text="Após 57 min autorizados para sua carteira, até 3 min vão para a carteira abaixo. Não retira saldo e não garante 5% das moedas. Vale no próximo início do minerador.",
-                 bg=PANEL, fg=MUTED, font=(FONT, -12), anchor="w", justify="left", wraplength=600).pack(fill="x", pady=(2, 4))
-        tk.Label(support_frame, text="Recebe a contribuição: " + DEFAULT_WALLET, bg=PANEL, fg=MUTED, font=("Consolas", -11), anchor="w").pack(fill="x")
-        logs_title = tk.Label(frame, text="Pasta dos logs do SRBMiner", bg=BG, fg=TEXT, font=(FONT, -14, "bold"), anchor="w")
-        logs_row = tk.Frame(frame, bg=BG)
-        tk.Entry(logs_row, textvariable=logs, bg=PANEL, fg=TEXT, insertbackground=TEXT, relief="flat",
-                 highlightthickness=2, highlightbackground=BORDER, highlightcolor=TEAL).pack(side="left", fill="x", expand=True, ipady=6)
+        ui.Button(row, "Colar", paste, variant="secondary", bg=SURFACE).pack(side="left", padx=(ui.px(self, 8), 0))
+        feedback = ui.label(frame, "", "small", wraplength=640)
+        feedback.pack(fill="x", padx=m, pady=(ui.px(self, 6), ui.px(self, 8)))
+        support_frame = ui.Card(frame, padding="md")
+        ui.check(support_frame, "Contribuir até 5% do tempo conectado para ajudar pela ferramenta", support, bg=support_frame.bg,
+                 anchor="w", wraplength=600, justify="left").pack(fill="x")
+        ui.label(support_frame, "Após 57 min autorizados para sua carteira, até 3 min vão para a carteira abaixo. Não retira saldo e não garante 5% das moedas. Vale no próximo início do minerador.",
+                 "small", tone="secondary", bg=support_frame.bg, wraplength=600).pack(fill="x", pady=(ui.px(self, 2), ui.px(self, 4)))
+        tk.Label(support_frame, text="Recebe a contribuição: " + DEFAULT_WALLET, bg=support_frame.bg, fg=TEXT_TERTIARY,
+                 font=ui.font("caption", mono=True), anchor="w").pack(fill="x")
+        logs_title = self.field_label(frame, "Pasta dos logs do SRBMiner", pady=(ui.px(self, 16), ui.px(self, 6)))
+        logs_row = tk.Frame(frame, bg=SURFACE)
+        ui.TextField(logs_row, logs).pack(side="left", fill="x", expand=True, ipady=ui.px(self, 1))
         def browse():
             chosen = filedialog.askdirectory(parent=self, title="Pasta dos logs")
             if chosen:
                 logs.set(chosen)
-        tk.Button(logs_row, text="Escolher", command=browse).pack(side="left", padx=(8, 0))
-        status = tk.Label(frame, text="", bg=BG, fg=MUTED, font=(FONT, -13), anchor="w", justify="left", wraplength=640)
-        actions = tk.Frame(frame, bg=BG)
+        ui.Button(logs_row, "Escolher", browse, variant="secondary", bg=SURFACE).pack(side="left", padx=(ui.px(self, 8), 0))
+        status = ui.label(frame, "", "small", tone="secondary", wraplength=640)
+        actions = tk.Frame(frame, bg=SURFACE)
 
         def update(*_):
             state, text = wallet_feedback(wallet.get())
-            feedback.configure(text=text, fg={"valid": TEAL, "author": ORANGE}.get(state, ORANGE))
-            entry.configure(highlightbackground={"valid": TEAL, "author": ORANGE}.get(state, DANGER))
+            tone, validation = {"valid": (ACCENT_TEXT, "ok"), "author": (WARNING, "warning")}.get(state, (ERROR, "error"))
+            feedback.configure(text=text, fg=tone)
+            entry.set_validation(validation)
             if state == "valid":
-                support_frame.pack(fill="x", padx=24, pady=4, before=logs_title)
+                support_frame.pack(fill="x", padx=m, pady=ui.px(self, 4), before=logs_title)
             else:
                 support_frame.pack_forget()
             self.after_idle(self.wrap_labels)
@@ -341,7 +342,7 @@ class SettingsWindow(tk.Toplevel):
         def save():
             state, text = wallet_feedback(wallet.get())
             if state == "invalid":
-                status.configure(text=text, fg=ORANGE)
+                status.configure(text=text, fg=WARNING)
                 return False
             try:
                 before = read_settings()
@@ -351,7 +352,7 @@ class SettingsWindow(tk.Toplevel):
                 messagebox.showerror("Configurações", str(error), parent=self)
                 return False
             loaded.update(wallet=after.get("wallet"), log_dir=after.get("log_dir"))
-            status.configure(text="✓ Salvo. GPUs que usam a carteira global passam a usá-la na próxima reconciliação do serviço.", fg=TEAL)
+            status.configure(text="✓ Salvo. GPUs que usam a carteira global passam a usá-la na próxima reconciliação do serviço.", fg=ACCENT_TEXT)
             self.refresh_status()
             if needs_restart(before, after) and callable(getattr(self.root, "close", None)) and messagebox.askyesno(
                     "Reiniciar o painel",
@@ -366,60 +367,59 @@ class SettingsWindow(tk.Toplevel):
             wallet.set(loaded["wallet"])
             logs.set(loaded["log_dir"])
             support.set(read_settings().get("support_enabled", True) is True)
-            status.configure(text="Alterações descartadas.", fg=MUTED)
+            status.configure(text="Alterações descartadas.", fg=TEXT_SECONDARY)
 
-        logs_title.pack(fill="x", padx=24, pady=(14, 2))
-        logs_row.pack(fill="x", padx=24)
-        actions.pack(fill="x", padx=24, pady=(18, 4))
-        tk.Button(actions, text="Salvar", command=save).pack(side="right")
-        tk.Button(actions, text="Descartar", command=discard).pack(side="right", padx=8)
-        status.pack(fill="x", padx=24)
+        logs_row.pack(fill="x", padx=m)
+        actions.pack(fill="x", padx=m, pady=(ui.px(self, 18), ui.px(self, 4)))
+        ui.Button(actions, "Salvar", save, variant="primary", bg=SURFACE).pack(side="right")
+        ui.Button(actions, "Descartar", discard, variant="ghost", bg=SURFACE).pack(side="right", padx=ui.px(self, 8))
+        status.pack(fill="x", padx=m)
         frame.save = save
         update()
         return frame
 
     def build_temperature(self, slot):
         from thermal_target import MIN_TARGET_C
-        frame = tk.Frame(slot, bg=BG)
+        frame = tk.Frame(slot, bg=SURFACE)
         settings = read_settings()
+        m = self.margin()
         current = settings.get("target_temperature_c")
         enabled = tk.BooleanVar(value=isinstance(current, (int, float)))
         value = tk.IntVar(value=int(current) if isinstance(current, (int, float)) else 72)
         self.heading(frame, "Temperatura-alvo",
                      "Você escolhe a temperatura; o HashPilot ajusta o clock sozinho, a cada 2 s, para tirar o máximo sem passar dela.")
-        tk.Checkbutton(frame, text="Controlar o clock pela temperatura-alvo", variable=enabled, bg=BG, fg=TEXT, selectcolor=PANEL,
-                       activebackground=BG, activeforeground=TEXT, anchor="w", font=(FONT, -14)).pack(fill="x", padx=24, pady=(8, 4))
-        row = tk.Frame(frame, bg=BG)
-        row.pack(fill="x", padx=24, pady=4)
-        tk.Label(row, text="Alvo (°C)", bg=BG, fg=TEXT, font=(FONT, -14, "bold")).pack(side="left")
-        spin = tk.Spinbox(row, from_=int(MIN_TARGET_C), to=80, increment=1, textvariable=value, width=5, font=(FONT, -16),
-                          bg=PANEL, fg=TEXT, insertbackground=TEXT, buttonbackground=PANEL, relief="flat")
-        spin.pack(side="left", padx=(10, 0), ipady=4)
-        tk.Label(frame, justify="left", anchor="w", wraplength=640, bg=BG, fg=MUTED, font=(FONT, -13), text=(
+        ui.check(frame, "Controlar o clock pela temperatura-alvo", enabled, anchor="w").pack(fill="x", padx=m, pady=(ui.px(self, 8), ui.px(self, 4)))
+        row = tk.Frame(frame, bg=SURFACE)
+        row.pack(fill="x", padx=m, pady=ui.px(self, 4))
+        ui.label(row, "Alvo (°C)", "label").pack(side="left")
+        spin = tk.Spinbox(row, from_=int(MIN_TARGET_C), to=80, increment=1, textvariable=value, width=5, font=ui.font("body"),
+                          bg=FIELD, fg=TEXT, insertbackground=TEXT, buttonbackground=CONTROL, relief="flat",
+                          highlightthickness=1, highlightbackground=BORDER, highlightcolor=ACCENT)
+        spin.pack(side="left", padx=(ui.px(self, 10), 0), ipady=ui.px(self, 4))
+        rules = ui.Card(frame, padding="md")
+        rules.pack(fill="x", padx=m, pady=(ui.px(self, 12), ui.px(self, 4)))
+        ui.label(rules, (
             "• Acima do alvo com a ventoinha no máximo: reduz o clock levemente (15 MHz).\n"
             "• Bem acima do alvo (+2 °C): reduz mesmo antes da ventoinha chegar ao máximo.\n"
             "• Sobrando 2 °C ou mais por 20 s: sobe o clock levemente.\n"
             "• Aprende: um clock que estourou o alvo, ou que não aumentou o hashrate, vira teto por 10 min.\n"
             "Faixa permitida: 50–80 °C. As proteções de emergência (pausa em 83 °C) continuam valendo. "
-            "Desmarcado, vale o controle automático anterior.")).pack(fill="x", padx=24, pady=(8, 4))
+            "Desmarcado, vale o controle automático anterior."), "small", tone="secondary", bg=rules.bg, wraplength=640).pack(fill="x")
         objective = tk.StringVar(value="profit" if settings.get("optimize_for") == "profit" else "hashrate")
         price_value = settings.get("electricity_price_brl_kwh")
         price = tk.StringVar(value=f"{price_value:.2f}".replace(".", ",") if isinstance(price_value, (int, float)) else "")
-        tk.Label(frame, text="Objetivo da otimização (núcleo e memória)", bg=BG, fg=TEXT, font=(FONT, -14, "bold"),
-                 anchor="w").pack(fill="x", padx=24, pady=(14, 2))
+        self.field_label(frame, "Objetivo da otimização (núcleo e memória)", pady=(ui.px(self, 16), ui.px(self, 4)))
         for key, label in (("hashrate", "Máximo hashrate — mais TH/s dentro do alvo"),
                            ("profit", "Máximo lucro — receita menos o custo da energia")):
-            tk.Radiobutton(frame, text=label, value=key, variable=objective, bg=BG, fg=TEXT, selectcolor=PANEL,
-                           activebackground=BG, activeforeground=TEXT, anchor="w", font=(FONT, -14)).pack(fill="x", padx=24)
-        price_row = tk.Frame(frame, bg=BG)
-        price_row.pack(fill="x", padx=24, pady=(6, 0))
-        tk.Label(price_row, text="Preço da energia (R$/kWh)", bg=BG, fg=TEXT, font=(FONT, -14)).pack(side="left")
-        tk.Entry(price_row, textvariable=price, width=8, bg=PANEL, fg=TEXT, insertbackground=TEXT, relief="flat",
-                 font=(FONT, -14)).pack(side="left", padx=(10, 0), ipady=4)
-        tk.Label(frame, text="O lucro usa a previsão de receita do HashPilot e o consumo medido de cada clock de memória. "
-                 "Sem preço informado, vale o máximo hashrate.", bg=BG, fg=MUTED, font=(FONT, -12), anchor="w",
-                 justify="left", wraplength=640).pack(fill="x", padx=24, pady=(2, 4))
-        status = tk.Label(frame, text="", bg=BG, fg=MUTED, font=(FONT, -13), anchor="w", justify="left", wraplength=640)
+            ui.radio(frame, label, objective, key, anchor="w").pack(fill="x", padx=m)
+        price_row = tk.Frame(frame, bg=SURFACE)
+        price_row.pack(fill="x", padx=m, pady=(ui.px(self, 8), 0))
+        ui.label(price_row, "Preço da energia (R$/kWh)", "body").pack(side="left")
+        ui.TextField(price_row, price, width=8).pack(side="left", padx=(ui.px(self, 10), 0))
+        ui.label(frame, "O lucro usa a previsão de receita do HashPilot e o consumo medido de cada clock de memória. "
+                 "Sem preço informado, vale o máximo hashrate.", "small", tone="secondary", wraplength=640).pack(
+                     fill="x", padx=m, pady=(ui.px(self, 4), ui.px(self, 4)))
+        status = ui.label(frame, "", "small", tone="secondary", wraplength=640)
 
         def save():
             text = price.get().strip().replace(",", ".")
@@ -428,18 +428,18 @@ class SettingsWindow(tk.Toplevel):
             except ValueError:
                 price_kwh = -1
             if price_kwh is not None and not 0 <= price_kwh <= 20:
-                status.configure(text="Preço da energia inválido: use algo como 0,90.", fg=ORANGE)
+                status.configure(text="Preço da energia inválido: use algo como 0,90.", fg=WARNING)
                 return False
             if objective.get() == "profit" and price_kwh is None:
-                status.configure(text="Para otimizar lucro, informe o preço da energia.", fg=ORANGE)
+                status.configure(text="Para otimizar lucro, informe o preço da energia.", fg=WARNING)
                 return False
             try:
                 chosen = int(value.get())
             except (tk.TclError, ValueError):
-                status.configure(text="Informe um número inteiro entre 50 e 80.", fg=ORANGE)
+                status.configure(text="Informe um número inteiro entre 50 e 80.", fg=WARNING)
                 return False
             if enabled.get() and not MIN_TARGET_C <= chosen <= 80:
-                status.configure(text="Informe um número inteiro entre 50 e 80.", fg=ORANGE)
+                status.configure(text="Informe um número inteiro entre 50 e 80.", fg=WARNING)
                 return False
             try:
                 data = read_settings()
@@ -457,14 +457,14 @@ class SettingsWindow(tk.Toplevel):
                 messagebox.showerror("Configurações", str(error), parent=self)
                 return False
             status.configure(text=(f"✓ Salvo. O serviço aplica o alvo de {chosen} °C em até 10 s." if enabled.get()
-                                   else "✓ Salvo. Controle automático anterior reativado em até 10 s."), fg=TEAL)
+                                   else "✓ Salvo. Controle automático anterior reativado em até 10 s."), fg=ACCENT_TEXT)
             self.refresh_status()
             return True
 
-        actions = tk.Frame(frame, bg=BG)
-        actions.pack(fill="x", padx=24, pady=(18, 4))
-        tk.Button(actions, text="Salvar", command=save).pack(side="right")
-        status.pack(fill="x", padx=24)
+        actions = tk.Frame(frame, bg=SURFACE)
+        actions.pack(fill="x", padx=m, pady=(ui.px(self, 18), ui.px(self, 4)))
+        ui.Button(actions, "Salvar", save, variant="primary", bg=SURFACE).pack(side="right")
+        status.pack(fill="x", padx=m)
         frame.save = save
         return frame
 
@@ -473,11 +473,11 @@ class SettingsWindow(tk.Toplevel):
         return run_gpu_setup(self.root, selected_uuid=getattr(self.root, "selected_gpu_uuid", None), container=slot)
 
     def build_miner(self, slot):
-        frame = tk.Frame(slot, bg=BG)
+        frame = tk.Frame(slot, bg=SURFACE)
         frame.pack(fill="x")
         self.heading(frame, "Minerador", "Instalar, iniciar e atualizar o SRBMiner são ações separadas das configurações: salvar uma opção nunca inicia a mineração.")
-        state = tk.Label(frame, text=self.miner_summary(), bg=BG, fg=TEXT, font=(FONT, -14), anchor="w", justify="left", wraplength=640)
-        state.pack(fill="x", padx=24, pady=4)
+        state = ui.label(frame, self.miner_summary(), "body", wraplength=640)
+        state.pack(fill="x", padx=self.margin(), pady=ui.px(self, 4))
         def install():
             from gpu_agent import detect_nvidia_gpus
             from onboarding import confirm_setup_mining, launch_mining_setup
@@ -493,13 +493,15 @@ class SettingsWindow(tk.Toplevel):
                 launch_mining_setup(wallet)
             except (ValueError, OSError, RuntimeError) as error:
                 messagebox.showerror("Minerador", str(error), parent=self)
-        tk.Button(frame, text="Instalar e iniciar o minerador…", command=install).pack(anchor="w", padx=24, pady=(6, 10))
+        ui.Button(frame, "Instalar e iniciar o minerador…", install, variant="secondary", bg=SURFACE).pack(
+            anchor="w", padx=self.margin(), pady=(ui.px(self, 6), ui.px(self, 10)))
         from miner_update_ui import show_miner_update
         return show_miner_update(self.root, container=slot)
 
     def build_about(self, slot):
         from component_status import identity
-        frame = tk.Frame(slot, bg=BG)
+        frame = tk.Frame(slot, bg=SURFACE)
+        self.brand_plate(frame)
         self.heading(frame, "Sobre", "HashPilot — Tech Fernandes. Código sob GPL-3.0-only; a marca e os logos não são licenciados sob GPL.")
         registry = self.registry()
         panel = identity()
@@ -509,18 +511,30 @@ class SettingsWindow(tk.Toplevel):
                  f"Dados locais: {STATE_DIR}",
                  "",
                  "Atalhos: Ctrl+, abre as Configurações · Esc fecha · Ctrl+S salva a seção atual."]
-        tk.Label(frame, text="\n".join(lines), bg=BG, fg=TEXT, font=(FONT, -14), anchor="w", justify="left", wraplength=640).pack(fill="x", padx=24, pady=6)
-        actions = tk.Frame(frame, bg=BG)
-        actions.pack(fill="x", padx=24, pady=10)
-        tk.Button(actions, text="Abrir pasta de dados", command=lambda: os.startfile(STATE_DIR)).pack(side="left")
+        ui.label(frame, "\n".join(lines), "body", wraplength=640).pack(fill="x", padx=self.margin(), pady=ui.px(self, 6))
+        actions = tk.Frame(frame, bg=SURFACE)
+        actions.pack(fill="x", padx=self.margin(), pady=ui.px(self, 10))
+        ui.Button(actions, "Abrir pasta de dados", lambda: os.startfile(STATE_DIR), variant="secondary", bg=SURFACE).pack(side="left")
         def wizard():
             from onboarding import run_setup
             self.close()
             if run_setup(self.root) and callable(getattr(self.root, "close", None)):
                 self.root.restart_requested = True
                 self.root.close()
-        tk.Button(actions, text="Refazer assistente inicial…", command=wizard).pack(side="left", padx=8)
+        ui.Button(actions, "Refazer assistente inicial…", wizard, variant="ghost", bg=SURFACE).pack(side="left", padx=ui.px(self, 8))
         return frame
+
+    def brand_plate(self, parent):
+        """Assinatura Tech Fernandes: o PNG tem fundo azul-marinho embutido, então vira uma placa do mesmo tamanho."""
+        try:
+            self.about_logo = tk.PhotoImage(master=self, file=str(ASSET_DIR / "logo-header-240.png"))
+        except (tk.TclError, OSError):
+            return
+        plate = tk.Frame(parent, bg=BRAND_NAVY, highlightthickness=1, highlightbackground=BORDER,
+                         width=self.about_logo.width() + 2, height=self.about_logo.height() + 2)
+        plate.pack(anchor="w", padx=self.margin(), pady=(ui.px(self, 24), 0))
+        plate.pack_propagate(False)
+        tk.Label(plate, image=self.about_logo, bg=BRAND_NAVY, bd=0).pack()
 
     # Status ---------------------------------------------------------------
     @staticmethod
@@ -566,7 +580,7 @@ class SettingsWindow(tk.Toplevel):
             return
         try:
             for name, text in self.statuses().items():
-                self.nav[name].configure(text=f"{name}\n{text}")
+                self.nav[name].set_subtitle(text)
         except (OSError, ValueError, tk.TclError):
             pass
         self.after(5000, self.refresh_status)

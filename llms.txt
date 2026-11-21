@@ -6,6 +6,8 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 
 ## Read first
 
+- [v0.5.15 release notes](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/releases/v0.5.15.md): redesigned interface (neutral graphite surfaces, left sidebar with three pages instead of top tabs, thin-bordered cards, brand teal as the single accent) across the main window, Settings, Operations Center and every secondary window; colors and fonts centralized in `monitor_theme.py` and the new `ui_kit.py`; no behavior, data or mining-control change; public screenshots now use simulated demo data.
+
 - [v0.5.14 release notes](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/releases/v0.5.14.md): SRBMiner 3.8.6, 3.8.7 and 3.8.9 in the verified catalog (default install stays 3.8.0; no measured efficiency gain claimed), optional Rust rig service selected with `Iniciar-Rig.ps1 -Motor Rust` (Python remains the default; the release package ships no binary), pool connection status fix, panel robustness fixes and the Rust `zip` dependency update.
 
 - [v0.5.13 chart fix](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/releases/v0.5.13.md): bounded canvas item count during repeated live redraws, readable time axes, preserved history and independent miner lifecycle.

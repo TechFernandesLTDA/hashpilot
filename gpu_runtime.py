@@ -6,7 +6,6 @@ import queue
 import threading
 import time
 import tkinter as tk
-from tkinter import ttk
 
 from config import STATE_DIR, LOG_DIR, SETTINGS_PATH
 from gpu_agent import GPUAgent, BackgroundAdvisor, detect_nvidia_gpus,numeric
@@ -16,6 +15,8 @@ from rig_config import resolve_devices
 from gpu_telemetry import read_gpu_samples, read_device_payload
 from rig_panel import totals
 from file_cache import cached_load, cached_glob, newest
+from monitor_theme import SURFACE
+import ui_kit as ui
 
 SNAPSHOT_FRESH_SECONDS=5
 
@@ -217,24 +218,29 @@ class GPURuntime:
 def show_gpu_panel(parent, runtime):
     window=tk.Toplevel(parent)
     window.title('Benchmark e IA — NVIDIA')
-    window.configure(bg='#0A1628')
-    window.geometry('820x530')
-    window.minsize(650,460)
+    ui.apply_styles(window)
+    window.configure(bg=SURFACE)
+    window.geometry(f'{ui.px(window,820)}x{ui.px(window,560)}')
+    window.minsize(ui.px(window,650),ui.px(window,480))
     window.columnconfigure(0,weight=1)
+    margin=ui.px(window,24)
     text=tk.StringVar()
-    title=tk.Label(window,text='Benchmark por GPU • IA local ou Cloud Free',font=('Segoe UI',17,'bold'),bg='#0A1628',fg='#12A98E')
-    title.grid(row=0,column=0,sticky='w',padx=20,pady=15)
-    label=tk.Label(window,textvariable=text,justify='left',anchor='nw',font=('Segoe UI',11),bg='#0A1628',fg='white',wraplength=760)
-    label.grid(row=1,column=0,sticky='nsew',padx=20,pady=5)
+    title=ui.label(window,'Benchmark por GPU • IA local ou Cloud Free','h1')
+    title.grid(row=0,column=0,sticky='w',padx=margin,pady=(ui.px(window,20),ui.px(window,12)))
+    card=ui.Card(window,padding='lg')
+    card.grid(row=1,column=0,sticky='nsew',padx=margin,pady=ui.px(window,4))
+    label=ui.label(card,'','body',bg=card.bg,textvariable=text,anchor='nw',wraplength=ui.px(window,760))
+    label.pack(fill='both',expand=True)
     window.rowconfigure(1,weight=1)
-    progress=ttk.Progressbar(window,maximum=100)
-    progress.grid(row=2,column=0,sticky='ew',padx=20,pady=10)
-    buttons=tk.Frame(window,bg='#0A1628')
-    buttons.grid(row=3,column=0,sticky='ew',padx=20,pady=15)
-    tk.Button(buttons,text='Benchmark 5 min · desempenho',command=runtime.benchmark,padx=8,pady=8).pack(side='left',padx=(0,8))
-    tk.Button(buttons,text='Benchmark 5 min · eficiência',command=lambda:runtime.benchmark('efficiency'),padx=8,pady=8).pack(side='left')
-    tk.Button(buttons,text='Configurar IA',command=lambda:__import__('ai_setup').show_ai_setup(window),padx=8,pady=8).pack(side='left',padx=6)
-    tk.Button(buttons,text='Fechar',command=window.destroy,padx=8,pady=8).pack(side='right')
+    progress=ui.progress(window)
+    progress.grid(row=2,column=0,sticky='ew',padx=margin,pady=ui.px(window,12))
+    ui.Separator(window).grid(row=3,column=0,sticky='ew')
+    buttons=tk.Frame(window,bg=SURFACE)
+    buttons.grid(row=4,column=0,sticky='ew',padx=margin,pady=ui.px(window,16))
+    ui.Button(buttons,'Benchmark 5 min · desempenho',runtime.benchmark,variant='secondary').pack(side='left',padx=(0,ui.px(window,8)))
+    ui.Button(buttons,'Benchmark 5 min · eficiência',lambda:runtime.benchmark('efficiency'),variant='secondary').pack(side='left')
+    ui.Button(buttons,'Configurar IA',lambda:__import__('ai_setup').show_ai_setup(window),variant='ghost').pack(side='left',padx=ui.px(window,8))
+    ui.Button(buttons,'Fechar',window.destroy,variant='ghost').pack(side='right')
     def refresh():
         if not window.winfo_exists(): return
         state=runtime.snapshot()
@@ -257,7 +263,7 @@ def show_gpu_panel(parent, runtime):
             'Histórico por UUID preservado. Escolha o provedor em Configurar IA; a política local valida as sugestões.'
         ]))
         progress['value']=state.get('progress',0)*100
-        label.configure(wraplength=max(500,window.winfo_width()-40))
+        label.configure(wraplength=max(ui.px(window,500),window.winfo_width()-2*margin-ui.px(window,36)))
         window.after(1000,refresh)
     refresh()
     return window

@@ -12,6 +12,7 @@ from unittest.mock import patch
 ROOT=Path(__file__).resolve().parents[1]
 sys.path.insert(0,str(ROOT))
 import monitor
+import monitor_theme as theme
 from config import STATE_DIR
 from test_responsive_ui import build_harness
 from test_rig_ui import fixture
@@ -57,7 +58,7 @@ def main():
             root.finance_state={}
             root.apply(simulated);root.refresh_finance()
             root.subtitle.configure(text='SIMULAÇÃO DE INTERFACE · 6 GPUs · valores fictícios, não medições de hardware')
-            root.status.configure(text='● SIMULAÇÃO · não é um benchmark real',fg=monitor.ORANGE)
+            root.status.configure(text='● SIMULAÇÃO · não é um benchmark real',fg=theme.WARNING)
             root.tabs.select(0);capture('six-gpus-simulation.png',True)
             root.destroy()
     (output/'capture-manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')

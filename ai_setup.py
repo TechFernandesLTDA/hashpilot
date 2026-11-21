@@ -10,6 +10,8 @@ import webbrowser
 from ai_advisor import PROVIDERS, configuration, credential, RoutedAdvisor
 from config import SETTINGS_PATH
 from fsutil import atomic_json
+from monitor_theme import SURFACE
+import ui_kit as ui
 
 DESCRIPTIONS={
  'openrouter':'Recomendado para rigs com CPU simples. Usa modelos na nuvem: openrouter/free ou :free, confirmados no catálogo com preço zero. Exige conta e chave API. Há cotas e indisponibilidade; sem fallback pago.',
@@ -61,39 +63,49 @@ def show_ai_setup(parent=None,path=SETTINGS_PATH,container=None):
     except FileNotFoundError:settings={}
     config=configuration(settings)
     window=open_window(parent,container,'Assistente de IA · HashPilot')
-    bg,panel,fg,muted,teal='#0A1628','#10213B','#FFFFFF','#B9C7DC','#12A98E'
-    window.configure(bg=bg)
-    width=min(800,window.winfo_screenwidth()-60);height=min(640,window.winfo_screenheight()-100)
+    ui.apply_styles(window)
+    window.configure(bg=SURFACE)
+    width=min(ui.px(window,800),window.winfo_screenwidth()-60);height=min(ui.px(window,680),window.winfo_screenheight()-80)
     window.geometry(f'{width}x{height}');window.columnconfigure(0,weight=1)
+    margin=ui.px(window,32 if embedded(window) else 24);gap=ui.px(window,4)
     enabled=tk.BooleanVar(value=config['enabled']);consent=tk.BooleanVar(value=config['cloud_consent'])
     provider=tk.StringVar(value=PROVIDERS[config['provider']][0]);model=tk.StringVar(value=config['model'])
     key=tk.StringVar();description=tk.StringVar();result=tk.StringVar()
-    def label(text,row,color=fg):
-        item=tk.Label(window,text=text,bg=bg,fg=color,anchor='w',justify='left',wraplength=width-40,font=('Segoe UI',-13))
-        item.grid(row=row,column=0,sticky='ew',padx=20,pady=4);return item
-    label('IA opcional · escolha onde processar',0,teal).configure(font=('Segoe UI',-23,'bold'))
-    tk.Checkbutton(window,text='Ativar sugestões de IA',variable=enabled,bg=bg,fg=fg,selectcolor=panel,
-                   activebackground=bg,font=('Segoe UI',-14)).grid(row=1,column=0,sticky='w',padx=16,pady=4)
+    wrapped=[]
+    def label(text,row,tone='secondary',role='small'):
+        item=ui.label(window,text,role,tone=tone,wraplength=width-2*margin)
+        item.grid(row=row,column=0,sticky='ew',padx=margin,pady=gap);wrapped.append((item,0));return item
+    label('IA opcional · escolha onde processar',0,'primary','h1').grid_configure(pady=(ui.px(window,24 if embedded(window) else 16),gap))
+    ui.check(window,'Ativar sugestões de IA',enabled).grid(row=1,column=0,sticky='w',padx=margin,pady=gap)
     choices=ttk.Combobox(window,textvariable=provider,values=[v[0] for v in PROVIDERS.values()],state='readonly')
-    choices.grid(row=2,column=0,sticky='ew',padx=20,pady=4)
-    tk.Label(window,textvariable=description,bg=panel,fg=fg,anchor='w',justify='left',
-             wraplength=width-64,font=('Segoe UI',-13),padx=12,pady=9).grid(row=3,column=0,sticky='ew',padx=20,pady=5)
-    label('Modelo (a disponibilidade gratuita é verificada antes da consulta)',4,muted)
-    models=ttk.Combobox(window,textvariable=model);models.grid(row=5,column=0,sticky='ew',padx=20,pady=4)
-    key_label=label('Chave OpenRouter · deixe vazio para manter a chave salva no cofre do Windows',6,muted)
-    entry=tk.Entry(window,textvariable=key,show='●',bg=panel,fg=fg,insertbackground=fg,relief='flat')
-    entry.grid(row=7,column=0,sticky='ew',padx=20,ipady=7)
-    cloud=tk.Checkbutton(window,text='Autorizo enviar à nuvem somente sensores e resumo do benchmark',variable=consent,
-        bg=bg,fg=fg,selectcolor=panel,activebackground=bg,font=('Segoe UI',-13))
-    cloud.grid(row=8,column=0,sticky='w',padx=16,pady=7)
-    label('Sem carteira, UUID, serial, logs ou chaves nos prompts. Até 40 consultas cloud/dia por rig. Sem IA ou sem conexão, benchmark e proteção térmica continuam ativos.',9,muted)
-    links=tk.Frame(window,bg=bg);links.grid(row=10,column=0,sticky='w',padx=20,pady=4)
+    choices.grid(row=2,column=0,sticky='ew',padx=margin,pady=gap)
+    card=ui.Card(window,padding='md')
+    card.grid(row=3,column=0,sticky='ew',padx=margin,pady=gap)
+    card_text=ui.label(card,'','body',tone='secondary',bg=card.bg,textvariable=description,wraplength=width-2*margin-ui.px(window,36))
+    card_text.pack(fill='x');wrapped.append((card_text,ui.px(window,36)))
+    def fit(event):
+        if event.widget is window:
+            for item,extra in wrapped:item.configure(wraplength=max(ui.px(window,240),event.width-2*margin-extra))
+    if embedded(window):window.bind('<Configure>',fit,add='+')
+    label('Modelo (a disponibilidade gratuita é verificada antes da consulta)',4)
+    models=ttk.Combobox(window,textvariable=model);models.grid(row=5,column=0,sticky='ew',padx=margin,pady=gap)
+    key_label=label('Chave OpenRouter · deixe vazio para manter a chave salva no cofre do Windows',6)
+    entry=ui.TextField(window,key,show='●')
+    entry.grid(row=7,column=0,sticky='ew',padx=margin,ipady=ui.px(window,1))
+    cloud=ui.check(window,'Autorizo enviar à nuvem somente sensores e resumo do benchmark',consent)
+    cloud.grid(row=8,column=0,sticky='w',padx=margin,pady=gap)
+    label('Sem carteira, UUID, serial, logs ou chaves nos prompts. Até 40 consultas cloud/dia por rig. Sem IA ou sem conexão, benchmark e proteção térmica continuam ativos.',9)
+    links=tk.Frame(window,bg=SURFACE);links.grid(row=10,column=0,sticky='w',padx=margin-ui.px(window,15),pady=gap)
     def selected():return next(k for k,v in PROVIDERS.items() if v[0]==provider.get())
-    tk.Button(links,text='Conta / login / documentação oficial',command=lambda:webbrowser.open(PROVIDERS[selected()][1])).pack(side='left')
-    invite=tk.Button(links,text='Indicação do autor · opcional',command=lambda:webbrowser.open(referral(selected())))
-    install=tk.Button(links,text='Instalar Ollama local',command=lambda:__import__('onboarding').launch_ai_setup())
-    status=label('',11,teal);status.configure(textvariable=result)
-    window.rowconfigure(11,weight=1)
+    ui.Button(links,'Conta / login / documentação oficial',lambda:webbrowser.open(PROVIDERS[selected()][1]),variant='ghost').pack(side='left')
+    invite=ui.Button(links,'Indicação do autor · opcional',lambda:webbrowser.open(referral(selected())),variant='ghost')
+    install=ui.Button(links,'Instalar Ollama local',lambda:__import__('onboarding').launch_ai_setup(),variant='secondary')
+    status=label('',11,'accent','body');status.configure(textvariable=result,anchor='nw');status.grid_configure(sticky='new')
+    def tint(*_):
+        text=result.get()
+        status.configure(fg=ui.TONES['secondary'] if not text or text.startswith('Consultando') else ui.TONES['accent'] if text.startswith('Conexão validada') else ui.TONES['warning'])
+    result.trace_add('write',tint)
+    window.rowconfigure(11,weight=0 if embedded(window) else 1)
     busy=False;responses=queue.Queue();revision=0;timer=None
     def change(event=None):
         nonlocal revision
@@ -105,10 +117,11 @@ def show_ai_setup(parent=None,path=SETTINGS_PATH,container=None):
         else:key_label.grid_remove();entry.grid_remove()
         cloud.configure(state='disabled' if p=='ollama' else 'normal')
         invite.pack_forget();install.pack_forget()
-        if referral(p):invite.pack(side='left',padx=5)
-        if p=='ollama':install.pack(side='left',padx=5)
+        if referral(p):invite.pack(side='left',padx=ui.px(window,8))
+        if p=='ollama':install.pack(side='left',padx=ui.px(window,8))
     choices.bind('<<ComboboxSelected>>',change);change()
-    buttons=tk.Frame(window,bg=bg);buttons.grid(row=12,column=0,sticky='e',padx=20,pady=12)
+    if not embedded(window):ui.Separator(window).grid(row=12,column=0,sticky='ew')
+    buttons=tk.Frame(window,bg=SURFACE);buttons.grid(row=13,column=0,sticky='ew',padx=margin,pady=ui.px(window,12))
     def save(close=True):
         try:save_ai(path,enabled.get(),selected(),model.get(),consent.get(),key.get());key.set('')
         except (ValueError,OSError) as error:
@@ -147,9 +160,9 @@ def show_ai_setup(parent=None,path=SETTINGS_PATH,container=None):
             try:window.after_cancel(timer)
             except tk.TclError:pass
     window.bind('<Destroy>',cleanup,add='+')
-    tk.Button(buttons,text='Testar conexão',command=test).pack(side='left',padx=4)
-    tk.Button(buttons,text='Descartar' if embedded(window) else 'Cancelar',command=window.destroy).pack(side='left',padx=4)
-    tk.Button(buttons,text='Salvar IA',command=save,bg=teal,fg=fg,relief='flat',padx=16,pady=8).pack(side='left',padx=4)
+    ui.Button(buttons,'Testar conexão',test,variant='secondary').pack(side='left')
+    ui.Button(buttons,'Salvar IA',save,variant='primary').pack(side='right')
+    ui.Button(buttons,'Descartar' if embedded(window) else 'Cancelar',window.destroy,variant='ghost').pack(side='right',padx=(0,ui.px(window,8)))
     poll()
     present(parent,window)
     return window

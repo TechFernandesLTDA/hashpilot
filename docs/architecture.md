@@ -24,8 +24,9 @@ flowchart LR
 | Arquivo | Responsabilidade |
 |---|---|
 | `install.ps1` | Instalação Windows, Python gerenciado pelo mise, versão do aplicativo e atalhos |
-| `monitor.py` | Aplicação Tk, três abas, coleta local, resumo e console |
-| `monitor_layout.py` / `monitor_chart.py` / `monitor_format.py` / `monitor_sensors.py` / `monitor_theme.py` | Construção das abas GPU e Rendimentos, gráfico, formatação (ausente = N/D), leituras do modo legado e cores |
+| `monitor.py` | Aplicação Tk (barra lateral com três páginas sobre um `ttk.Notebook` de abas ocultas), coleta local, resumo e console |
+| `monitor_layout.py` / `monitor_chart.py` / `monitor_format.py` / `monitor_sensors.py` | Construção das páginas GPU e Rendimentos, gráfico, formatação (ausente = N/D) e leituras do modo legado |
+| `monitor_theme.py` / `ui_kit.py` | Tokens visuais (cores, tipografia, espaçamentos) e componentes Tk reutilizáveis (estilos ttk, botões, cartões, barra lateral, pílulas, campos); listados em `data/rig-runtime.json` para que `stop_ui.py` (que roda no runtime do rig) possa usá-los |
 | `onboarding.py` | Assistente de configuração, carteira e escolha explícita das opções de instalação/mineração |
 | `Abrir-Monitor.ps1` | Lançador relativo Windows, com `-Resumo` e `-Console` |
 

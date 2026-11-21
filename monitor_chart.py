@@ -5,14 +5,15 @@ from collections import deque
 import datetime as dt
 import time
 import tkinter as tk
+import tkinter.font as tkfont
 
 from monitor_format import safe_number
-from monitor_theme import BODY_FONT, BORDER, MUTED, PANEL, TEXT
+from monitor_theme import BORDER, CARD, CHART_GRID, FONT_FAMILY, FONT_SEMIBOLD, TEXT, TEXT_TERTIARY
 
 
 class Chart(tk.Canvas):
     def __init__(self, master, title, color, unit, fixed=None, window=900, max_gap=80, show_age=False):
-        super().__init__(master, bg=PANEL, highlightthickness=1, highlightbackground=BORDER, height=185)
+        super().__init__(master, bg=CARD, highlightthickness=1, highlightbackground=BORDER, highlightcolor=BORDER, height=185)
         self.title, self.color, self.unit, self.fixed = title, color, unit, fixed
         self.window = window
         self.max_gap, self.show_age = max_gap, show_age
@@ -20,6 +21,12 @@ class Chart(tk.Canvas):
         self.dirty = False
         self._layout = None
         self.bind("<Configure>", lambda _: self.draw(force=True))
+
+    def _title_font(self, size):
+        """Título em seminegrito: o Tk só tem normal/bold, então o seminegrito é a família `FONT_SEMIBOLD`."""
+        if FONT_SEMIBOLD in tkfont.families(self):
+            return (FONT_SEMIBOLD, size, "normal")
+        return (FONT_FAMILY, size, "bold")
 
     def redraw_if_dirty(self):
         if self.dirty and self.winfo_viewable():
@@ -29,12 +36,12 @@ class Chart(tk.Canvas):
         """Título, grade e rótulos do eixo só são recriados quando tamanho ou fonte mudam."""
         self.delete("all")
         left, right, top, bottom = 50, w-18, 44, h-28
-        self.create_text(16, 18, anchor="w", text=self.title, fill=TEXT, font=(BODY_FONT, title_size, "bold"))
+        self.create_text(16, 18, anchor="w", text=self.title, fill=TEXT, font=self._title_font(title_size))
         self.grid_items, self.axis_items = [], []
         for i in range(4):
             y = top + (bottom-top)*i/3
-            self.grid_items.append(self.create_line(left, y, right, y, fill=BORDER))
-            self.axis_items.append(self.create_text(left-8, y, text="", anchor="e", fill=MUTED, font=(BODY_FONT, axis_size)))
+            self.grid_items.append(self.create_line(left, y, right, y, fill=CHART_GRID))
+            self.axis_items.append(self.create_text(left-8, y, text="", anchor="e", fill=TEXT_TERTIARY, font=(FONT_FAMILY, axis_size)))
 
     def add(self, timestamp, value):
         timestamp=safe_number(timestamp)
@@ -100,7 +107,7 @@ class Chart(tk.Canvas):
         if not values:
             for item in self.grid_items+self.axis_items:
                 self.itemconfigure(item, state="hidden")
-            self.create_text(w/2, h/2, text="Aguardando amostras reais", fill=MUTED, font=(BODY_FONT, title_size), tags="dynamic")
+            self.create_text(w/2, h/2, text="Aguardando amostras reais", fill=TEXT_TERTIARY, font=(FONT_FAMILY, title_size), tags="dynamic")
             return
         ymin, ymax = self.fixed or (max(0, min(values) * .85), max(values) * 1.1)
         if ymax <= ymin:
@@ -126,7 +133,7 @@ class Chart(tk.Canvas):
         if self.show_age:
             latest = self.sample_info()["latest_sample_at"]
             age = max(0, int(now-latest))
-            self.create_text(right, 18, anchor="e", text=f"última amostra há {age} s", fill=MUTED,
-                             font=(BODY_FONT, axis_size), tags=("sample-age", "dynamic"))
-        self.create_text(left, h-12, text=dt.datetime.fromtimestamp(start).strftime("%H:%M:%S"), anchor="w", fill=MUTED, font=(BODY_FONT, axis_size), tags=("time-axis", "dynamic"))
-        self.create_text(right, h-12, text="agora · " + self.unit, anchor="e", fill=MUTED, font=(BODY_FONT, axis_size), tags=("time-axis", "dynamic"))
+            self.create_text(right, 18, anchor="e", text=f"última amostra há {age} s", fill=TEXT_TERTIARY,
+                             font=(FONT_FAMILY, axis_size), tags=("sample-age", "dynamic"))
+        self.create_text(left, h-12, text=dt.datetime.fromtimestamp(start).strftime("%H:%M:%S"), anchor="w", fill=TEXT_TERTIARY, font=(FONT_FAMILY, axis_size), tags=("time-axis", "dynamic"))
+        self.create_text(right, h-12, text="agora · " + self.unit, anchor="e", fill=TEXT_TERTIARY, font=(FONT_FAMILY, axis_size), tags=("time-axis", "dynamic"))

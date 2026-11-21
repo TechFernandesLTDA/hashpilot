@@ -1,9 +1,10 @@
 {
-  "captured_at": 1793237782.9658353,
-  "version": "v0.5.3",
-  "source": "isolated current UI, local snapshot and 15-minute GPU telemetry history read-only",
-  "privacy": "financial values, wallet, GPU identifiers, payment panel, pool details and logs explicitly hidden; screenshot is not an unaltered full UI",
-  "hardware": "local snapshot; no mining or GPU controls started or changed",
+  "captured_at": 1795286490.2784846,
+  "source": "isolated current UI built by test_responsive_ui.build_harness with temporary LOCALAPPDATA; no collectors, network or button actions",
+  "data": "simulated demo fixture (test_rig_ui.fixture(1)), one fictitious GPU, empty finance; default author wallet already public in the repository",
+  "privacy": "no local owner data read (snapshot, history, finance cache, logs)",
+  "hardware": "not hardware measurements; no mining or GPU controls started or changed",
+  "window": "1500x960, native DPI",
   "images": [
     "overview.png",
     "gpu-mining.png"
