@@ -34,6 +34,9 @@ from reference_profile import (REFERENCE_RTX3070_UUID,reference_device_confirmed
     reference_memory_clock,reference_start_clock)
 
 MARKER="HashPilotRig-v1"
+# Sem conexão ou sem hashrate, o minerador só é reiniciado se o estado persistir por este tempo.
+# O SRBMiner tenta reconectar sozinho a cada 5 s; reiniciar numa oscilação da pool só alonga a queda.
+STALL_CONFIRM_WAITING_S=120
 LOG=get_logger("rig")
 
 
@@ -677,7 +680,8 @@ class RigManager:
             # Never turn a thermal pause, missing sensor, external session or manual stop into a restart.
             safe=safe_sensor(sensor,self.clock())
             age=self.clock()-entry.get('started_at',self.clock())
-            stalled=(status['state'] in ('connecting','no_hashrate') and age>300) or (
+            waiting=status['state'] in ('connecting','no_hashrate')
+            stalled=(waiting and age>300) or (
                 status['warning'] and status['seconds_without_share']>2*status['warning_after_seconds'])
             # A read error or a just-resumed machine is insufficient evidence of a dead miner.
             stalled=stalled and not snapshot.get('log_error') and self.clock()>=self.continuity.grace_until
@@ -686,7 +690,8 @@ class RigManager:
                 entry['stall_observations']=entry.get('stall_observations',0)+1
             else:
                 entry.pop('stall_first_at',None);entry.pop('stall_observations',None)
-            stalled=stalled and entry.get('stall_observations',0)>=3 and self.clock()-entry.get('stall_first_at',self.clock())>=10
+            confirm=STALL_CONFIRM_WAITING_S if waiting else 10
+            stalled=stalled and entry.get('stall_observations',0)>=3 and self.clock()-entry.get('stall_first_at',self.clock())>=confirm
             if safe and stalled and entry.get('enabled') and entry.get('managed') and not entry.get('external_readonly') and not snapshot['miner'].get('paused'):
                 budget=entry['recovery']
                 if not budget['blocked'] and self.clock()>=budget['next_allowed_at']:

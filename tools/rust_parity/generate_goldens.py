@@ -3437,7 +3437,7 @@ def rig_scenarios():
             {"op": "reconcile", "detected": rig_detected(1)},
             *[
                 step
-                for at in (1400.5, 1402.5, 1404.5, 1411.5, 1412.5)
+                for at in (1400.5, 1402.5, 1404.5, 1411.5, 1412.5, 1519.5, 1521.5)
                 for step in (
                     {"op": "set_clock", "value": at},
                     {
@@ -3448,13 +3448,13 @@ def rig_scenarios():
                     },
                 )
             ],
-            {"op": "set_clock", "value": 1415.0},
+            {"op": "set_clock", "value": 1525.0},
             {"op": "reconcile", "detected": rig_detected(1)},
             {"op": "set_attr", "name": "require_recovery_sensors", "value": True},
-            {"op": "set_clock", "value": 1800.0},
+            {"op": "set_clock", "value": 1900.0},
             *[
                 step
-                for at in (1800.0, 1811.0, 1812.0)
+                for at in (1900.0, 1911.0, 2021.0)
                 for step in (
                     {"op": "set_clock", "value": at},
                     {
@@ -3465,31 +3465,48 @@ def rig_scenarios():
                     },
                 )
             ],
-            {"op": "set_clock", "value": 1815.0},
+            {"op": "set_clock", "value": 2024.0},
             {
                 "op": "observe_health",
                 "snapshots": {
-                    "GPU-test-0": {"miner": stalled_miner, "miner_running": True, "gpu": gpu_sample(75, 1813.0)}
+                    "GPU-test-0": {"miner": stalled_miner, "miner_running": True, "gpu": gpu_sample(75, 2022.0)}
                 },
             },
             {"op": "reconcile", "detected": rig_detected(1)},
-            {"op": "set_clock", "value": 1830.0},
+            {"op": "set_clock", "value": 2040.0},
             {
                 "op": "observe_health",
                 "snapshots": {
                     "GPU-test-0": {
                         "miner": {
                             "hashrate": 70.0,
-                            "hashrate_at": 1829.0,
+                            "hashrate_at": 2039.0,
                             "connection": "Conectado à pool",
-                            "last_share_at": 1820.0,
+                            "last_share_at": 2030.0,
                         },
                         "miner_running": True,
-                        "gpu": gpu_sample(60, 1829.0),
+                        "gpu": gpu_sample(60, 2039.0),
                         "log_error": None,
                     }
                 },
             },
+            {"op": "reconcile", "detected": rig_detected(1)},
+        ],
+        "saude_oscilacao_da_pool_sem_reinicio": [
+            {"op": "reconcile", "detected": rig_detected(1)},
+            *[
+                step
+                for at in (1400.5, 1402.5, 1404.5, 1411.5, 1450.5, 1500.5)
+                for step in (
+                    {"op": "set_clock", "value": at},
+                    {
+                        "op": "observe_health",
+                        "snapshots": {
+                            "GPU-test-0": {"miner": stalled_miner, "miner_running": True, "gpu": gpu_sample(60, at - 1)}
+                        },
+                    },
+                )
+            ],
             {"op": "reconcile", "detected": rig_detected(1)},
         ],
         "sucessor_confirmado": [

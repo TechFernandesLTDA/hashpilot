@@ -50894,7 +50894,51 @@
     },
     {
      "op": "set_clock",
-     "value": 1415.0
+     "value": 1519.5
+    },
+    {
+     "op": "observe_health",
+     "snapshots": {
+      "GPU-test-0": {
+       "miner": {
+        "hashrate": 0,
+        "hashrate_at": null,
+        "connection": null
+       },
+       "miner_running": true,
+       "gpu": {
+        "temperature.gpu": 60,
+        "sampled_at": 1518.5,
+        "error": null
+       }
+      }
+     }
+    },
+    {
+     "op": "set_clock",
+     "value": 1521.5
+    },
+    {
+     "op": "observe_health",
+     "snapshots": {
+      "GPU-test-0": {
+       "miner": {
+        "hashrate": 0,
+        "hashrate_at": null,
+        "connection": null
+       },
+       "miner_running": true,
+       "gpu": {
+        "temperature.gpu": 60,
+        "sampled_at": 1520.5,
+        "error": null
+       }
+      }
+     }
+    },
+    {
+     "op": "set_clock",
+     "value": 1525.0
     },
     {
      "op": "reconcile",
@@ -50914,11 +50958,11 @@
     },
     {
      "op": "set_clock",
-     "value": 1800.0
+     "value": 1900.0
     },
     {
      "op": "set_clock",
-     "value": 1800.0
+     "value": 1900.0
     },
     {
      "op": "observe_health",
@@ -50932,7 +50976,7 @@
        "miner_running": true,
        "gpu": {
         "temperature.gpu": 60,
-        "sampled_at": 1799.0,
+        "sampled_at": 1899.0,
         "error": null
        }
       }
@@ -50940,7 +50984,7 @@
     },
     {
      "op": "set_clock",
-     "value": 1811.0
+     "value": 1911.0
     },
     {
      "op": "observe_health",
@@ -50954,7 +50998,7 @@
        "miner_running": true,
        "gpu": {
         "temperature.gpu": 60,
-        "sampled_at": 1810.0,
+        "sampled_at": 1910.0,
         "error": null
        }
       }
@@ -50962,7 +51006,7 @@
     },
     {
      "op": "set_clock",
-     "value": 1812.0
+     "value": 2021.0
     },
     {
      "op": "observe_health",
@@ -50976,7 +51020,7 @@
        "miner_running": true,
        "gpu": {
         "temperature.gpu": 60,
-        "sampled_at": 1811.0,
+        "sampled_at": 2020.0,
         "error": null
        }
       }
@@ -50984,7 +51028,7 @@
     },
     {
      "op": "set_clock",
-     "value": 1815.0
+     "value": 2024.0
     },
     {
      "op": "observe_health",
@@ -50998,7 +51042,7 @@
        "miner_running": true,
        "gpu": {
         "temperature.gpu": 75,
-        "sampled_at": 1813.0,
+        "sampled_at": 2022.0,
         "error": null
        }
       }
@@ -51017,7 +51061,7 @@
     },
     {
      "op": "set_clock",
-     "value": 1830.0
+     "value": 2040.0
     },
     {
      "op": "observe_health",
@@ -51025,14 +51069,14 @@
       "GPU-test-0": {
        "miner": {
         "hashrate": 70.0,
-        "hashrate_at": 1829.0,
+        "hashrate_at": 2039.0,
         "connection": "Conectado à pool",
-        "last_share_at": 1820.0
+        "last_share_at": 2030.0
        },
        "miner_running": true,
        "gpu": {
         "temperature.gpu": 60,
-        "sampled_at": 1829.0,
+        "sampled_at": 2039.0,
         "error": null
        },
        "log_error": null
@@ -52397,22 +52441,81 @@
        "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
        "enabled": true,
        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
-       "state": "error",
+       "state": "running",
        "managed": true,
        "external_readonly": false,
-       "miner": null,
-       "controller": null,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
        "proxy": null,
-       "miner_pid": null,
-       "controller_pid": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
        "proxy_pid": null,
-       "error": "Recuperação automática: Aguardando conexão com a pool",
+       "error": null,
        "started_at": 1000.5,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
        "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
-       "miner_running": false,
+       "miner_running": true,
        "health": {
         "state": "connecting",
         "label": "Aguardando conexão com a pool",
@@ -52446,49 +52549,7 @@
         "error": null
        },
        "stall_first_at": 1400.5,
-       "stall_observations": 4,
-       "last_miner_session": {
-        "miner": {
-         "pid": 101,
-         "created_at": "101000",
-         "executable": "{root}\\SRBMiner-MULTI.exe",
-         "argv": [
-          "{root}\\SRBMiner-MULTI.exe",
-          "--disable-cpu",
-          "--disable-msr-tweaks",
-          "--disable-worker-watchdog",
-          "--disable-gpu-amd",
-          "--disable-gpu-intel",
-          "--algorithm-gpu",
-          "pearlhash",
-          "--gpu-id",
-          "0",
-          "--pool",
-          "prl.kryptex.network:7048",
-          "--wallet",
-          "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
-          "--worker",
-          "HashPilot_test-0",
-          "--gpu-off-temperature",
-          "83",
-          "--log-file",
-          "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
-         ],
-         "launch_id": "101"
-        },
-        "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
-        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
-        "pool": "prl.kryptex.network:7048",
-        "valid_until": 1531.5
-       },
-       "stopped_at": 1411.5,
-       "restoration": {
-        "state": "restored",
-        "at": 1000,
-        "components": {},
-        "simulated": true
-       },
-       "retry_after": 1413.5
+       "stall_observations": 4
       }
      },
      "manager": {
@@ -52504,15 +52565,9 @@
      },
      "backend": {
       "started": [],
-      "stopped": [
-       101
-      ],
-      "restored": [
-       "GPU-test-0"
-      ],
-      "waited": [
-       101
-      ]
+      "stopped": [],
+      "restored": [],
+      "waited": []
      }
     },
     {
@@ -52549,22 +52604,81 @@
        "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
        "enabled": true,
        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
-       "state": "error",
+       "state": "running",
        "managed": true,
        "external_readonly": false,
-       "miner": null,
-       "controller": null,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
        "proxy": null,
-       "miner_pid": null,
-       "controller_pid": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
        "proxy_pid": null,
-       "error": "Recuperação automática: Aguardando conexão com a pool",
+       "error": null,
        "started_at": 1000.5,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
        "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
-       "miner_running": false,
+       "miner_running": true,
        "health": {
         "state": "connecting",
         "label": "Aguardando conexão com a pool",
@@ -52598,49 +52712,7 @@
         "error": null
        },
        "stall_first_at": 1400.5,
-       "stall_observations": 4,
-       "last_miner_session": {
-        "miner": {
-         "pid": 101,
-         "created_at": "101000",
-         "executable": "{root}\\SRBMiner-MULTI.exe",
-         "argv": [
-          "{root}\\SRBMiner-MULTI.exe",
-          "--disable-cpu",
-          "--disable-msr-tweaks",
-          "--disable-worker-watchdog",
-          "--disable-gpu-amd",
-          "--disable-gpu-intel",
-          "--algorithm-gpu",
-          "pearlhash",
-          "--gpu-id",
-          "0",
-          "--pool",
-          "prl.kryptex.network:7048",
-          "--wallet",
-          "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
-          "--worker",
-          "HashPilot_test-0",
-          "--gpu-off-temperature",
-          "83",
-          "--log-file",
-          "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
-         ],
-         "launch_id": "101"
-        },
-        "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
-        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
-        "pool": "prl.kryptex.network:7048",
-        "valid_until": 1531.5
-       },
-       "stopped_at": 1411.5,
-       "restoration": {
-        "state": "restored",
-        "at": 1000,
-        "components": {},
-        "simulated": true
-       },
-       "retry_after": 1413.5
+       "stall_observations": 4
       }
      },
      "manager": {
@@ -52656,15 +52728,661 @@
      },
      "backend": {
       "started": [],
-      "stopped": [
-       101
-      ],
-      "restored": [
-       "GPU-test-0"
-      ],
-      "waited": [
-       101
-      ]
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "observe_health",
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 412.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1412.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1411.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 5
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "set_clock",
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 412.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1412.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1411.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 5
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "observe_health",
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 519.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1519.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1518.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 6
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "set_clock",
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 519.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1519.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1518.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 6
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
      }
     },
     {
@@ -52723,7 +53441,7 @@
         "hashing": false,
         "connected": false,
         "last_accepted_at": null,
-        "seconds_without_share": 412.0,
+        "seconds_without_share": 521.0,
         "warning": false,
         "warning_after_seconds": 900,
         "interval_samples": 0,
@@ -52734,20 +53452,10 @@
         "attempts_last_hour": 0,
         "limit_per_hour": 3,
         "blocked": false,
-        "next_allowed_at": 1412.5,
+        "next_allowed_at": 1521.5,
         "last_reason": null
        },
        "incidents": [
-        {
-         "at": 1411.5,
-         "kind": "health_restart",
-         "message": "Aguardando conexão com a pool"
-        },
-        {
-         "at": 1411.5,
-         "kind": "stopped",
-         "message": "Parada confirmada"
-        },
         {
          "at": 1000.5,
          "kind": "started",
@@ -52756,11 +53464,11 @@
        ],
        "last_gpu_sample": {
         "temperature.gpu": 60,
-        "sampled_at": 1411.5,
+        "sampled_at": 1520.5,
         "error": null
        },
        "stall_first_at": 1400.5,
-       "stall_observations": 5,
+       "stall_observations": 7,
        "last_miner_session": {
         "miner": {
          "pid": 101,
@@ -52793,16 +53501,16 @@
         "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
         "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
         "pool": "prl.kryptex.network:7048",
-        "valid_until": 1531.5
+        "valid_until": 1641.5
        },
-       "stopped_at": 1412.5,
+       "stopped_at": 1521.5,
        "restoration": {
         "state": "restored",
         "at": 1000,
         "components": {},
         "simulated": true
        },
-       "retry_after": 1414.5
+       "retry_after": 1523.5
       }
      },
      "manager": {
@@ -52885,7 +53593,7 @@
         "hashing": false,
         "connected": false,
         "last_accepted_at": null,
-        "seconds_without_share": 412.0,
+        "seconds_without_share": 521.0,
         "warning": false,
         "warning_after_seconds": 900,
         "interval_samples": 0,
@@ -52896,20 +53604,10 @@
         "attempts_last_hour": 0,
         "limit_per_hour": 3,
         "blocked": false,
-        "next_allowed_at": 1412.5,
+        "next_allowed_at": 1521.5,
         "last_reason": null
        },
        "incidents": [
-        {
-         "at": 1411.5,
-         "kind": "health_restart",
-         "message": "Aguardando conexão com a pool"
-        },
-        {
-         "at": 1411.5,
-         "kind": "stopped",
-         "message": "Parada confirmada"
-        },
         {
          "at": 1000.5,
          "kind": "started",
@@ -52918,11 +53616,11 @@
        ],
        "last_gpu_sample": {
         "temperature.gpu": 60,
-        "sampled_at": 1411.5,
+        "sampled_at": 1520.5,
         "error": null
        },
        "stall_first_at": 1400.5,
-       "stall_observations": 5,
+       "stall_observations": 7,
        "last_miner_session": {
         "miner": {
          "pid": 101,
@@ -52955,16 +53653,16 @@
         "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
         "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
         "pool": "prl.kryptex.network:7048",
-        "valid_until": 1531.5
+        "valid_until": 1641.5
        },
-       "stopped_at": 1412.5,
+       "stopped_at": 1521.5,
        "restoration": {
         "state": "restored",
         "at": 1000,
         "components": {},
         "simulated": true
        },
-       "retry_after": 1414.5
+       "retry_after": 1523.5
       }
      },
      "manager": {
@@ -53119,7 +53817,7 @@
        "controller_pid": 104,
        "proxy_pid": null,
        "error": null,
-       "started_at": 1415.0,
+       "started_at": 1525.0,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
@@ -53304,7 +54002,7 @@
        "controller_pid": 104,
        "proxy_pid": null,
        "error": null,
-       "started_at": 1415.0,
+       "started_at": 1525.0,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
@@ -53439,7 +54137,7 @@
        "controller_pid": 104,
        "proxy_pid": null,
        "error": null,
-       "started_at": 1415.0,
+       "started_at": 1525.0,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
@@ -53574,7 +54272,7 @@
        "controller_pid": 104,
        "proxy_pid": null,
        "error": null,
-       "started_at": 1415.0,
+       "started_at": 1525.0,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
@@ -53709,7 +54407,7 @@
        "controller_pid": 104,
        "proxy_pid": null,
        "error": null,
-       "started_at": 1415.0,
+       "started_at": 1525.0,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
@@ -53721,7 +54419,7 @@
         "hashing": false,
         "connected": false,
         "last_accepted_at": null,
-        "seconds_without_share": 385.0,
+        "seconds_without_share": 375.0,
         "warning": false,
         "warning_after_seconds": 900,
         "interval_samples": 0,
@@ -53732,42 +54430,37 @@
         "attempts_last_hour": 1,
         "limit_per_hour": 3,
         "blocked": false,
-        "next_allowed_at": 1475.0,
+        "next_allowed_at": 1585.0,
         "last_reason": "Recuperação automática: Aguardando conexão com a pool"
        },
        "incidents": [
         {
-         "at": 1415.0,
+         "at": 1525.0,
          "kind": "started",
          "message": "Minerador e controlador iniciados"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "health_restart",
          "message": "Aguardando conexão com a pool"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "stopped",
          "message": "Parada confirmada"
         },
         {
-         "at": 1411.5,
-         "kind": "health_restart",
-         "message": "Aguardando conexão com a pool"
-        },
-        {
-         "at": 1411.5,
-         "kind": "stopped",
-         "message": "Parada confirmada"
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
         }
        ],
        "last_gpu_sample": {
         "temperature.gpu": 60,
-        "sampled_at": 1799.0,
+        "sampled_at": 1899.0,
         "error": null
        },
-       "stall_first_at": 1800.0,
+       "stall_first_at": 1900.0,
        "stall_observations": 1
       }
      },
@@ -53898,7 +54591,7 @@
        "controller_pid": 104,
        "proxy_pid": null,
        "error": null,
-       "started_at": 1415.0,
+       "started_at": 1525.0,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
@@ -53910,7 +54603,7 @@
         "hashing": false,
         "connected": false,
         "last_accepted_at": null,
-        "seconds_without_share": 385.0,
+        "seconds_without_share": 375.0,
         "warning": false,
         "warning_after_seconds": 900,
         "interval_samples": 0,
@@ -53921,42 +54614,37 @@
         "attempts_last_hour": 1,
         "limit_per_hour": 3,
         "blocked": false,
-        "next_allowed_at": 1475.0,
+        "next_allowed_at": 1585.0,
         "last_reason": "Recuperação automática: Aguardando conexão com a pool"
        },
        "incidents": [
         {
-         "at": 1415.0,
+         "at": 1525.0,
          "kind": "started",
          "message": "Minerador e controlador iniciados"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "health_restart",
          "message": "Aguardando conexão com a pool"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "stopped",
          "message": "Parada confirmada"
         },
         {
-         "at": 1411.5,
-         "kind": "health_restart",
-         "message": "Aguardando conexão com a pool"
-        },
-        {
-         "at": 1411.5,
-         "kind": "stopped",
-         "message": "Parada confirmada"
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
         }
        ],
        "last_gpu_sample": {
         "temperature.gpu": 60,
-        "sampled_at": 1799.0,
+        "sampled_at": 1899.0,
         "error": null
        },
-       "stall_first_at": 1800.0,
+       "stall_first_at": 1900.0,
        "stall_observations": 1
       }
      },
@@ -54087,7 +54775,7 @@
        "controller_pid": 104,
        "proxy_pid": null,
        "error": null,
-       "started_at": 1415.0,
+       "started_at": 1525.0,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
@@ -54099,7 +54787,7 @@
         "hashing": false,
         "connected": false,
         "last_accepted_at": null,
-        "seconds_without_share": 396.0,
+        "seconds_without_share": 386.0,
         "warning": false,
         "warning_after_seconds": 900,
         "interval_samples": 0,
@@ -54110,42 +54798,37 @@
         "attempts_last_hour": 1,
         "limit_per_hour": 3,
         "blocked": false,
-        "next_allowed_at": 1475.0,
+        "next_allowed_at": 1585.0,
         "last_reason": "Recuperação automática: Aguardando conexão com a pool"
        },
        "incidents": [
         {
-         "at": 1415.0,
+         "at": 1525.0,
          "kind": "started",
          "message": "Minerador e controlador iniciados"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "health_restart",
          "message": "Aguardando conexão com a pool"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "stopped",
          "message": "Parada confirmada"
         },
         {
-         "at": 1411.5,
-         "kind": "health_restart",
-         "message": "Aguardando conexão com a pool"
-        },
-        {
-         "at": 1411.5,
-         "kind": "stopped",
-         "message": "Parada confirmada"
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
         }
        ],
        "last_gpu_sample": {
         "temperature.gpu": 60,
-        "sampled_at": 1810.0,
+        "sampled_at": 1910.0,
         "error": null
        },
-       "stall_first_at": 1800.0,
+       "stall_first_at": 1900.0,
        "stall_observations": 2
       }
      },
@@ -54276,7 +54959,7 @@
        "controller_pid": 104,
        "proxy_pid": null,
        "error": null,
-       "started_at": 1415.0,
+       "started_at": 1525.0,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
@@ -54288,7 +54971,7 @@
         "hashing": false,
         "connected": false,
         "last_accepted_at": null,
-        "seconds_without_share": 396.0,
+        "seconds_without_share": 386.0,
         "warning": false,
         "warning_after_seconds": 900,
         "interval_samples": 0,
@@ -54299,42 +54982,37 @@
         "attempts_last_hour": 1,
         "limit_per_hour": 3,
         "blocked": false,
-        "next_allowed_at": 1475.0,
+        "next_allowed_at": 1585.0,
         "last_reason": "Recuperação automática: Aguardando conexão com a pool"
        },
        "incidents": [
         {
-         "at": 1415.0,
+         "at": 1525.0,
          "kind": "started",
          "message": "Minerador e controlador iniciados"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "health_restart",
          "message": "Aguardando conexão com a pool"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "stopped",
          "message": "Parada confirmada"
         },
         {
-         "at": 1411.5,
-         "kind": "health_restart",
-         "message": "Aguardando conexão com a pool"
-        },
-        {
-         "at": 1411.5,
-         "kind": "stopped",
-         "message": "Parada confirmada"
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
         }
        ],
        "last_gpu_sample": {
         "temperature.gpu": 60,
-        "sampled_at": 1810.0,
+        "sampled_at": 1910.0,
         "error": null
        },
-       "stall_first_at": 1800.0,
+       "stall_first_at": 1900.0,
        "stall_observations": 2
       }
      },
@@ -54406,7 +55084,7 @@
        "controller_pid": null,
        "proxy_pid": null,
        "error": "Recuperação automática: Aguardando conexão com a pool",
-       "started_at": 1415.0,
+       "started_at": 1525.0,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
@@ -54418,7 +55096,7 @@
         "hashing": false,
         "connected": false,
         "last_accepted_at": null,
-        "seconds_without_share": 397.0,
+        "seconds_without_share": 496.0,
         "warning": false,
         "warning_after_seconds": 900,
         "interval_samples": 0,
@@ -54429,42 +55107,37 @@
         "attempts_last_hour": 1,
         "limit_per_hour": 3,
         "blocked": false,
-        "next_allowed_at": 1475.0,
+        "next_allowed_at": 1585.0,
         "last_reason": "Recuperação automática: Aguardando conexão com a pool"
        },
        "incidents": [
         {
-         "at": 1415.0,
+         "at": 1525.0,
          "kind": "started",
          "message": "Minerador e controlador iniciados"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "health_restart",
          "message": "Aguardando conexão com a pool"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "stopped",
          "message": "Parada confirmada"
         },
         {
-         "at": 1411.5,
-         "kind": "health_restart",
-         "message": "Aguardando conexão com a pool"
-        },
-        {
-         "at": 1411.5,
-         "kind": "stopped",
-         "message": "Parada confirmada"
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
         }
        ],
        "last_gpu_sample": {
         "temperature.gpu": 60,
-        "sampled_at": 1811.0,
+        "sampled_at": 2020.0,
         "error": null
        },
-       "stall_first_at": 1800.0,
+       "stall_first_at": 1900.0,
        "stall_observations": 3,
        "last_miner_session": {
         "miner": {
@@ -54498,16 +55171,16 @@
         "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
         "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
         "pool": "prl.kryptex.network:7048",
-        "valid_until": 1932.0
+        "valid_until": 2141.0
        },
-       "stopped_at": 1812.0,
+       "stopped_at": 2021.0,
        "restoration": {
         "state": "restored",
         "at": 1000,
         "components": {},
         "simulated": true
        },
-       "retry_after": 1814.0
+       "retry_after": 2023.0
       }
      },
      "manager": {
@@ -54581,7 +55254,7 @@
        "controller_pid": null,
        "proxy_pid": null,
        "error": "Recuperação automática: Aguardando conexão com a pool",
-       "started_at": 1415.0,
+       "started_at": 1525.0,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
@@ -54593,7 +55266,7 @@
         "hashing": false,
         "connected": false,
         "last_accepted_at": null,
-        "seconds_without_share": 397.0,
+        "seconds_without_share": 496.0,
         "warning": false,
         "warning_after_seconds": 900,
         "interval_samples": 0,
@@ -54604,42 +55277,37 @@
         "attempts_last_hour": 1,
         "limit_per_hour": 3,
         "blocked": false,
-        "next_allowed_at": 1475.0,
+        "next_allowed_at": 1585.0,
         "last_reason": "Recuperação automática: Aguardando conexão com a pool"
        },
        "incidents": [
         {
-         "at": 1415.0,
+         "at": 1525.0,
          "kind": "started",
          "message": "Minerador e controlador iniciados"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "health_restart",
          "message": "Aguardando conexão com a pool"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "stopped",
          "message": "Parada confirmada"
         },
         {
-         "at": 1411.5,
-         "kind": "health_restart",
-         "message": "Aguardando conexão com a pool"
-        },
-        {
-         "at": 1411.5,
-         "kind": "stopped",
-         "message": "Parada confirmada"
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
         }
        ],
        "last_gpu_sample": {
         "temperature.gpu": 60,
-        "sampled_at": 1811.0,
+        "sampled_at": 2020.0,
         "error": null
        },
-       "stall_first_at": 1800.0,
+       "stall_first_at": 1900.0,
        "stall_observations": 3,
        "last_miner_session": {
         "miner": {
@@ -54673,16 +55341,16 @@
         "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
         "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
         "pool": "prl.kryptex.network:7048",
-        "valid_until": 1932.0
+        "valid_until": 2141.0
        },
-       "stopped_at": 1812.0,
+       "stopped_at": 2021.0,
        "restoration": {
         "state": "restored",
         "at": 1000,
         "components": {},
         "simulated": true
        },
-       "retry_after": 1814.0
+       "retry_after": 2023.0
       }
      },
      "manager": {
@@ -54756,7 +55424,7 @@
        "controller_pid": null,
        "proxy_pid": null,
        "error": "Recuperação automática: Aguardando conexão com a pool",
-       "started_at": 1415.0,
+       "started_at": 1525.0,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
@@ -54768,7 +55436,7 @@
         "hashing": false,
         "connected": false,
         "last_accepted_at": null,
-        "seconds_without_share": 400.0,
+        "seconds_without_share": 499.0,
         "warning": false,
         "warning_after_seconds": 900,
         "interval_samples": 0,
@@ -54779,42 +55447,42 @@
         "attempts_last_hour": 1,
         "limit_per_hour": 3,
         "blocked": false,
-        "next_allowed_at": 1475.0,
+        "next_allowed_at": 1585.0,
         "last_reason": "Recuperação automática: Aguardando conexão com a pool"
        },
        "incidents": [
         {
-         "at": 1812.0,
+         "at": 2021.0,
          "kind": "health_restart",
          "message": "Aguardando conexão com a pool"
         },
         {
-         "at": 1812.0,
+         "at": 2021.0,
          "kind": "stopped",
          "message": "Parada confirmada"
         },
         {
-         "at": 1415.0,
+         "at": 1525.0,
          "kind": "started",
          "message": "Minerador e controlador iniciados"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "health_restart",
          "message": "Aguardando conexão com a pool"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "stopped",
          "message": "Parada confirmada"
         }
        ],
        "last_gpu_sample": {
         "temperature.gpu": 75,
-        "sampled_at": 1813.0,
+        "sampled_at": 2022.0,
         "error": null
        },
-       "stall_first_at": 1800.0,
+       "stall_first_at": 1900.0,
        "stall_observations": 4,
        "last_miner_session": {
         "miner": {
@@ -54848,16 +55516,16 @@
         "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
         "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
         "pool": "prl.kryptex.network:7048",
-        "valid_until": 1932.0
+        "valid_until": 2141.0
        },
-       "stopped_at": 1812.0,
+       "stopped_at": 2021.0,
        "restoration": {
         "state": "restored",
         "at": 1000,
         "components": {},
         "simulated": true
        },
-       "retry_after": 1814.0
+       "retry_after": 2023.0
       }
      },
      "manager": {
@@ -54956,7 +55624,7 @@
        "controller_pid": null,
        "proxy_pid": null,
        "error": "Recuperação aguarda sensor atual abaixo de 70 °C",
-       "started_at": 1415.0,
+       "started_at": 1525.0,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
@@ -54968,7 +55636,7 @@
         "hashing": false,
         "connected": false,
         "last_accepted_at": null,
-        "seconds_without_share": 400.0,
+        "seconds_without_share": 499.0,
         "warning": false,
         "warning_after_seconds": 900,
         "interval_samples": 0,
@@ -54979,42 +55647,42 @@
         "attempts_last_hour": 1,
         "limit_per_hour": 3,
         "blocked": false,
-        "next_allowed_at": 1475.0,
+        "next_allowed_at": 1585.0,
         "last_reason": "Recuperação automática: Aguardando conexão com a pool"
        },
        "incidents": [
         {
-         "at": 1812.0,
+         "at": 2021.0,
          "kind": "health_restart",
          "message": "Aguardando conexão com a pool"
         },
         {
-         "at": 1812.0,
+         "at": 2021.0,
          "kind": "stopped",
          "message": "Parada confirmada"
         },
         {
-         "at": 1415.0,
+         "at": 1525.0,
          "kind": "started",
          "message": "Minerador e controlador iniciados"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "health_restart",
          "message": "Aguardando conexão com a pool"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "stopped",
          "message": "Parada confirmada"
         }
        ],
        "last_gpu_sample": {
         "temperature.gpu": 75,
-        "sampled_at": 1813.0,
+        "sampled_at": 2022.0,
         "error": null
        },
-       "stall_first_at": 1800.0,
+       "stall_first_at": 1900.0,
        "stall_observations": 4,
        "last_miner_session": {
         "miner": {
@@ -55048,17 +55716,17 @@
         "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
         "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
         "pool": "prl.kryptex.network:7048",
-        "valid_until": 1932.0
+        "valid_until": 2141.0
        },
-       "stopped_at": 1812.0,
+       "stopped_at": 2021.0,
        "restoration": {
         "state": "restored",
         "at": 1000,
         "components": {},
         "simulated": true
        },
-       "retry_after": 1825.0,
-       "successor_probe_after": 1830.0,
+       "retry_after": 2034.0,
+       "successor_probe_after": 2039.0,
        "support_pending_restart": false
       }
      },
@@ -55133,7 +55801,7 @@
        "controller_pid": null,
        "proxy_pid": null,
        "error": "Recuperação aguarda sensor atual abaixo de 70 °C",
-       "started_at": 1415.0,
+       "started_at": 1525.0,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
@@ -55145,7 +55813,7 @@
         "hashing": false,
         "connected": false,
         "last_accepted_at": null,
-        "seconds_without_share": 400.0,
+        "seconds_without_share": 499.0,
         "warning": false,
         "warning_after_seconds": 900,
         "interval_samples": 0,
@@ -55156,42 +55824,42 @@
         "attempts_last_hour": 1,
         "limit_per_hour": 3,
         "blocked": false,
-        "next_allowed_at": 1475.0,
+        "next_allowed_at": 1585.0,
         "last_reason": "Recuperação automática: Aguardando conexão com a pool"
        },
        "incidents": [
         {
-         "at": 1812.0,
+         "at": 2021.0,
          "kind": "health_restart",
          "message": "Aguardando conexão com a pool"
         },
         {
-         "at": 1812.0,
+         "at": 2021.0,
          "kind": "stopped",
          "message": "Parada confirmada"
         },
         {
-         "at": 1415.0,
+         "at": 1525.0,
          "kind": "started",
          "message": "Minerador e controlador iniciados"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "health_restart",
          "message": "Aguardando conexão com a pool"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "stopped",
          "message": "Parada confirmada"
         }
        ],
        "last_gpu_sample": {
         "temperature.gpu": 75,
-        "sampled_at": 1813.0,
+        "sampled_at": 2022.0,
         "error": null
        },
-       "stall_first_at": 1800.0,
+       "stall_first_at": 1900.0,
        "stall_observations": 4,
        "last_miner_session": {
         "miner": {
@@ -55225,17 +55893,17 @@
         "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
         "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
         "pool": "prl.kryptex.network:7048",
-        "valid_until": 1932.0
+        "valid_until": 2141.0
        },
-       "stopped_at": 1812.0,
+       "stopped_at": 2021.0,
        "restoration": {
         "state": "restored",
         "at": 1000,
         "components": {},
         "simulated": true
        },
-       "retry_after": 1825.0,
-       "successor_probe_after": 1830.0,
+       "retry_after": 2034.0,
+       "successor_probe_after": 2039.0,
        "support_pending_restart": false
       }
      },
@@ -55310,7 +55978,7 @@
        "controller_pid": null,
        "proxy_pid": null,
        "error": "Recuperação aguarda sensor atual abaixo de 70 °C",
-       "started_at": 1415.0,
+       "started_at": 1525.0,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
@@ -55321,7 +55989,7 @@
         "label": "Pool confirmou shares",
         "hashing": true,
         "connected": true,
-        "last_accepted_at": 1820.0,
+        "last_accepted_at": 2030.0,
         "seconds_without_share": 10.0,
         "warning": false,
         "warning_after_seconds": 900,
@@ -55333,39 +56001,39 @@
         "attempts_last_hour": 1,
         "limit_per_hour": 3,
         "blocked": false,
-        "next_allowed_at": 1475.0,
+        "next_allowed_at": 1585.0,
         "last_reason": "Recuperação automática: Aguardando conexão com a pool"
        },
        "incidents": [
         {
-         "at": 1812.0,
+         "at": 2021.0,
          "kind": "health_restart",
          "message": "Aguardando conexão com a pool"
         },
         {
-         "at": 1812.0,
+         "at": 2021.0,
          "kind": "stopped",
          "message": "Parada confirmada"
         },
         {
-         "at": 1415.0,
+         "at": 1525.0,
          "kind": "started",
          "message": "Minerador e controlador iniciados"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "health_restart",
          "message": "Aguardando conexão com a pool"
         },
         {
-         "at": 1412.5,
+         "at": 1521.5,
          "kind": "stopped",
          "message": "Parada confirmada"
         }
        ],
        "last_gpu_sample": {
         "temperature.gpu": 60,
-        "sampled_at": 1829.0,
+        "sampled_at": 2039.0,
         "error": null
        },
        "last_miner_session": {
@@ -55400,17 +56068,17 @@
         "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
         "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
         "pool": "prl.kryptex.network:7048",
-        "valid_until": 1932.0
+        "valid_until": 2141.0
        },
-       "stopped_at": 1812.0,
+       "stopped_at": 2021.0,
        "restoration": {
         "state": "restored",
         "at": 1000,
         "components": {},
         "simulated": true
        },
-       "retry_after": 1825.0,
-       "successor_probe_after": 1830.0,
+       "retry_after": 2034.0,
+       "successor_probe_after": 2039.0,
        "support_pending_restart": false
       }
      },
@@ -55569,7 +56237,7 @@
        "controller_pid": 106,
        "proxy_pid": null,
        "error": null,
-       "started_at": 1830.0,
+       "started_at": 2040.0,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
@@ -55658,7 +56326,7 @@
    "files": {
     "logs/gpus/GPU-test-0/gpu-defaults.json": {
      "state": "mining_session",
-     "at": 1830.0,
+     "at": 2040.0,
      "gpu_uuid": "GPU-test-0"
     },
     "logs/gpus/GPU-test-0/proxy-settings.json": {
@@ -55672,7 +56340,7 @@
      "schema_version": 1,
      "marker": "HashPilotRig-v1",
      "pid": 0,
-     "sampled_at": 1830.0,
+     "sampled_at": 2040.0,
      "ready": true,
      "max_gpus": 6,
      "devices": {
@@ -55776,7 +56444,7 @@
        "controller_pid": 106,
        "proxy_pid": null,
        "error": null,
-       "started_at": 1830.0,
+       "started_at": 2040.0,
        "pool": "prl.kryptex.network:7048",
        "miner_index": 0,
        "profile": "performance",
@@ -55809,20 +56477,20 @@
     "acks": [
      [
       "GPU-test-0",
-      1820.0
+      2030.0
      ]
     ],
     "recoveries": [
      [
       1,
       "GPU-test-0",
-      1415.0,
+      1525.0,
       "Recuperação automática: Aguardando conexão com a pool"
      ],
      [
       2,
       "GPU-test-0",
-      1830.0,
+      2040.0,
       "Recuperação aguarda sensor atual abaixo de 70 °C"
      ]
     ],
@@ -55837,56 +56505,2717 @@
      [
       2,
       "GPU-test-0",
-      1411.5,
+      1521.5,
       "stopped",
       "Parada confirmada"
      ],
      [
       3,
       "GPU-test-0",
-      1411.5,
+      1521.5,
       "health_restart",
       "Aguardando conexão com a pool"
      ],
      [
       4,
       "GPU-test-0",
-      1412.5,
-      "stopped",
-      "Parada confirmada"
-     ],
-     [
-      5,
-      "GPU-test-0",
-      1412.5,
-      "health_restart",
-      "Aguardando conexão com a pool"
-     ],
-     [
-      6,
-      "GPU-test-0",
-      1415.0,
+      1525.0,
       "started",
       "Minerador e controlador iniciados"
      ],
      [
-      7,
+      5,
       "GPU-test-0",
-      1812.0,
+      2021.0,
       "stopped",
       "Parada confirmada"
      ],
      [
-      8,
+      6,
       "GPU-test-0",
-      1812.0,
+      2021.0,
       "health_restart",
       "Aguardando conexão com a pool"
      ],
      [
-      9,
+      7,
       "GPU-test-0",
-      1830.0,
+      2040.0,
+      "started",
+      "Minerador e controlador iniciados"
+     ]
+    ],
+    "component_attempts": []
+   }
+  },
+  {
+   "name": "saude_oscilacao_da_pool_sem_reinicio",
+   "steps": [
+    {
+     "op": "reconcile",
+     "detected": [
+      {
+       "vendor": "NVIDIA",
+       "uuid": "GPU-test-0",
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070"
+      }
+     ]
+    },
+    {
+     "op": "set_clock",
+     "value": 1400.5
+    },
+    {
+     "op": "observe_health",
+     "snapshots": {
+      "GPU-test-0": {
+       "miner": {
+        "hashrate": 0,
+        "hashrate_at": null,
+        "connection": null
+       },
+       "miner_running": true,
+       "gpu": {
+        "temperature.gpu": 60,
+        "sampled_at": 1399.5,
+        "error": null
+       }
+      }
+     }
+    },
+    {
+     "op": "set_clock",
+     "value": 1402.5
+    },
+    {
+     "op": "observe_health",
+     "snapshots": {
+      "GPU-test-0": {
+       "miner": {
+        "hashrate": 0,
+        "hashrate_at": null,
+        "connection": null
+       },
+       "miner_running": true,
+       "gpu": {
+        "temperature.gpu": 60,
+        "sampled_at": 1401.5,
+        "error": null
+       }
+      }
+     }
+    },
+    {
+     "op": "set_clock",
+     "value": 1404.5
+    },
+    {
+     "op": "observe_health",
+     "snapshots": {
+      "GPU-test-0": {
+       "miner": {
+        "hashrate": 0,
+        "hashrate_at": null,
+        "connection": null
+       },
+       "miner_running": true,
+       "gpu": {
+        "temperature.gpu": 60,
+        "sampled_at": 1403.5,
+        "error": null
+       }
+      }
+     }
+    },
+    {
+     "op": "set_clock",
+     "value": 1411.5
+    },
+    {
+     "op": "observe_health",
+     "snapshots": {
+      "GPU-test-0": {
+       "miner": {
+        "hashrate": 0,
+        "hashrate_at": null,
+        "connection": null
+       },
+       "miner_running": true,
+       "gpu": {
+        "temperature.gpu": 60,
+        "sampled_at": 1410.5,
+        "error": null
+       }
+      }
+     }
+    },
+    {
+     "op": "set_clock",
+     "value": 1450.5
+    },
+    {
+     "op": "observe_health",
+     "snapshots": {
+      "GPU-test-0": {
+       "miner": {
+        "hashrate": 0,
+        "hashrate_at": null,
+        "connection": null
+       },
+       "miner_running": true,
+       "gpu": {
+        "temperature.gpu": 60,
+        "sampled_at": 1449.5,
+        "error": null
+       }
+      }
+     }
+    },
+    {
+     "op": "set_clock",
+     "value": 1500.5
+    },
+    {
+     "op": "observe_health",
+     "snapshots": {
+      "GPU-test-0": {
+       "miner": {
+        "hashrate": 0,
+        "hashrate_at": null,
+        "connection": null
+       },
+       "miner_running": true,
+       "gpu": {
+        "temperature.gpu": 60,
+        "sampled_at": 1499.5,
+        "error": null
+       }
+      }
+     }
+    },
+    {
+     "op": "reconcile",
+     "detected": [
+      {
+       "vendor": "NVIDIA",
+       "uuid": "GPU-test-0",
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070"
+      }
+     ]
+    }
+   ],
+   "records": [
+    {
+     "op": "reconcile",
+     "result": [
+      {
+       "vendor": "NVIDIA",
+       "uuid": "GPU-test-0",
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+       "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+       "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+       "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+       "enabled": true,
+       "profile": "performance",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "wallet_override": null,
+       "uses_default_wallet": true,
+       "uses_author_wallet": true,
+       "device_key": "GPU-test-0",
+       "worker_name": "HashPilot_test-0",
+       "configuration_error": null,
+       "miner_index": 0
+      }
+     ],
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [
+       [
+        "{root}\\SRBMiner-MULTI.exe",
+        "--disable-cpu",
+        "--disable-msr-tweaks",
+        "--disable-worker-watchdog",
+        "--disable-gpu-amd",
+        "--disable-gpu-intel",
+        "--algorithm-gpu",
+        "pearlhash",
+        "--gpu-id",
+        "0",
+        "--pool",
+        "prl.kryptex.network:7048",
+        "--wallet",
+        "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "--worker",
+        "HashPilot_test-0",
+        "--gpu-off-temperature",
+        "83",
+        "--log-file",
+        "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+       ],
+       [
+        "{root}\\python.exe",
+        "{project}\\gpu_agent.py",
+        "--control",
+        "--miner-pid",
+        "101",
+        "--uuid",
+        "GPU-test-0",
+        "--index",
+        "0",
+        "--duration",
+        "300",
+        "--state-dir",
+        "{root}\\logs\\gpus\\GPU-test-0",
+        "--monitor-state-dir",
+        "{root}\\logs\\gpus\\GPU-test-0",
+        "--log-dir",
+        "{root}\\logs\\gpus\\GPU-test-0",
+        "--miner-log",
+        "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+        "--miner-index",
+        "0",
+        "--profile",
+        "performance",
+        "--objective",
+        "performance"
+       ]
+      ],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "set_clock",
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "observe_health",
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 400.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1400.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1399.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 1
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "set_clock",
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 400.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1400.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1399.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 1
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "observe_health",
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 402.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1402.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1401.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 2
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "set_clock",
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 402.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1402.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1401.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 2
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "observe_health",
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 404.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1404.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1403.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 3
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "set_clock",
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 404.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1404.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1403.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 3
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "observe_health",
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 411.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1411.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1410.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 4
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "set_clock",
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 411.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1411.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1410.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 4
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "observe_health",
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 450.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1450.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1449.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 5
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "set_clock",
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 450.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1450.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1449.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 5
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "observe_health",
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 500.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1500.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1499.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 6
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    },
+    {
+     "op": "reconcile",
+     "result": [
+      {
+       "vendor": "NVIDIA",
+       "uuid": "GPU-test-0",
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+       "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+       "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+       "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+       "enabled": true,
+       "profile": "performance",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "wallet_override": null,
+       "uses_default_wallet": true,
+       "uses_author_wallet": true,
+       "device_key": "GPU-test-0",
+       "worker_name": "HashPilot_test-0",
+       "configuration_error": null,
+       "miner_index": 0
+      }
+     ],
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 500.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1500.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1499.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 6,
+       "support_pending_restart": false
+      }
+     },
+     "manager": {
+      "error": null,
+      "ignored": [],
+      "processed_ids": [],
+      "reference_uuid": null,
+      "registry_valid": true,
+      "shutting_down": false,
+      "miner_path": "{root}\\SRBMiner-MULTI.exe",
+      "miner_base": "C:\\Users\\renan\\AppData\\Local\\Temp",
+      "miner_update_pending": null
+     },
+     "backend": {
+      "started": [],
+      "stopped": [],
+      "restored": [],
+      "waited": []
+     }
+    }
+   ],
+   "files": {
+    "logs/gpus/GPU-test-0/gpu-defaults.json": {
+     "state": "mining_session",
+     "at": 1000.5,
+     "gpu_uuid": "GPU-test-0"
+    },
+    "logs/gpus/GPU-test-0/proxy-settings.json": {
+     "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+     "support_enabled": false
+    },
+    "settings.json": {
+     "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t"
+    },
+    "state/rig-manager.json": {
+     "schema_version": 1,
+     "marker": "HashPilotRig-v1",
+     "pid": 0,
+     "sampled_at": 1500.5,
+     "ready": true,
+     "max_gpus": 6,
+     "devices": {
+      "GPU-test-0": {
+       "gpu_uuid": "GPU-test-0",
+       "identity": {
+        "vendor": "NVIDIA",
+        "uuid": "GPU-test-0",
+        "index": 0,
+        "name": "NVIDIA GeForce RTX 3070",
+        "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "state_dir": "{root}\\logs\\gpus\\GPU-test-0",
+        "latest_path": "{root}\\logs\\gpus\\GPU-test-0\\latest.json",
+        "controller_status_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-control.json",
+        "proxy_settings_path": "{root}\\logs\\gpus\\GPU-test-0\\proxy-settings.json",
+        "benchmark_request_path": "{root}\\logs\\gpus\\GPU-test-0\\gpu-agent-request.json",
+        "enabled": true,
+        "profile": "performance",
+        "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "effective_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+        "wallet_override": null,
+        "uses_default_wallet": true,
+        "uses_author_wallet": true,
+        "device_key": "GPU-test-0",
+        "worker_name": "HashPilot_test-0",
+        "configuration_error": null,
+        "miner_index": 0
+       },
+       "index": 0,
+       "name": "NVIDIA GeForce RTX 3070",
+       "wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "desired_wallet": "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+       "enabled": true,
+       "log_dir": "{root}\\logs\\gpus\\GPU-test-0",
+       "state": "running",
+       "managed": true,
+       "external_readonly": false,
+       "miner": {
+        "pid": 101,
+        "created_at": "101000",
+        "executable": "{root}\\SRBMiner-MULTI.exe",
+        "argv": [
+         "{root}\\SRBMiner-MULTI.exe",
+         "--disable-cpu",
+         "--disable-msr-tweaks",
+         "--disable-worker-watchdog",
+         "--disable-gpu-amd",
+         "--disable-gpu-intel",
+         "--algorithm-gpu",
+         "pearlhash",
+         "--gpu-id",
+         "0",
+         "--pool",
+         "prl.kryptex.network:7048",
+         "--wallet",
+         "prl1pl2km7u7uddqqfmry4px9c9c7lpfeskhtl0yvkylvgupcjkafxmaqc6cr8t",
+         "--worker",
+         "HashPilot_test-0",
+         "--gpu-off-temperature",
+         "83",
+         "--log-file",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log"
+        ],
+        "launch_id": "101"
+       },
+       "controller": {
+        "pid": 102,
+        "created_at": "102000",
+        "executable": "{root}\\python.exe",
+        "argv": [
+         "{root}\\python.exe",
+         "{project}\\gpu_agent.py",
+         "--control",
+         "--miner-pid",
+         "101",
+         "--uuid",
+         "GPU-test-0",
+         "--index",
+         "0",
+         "--duration",
+         "300",
+         "--state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--monitor-state-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--log-dir",
+         "{root}\\logs\\gpus\\GPU-test-0",
+         "--miner-log",
+         "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+         "--miner-index",
+         "0",
+         "--profile",
+         "performance",
+         "--objective",
+         "performance"
+        ],
+        "launch_id": "102"
+       },
+       "proxy": null,
+       "miner_pid": 101,
+       "controller_pid": 102,
+       "proxy_pid": null,
+       "error": null,
+       "started_at": 1000.5,
+       "pool": "prl.kryptex.network:7048",
+       "miner_index": 0,
+       "profile": "performance",
+       "miner_log": "{root}\\logs\\gpus\\GPU-test-0\\mining-{stamp}.log",
+       "miner_running": true,
+       "health": {
+        "state": "connecting",
+        "label": "Aguardando conexão com a pool",
+        "hashing": false,
+        "connected": false,
+        "last_accepted_at": null,
+        "seconds_without_share": 500.0,
+        "warning": false,
+        "warning_after_seconds": 900,
+        "interval_samples": 0,
+        "basis": "janela inicial conservadora de 15 min; dificuldade desconhecida",
+        "ack_source": "resposta da pool registrada pelo minerador; não comprova pagamento"
+       },
+       "recovery": {
+        "attempts_last_hour": 0,
+        "limit_per_hour": 3,
+        "blocked": false,
+        "next_allowed_at": 1500.5,
+        "last_reason": null
+       },
+       "incidents": [
+        {
+         "at": 1000.5,
+         "kind": "started",
+         "message": "Minerador e controlador iniciados"
+        }
+       ],
+       "last_gpu_sample": {
+        "temperature.gpu": 60,
+        "sampled_at": 1499.5,
+        "error": null
+       },
+       "stall_first_at": 1400.5,
+       "stall_observations": 6,
+       "support_pending_restart": false
+      }
+     },
+     "ignored_devices": [],
+     "error": null,
+     "processed_request_ids": [],
+     "reference_uuid": null,
+     "software": {
+      "version": "v0.5.15",
+      "revision": null,
+      "source": "source"
+     },
+     "capabilities": [
+      "stop_restore_v1",
+      "miner_update_v1",
+      "continuity_v1"
+     ],
+     "continuity": {
+      "idle_sleep_prevented": false,
+      "sleep_guard_error": null,
+      "resume_grace_until": 0
+     }
+    }
+   },
+   "operations": {
+    "acks": [],
+    "recoveries": [],
+    "incidents": [
+     [
+      1,
+      "GPU-test-0",
+      1000.5,
       "started",
       "Minerador e controlador iniciados"
      ]

@@ -33,6 +33,10 @@ use crate::reference::{
 use crate::successor::{match_successor, option};
 
 pub const MARKER: &str = "HashPilotRig-v1";
+/// Sem conexão ou sem hashrate, o minerador só é reiniciado se o estado persistir por
+/// este tempo. O SRBMiner tenta reconectar sozinho a cada 5 s; reiniciar numa oscilação
+/// da pool só alonga a queda.
+const STALL_CONFIRM_WAITING_S: f64 = 120.0;
 const APP_VERSION_SOURCE: &str = include_str!("../../../app_version.py");
 const ACTIONS: [&str; 9] = [
     "reconcile",
@@ -2105,7 +2109,8 @@ impl RigManager {
     }
 
     /// `observe_health(snapshots)`: reinício automático só com sensor seguro e
-    /// travamento confirmado três vezes em pelo menos 10 s.
+    /// travamento confirmado três vezes: por 120 s sem conexão ou sem hashrate, ou por
+    /// 10 s no alerta de falta prolongada de shares.
     pub fn observe_health(&mut self, snapshots: &Obj) -> Result<(), String> {
         for (identifier, snapshot) in snapshots {
             if !self.devices.contains_key(identifier) {
@@ -2149,7 +2154,8 @@ impl RigManager {
             let limit = field(&status, "warning_after_seconds")
                 .as_f64()
                 .unwrap_or(f64::NAN);
-            let mut stalled = ((state == "connecting" || state == "no_hashrate") && age > 300.0)
+            let waiting = state == "connecting" || state == "no_hashrate";
+            let mut stalled = (waiting && age > 300.0)
                 || (truthy(field(&status, "warning"))
                     && without.is_some_and(|value| value > 2.0 * limit));
             stalled = stalled
@@ -2176,7 +2182,12 @@ impl RigManager {
                 .map_or(clock, |value| value.as_f64().unwrap_or(f64::NAN));
             stalled = stalled
                 && field(&entry, "stall_observations").as_i64().unwrap_or(0) >= 3
-                && clock - first >= 10.0;
+                && clock - first
+                    >= if waiting {
+                        STALL_CONFIRM_WAITING_S
+                    } else {
+                        10.0
+                    };
             if safe
                 && stalled
                 && truthy(field(&entry, "enabled"))
