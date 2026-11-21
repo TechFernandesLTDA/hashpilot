@@ -727,7 +727,8 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
         controls = tk.Frame(header, bg=SURFACE)
         controls.pack(side="right")
         # Ações principais ficam visíveis; o resto mora no menu "⋯" para o cabeçalho caber em janelas estreitas.
-        ui.Button(controls, "Iniciar todas", self.start_rig, variant="primary").pack(side="left")
+        self.start_button = ui.Button(controls, "Iniciar todas", self.start_rig, variant="primary")
+        self.start_button.pack(side="left")
         ui.Button(controls, "Parar", self.stop_mining, variant="danger_ghost").pack(side="left", padx=(ui.px(self, 8), 0))
         self.more_button = ui.Button(controls, "⋯", None, variant="ghost")
         # O "⋯" da fonte de texto fica minúsculo; o glifo "mais" da fonte de ícones do Windows é o equivalente legível.
@@ -1002,6 +1003,10 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
         for key in ("hash", "temp", "power"):
             self.overview_values[key].configure(text=self.card_values[key].cget("text"))
             self.overview_notes[key].configure(text=self.card_notes[key].cget("text"))
+        # Com todas as GPUs minerando não há o que iniciar: o botão principal fica desabilitado.
+        mining=((data['rig'].get('totals') or totals(devices)).get('mining_count') or 0) if devices else 0
+        wanted='disabled' if devices and mining>=len(devices) else 'normal'
+        if str(self.start_button.cget('state'))!=wanted:self.start_button.configure(state=wanted)
         if devices:
             aggregate=(data['rig'].get('totals') or totals(devices))
             self.overview_values['hash'].configure(text=fmt(aggregate.get('hashrate_ths'),' TH/s',1))
