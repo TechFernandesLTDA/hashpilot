@@ -216,3 +216,22 @@ class CorruptStateTests(unittest.TestCase):
                     blocked.assert_not_called()
                     self.assertFalse(window.winfo_exists())
         finally:root.destroy()
+
+    def test_collector_survives_unreviewed_selected_version_and_cycle_errors(self):
+        import monitor
+        collector=monitor.Collector()
+        with patch.object(collector,'rig_reader') as reader,patch('monitor.miner_process_ids',return_value=set()),\
+             patch('miner_update.active_executable',side_effect=ValueError('Versão ainda não revisada')):
+            reader.sample.return_value={'schema_version':2,'devices':[],'totals':{},'ignored_devices':[],'error':None}
+            sample=collector.sample()
+            self.assertFalse(sample['miner_executable_available'])
+        calls=[0]
+        def flaky():
+            calls[0]+=1
+            if calls[0]==1:raise RuntimeError('falha transitória')
+            collector.stop.set()
+            return {'collected_at':1.0,'rig':{'devices':[]}}
+        with patch.object(collector,'sample',side_effect=flaky),patch('monitor.exception_once'):
+            collector.work()
+        self.assertEqual(calls[0],2)
+        self.assertFalse(collector.samples.empty())

@@ -62,3 +62,5 @@ A 3.8.7 só vira a versão recomendada depois de um A/B na placa, com as liçõe
 - **Pelo menos 30 minutos por versão, em ordem alternada.** O teste da 3.8.6 teve cerca de 10 minutos por versão e uma só ordem; a diferença de potência ficou perto do ruído térmico.
 - **O que comparar:** TH/s e watts médios, a razão TH/s/W, temperatura, clock efetivo, shares aceitas e rejeitadas e erros de hardware.
 - **Critério:** a melhora anunciada é de eficiência. Watts menores com o mesmo TH/s já contam como ganho. Perda de TH/s, rejeições ou instabilidade: voltar à versão anterior pela seleção de versão.
+
+Revisão seguinte: [SRBMiner 3.8.9](srbminer-3.8.9.md).

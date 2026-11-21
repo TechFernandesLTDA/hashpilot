@@ -105,9 +105,12 @@ class Collector:
                 try:self.history.archive_log(Path(device['log_path']),gpu_uuid=device['uuid'],wallet=device['wallet'])
                 except OSError:pass
         from miner_update import active_executable
-        miner_file=active_executable(verify=False)
+        try:
+            miner_executable_available = active_executable(verify=False).is_file()
+        except (OSError, ValueError, RuntimeError):
+            miner_executable_available = False
         result={'collected_at':now,'rig':rig,'gpu':None,'gpu_error':rig.get('error'),'miner':parse_log(''),
-            'miner_executable_available':miner_file.is_file(),
+            'miner_executable_available':miner_executable_available,
             'miner_running':None,'process_error':process_error,'log_error':None,'log_path':None,'thermal_control':None,'support_contribution':{}}
         return project_selected(result,self.selected_uuid)
 
@@ -156,29 +159,32 @@ class Collector:
     def work(self):
         while not self.stop.is_set():
             started = time.monotonic()
-            data = self.sample()
-            if self.history:
-                rig_archived=hasattr(self.history,'rig_telemetry')
-                if rig_archived:
-                    self.history.rig_telemetry(data['rig'])
-                legacy=next((d for d in data['rig']['devices'] if d['index']==0),None)
-                if legacy:
-                    # A GPU0 já foi gravada em gpu_telemetry; a tabela legada só recebe os
-                    # eventos de status (a cópia da linha dobrava o tamanho do banco).
-                    self.history.telemetry({**data,'wallet':legacy['wallet'],**{k:legacy.get(k) for k in ('gpu','miner','miner_running','log_path')}},
-                                           source='live',archive=not rig_archived)
-                try:
-                    self.history.archive_thermal(LOG_DIR / "thermal-control-events.jsonl")
-                except OSError as error:
-                    self.history.event(time.time(), "thermal_import_error", {"error": str(error)})
             try:
-                self.samples.put_nowait(data)
-            except queue.Full:
+                data = self.sample()
+                if self.history:
+                    rig_archived=hasattr(self.history,'rig_telemetry')
+                    if rig_archived:
+                        self.history.rig_telemetry(data['rig'])
+                    legacy=next((d for d in data['rig']['devices'] if d['index']==0),None)
+                    if legacy:
+                        # A GPU0 já foi gravada em gpu_telemetry; a tabela legada só recebe os
+                        # eventos de status (a cópia da linha dobrava o tamanho do banco).
+                        self.history.telemetry({**data,'wallet':legacy['wallet'],**{k:legacy.get(k) for k in ('gpu','miner','miner_running','log_path')}},
+                                               source='live',archive=not rig_archived)
+                    try:
+                        self.history.archive_thermal(LOG_DIR / "thermal-control-events.jsonl")
+                    except OSError as error:
+                        self.history.event(time.time(), "thermal_import_error", {"error": str(error)})
                 try:
-                    self.samples.get_nowait()
-                except queue.Empty:
-                    pass
-                self.samples.put_nowait(data)
+                    self.samples.put_nowait(data)
+                except queue.Full:
+                    try:
+                        self.samples.get_nowait()
+                    except queue.Empty:
+                        pass
+                    self.samples.put_nowait(data)
+            except Exception:
+                exception_once(LOG, "collector-work", "Falha no ciclo de coleta do painel")
             self.stop.wait(max(0.2, 2 - (time.monotonic() - started)))
 
 
@@ -750,16 +756,16 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
         right.grid(row=2, column=1, sticky="nsew", padx=(12, 0))
         self.payout_generated_text = self.label(left, "Gerado na pool: N/D", bg=PANEL, anchor="w", font=(BODY_FONT, 9))
         self.payout_generated_text.pack(fill="x")
-        generated_track=tk.Frame(left,bg=BG,height=8)
+        generated_track=tk.Frame(left,bg=BG,height=12)
         generated_track.pack(fill='x',pady=(3,4));generated_track.pack_propagate(False)
         self.payout_generated_bar = ttk.Progressbar(generated_track, style="Generated.Horizontal.TProgressbar", maximum=100, mode="determinate")
-        self.payout_generated_bar.place(x=0,y=0,relwidth=1,height=8)
+        self.payout_generated_bar.place(x=0,y=0,relwidth=1,height=12)
         self.payout_confirmed_text = self.label(left, "Confirmado para envio: N/D", bg=PANEL, anchor="w", font=(BODY_FONT, 9))
         self.payout_confirmed_text.pack(fill="x")
-        confirmed_track=tk.Frame(left,bg=BG,height=8)
+        confirmed_track=tk.Frame(left,bg=BG,height=12)
         confirmed_track.pack(fill='x',pady=(3,4));confirmed_track.pack_propagate(False)
         self.payout_confirmed_bar = ttk.Progressbar(confirmed_track, style="Confirmed.Horizontal.TProgressbar", maximum=100, mode="determinate")
-        self.payout_confirmed_bar.place(x=0,y=0,relwidth=1,height=8)
+        self.payout_confirmed_bar.place(x=0,y=0,relwidth=1,height=12)
         self.payout_remaining = self.label(left, "Pendente / restante: N/D", bg=PANEL, fg=MUTED, anchor="w", justify="left", font=(BODY_FONT, 9))
         self.payout_remaining.pack(fill="x")
         self.payout_eta = self.label(right, "Estimativa: aguardando dados", bg=PANEL, fg=TEAL, font=(TITLE_FONT, 12, "bold"), anchor="w", justify="left")
