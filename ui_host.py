@@ -2,7 +2,7 @@
 from __future__ import annotations
 import tkinter as tk
 
-BG = "#0A1628"
+from monitor_theme import SURFACE
 
 
 class Section(tk.Frame):
@@ -14,7 +14,7 @@ class Section(tk.Frame):
     embedded = True
 
     def __init__(self, container, *, on_close=None, navigate=None):
-        super().__init__(container, bg=BG)
+        super().__init__(container, bg=SURFACE)
         self.on_close, self.navigate_to, self.release = on_close, navigate, False
         self.close_handler = None
 

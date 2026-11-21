@@ -15,7 +15,6 @@ from urllib.parse import quote
 import threading
 import time
 import tkinter as tk
-import tkinter.font as tkfont
 import sys
 import math
 from tkinter import ttk
@@ -33,7 +32,10 @@ from tray import WindowsTray
 from bootstrap import restore_bundled_data
 from rig_panel import RigCards, project_selected, totals, show_identity
 from app_update import build_identity
-from monitor_theme import ASSET_DIR, BODY_FONT, TITLE_FONT, BG, PANEL, BORDER, TEXT, MUTED, TEAL, BLUE, ORANGE, PINK  # noqa: F401
+import monitor_theme as theme
+import ui_kit as ui
+from monitor_theme import ACCENT, ASSET_DIR, BG, BORDER, BRAND_NAVY, CARD, SIDEBAR, SURFACE, TEXT, TEXT_SECONDARY, TEXT_TERTIARY, WARNING  # noqa: F401
+from monitor_theme import MUTED, ORANGE, PANEL, TEAL  # noqa: F401  (nomes antigos usados por ferramentas de captura)
 from monitor_format import fmt, safe_number, format_prl, format_brl, payout_for_local_state, thermal_description  # noqa: F401
 from monitor_sensors import NO_WINDOW, selected_gpu_context, run, miner_process_ids, number, read_gpu, tail, parse_log  # noqa: F401
 from monitor_chart import Chart  # noqa: F401
@@ -251,16 +253,12 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
         enable_native_dpi_awareness()
         restore_bundled_data()
         super().__init__()
-        global BODY_FONT, TITLE_FONT
-        families = set(tkfont.families(self))
-        BODY_FONT = "Plus Jakarta Sans" if "Plus Jakarta Sans" in families else "Segoe UI"
-        TITLE_FONT = "Sora" if "Sora" in families else "Segoe UI"
         self.title(APP_NAME+' · '+APP_BUILD['version'])
         self.app_icon = tk.PhotoImage(file=ASSET_DIR / "icon-256.png")
         self.iconphoto(True, self.app_icon)
         self.geometry("1280x800")
         self.minsize(1120, 620)
-        self.configure(bg=BG)
+        self.configure(bg=SURFACE)
         self.history = HistoryStore(STATE_DIR / "history.sqlite3", WALLET)
         self.history_restore = queue.Queue()
         self.restored_points = {}
@@ -287,7 +285,7 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
         self.protocol("WM_DELETE_WINDOW", self.hide_to_tray)
         self.bind("<Unmap>", self.on_minimize)
         self.bind("<Configure>", self.schedule_preferences, add="+")
-        self.tabs.bind("<<NotebookTabChanged>>", self.schedule_preferences)
+        self.tabs.bind("<<NotebookTabChanged>>", self.schedule_preferences, add="+")
         threading.Thread(target=self.restore_history, daemon=True, name="history-loader").start()
         self.collector_thread = threading.Thread(target=self.collector.work, daemon=True, name="collector")
         self.collector_thread.start()
@@ -385,8 +383,7 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
         self.configure_setup('GPUs')
 
     def show_more_menu(self, anchor):
-        menu = tk.Menu(self, tearoff=0, bg=PANEL, fg=TEXT, activebackground=BLUE, activeforeground=TEXT,
-                       font=(BODY_FONT, 10), bd=0)
+        menu = ui.menu(self)
         for text, command in (("Benchmark / IA", self.open_gpu_agent), ("Resumo compacto", self.show_summary),
                               ("Console", self.open_console)):
             menu.add_command(label=text, command=command)
@@ -404,7 +401,7 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
             if not enabled:
                 from stop_mining import request_stop
                 result=request_stop([identifier],STATE_DIR,LOG_DIR,SETTINGS_PATH)
-                if result['requires_uac']:self.status.configure(text='● Parada solicitada · aprove o UAC para restaurar padrões',fg=ORANGE)
+                if result['requires_uac']:self.status.configure(text='● Parada solicitada · aprove o UAC para restaurar padrões',fg=WARNING)
                 return
             from start_mining import request_start
             from onboarding import confirm_author_wallet, read_settings
@@ -413,7 +410,7 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
             if enabled and not self.rig_service_running():
                 from onboarding import launch_rig_service
                 launch_rig_service()
-            self.status.configure(text='● Preferência salva · aguardando serviço do rig',fg=ORANGE)
+            self.status.configure(text='● Preferência salva · aguardando serviço do rig',fg=WARNING)
             if hasattr(self,'collector'):self.collector.rig_reader.detected_at=0
         except (OSError,ValueError,RuntimeError) as error:messagebox.showerror('Configuração da GPU',str(error),parent=self)
 
@@ -445,7 +442,7 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
             if not confirm_author_wallet(self,read_settings(SETTINGS_PATH),identifiers): return
             request_start(identifiers,STATE_DIR,LOG_DIR,SETTINGS_PATH)
             if not self.rig_service_running():launch_rig_service()
-            self.status.configure(text='● Mineração solicitada · aguardando partida das GPUs',fg=ORANGE)
+            self.status.configure(text='● Mineração solicitada · aguardando partida das GPUs',fg=WARNING)
         except (OSError,ValueError,RuntimeError) as error:messagebox.showerror('Iniciar rig',str(error),parent=self)
 
     def stop_mining(self,all_devices=False):
@@ -499,17 +496,21 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
             self.summary_window.lift()
             return
         window = self.summary_window = tk.Toplevel(self)
+        ui.apply_styles(window)
         window.title("HashPilot · Resumo ao vivo · "+APP_BUILD['version'])
         area = work_area(self)
         summary_width, summary_height = min(660, area[2]-area[0]-20), min(700, area[3]-area[1]-44)
         window.geometry(f"{summary_width}x{summary_height}")
         window.minsize(min(600,summary_width),min(620,summary_height))
-        window.configure(bg=BG)
+        window.configure(bg=SURFACE)
         window.iconphoto(True, self.app_icon)
-        self.label(window, "HashPilot", font=(TITLE_FONT, -24, "bold"), fg=TEAL).pack(anchor="w", padx=22, pady=(18, 2))
-        self.label(window, "TECH FERNANDES  /  RESUMO AO VIVO", fg=MUTED, font=(BODY_FONT, -11, "bold")).pack(anchor="w", padx=23, pady=(0, 14))
-        grid = tk.Frame(window, bg=PANEL, padx=16, pady=12)
-        grid.pack(fill="both", expand=True, padx=22)
+        margin = ui.px(window, 24)
+        ui.label(window, "HashPilot", "h1").pack(anchor="w", padx=margin, pady=(ui.px(window, 18), ui.px(window, 2)))
+        ui.label(window, "TECH FERNANDES  /  RESUMO AO VIVO", "overline", tone="tertiary").pack(anchor="w", padx=margin, pady=(0, ui.px(window, 14)))
+        buttons = tk.Frame(window, bg=SURFACE)
+        buttons.pack(side="bottom", fill="x", padx=margin, pady=ui.px(window, 16))
+        grid = ui.Card(window, padding="md")
+        grid.pack(fill="both", expand=True, padx=margin)
         grid.columnconfigure(1, weight=1)
         for row, (key, title) in enumerate([
             ("wallet", "Carteira de recebimento"), ("status", "Estado"), ("hash", "Hashrate"), ("gpu", "GPU · temperatura · consumo"),
@@ -518,15 +519,12 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
             ("week", "Projeção · próximos 7 dias"), ("month", "Projeção · próximos 30 dias"),
             ("payout_eta", "Próximo pagamento · estimativa"), ("payout_remaining", "Falta gerar para o mínimo"),
             ("price", "Cotação atual · 1 PRL"), ("thermal", "Controle térmico"), ("history", "Histórico permanente")]):
-            self.label(grid, title, bg=PANEL, fg=MUTED, anchor="w", font=(BODY_FONT, -12)).grid(row=row, column=0, sticky="w", pady=5)
-            value = self.label(grid, "—", bg=PANEL, fg=TEXT, font=(BODY_FONT, -13, "bold"), anchor="e", wraplength=325, justify="right")
-            value.grid(row=row, column=1, sticky="e", padx=(12, 0), pady=5)
+            ui.label(grid, title, "small", tone="secondary", bg=grid.bg).grid(row=row, column=0, sticky="w", pady=ui.px(window, 2))
+            value = ui.label(grid, "—", "label", bg=grid.bg, anchor="e", wraplength=ui.px(window, 325), justify="right")
+            value.grid(row=row, column=1, sticky="e", padx=(ui.px(window, 12), 0), pady=ui.px(window, 2))
             self.summary_values[key] = value
-        buttons = tk.Frame(window, bg=BG)
-        buttons.pack(fill="x", padx=22, pady=16)
         for text, command in (("Abrir painel", self.show_panel), ("Copiar carteira", self.copy_wallet), ("Console", self.open_console), ("Recolher", window.withdraw)):
-            tk.Button(buttons, text=text, command=command, bg=PANEL, fg=TEXT, activebackground=BORDER,
-                      activeforeground=TEXT, relief="flat", padx=12, pady=9, font=(BODY_FONT, -12)).pack(side="left", padx=(0, 8))
+            ui.Button(buttons, text, command, variant="secondary").pack(side="left", padx=(0, ui.px(window, 8)))
         self.refresh_summary()
 
     def copy_wallet(self):
@@ -654,140 +652,169 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
 
 
     def build(self):
+        ui.apply_styles(self)
         left,top,right,bottom = work_area(self)
         self.minsize(min(1120,right-left-16),min(620,bottom-top-44))
         self.restore_normal_geometry(self.geometry())
-        self.columnconfigure(0, weight=1)
-        self.rowconfigure(1, weight=1)
-        head = tk.Frame(self, bg=BG)
-        head.grid(row=0, column=0, sticky="ew", padx=16, pady=(8, 6))
+        self.columnconfigure(0, weight=0)
+        self.columnconfigure(1, weight=0)
+        self.columnconfigure(2, weight=1)
+        self.rowconfigure(0, weight=1)
         self.logo_images = {width:tk.PhotoImage(file=ASSET_DIR / f"logo-header-{width}.png") for width in (180,240,360)}
         self.logo_native_width = 180
         self.brand_logo = self.logo_images[180]
-        self.brand_logo_label = tk.Label(head,image=self.brand_logo,bg=BG)
-        self.brand_logo_label.pack(side="left",padx=(0,14))
-        product = tk.Frame(head, bg=BG)
-        product.pack(side="left")
-        self.label(product, "HashPilot "+APP_BUILD['version'], font=(TITLE_FONT, 20, "bold")).pack(anchor="w")
-        self.subtitle = self.label(product, "Mineração e recebimentos", fg=MUTED, font=(BODY_FONT, 9))
-        self.subtitle.pack(anchor="w")
-        controls = tk.Frame(head, bg=BG)
-        controls.pack(side="right")
-        self.status = self.label(controls, "● Aguardando sensores", fg=TEAL, font=(BODY_FONT, 10, "bold"))
-        self.status.pack(anchor="e", pady=(0, 4))
-        buttons = tk.Frame(controls, bg=BG)
-        buttons.pack(anchor="e")
-        # Primary actions stay visible; everything else lives in the "⋯" menu so the header fits narrow windows.
-        for text, command, color in (("Iniciar todas", self.start_rig, TEAL), ("Parar", self.stop_mining, '#9E3333'),
-                                     ("Configurações", self.configure_setup, PANEL), ("⋯", None, PANEL)):
-            button = tk.Button(buttons, text=text, command=command, bg=color, fg=TEXT, activebackground=BLUE,
-                               activeforeground=TEXT, relief="flat", padx=12 if text != "⋯" else 10, pady=4, cursor="hand2",
-                               highlightthickness=2, highlightbackground=BG, highlightcolor=TEAL,
-                               font=(BODY_FONT, 10 if text == "⋯" else 9, "bold"))
-            button.pack(side="left", padx=(5, 0))
-            if text == "⋯":
-                button.configure(command=lambda b=button: self.show_more_menu(b))
-                self.more_button = button
-        self.bind_all("<Control-comma>", lambda _: self.configure_setup())
-
-        style = ttk.Style(self)
-        style.theme_use("clam")
-        style.configure("TNotebook", background=BG, borderwidth=0)
-        style.configure("TNotebook.Tab", background=PANEL, foreground=MUTED, padding=(20, 7), font=(BODY_FONT, 10, "bold"))
-        style.map("TNotebook.Tab", background=[("selected", BORDER)], foreground=[("selected", TEAL)])
-        style.configure("Generated.Horizontal.TProgressbar", troughcolor=BG, background=TEAL, bordercolor=BORDER, lightcolor=TEAL, darkcolor=TEAL)
-        style.configure("Confirmed.Horizontal.TProgressbar", troughcolor=BG, background=BLUE, bordercolor=BORDER, lightcolor=BLUE, darkcolor=BLUE)
-        self.tabs = ttk.Notebook(self)
-        self.tabs.grid(row=1, column=0, sticky="nsew", padx=12)
-        self.overview_tab = tk.Frame(self.tabs, bg=BG)
-        self.live_tab = tk.Frame(self.tabs, bg=BG)
-        self.finance_tab = tk.Frame(self.tabs, bg=BG)
+        self.build_sidebar()
+        ui.Separator(self, vertical=True).grid(row=0, column=1, sticky="ns")
+        content = tk.Frame(self, bg=SURFACE)
+        content.grid(row=0, column=2, sticky="nsew")
+        content.columnconfigure(0, weight=1)
+        content.rowconfigure(1, weight=1)
+        self.content = content
+        self.build_header(content)
+        self.tabs = ttk.Notebook(content, style="Hidden.TNotebook")
+        self.tabs.grid(row=1, column=0, sticky="nsew", padx=ui.px(self, theme.CONTENT_PADDING))
+        self.overview_tab = tk.Frame(self.tabs, bg=SURFACE)
+        self.live_tab = tk.Frame(self.tabs, bg=SURFACE)
+        self.finance_tab = tk.Frame(self.tabs, bg=SURFACE)
         for tab, name in ((self.overview_tab, "Visão geral"), (self.live_tab, "GPU e mineração"), (self.finance_tab, "Rendimentos")):
             self.tabs.add(tab, text=name)
         self.build_overview()
         self.build_gpu()
         self.build_finance()
-        self.footer = self.label(self, "Histórico permanente · somente leitura", fg=MUTED, anchor="w", font=(BODY_FONT, 8))
-        self.footer.grid(row=2, column=0, sticky="ew", padx=16, pady=(5, 7))
+        self.footer = ui.label(content, "Histórico permanente · somente leitura", "caption", tone="tertiary")
+        self.footer.grid(row=2, column=0, sticky="ew", padx=ui.px(self, theme.CONTENT_PADDING), pady=(ui.px(self, 4), ui.px(self, 8)))
+        self.tabs.bind("<<NotebookTabChanged>>", self.sync_navigation, add="+")
         self.tabs.select(self.overview_tab)
+        self.sync_navigation()
         self.bind("<Configure>", self.adapt_layout, add="+")
         self.after_idle(self.adapt_layout)
+
+    def build_sidebar(self):
+        self.sidebar = side = tk.Frame(self, bg=SIDEBAR, width=ui.px(self, theme.SIDEBAR_WIDTH))
+        side.grid(row=0, column=0, sticky="ns")
+        side.grid_propagate(False)
+        side.pack_propagate(False)
+        # Rodapé primeiro (empilha de baixo para cima): placa da marca e, acima dela, Configurações.
+        plate = tk.Frame(side, bg=BRAND_NAVY, highlightthickness=1, highlightbackground=BORDER, highlightcolor=BORDER)
+        plate.pack(side="bottom", padx=ui.px(self, 16), pady=(ui.px(self, 8), ui.px(self, 16)))
+        self.brand_logo_label = tk.Label(plate, image=self.brand_logo, bg=BRAND_NAVY, bd=0)
+        self.brand_logo_label.pack()
+        ui.SidebarItem(side, "Configurações", self.configure_setup, icon="settings", subtitle="Ctrl+,").pack(
+            side="bottom", fill="x", padx=ui.px(self, 8), pady=1)
+        brand = tk.Frame(side, bg=SIDEBAR)
+        brand.pack(side="top", fill="x", padx=ui.px(self, 16), pady=(ui.px(self, 18), ui.px(self, 16)))
+        ui.brand_icon(brand, 32, bg=SIDEBAR).pack(side="left")
+        ui.label(brand, "HashPilot "+APP_BUILD['version'], "h3", bg=SIDEBAR).pack(side="left", padx=(ui.px(self, 10), 0))
+        self.nav_items = []
+        for index, (name, icon) in enumerate((("Visão geral", "home"), ("GPU e mineração", "gpu"), ("Rendimentos", "wallet"))):
+            item = ui.SidebarItem(side, name, lambda i=index: self.tabs.select(i), icon=icon)
+            item.pack(side="top", fill="x", padx=ui.px(self, 8), pady=1)
+            self.nav_items.append(item)
+
+    def build_header(self, content):
+        self.page_header = header = tk.Frame(content, bg=SURFACE)
+        header.grid(row=0, column=0, sticky="ew", padx=ui.px(self, theme.CONTENT_PADDING), pady=(ui.px(self, 18), ui.px(self, 12)))
+        titles = tk.Frame(header, bg=SURFACE)
+        titles.pack(side="left")
+        line = tk.Frame(titles, bg=SURFACE)
+        line.pack(anchor="w")
+        self.page_title = ui.label(line, "Visão geral", "h1")
+        self.page_title.pack(side="left")
+        self.status = ui.Pill(line, "● Aguardando sensores", "neutral")
+        self.status.pack(side="left", padx=(ui.px(self, 12), 0))
+        self.subtitle = ui.label(titles, "Mineração e recebimentos", "small", tone="secondary")
+        self.subtitle.pack(anchor="w", pady=(ui.px(self, 2), 0))
+        controls = tk.Frame(header, bg=SURFACE)
+        controls.pack(side="right")
+        # Ações principais ficam visíveis; o resto mora no menu "⋯" para o cabeçalho caber em janelas estreitas.
+        ui.Button(controls, "Iniciar todas", self.start_rig, variant="primary").pack(side="left")
+        ui.Button(controls, "Parar", self.stop_mining, variant="danger_ghost").pack(side="left", padx=(ui.px(self, 8), 0))
+        self.more_button = ui.Button(controls, "⋯", None, variant="ghost")
+        # O "⋯" da fonte de texto fica minúsculo; o glifo "mais" da fonte de ícones do Windows é o equivalente legível.
+        self.more_button.configure(command=lambda b=self.more_button: self.show_more_menu(b), text=ui.ICONS["more"], font=ui.icon_font(14))
+        self.more_button.pack(side="left", padx=(ui.px(self, 4), 0))
+        self.bind_all("<Control-comma>", lambda _: self.configure_setup())
 
     def build_overview(self):
         parent = self.overview_tab
         parent.columnconfigure(0, weight=1)
         parent.rowconfigure(2, weight=0)
+        gap = ui.px(self, 12)
         self.overview_values, self.overview_notes = {}, {}
-        cards = tk.Frame(parent, bg=BG)
-        cards.grid(row=0, column=0, sticky="ew", pady=(9, 6))
-        for index, (key, title, color) in enumerate((("hash", "HASHRATE", TEAL), ("temp", "TEMPERATURA", ORANGE), ("power", "CONSUMO DA GPU", BLUE), ("today", "GERADO HOJE · BRL", TEAL))):
-            frame = self.metric_card(cards, title, color, index, self.overview_values, self.overview_notes, key)
+        cards = tk.Frame(parent, bg=SURFACE)
+        cards.grid(row=0, column=0, sticky="ew", pady=(0, ui.px(self, 8)))
+        metrics = (("hash", "HASHRATE"), ("temp", "TEMPERATURA"), ("power", "CONSUMO DA GPU"), ("today", "GERADO HOJE · BRL"))
+        for index, (key, title) in enumerate(metrics):
+            frame = self.metric_card(cards, title, None, index, self.overview_values, self.overview_notes, key, count=len(metrics))
             if key == "today":
                 self.overview_today_title = frame.title_label
-        self.overview_thermal = self.label(parent, "Controle térmico: aguardando supervisor", fg=MUTED, anchor="w", font=(BODY_FONT, 9))
-        self.overview_thermal.grid(row=1, column=0, sticky="ew", padx=6, pady=(0, 6))
-        wallet_panel = tk.Frame(parent, bg=PANEL, padx=12, pady=8, highlightthickness=1, highlightbackground=BORDER)
-        wallet_panel.grid(row=3, column=0, sticky="ew", padx=4, pady=(0, 5))
-        self.label(wallet_panel, "CARTEIRA CONFIGURADA PARA RECEBER PEARL (PRL)", bg=PANEL, fg=TEAL, font=(BODY_FONT, 9, "bold")).pack(anchor="w", pady=(0, 4))
-        row = tk.Frame(wallet_panel, bg=PANEL)
+        self.overview_thermal = ui.label(parent, "Controle térmico: aguardando supervisor", "small", tone="secondary")
+        self.overview_thermal.grid(row=1, column=0, sticky="ew", pady=(0, ui.px(self, 8)))
+        wallet_panel = ui.Card(parent, padding="md")
+        wallet_panel.grid(row=3, column=0, sticky="ew", pady=(0, gap))
+        ui.label(wallet_panel, "CARTEIRA CONFIGURADA PARA RECEBER PEARL (PRL)", "overline", tone="secondary", bg=wallet_panel.bg).pack(anchor="w", pady=(0, ui.px(self, 6)))
+        row = tk.Frame(wallet_panel, bg=wallet_panel.bg)
         row.pack(fill="x")
-        actions = tk.Frame(row, bg=PANEL)
-        actions.pack(side="right", padx=(10, 0))
-        self.wallet_copy_button = tk.Button(actions, text="Copiar", command=self.copy_wallet, bg=BG, fg=TEXT, relief="flat", padx=10, pady=5, font=(BODY_FONT, 9))
-        self.wallet_copy_button.pack(side="left", padx=(0, 6))
-        self.wallet_pool_button = tk.Button(actions, text="Abrir na pool", command=self.open_wallet_pool, bg=BG, fg=TEXT, relief="flat", padx=10, pady=5, font=(BODY_FONT, 9))
+        actions = tk.Frame(row, bg=wallet_panel.bg)
+        actions.pack(side="right", padx=(ui.px(self, 10), 0))
+        self.wallet_copy_button = ui.Button(actions, "Copiar", self.copy_wallet, variant="secondary", size="sm", bg=wallet_panel.bg)
+        self.wallet_copy_button.pack(side="left", padx=(0, ui.px(self, 6)))
+        self.wallet_pool_button = ui.Button(actions, "Abrir na pool", self.open_wallet_pool, variant="secondary", size="sm", bg=wallet_panel.bg)
         self.wallet_pool_button.pack(side="left")
         self.wallet_var = tk.StringVar(value=WALLET)
-        self.wallet_entry = tk.Entry(row, textvariable=self.wallet_var, state="readonly", readonlybackground=PANEL, foreground=TEXT, selectbackground=BLUE,
-                                    selectforeground=TEXT, relief="flat", font=("Consolas", 10), width=64)
-        self.wallet_entry.pack(side="left", fill="x", expand=True, ipady=4)
-        self.support_status_label=self.label(wallet_panel,'Ajuda pela ferramenta: aguardando configuração',bg=PANEL,fg=MUTED,font=(BODY_FONT,9))
-        self.support_status_label.pack(anchor='w',pady=(3,0))
-        payout = tk.Frame(parent, bg=PANEL, padx=12, pady=10, highlightthickness=1, highlightbackground=BORDER)
-        payout.grid(row=4, column=0, sticky="ew", padx=4, pady=(0, 5))
+        self.wallet_entry = ui.TextField(row, self.wallet_var, mono=True, readonly=True, width=64)
+        self.wallet_entry.configure(highlightthickness=0, readonlybackground=CARD, bd=0)
+        self.wallet_entry.pack(side="left", fill="x", expand=True, ipady=ui.px(self, 4))
+        self.support_status_label = ui.label(wallet_panel, 'Ajuda pela ferramenta: aguardando configuração', "small", tone="tertiary", bg=wallet_panel.bg)
+        self.support_status_label.pack(anchor='w', pady=(ui.px(self, 4), 0))
+        payout = ui.Card(parent, padding="lg")
+        payout.grid(row=4, column=0, sticky="ew", pady=(0, gap))
         payout.columnconfigure((0, 1), weight=1, uniform="payout")
-        self.label(payout, "Próximo pagamento", bg=PANEL, font=(TITLE_FONT, 14, "bold")).grid(row=0, column=0, sticky="w")
-        self.payout_threshold = self.label(payout, "Mínimo: N/D", bg=PANEL, fg=MUTED, anchor="e", font=(BODY_FONT, 9))
+        bg = payout.bg
+        ui.label(payout, "Próximo pagamento", "h3", bg=bg).grid(row=0, column=0, sticky="w")
+        self.payout_threshold = ui.label(payout, "Mínimo: N/D", "small", tone="tertiary", bg=bg, anchor="e")
         self.payout_threshold.grid(row=0, column=1, sticky="e")
-        self.payout_state = self.label(payout, "Aguardando pool", bg=PANEL, fg=MUTED, anchor="w", font=(BODY_FONT, 9))
-        self.payout_state.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(2, 7))
-        left, right = tk.Frame(payout, bg=PANEL), tk.Frame(payout, bg=PANEL)
-        left.grid(row=2, column=0, sticky="nsew", padx=(0, 12))
-        right.grid(row=2, column=1, sticky="nsew", padx=(12, 0))
-        self.payout_generated_text = self.label(left, "Gerado na pool: N/D", bg=PANEL, anchor="w", font=(BODY_FONT, 9))
+        self.payout_state = ui.label(payout, "Aguardando pool", "small", tone="secondary", bg=bg)
+        self.payout_state.grid(row=1, column=0, columnspan=2, sticky="ew", pady=(ui.px(self, 2), ui.px(self, 8)))
+        left, right = tk.Frame(payout, bg=bg), tk.Frame(payout, bg=bg)
+        left.grid(row=2, column=0, sticky="nsew", padx=(0, ui.px(self, 12)))
+        right.grid(row=2, column=1, sticky="nsew", padx=(ui.px(self, 12), 0))
+        bar_height = ui.px(self, 6)
+        self.payout_generated_text = ui.label(left, "Gerado na pool: N/D", "small", tone="secondary", bg=bg)
         self.payout_generated_text.pack(fill="x")
-        generated_track=tk.Frame(left,bg=BG,height=12)
-        generated_track.pack(fill='x',pady=(3,4));generated_track.pack_propagate(False)
+        generated_track=tk.Frame(left,bg=bg,height=bar_height)
+        generated_track.pack(fill='x',pady=(ui.px(self,4),ui.px(self,6)));generated_track.pack_propagate(False)
         self.payout_generated_bar = ttk.Progressbar(generated_track, style="Generated.Horizontal.TProgressbar", maximum=100, mode="determinate")
-        self.payout_generated_bar.place(x=0,y=0,relwidth=1,height=12)
-        self.payout_confirmed_text = self.label(left, "Confirmado para envio: N/D", bg=PANEL, anchor="w", font=(BODY_FONT, 9))
+        self.payout_generated_bar.place(x=0,y=0,relwidth=1,height=bar_height)
+        self.payout_confirmed_text = ui.label(left, "Confirmado para envio: N/D", "small", tone="secondary", bg=bg)
         self.payout_confirmed_text.pack(fill="x")
-        confirmed_track=tk.Frame(left,bg=BG,height=12)
-        confirmed_track.pack(fill='x',pady=(3,4));confirmed_track.pack_propagate(False)
+        confirmed_track=tk.Frame(left,bg=bg,height=bar_height)
+        confirmed_track.pack(fill='x',pady=(ui.px(self,4),ui.px(self,6)));confirmed_track.pack_propagate(False)
         self.payout_confirmed_bar = ttk.Progressbar(confirmed_track, style="Confirmed.Horizontal.TProgressbar", maximum=100, mode="determinate")
-        self.payout_confirmed_bar.place(x=0,y=0,relwidth=1,height=12)
-        self.payout_remaining = self.label(left, "Pendente / restante: N/D", bg=PANEL, fg=MUTED, anchor="w", justify="left", font=(BODY_FONT, 9))
+        self.payout_confirmed_bar.place(x=0,y=0,relwidth=1,height=bar_height)
+        self.payout_remaining = ui.label(left, "Pendente / restante: N/D", "small", tone="secondary", bg=bg)
         self.payout_remaining.pack(fill="x")
-        self.payout_eta = self.label(right, "Estimativa: aguardando dados", bg=PANEL, fg=TEAL, font=(TITLE_FONT, 12, "bold"), anchor="w", justify="left")
+        self.payout_eta = ui.label(right, "Estimativa: aguardando dados", "h2", tone="accent", bg=bg)
         self.payout_eta.pack(fill="x")
-        self.payout_details = self.label(right, "", bg=PANEL, fg=MUTED, anchor="w", justify="left", font=(BODY_FONT, 9))
-        self.payout_details.pack(fill="x", pady=(4, 0))
-        self.payout_source = self.label(right, "Fonte: pool", bg=PANEL, fg=MUTED, anchor="w", font=(BODY_FONT, 8))
-        self.payout_source.pack(fill="x", pady=(4, 0))
-        self.payout_rule = self.label(payout, "Envio automático a cada hora após mínimo confirmado; crédito depende da rede.", bg=PANEL, fg=MUTED, anchor="w", font=(BODY_FONT, 8))
-        self.payout_rule.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(7, 0))
-        self.overview_activity = self.label(parent, "Atividade: aguardando dados", bg=PANEL, fg=MUTED, anchor="nw", justify="left", padx=12, pady=9, font=(BODY_FONT, 9))
+        self.payout_details = ui.label(right, "", "small", tone="secondary", bg=bg)
+        self.payout_details.pack(fill="x", pady=(ui.px(self, 4), 0))
+        self.payout_source = ui.label(right, "Fonte: pool", "caption", tone="tertiary", bg=bg)
+        self.payout_source.pack(fill="x", pady=(ui.px(self, 4), 0))
+        self.payout_rule = ui.label(payout, "Envio automático a cada hora após mínimo confirmado; crédito depende da rede.", "caption", tone="tertiary", bg=bg)
+        self.payout_rule.grid(row=3, column=0, columnspan=2, sticky="ew", pady=(ui.px(self, 8), 0))
+        self.overview_activity = ui.label(parent, "Atividade: aguardando dados", "small", tone="secondary", bg=CARD, anchor="nw", padx=12, pady=9)
         self.rig_cards=RigCards(parent,self.select_gpu,self.toggle_gpu,self.configure_gpu)
-        self.rig_cards.grid(row=2,column=0,sticky='nsew',padx=2,pady=(0,4))
-        self.overview_trends=tk.Frame(parent,bg=BG)
-        self.overview_trends.grid(row=5,column=0,sticky='nsew',padx=2,pady=(0,5))
+        self.rig_cards.grid(row=2,column=0,sticky='nsew',pady=(0,ui.px(self, 8)))
+        self.overview_trends=tk.Frame(parent,bg=SURFACE)
+        self.overview_trends.grid(row=5,column=0,sticky='nsew',pady=(0,ui.px(self, 4)))
         self.overview_trends.columnconfigure((0,1),weight=1,uniform='overview-trends')
         self.overview_trends.rowconfigure(0,weight=1)
         parent.rowconfigure(5,weight=1)
         self.overview_charts={}
-        for column,(key,title,color,unit,gap) in enumerate((('hash','Hashrate do rig · esta sessão',TEAL,'TH/s',180),('power','Potência do rig · esta sessão',BLUE,'W',10))):
-            chart=Chart(self.overview_trends,title,color,unit,max_gap=gap)
-            chart.grid(row=0,column=column,sticky='nsew',padx=3,pady=2)
+        half = ui.px(self, 6)
+        for column,(key,title,unit,gap_seconds) in enumerate((('hash','Hashrate do rig · esta sessão','TH/s',180),('power','Potência do rig · esta sessão','W',10))):
+            chart=Chart(self.overview_trends,title,theme.CHART[key],unit,max_gap=gap_seconds)
+            chart.grid(row=0,column=column,sticky='nsew',padx=(0,half) if column==0 else (half,0))
             self.overview_charts[key]=chart
 
 
@@ -861,7 +888,7 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
         quote_usd = safe_number(model.get("price_usd"))
         self.quote.configure(text="1 PRL = "+format_brl(price)+(f" · US$ {quote_usd:.4f}".replace(".",",") if quote_usd is not None else " · USD N/D")+"     |     1 BTC = "+format_brl(model.get("price_btc_brl")))
         stale = bool(model.get("errors") or model.get("btc_price_stale") or (model.get("price_at") and time.time()-model["price_at"]>180))
-        self.quote_note.configure(text="Cotação PRL: "+timestamp(model.get("price_at"))+" · BTC: "+timestamp(model.get("btc_price_at"))+" · Pool: "+timestamp(model.get("pool_at"))+(" · cache/desatualizado" if stale else " · atualização 60 s"),fg=ORANGE if stale else MUTED)
+        self.quote_note.configure(text="Cotação PRL: "+timestamp(model.get("price_at"))+" · BTC: "+timestamp(model.get("btc_price_at"))+" · Pool: "+timestamp(model.get("pool_at"))+(" · cache/desatualizado" if stale else " · atualização 60 s"),fg=WARNING if stale else TEXT_TERTIARY)
         self.finance_pay_summary.configure(text="Pagamento real em PRL · Carteira "+(wallet[:12]+"—"+wallet[-8:] if wallet else "não configurada")+" · Mínimo "+format_prl(threshold)+" · Falta "+format_prl(payout.get("remaining_prl"))+"\n"+str(payout.get("eta_label") or "Estimativa aguardando dados"))
         partial = model.get("periods",{}).get("day",{})
         support_note=' Ajuda opcional de 5% configurada já descontada da projeção.' if (model.get('support_contribution') or {}).get('enabled') else ''
@@ -933,29 +960,29 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
         stamp = miner.get("hashrate_at")
         age = now-stamp if stamp else None
         fresh = age is not None and -5 <= age <= 180 and data["miner_running"] is True and not miner.get("paused")
-        status, color = "Aguardando mineração", MUTED
+        status, color = "Aguardando mineração", TEXT_SECONDARY
         if data["miner_running"] is False:
-            status, color = ("Minerador indisponível" if data.get('miner_executable_available') is False else "Minerador parado"), ORANGE
+            status, color = ("Minerador indisponível" if data.get('miner_executable_available') is False else "Minerador parado"), WARNING
         elif data["miner_running"] is None:
-            status, color = "Estado do processo indisponível", ORANGE
+            status, color = "Estado do processo indisponível", WARNING
         elif "Reconectando" in miner["connection"]:
-            status, color = miner["connection"], ORANGE
+            status, color = miner["connection"], WARNING
         elif miner.get("paused"):
-            status, color = "GPU pausada para resfriar", ORANGE
+            status, color = "GPU pausada para resfriar", WARNING
         elif fresh:
-            status, color = "Minerando · dados atuais", TEAL
+            status, color = "Minerando · dados atuais", ACCENT
         elif stamp:
-            status, color = "Sem hashrate recente", ORANGE
+            status, color = "Sem hashrate recente", WARNING
         from mining_health import health
         mining_health=data.get('health') or health(miner,data['miner_running'],now)
         if fresh and not miner.get('paused'):
             status=mining_health['label']
-            color=TEAL if mining_health['state']=='confirmed' else ORANGE
+            color=ACCENT if mining_health['state']=='confirmed' else WARNING
         if data['miner_running'] is False:
             restored=(data.get('restoration') or {}).get('state')
-            if restored=='restored':status,color='Parada · padrões restaurados',TEAL
-            elif restored in ('partial','failed'):status,color='Parada · restauração incompleta',ORANGE
-            elif restored in ('pending','restoring'):status,color='Parando · restaurando padrões',ORANGE
+            if restored=='restored':status,color='Parada · padrões restaurados',ACCENT
+            elif restored in ('partial','failed'):status,color='Parada · restauração incompleta',WARNING
+            elif restored in ('pending','restoring'):status,color='Parando · restaurando padrões',WARNING
         self.status.configure(text="●  " + status, fg=color)
         hashrate = miner.get("hashrate") if fresh else None
         self.card_values["hash"].configure(text=fmt(hashrate, " TH/s", 1))
@@ -1001,8 +1028,8 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
         if self.winfo_height()<780:
             contribution='Ajuda 5% ativa' if support.get('ready') and support.get('enabled') else 'Ajuda 5% configurada' if support.get('enabled') or support.get('configured_enabled') else 'Sem ajuda adicional'
             self.overview_thermal.configure(text=self.overview_thermal.cget('text')+' · '+contribution)
-        if ignored:self.overview_thermal.configure(text=f"Limite: 6 GPUs · {len(ignored)} dispositivos adicionais fora do rig",fg=ORANGE)
-        self.details.configure(text=f"Núcleo {fmt(gpu.get('clocks.gr'), ' MHz')} · Memória {fmt(gpu.get('clocks.mem'), ' MHz')} · VRAM {fmt(gpu.get('memory.used'))} / {fmt(gpu.get('memory.total'), ' MiB')} · Eficiência {fmt(efficiency, ' TH/s/W', 3)}\nDriver {gpu.get('driver_version', '—')} · Estado {gpu.get('pstate', '—')} · Uso GPU {fmt(gpu.get('utilization.gpu'), '%')} / memória {fmt(gpu.get('utilization.memory'), '%')} · Média 15 min {fmt(miner.get('average_15m') if fresh else None, ' TH/s', 1)}\nControle térmico: {thermal_text}", wraplength=max(700, self.winfo_width()-60))
+        if ignored:self.overview_thermal.configure(text=f"Limite: 6 GPUs · {len(ignored)} dispositivos adicionais fora do rig",fg=WARNING)
+        self.details.configure(text=f"Núcleo {fmt(gpu.get('clocks.gr'), ' MHz')} · Memória {fmt(gpu.get('clocks.mem'), ' MHz')} · VRAM {fmt(gpu.get('memory.used'))} / {fmt(gpu.get('memory.total'), ' MiB')} · Eficiência {fmt(efficiency, ' TH/s/W', 3)}\nDriver {gpu.get('driver_version', '—')} · Estado {gpu.get('pstate', '—')} · Uso GPU {fmt(gpu.get('utilization.gpu'), '%')} / memória {fmt(gpu.get('utilization.memory'), '%')} · Média 15 min {fmt(miner.get('average_15m') if fresh else None, ' TH/s', 1)}\nControle térmico: {thermal_text}", wraplength=getattr(self, "layout_profile", {}).get("page_wrap") or max(700, self.winfo_width()-60))
         self.subtitle.configure(text=f"{len(devices)} NVIDIA · GPU {gpu.get('index',0)} selecionada · PRL" if devices else f"{gpu.get('name', 'GPU indisponível')} · PRL")
         for timestamp, rate in miner.get("rate_points", []):
             self.charts["hash"].add(timestamp, rate)

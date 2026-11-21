@@ -1,7 +1,7 @@
-# Capturas isoladas da v0.5.3
+# Capturas do visual atual (dados simulados)
 
 [Visão geral](overview.png) · [GPU e mineração](gpu-mining.png) · [Manifesto](capture-manifest.json)
 
-As imagens mostram a interface v0.5.3 com um snapshot de telemetria de uma RTX 3070 real. São fotografias de um momento, não um benchmark independente nem garantia de desempenho. O renderizador alterou explicitamente a apresentação: carteira, identificadores, saldo, pagamento, previsões, informações da pool e logs foram ocultados para privacidade. Não são capturas integrais inalteradas. O vídeo anterior permanece histórico da v0.1.0.
+As imagens mostram o visual atual (barra lateral, tema grafite) preenchido com dados simulados de demonstração: uma GPU fictícia (`test_rig_ui.fixture(1)`), sem saldos nem previsões. Não são medições de hardware, benchmark nem garantia de desempenho. A carteira exibida é a padrão do autor, já pública neste repositório; nenhum dado local do dono (snapshot, histórico, cache financeiro ou logs) foi lido. A validação física documentada continua sendo a da [RTX 3070](../../docs/performance/rtx3070.md). O vídeo anterior permanece histórico da v0.1.0.
 
-Para reproduzir no Windows: `mise exec -- python tools/capture_current_private.py`. O teste cria uma janela isolada e usa `PrintWindow` somente no handle dessa janela; não captura o desktop ou outras janelas, não envia entrada, não inicia coletores nem altera mineração ou GPU. O snapshot e os últimos 15 minutos de telemetria da GPU são lidos localmente; o SQLite é aberto somente para leitura, sem consulta financeira. As escritas do renderizador ficam em diretório temporário. Revise as imagens e o manifesto antes de publicar.
+Como foram geradas no Windows: janela isolada do painel montada pelo `build_harness` de `test_responsive_ui.py`, com `LOCALAPPDATA` temporário, sem coletores, sem rede e sem acionar botões, em 1500×960 px com DPI nativo; `tools/capture_window.ps1` usa `PrintWindow` somente no handle dessa janela. Revise as imagens e o manifesto antes de publicar.

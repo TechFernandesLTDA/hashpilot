@@ -1,6 +1,6 @@
 # Central de operação
 
-Abra **Configurações → Operação** (até a v0.5.7: **Configurar → Central de operação**). As três abas principais continuam disponíveis; a central reúne as operações menos frequentes.
+Abra **Configurações → Operação** (até a v0.5.7: **Configurar → Central de operação**). As três páginas principais continuam na barra lateral do painel; a central reúne as operações menos frequentes.
 
 ## Saúde e recuperação
 
@@ -36,4 +36,4 @@ O diagnóstico usa uma lista explícita de campos: modelo normalizado, driver, s
 
 ## Rendimentos
 
-A aba de rendimentos indica origem, idade e disponibilidade das fontes. Confirmado/pendente vêm da pool; BRL, USD e BTC são conversões. Os períodos históricos podem ser parciais. Valores futuros são projeções variáveis de hashrate, rede e cotação atuais, não dinheiro já creditado.
+A página Rendimentos indica origem, idade e disponibilidade das fontes. Confirmado/pendente vêm da pool; BRL, USD e BTC são conversões. Os períodos históricos podem ser parciais. Valores futuros são projeções variáveis de hashrate, rede e cotação atuais, não dinheiro já creditado.

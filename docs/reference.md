@@ -12,13 +12,13 @@ Abra **HashPilot** no menu Iniciar, ou execute `python monitor.py` nesta pasta u
 
 ## Organização da interface
 
-O painel principal tem três abas, com grids e tipografia adaptados à área útil da janela:
+O painel principal tem três páginas, escolhidas na barra lateral à esquerda (que também abre as **Configurações**, `Ctrl+,`), com grids e tipografia adaptados à área útil da janela. O cabeçalho mostra o nome da página, o estado da mineração, **Iniciar todas**, **Parar** e o menu **⋯** (benchmark, resumo compacto e console):
 
 1. **Visão geral:** indicadores principais, carteira de recebimento, saldo e progresso para o próximo pagamento.
 2. **GPU e mineração:** telemetria, controle térmico, quatro gráficos e atividade recente do minerador.
 3. **Rendimentos:** tabela em PRL, reais, dólares e BTC, períodos observados, projeções e gráfico financeiro.
 
-As abas não usam barras de rolagem; o layout foi preparado para HD a 4K, respeitando a área útil do sistema e o dimensionamento da janela. Valores em USD/BTC são equivalentes à cotação atual. O pagamento da pool continua sendo em PRL na carteira configurada.
+As páginas não usam barras de rolagem; o layout foi preparado para HD a 4K, respeitando a área útil do sistema e o dimensionamento da janela. Valores em USD/BTC são equivalentes à cotação atual. O pagamento da pool continua sendo em PRL na carteira configurada.
 
 Veja [pagamentos, carteira e previsão de recebimento](../PAGAMENTOS.md).
 

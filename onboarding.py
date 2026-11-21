@@ -11,9 +11,10 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 
 from config import DEFAULT_WALLET, SETTINGS_PATH, LOG_DIR
+from monitor_theme import SURFACE, TEXT_TERTIARY
+import ui_kit as ui
 
 ROOT = Path(__file__).resolve().parent
-BG, PANEL, TEXT, MUTED, TEAL = '#0A1628', '#10213B', '#FFFFFF', '#B9C7DC', '#12A98E'
 
 
 def read_settings(path: Path = SETTINGS_PATH) -> dict:
@@ -110,34 +111,41 @@ def run_gpu_setup(parent=None,selected_uuid=None,devices=None,path=SETTINGS_PATH
     if devices is None: devices=detect_nvidia_gpus(max_devices=6)
     resolved=resolve_devices(devices,settings,LOG_DIR)
     window=open_window(parent,container,'GPUs e carteiras — HashPilot')
-    window.configure(bg=BG)
-    width=min(1100,window.winfo_screenwidth()-60)
-    height=min(650,window.winfo_screenheight()-80)
+    ui.apply_styles(window)
+    window.configure(bg=SURFACE)
+    width=min(ui.px(window,1100),window.winfo_screenwidth()-60)
+    height=min(ui.px(window,650),window.winfo_screenheight()-80)
     window.geometry(f'{width}x{height}')
-    window.minsize(min(width,980),min(height,560))
+    window.minsize(min(width,ui.px(window,980)),min(height,ui.px(window,560)))
     window.columnconfigure(0,weight=1)
-    tk.Label(window,text='Seu rig NVIDIA · até 6 GPUs',bg=BG,fg=TEAL,font=('Segoe UI',-24,'bold'),anchor='w').grid(row=0,column=0,sticky='ew',padx=20,pady=(14,5))
-    tk.Label(window,text='Todas são ativadas por padrão. Cada placa pode usar a carteira global ou um endereço próprio. Desativar encerra somente o minerador daquela GPU.',bg=BG,fg=MUTED,font=('Segoe UI',-13),wraplength=width-40,justify='left',anchor='w').grid(row=1,column=0,sticky='ew',padx=20,pady=(0,8))
-    holder=tk.Frame(window,bg=BG)
-    holder.grid(row=2,column=0,sticky='nsew',padx=20)
+    margin=ui.px(window,32 if embedded(window) else 24)
+    ui.label(window,'Seu rig NVIDIA · até 6 GPUs','h1').grid(row=0,column=0,sticky='ew',padx=margin,pady=(ui.px(window,24 if embedded(window) else 20),ui.px(window,4)))
+    wrapped=[]
+    intro=ui.label(window,'Todas são ativadas por padrão. Cada placa pode usar a carteira global ou um endereço próprio. Desativar encerra somente o minerador daquela GPU.','body',tone='secondary',wraplength=width-2*margin)
+    intro.grid(row=1,column=0,sticky='ew',padx=margin,pady=(0,ui.px(window,12)));wrapped.append((intro,0))
+    holder=tk.Frame(window,bg=SURFACE)
+    holder.grid(row=2,column=0,sticky='nsew',padx=margin)
     holder.columnconfigure(0,weight=1)
-    window.rowconfigure(2,weight=1)
+    window.rowconfigure(2,weight=0 if embedded(window) else 1)
     rows=[]
     for index,device in enumerate(resolved):
-        frame=tk.Frame(holder,bg=PANEL,highlightbackground=TEAL if device['uuid']==selected_uuid else '#23446D',highlightthickness=1,padx=8,pady=5)
-        frame.grid(row=index,column=0,sticky='ew',pady=3)
-        frame.columnconfigure(2,weight=1)
+        card=ui.Card(holder,padding='md')
+        card.set_selected(device['uuid']==selected_uuid)
+        card.grid(row=index,column=0,sticky='ew',pady=ui.px(window,4))
+        card.columnconfigure(2,weight=1)
         enabled=tk.BooleanVar(value=device['enabled'])
         inherit=tk.BooleanVar(value=device['uses_default_wallet'])
         address=tk.StringVar(value=device['wallet'])
         title=device['name'].removeprefix('NVIDIA ').removeprefix('GeForce ')
         title=title if len(title)<=26 else title[:23]+'…'
-        tk.Checkbutton(frame,text=f"GPU {device['index']} · {title}",variable=enabled,bg=PANEL,fg=TEXT,selectcolor=BG,activebackground=PANEL,activeforeground=TEXT,font=('Segoe UI',-12,'bold'),anchor='w',width=32).grid(row=0,column=0,sticky='w')
-        tk.Label(frame,text=device['uuid'],bg=PANEL,fg=MUTED,font=('Consolas',-10),anchor='w').grid(row=1,column=0,columnspan=2,sticky='w')
-        inherit_box=tk.Checkbutton(frame,text='Carteira global',variable=inherit,bg=PANEL,fg=TEXT,selectcolor=BG,activebackground=PANEL,activeforeground=TEXT,font=('Segoe UI',-12))
-        inherit_box.grid(row=0,column=1,padx=8)
-        entry=tk.Entry(frame,textvariable=address,bg=BG,fg=TEXT,readonlybackground=PANEL,insertbackground=TEXT,relief='flat',font=('Consolas',-11))
-        entry.grid(row=0,column=2,rowspan=2,sticky='ew',ipady=9)
+        ui.check(card,f"GPU {device['index']} · {title}",enabled,bg=card.bg,font=ui.font('label'),width=29).grid(row=0,column=0,sticky='w')
+        uuid_label=ui.label(card,device['uuid'],'caption',tone='tertiary',bg=card.bg)
+        uuid_label.configure(font=ui.font('caption',mono=True))
+        uuid_label.grid(row=1,column=0,columnspan=2,sticky='w')
+        inherit_box=ui.check(card,'Carteira global',inherit,bg=card.bg)
+        inherit_box.grid(row=0,column=1,padx=ui.px(window,8))
+        entry=ui.TextField(card,address,mono=True)
+        entry.grid(row=0,column=2,rowspan=2,sticky='ew',ipady=ui.px(window,1))
         def mode(inherit=inherit,address=address,entry=entry,device=device):
             if inherit.get():
                 address.set(settings.get('wallet',DEFAULT_WALLET));entry.configure(state='readonly')
@@ -148,10 +156,15 @@ def run_gpu_setup(parent=None,selected_uuid=None,devices=None,path=SETTINGS_PATH
         if inherit.get(): entry.configure(state='readonly')
         rows.append((device['uuid'],enabled,inherit,address))
     if not resolved:
-        tk.Label(holder,text='Nenhuma GPU NVIDIA detectada. Confira o driver e nvidia-smi.',bg=BG,fg=MUTED,font=('Segoe UI',-16)).pack(pady=30)
+        ui.label(holder,'Nenhuma GPU NVIDIA detectada. Confira o driver e nvidia-smi.','body',tone='secondary').pack(pady=ui.px(window,30))
     support=tk.BooleanVar(value=settings.get('support_enabled') is True)
-    tk.Checkbutton(window,text='Ajuda opcional: até 5% do tempo conectado para a carteira do autor',variable=support,bg=BG,fg=TEXT,selectcolor=PANEL,activebackground=BG,activeforeground=TEXT,font=('Segoe UI',-13),anchor='w').grid(row=3,column=0,sticky='ew',padx=20,pady=(7,3))
-    tk.Label(window,text='Somente para carteiras diferentes da do autor. Pode ser desativada. Divide tempo conectado, sem garantir 5% das moedas nem retirar saldo. O serviço reinicia GPUs cuja carteira mudou; um rig parado só inicia pelo botão de mineração.',bg=BG,fg=MUTED,font=('Segoe UI',-12),wraplength=width-40,justify='left',anchor='w').grid(row=4,column=0,sticky='ew',padx=20,pady=3)
+    ui.check(window,'Ajuda opcional: até 5% do tempo conectado para a carteira do autor',support).grid(row=3,column=0,sticky='ew',padx=margin,pady=(ui.px(window,10),ui.px(window,2)))
+    help_note=ui.label(window,'Somente para carteiras diferentes da do autor. Pode ser desativada. Divide tempo conectado, sem garantir 5% das moedas nem retirar saldo. O serviço reinicia GPUs cuja carteira mudou; um rig parado só inicia pelo botão de mineração.','small',tone='secondary',wraplength=width-2*margin)
+    help_note.grid(row=4,column=0,sticky='ew',padx=margin,pady=(0,ui.px(window,8)));wrapped.append((help_note,0))
+    def fit(event):
+        if event.widget is window:
+            for item,extra in wrapped:item.configure(wraplength=max(ui.px(window,240),event.width-2*margin-extra))
+    if embedded(window):window.bind('<Configure>',fit,add='+')
     saved=False
     def finish():
         nonlocal saved
@@ -171,14 +184,19 @@ def run_gpu_setup(parent=None,selected_uuid=None,devices=None,path=SETTINGS_PATH
         except (OSError,ValueError,RuntimeError) as error:
             messagebox.showerror('Configurar GPUs',str(error),parent=window);return
         saved=True;window.destroy()
-    buttons=tk.Frame(window,bg=BG)
-    buttons.grid(row=5,column=0,sticky='e',padx=20,pady=12)
+    if not embedded(window): ui.Separator(window).grid(row=5,column=0,sticky='ew')
+    buttons=tk.Frame(window,bg=SURFACE)
+    buttons.grid(row=6,column=0,sticky='ew',padx=margin,pady=ui.px(window,16))
+    ui.Button(buttons,'Salvar GPUs e carteiras',finish,variant='primary').pack(side='right')
+    ui.Button(buttons,'Descartar' if embedded(window) else 'Cancelar',window.destroy,variant='ghost').pack(side='right',padx=(0,ui.px(window,8)))
     if not embedded(window):
-        tk.Button(buttons,text='Segurança do minerador',command=lambda:__import__('defender_setup').show_defender_setup(window),padx=10,pady=7).pack(side='left',padx=6)
-        tk.Button(buttons,text='Atualizações',command=lambda:__import__('app_update').show_update_setup(window),padx=10,pady=7).pack(side='left',padx=6)
-    tk.Button(buttons,text='Descartar' if embedded(window) else 'Cancelar',command=window.destroy,padx=14,pady=7).pack(side='left',padx=6)
-    tk.Button(buttons,text='Salvar GPUs e carteiras',command=finish,bg=TEAL,fg=TEXT,relief='flat',padx=16,pady=8).pack(side='left')
+        ui.Button(buttons,'Segurança do minerador',lambda:__import__('defender_setup').show_defender_setup(window),variant='ghost').pack(side='left')
+        ui.Button(buttons,'Atualizações',lambda:__import__('app_update').show_update_setup(window),variant='ghost').pack(side='left',padx=(ui.px(window,8),0))
     if embedded(window):return window
+    # Com seis GPUs a lista não cabe na altura padrão (não há rolagem): a janela cresce até o limite da tela.
+    window.update_idletasks()
+    needed=min(window.winfo_reqheight(),window.winfo_screenheight()-80)
+    if needed>height: window.geometry(f'{width}x{needed}')
     present(parent,window)
     return saved
 
@@ -189,11 +207,12 @@ def run_setup(parent=None,selected_uuid=None) -> bool:
     settings = read_settings()
     window = tk.Toplevel(parent) if parent else tk.Tk()
     window.title('Configurar HashPilot — Tech Fernandes')
-    window.configure(bg=BG)
-    width = min(760, window.winfo_screenwidth()-60)
-    height = min(640, window.winfo_screenheight()-80)
+    ui.apply_styles(window)
+    window.configure(bg=SURFACE)
+    width = min(ui.px(window,760), window.winfo_screenwidth()-60)
+    height = min(ui.px(window,680), window.winfo_screenheight()-80)
     window.geometry(f'{width}x{height}')
-    window.minsize(min(660,width), min(500,height))
+    window.minsize(min(ui.px(window,660),width), min(ui.px(window,500),height))
     window.columnconfigure(0, weight=1)
     try:
         window.iconbitmap(str(ROOT / 'assets/brand/hashpilot.ico'))
@@ -205,24 +224,31 @@ def run_setup(parent=None,selected_uuid=None) -> bool:
     mine = tk.BooleanVar(value=False)
     ai = tk.BooleanVar(value=bool(settings.get('ai_enabled')))
     support = tk.BooleanVar(value=settings.get('support_enabled',True) is True)
+    margin = ui.px(window,24)
+    wrap = width-2*margin
+    gap = ui.px(window,4)
 
-    def label(text, row, color=TEXT, size=11):
-        widget = tk.Label(window, text=text, bg=BG, fg=color, font=('Segoe UI',-int(size*1.3)), anchor='w', justify='left', wraplength=width-48)
-        widget.grid(row=row,column=0,sticky='ew',padx=24,pady=5)
+    def label(text, row, tone='primary', role='body', *, pady=None):
+        widget = ui.label(window, text, role, tone=tone, wraplength=wrap)
+        widget.grid(row=row,column=0,sticky='ew',padx=margin,pady=pady if pady is not None else gap)
         return widget
 
-    label('Bem-vindo ao HashPilot', 0, TEAL, 20)
-    label('Acompanhe sua GPU NVIDIA, a mineração e os recebimentos em PRL.',1)
-    label('Carteira global · padrão para todas as GPUs sem carteira própria',2,TEAL)
-    entry = tk.Entry(window,textvariable=wallet,font=('Consolas',-14),bg=PANEL,fg=TEXT,insertbackground=TEXT,relief='flat')
-    entry.grid(row=3,column=0,sticky='ew',padx=24,ipady=9)
-    label('O endereço preenchido por padrão pertence ao autor. Mantê-lo direciona a mineração iniciada por este assistente para o autor. Você pode substituí-lo pelo seu endereço público. Nunca informe seed ou chave privada.',4,MUTED,10)
-    support_frame=tk.Frame(window,bg=PANEL,padx=8,pady=5)
-    support_frame.grid(row=5,column=0,sticky='ew',padx=24,pady=4)
-    tk.Checkbutton(support_frame,text='Contribuir até 5% do tempo conectado para ajudar pela ferramenta',variable=support,bg=PANEL,fg=TEXT,selectcolor=BG,activebackground=PANEL,activeforeground=TEXT,anchor='w',font=('Segoe UI',-14)).pack(anchor='w')
-    tk.Label(support_frame,text='Após 57 min autorizados para sua carteira, até 3 min para o autor. Não retira saldo e não garante 5% das moedas; pausas e shares rejeitadas alteram os créditos. Desmarque para desativar.',bg=PANEL,fg=MUTED,justify='left',anchor='w',wraplength=width-72,font=('Segoe UI',-13)).pack(fill='x')
-    target=tk.Entry(support_frame,textvariable=tk.StringVar(value=DEFAULT_WALLET),state='readonly',readonlybackground=PANEL,fg=MUTED,relief='flat',font=('Consolas',-11))
-    target.pack(fill='x',pady=(2,0))
+    head = tk.Frame(window,bg=SURFACE)
+    head.grid(row=0,column=0,sticky='ew',padx=margin,pady=(ui.px(window,20),ui.px(window,4)))
+    ui.brand_icon(head,32,bg=SURFACE).pack(side='left',padx=(0,ui.px(window,12)))
+    ui.label(head,'Bem-vindo ao HashPilot','h1').pack(side='left')
+    label('Acompanhe sua GPU NVIDIA, a mineração e os recebimentos em PRL.',1,'secondary',pady=(0,ui.px(window,8)))
+    label('Carteira global · padrão para todas as GPUs sem carteira própria',2,'primary','label',pady=(ui.px(window,8),gap))
+    entry = ui.TextField(window,wallet,mono=True)
+    entry.grid(row=3,column=0,sticky='ew',padx=margin,ipady=ui.px(window,1))
+    label('O endereço preenchido por padrão pertence ao autor. Mantê-lo direciona a mineração iniciada por este assistente para o autor. Você pode substituí-lo pelo seu endereço público. Nunca informe seed ou chave privada.',4,'secondary','small')
+    support_frame=ui.Card(window,padding='md')
+    support_frame.grid(row=5,column=0,sticky='ew',padx=margin,pady=gap)
+    ui.check(support_frame,'Contribuir até 5% do tempo conectado para ajudar pela ferramenta',support,bg=support_frame.bg).pack(anchor='w')
+    ui.label(support_frame,'Após 57 min autorizados para sua carteira, até 3 min para o autor. Não retira saldo e não garante 5% das moedas; pausas e shares rejeitadas alteram os créditos. Desmarque para desativar.','small',tone='secondary',bg=support_frame.bg,wraplength=wrap-ui.px(window,36)).pack(fill='x',pady=(gap,ui.px(window,6)))
+    target=ui.TextField(support_frame,tk.StringVar(value=DEFAULT_WALLET),mono=True,readonly=True)
+    target.configure(fg=TEXT_TERTIARY)
+    target.pack(fill='x')
     def show_support(*_):
         if wallet.get().strip() and wallet.get().strip()!=DEFAULT_WALLET:
             support_frame.grid()
@@ -230,32 +256,34 @@ def run_setup(parent=None,selected_uuid=None) -> bool:
             support_frame.grid_remove()
     wallet.trace_add('write',show_support)
     show_support()
-    label('Pasta dos logs do SRBMiner',6,TEAL)
-    logrow=tk.Frame(window,bg=BG)
-    logrow.grid(row=7,column=0,sticky='ew',padx=24)
+    label('Pasta dos logs do SRBMiner',6,'primary','label',pady=(ui.px(window,8),gap))
+    logrow=tk.Frame(window,bg=SURFACE)
+    logrow.grid(row=7,column=0,sticky='ew',padx=margin)
     logrow.columnconfigure(0,weight=1)
-    tk.Entry(logrow,textvariable=logs,bg=PANEL,fg=TEXT,insertbackground=TEXT,relief='flat').grid(row=0,column=0,sticky='ew',ipady=7)
+    ui.TextField(logrow,logs).grid(row=0,column=0,sticky='ew',ipady=ui.px(window,1))
     def browse():
         chosen=filedialog.askdirectory(parent=window,title='Pasta dos logs')
         if chosen: logs.set(chosen)
-    tk.Button(logrow,text='Escolher',command=browse).grid(row=0,column=1,padx=(8,0))
-    check=tk.Checkbutton(window,text='Instalar e iniciar o minerador NVIDIA',variable=mine,bg=BG,fg=TEXT,selectcolor=PANEL,activebackground=BG,activeforeground=TEXT,anchor='w',font=('Segoe UI',-14))
-    check.grid(row=8,column=0,sticky='ew',padx=20,pady=(10,3))
+    ui.Button(logrow,'Escolher',browse,variant='secondary').grid(row=0,column=1,padx=(ui.px(window,8),0))
+    check=ui.check(window,'Instalar e iniciar o minerador NVIDIA',mine)
+    check.grid(row=8,column=0,sticky='ew',padx=margin,pady=(ui.px(window,12),gap))
     if os.name != 'nt': check.configure(state='disabled')
-    label('O hash oficial confirma a origem, não garante segurança. Uma detecção do Defender precisa de análise. Exceção opcional somente com decisão do administrador.',9,MUTED,10)
-    tk.Button(window,text='Segurança do minerador / permissão do Defender',command=lambda:__import__('defender_setup').show_defender_setup(window)).grid(row=10,column=0,sticky='w',padx=24,pady=5)
-    tk.Button(window,text='Atualizações',command=lambda:__import__('app_update').show_update_setup(window)).grid(row=10,column=0,sticky='e',padx=24,pady=5)
-    ai_check=tk.Checkbutton(window,text='Ativar sugestões de IA',variable=ai,bg=BG,fg=TEXT,selectcolor=PANEL,activebackground=BG,activeforeground=TEXT,anchor='w',font=('Segoe UI',-14))
-    ai_check.grid(row=11,column=0,sticky='w',padx=20,pady=4)
+    label('O hash oficial confirma a origem, não garante segurança. Uma detecção do Defender precisa de análise. Exceção opcional somente com decisão do administrador.',9,'secondary','small')
+    links=tk.Frame(window,bg=SURFACE)
+    links.grid(row=10,column=0,sticky='ew',padx=margin-ui.px(window,15),pady=gap)
+    ui.Button(links,'Segurança do minerador / permissão do Defender',lambda:__import__('defender_setup').show_defender_setup(window),variant='ghost').pack(side='left')
+    ui.Button(links,'Atualizações',lambda:__import__('app_update').show_update_setup(window),variant='ghost').pack(side='right')
+    ai_row=tk.Frame(window,bg=SURFACE)
+    ai_row.grid(row=11,column=0,sticky='ew',padx=(margin,margin-ui.px(window,15)),pady=gap)
+    ai_check=ui.check(ai_row,'Ativar sugestões de IA',ai)
+    ai_check.pack(side='left')
     def choose_ai():
         __import__('ai_setup').show_ai_setup(window)
         ai.set(read_settings().get('ai_enabled') is True)
-    tk.Button(window,text='Escolher provedor de IA',command=choose_ai).grid(row=11,column=0,sticky='e',padx=24)
-    label('Escolha OpenRouter, OpenCode ou Ollama local no assistente de IA. Cloud Free poupa CPU/RAM do rig.',12,MUTED,10)
+    ui.Button(ai_row,'Escolher provedor de IA',choose_ai,variant='ghost').pack(side='right')
+    label('Escolha OpenRouter, OpenCode ou Ollama local no assistente de IA. Cloud Free poupa CPU/RAM do rig.',12,'secondary','small')
     window.rowconfigure(13,weight=1)
-    tk.Button(window,text='Central de operação · saúde, perfis, backups e diagnóstico',command=lambda:__import__('operations_ui').show_operations(window)).grid(row=13,column=0,sticky='w',padx=24,pady=5)
-    buttons=tk.Frame(window,bg=BG)
-    buttons.grid(row=14,column=0,sticky='e',padx=24,pady=12)
+    ui.Button(window,'Central de operação · saúde, perfis, backups e diagnóstico',lambda:__import__('operations_ui').show_operations(window),variant='ghost').grid(row=13,column=0,sticky='nw',padx=margin-ui.px(window,15),pady=gap)
     def finish():
         nonlocal saved
         try:
@@ -271,8 +299,11 @@ def run_setup(parent=None,selected_uuid=None) -> bool:
             return
         saved=True
         window.destroy()
-    tk.Button(buttons,text='Cancelar',command=window.destroy,padx=12,pady=7).pack(side='left',padx=6)
-    tk.Button(buttons,text='Salvar e abrir painel',command=finish,bg=TEAL,fg=TEXT,relief='flat',padx=16,pady=8).pack(side='left')
+    ui.Separator(window).grid(row=14,column=0,sticky='ew')
+    buttons=tk.Frame(window,bg=SURFACE)
+    buttons.grid(row=15,column=0,sticky='ew',padx=margin,pady=ui.px(window,16))
+    ui.Button(buttons,'Salvar e abrir painel',finish,variant='primary').pack(side='right')
+    ui.Button(buttons,'Cancelar',window.destroy,variant='ghost').pack(side='right',padx=(0,ui.px(window,8)))
     entry.focus_set()
     if parent:
         window.transient(parent)
