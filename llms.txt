@@ -6,6 +6,8 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 
 ## Read first
 
+- [v0.5.14 release notes](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/releases/v0.5.14.md): SRBMiner 3.8.6, 3.8.7 and 3.8.9 in the verified catalog (default install stays 3.8.0; no measured efficiency gain claimed), optional Rust rig service selected with `Iniciar-Rig.ps1 -Motor Rust` (Python remains the default; the release package ships no binary), pool connection status fix, panel robustness fixes and the Rust `zip` dependency update.
+
 - [v0.5.13 chart fix](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/releases/v0.5.13.md): bounded canvas item count during repeated live redraws, readable time axes, preserved history and independent miner lifecycle.
 
 - [VRAM and Pearl optimization analysis](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/vram-pearl-rtx3070.md): measured GPU-wide VRAM versus process RAM, WDDM attribution limits, real batch-size controls in an alternative host, and a proposed benchmark. No gains from filling VRAM or alternative backend integration are claimed.
