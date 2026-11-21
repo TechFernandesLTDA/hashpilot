@@ -828,6 +828,17 @@ impl Loop<'_> {
                                 memory_supported.iter().map(|value| *value as f64).collect();
                             let mut explorer = MemoryExplorer::new(&candidates, target);
                             explorer.best_mhz = best.filter(|best| candidates.contains(best));
+                            // Reinício do minerador ou do serviço não refaz a exploração antes
+                            // da janela de 6 h.
+                            if explorer.best_mhz.is_some()
+                                && let Some(explored) = numeric(
+                                    self.remembered()
+                                        .get("memory_explored_at")
+                                        .unwrap_or(&Value::Null),
+                                )
+                            {
+                                explorer.explored_at = explored;
+                            }
                             // Só no serviço: reexplorar cada vez menos enquanto o melhor se confirma.
                             explorer.reexplore_backoff = self.hooks.memory_backoff;
                             self.memory_explorer = Some(explorer);
@@ -1075,7 +1086,14 @@ impl Loop<'_> {
                         && explorer.queue.is_empty()
                     {
                         let scores = memory_scores(explorer);
-                        self.remember(vec![("memory_mhz", json!(best)), ("memory_scores", scores)]);
+                        let mut values = vec![("memory_mhz", json!(best))];
+                        if scores.as_object().is_some_and(|scores| !scores.is_empty()) {
+                            values.push(("memory_scores", scores));
+                        }
+                        if explorer.explored_at.is_finite() {
+                            values.push(("memory_explored_at", json!(explorer.explored_at)));
+                        }
+                        self.remember(values);
                     }
                     let explorer = self.memory_explorer.as_ref().expect("explorador");
                     let unreachable: BTreeSet<i64> = explorer

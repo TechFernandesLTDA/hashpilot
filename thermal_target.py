@@ -99,6 +99,11 @@ class MemoryExplorer:
         if len(self.candidates) < 2:
             return None
         if not self.queue and self.current_mhz is None:
+            if (self.best_mhz is not None and self.best_mhz not in self.unreachable
+                    and 0 <= now - self.explored_at < MEMORY_REEXPLORE_S):
+                # Controlador reiniciado dentro da janela: retoma o melhor memorizado, sem rodada nova.
+                self._begin(self.best_mhz, now)
+                return self.best_mhz
             self._start_round(now)
         if self.current_mhz is None:
             return self._next(now)

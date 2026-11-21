@@ -438,6 +438,15 @@ impl MemoryExplorer {
             return None;
         }
         if self.queue.is_empty() && self.current_mhz.is_none() {
+            if let Some(best) = self.best_mhz
+                && !self.is_unreachable(best)
+                && (0.0..self.reexplore_after_s).contains(&(now - self.explored_at))
+            {
+                // Controlador reiniciado dentro da janela: retoma o melhor memorizado,
+                // sem rodada nova.
+                self.begin(best, now);
+                return Some(best);
+            }
             self.start_round(now);
         }
         let Some(current) = self.current_mhz else {
@@ -595,6 +604,30 @@ fn python_mean(values: &[f64]) -> f64 {
 #[cfg(test)]
 mod tests {
     use super::*;
+
+    #[test]
+    fn restart_inside_window_resumes_remembered_best() {
+        let mut explorer = MemoryExplorer::new(&[6801.0, 5001.0, 810.0], 76.0);
+        explorer.best_mhz = Some(5001.0);
+        explorer.explored_at = 1000.0;
+        let step = |explorer: &mut MemoryExplorer, now: f64| {
+            explorer.step(now, Some(75.0), Some(78.0), Some(0.0), Some(5001.0), None)
+        };
+        assert_eq!(
+            explorer.step(4600.0, Some(75.0), Some(78.0), Some(0.0), None, None),
+            Some(5001.0)
+        );
+        assert!(explorer.queue.is_empty());
+        assert_eq!(step(&mut explorer, 6000.0), None);
+        assert_eq!(explorer.explored_at, 1000.0);
+        step(&mut explorer, 1000.0 + MEMORY_REEXPLORE_S + 1.0);
+        assert_eq!(explorer.queue, vec![6801.0, 810.0]);
+
+        let mut fresh = MemoryExplorer::new(&[6801.0, 5001.0, 810.0], 76.0);
+        fresh.best_mhz = Some(5001.0);
+        fresh.step(50.0, Some(75.0), Some(78.0), Some(0.0), None, None);
+        assert_eq!(fresh.queue, vec![6801.0, 810.0]);
+    }
 
     #[test]
     fn formatting_matches_python_rounding() {
