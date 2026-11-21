@@ -1250,6 +1250,9 @@ def control(args,state_dir,monitor_state_dir):
                     if len(memory_supported)>=2:
                         best=numeric(remembered().get("memory_mhz"))
                         memory_explorer=MemoryExplorer(memory_supported,target,best_mhz=best if best in memory_supported else None)
+                        # Reinício do minerador ou do serviço não refaz a exploração antes da janela de 6 h.
+                        explored=numeric(remembered().get("memory_explored_at"))
+                        if explored is not None and memory_explorer.best_mhz is not None:memory_explorer.explored_at=explored
                     # Partida segura: trava no último clock bom antes do boost de fábrica aquecer a placa.
                     running=sample["clock_mhz"] if (sample["clock_mhz"] or 0)>=1000 else None
                     locked=actuator.apply_reduction(gpu,sample,min(start_clock(),running or float("inf")),startup=True)
@@ -1331,7 +1334,9 @@ def control(args,state_dir,monitor_state_dir):
                         target_controller.ceiling_mhz=None
                         target_controller.pending_up=None
                     if memory_explorer.best_mhz is not None and not memory_explorer.queue:
-                        remember(memory_mhz=memory_explorer.best_mhz,memory_scores={str(int(k)):round(v,3) for k,v in memory_explorer.scores.items()})
+                        scores={str(int(k)):round(v,3) for k,v in memory_explorer.scores.items()}
+                        remember(memory_mhz=memory_explorer.best_mhz,**({"memory_scores":scores} if scores else {}),
+                                 **({"memory_explored_at":memory_explorer.explored_at} if math.isfinite(memory_explorer.explored_at) else {}))
                     memory_info={"testing_mhz":memory_explorer.current_mhz,"best_mhz":memory_explorer.best_mhz,
                                  "pending":[int(c) for c in memory_explorer.queue],
                                  "unreachable":sorted(int(c) for c in memory_explorer.unreachable),

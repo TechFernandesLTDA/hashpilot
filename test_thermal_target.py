@@ -137,6 +137,32 @@ class MemoryExplorerTests(unittest.TestCase):
         self.assertEqual(e.step(settle+2,75,90,1),5001.0)  # erro novo -> próximo candidato
         self.assertEqual(e.scores[first],0.0)
 
+    def test_restart_inside_window_resumes_remembered_best_without_new_round(self):
+        # 21/11/2026: cada reinício do minerador refazia a rodada e passava 11 min em 810 MHz.
+        e=MemoryExplorer([6801,5001,810],76,best_mhz=5001.0);e.explored_at=1000.0
+        self.assertEqual(e.step(1000.0+3600,75,78.0,0),5001.0)
+        self.assertEqual((e.queue,e.current_mhz),([],5001.0))
+        for now in range(4700,4700+3000,2):self.assertIsNone(e.step(float(now),75,78.0,0,5001.0))
+        self.assertEqual(e.explored_at,1000.0)
+        # Passadas as 6 h desde a última rodada, a reexploração volta a acontecer.
+        e.step(1000.0+6*3600+1,75,78.0,0,5001.0)
+        self.assertEqual(e.queue,[6801.0,810.0])
+
+    def test_restart_after_window_or_without_record_starts_a_round(self):
+        e=MemoryExplorer([6801,5001,810],76,best_mhz=5001.0);e.explored_at=1000.0
+        self.assertEqual(e.step(1000.0+6*3600,75,78.0,0),5001.0);self.assertEqual(e.queue,[6801.0,810.0])
+        e=MemoryExplorer([6801,5001,810],76,best_mhz=5001.0)
+        e.step(50.0,75,78.0,0);self.assertEqual(e.queue,[6801.0,810.0])
+        # Relógio do sistema voltou para trás: registro no futuro não vale.
+        e=MemoryExplorer([6801,5001,810],76,best_mhz=5001.0);e.explored_at=9000.0
+        e.step(50.0,75,78.0,0);self.assertEqual(e.queue,[6801.0,810.0])
+
+    def test_resumed_best_that_the_driver_refuses_falls_back_to_a_round(self):
+        e=MemoryExplorer([6801,5001,810],76,best_mhz=5001.0);e.explored_at=1000.0
+        e.step(2000.0,75,78.0,0)
+        e.step(2020.0,75,78.0,0,6801.0)
+        self.assertIn(5001.0,e.unreachable);self.assertIsNone(e.best_mhz);self.assertNotEqual(e.current_mhz,5001.0)
+
     def test_starts_with_remembered_best_and_reexplores_after_six_hours(self):
         e=MemoryExplorer([6801,5001,405],78,best_mhz=5001)
         self.assertEqual(e.step(0,75,80,0),5001.0)
