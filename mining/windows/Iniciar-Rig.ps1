@@ -17,6 +17,13 @@ if($LegacyUuid -and $LegacyUuid -notmatch '^GPU-[A-Za-z0-9-]{1,100}$'){throw 'UU
 $motorFile=Join-Path $state 'rig-motor.txt'
 if(-not $Motor){$Motor=if((Test-Path -LiteralPath $motorFile) -and ((Get-Content -LiteralPath $motorFile -Raw).Trim() -ieq 'Rust')){'Rust'}else{'Python'}}
 $rustExe=Join-Path $project 'rust\target\release\hashpilot.exe'
+# A instalacao pelo pacote nao traz o executavel compilado. Sem ele aqui, usa o ultimo
+# hashpilot.exe que serviu este rig (gravado abaixo, na partida), em vez de falhar calado.
+$rustExeFile=Join-Path $state 'rig-rust-exe.txt'
+if($Motor -eq 'Rust' -and -not (Test-Path -LiteralPath $rustExe) -and (Test-Path -LiteralPath $rustExeFile)){
+ $savedExe=(Get-Content -LiteralPath $rustExeFile -Raw -Encoding UTF8).Trim()
+ if($savedExe -and [IO.Path]::GetFileName($savedExe) -ieq 'hashpilot.exe' -and (Test-Path -LiteralPath $savedExe)){$rustExe=$savedExe}
+}
 $principal=[Security.Principal.WindowsPrincipal]::new([Security.Principal.WindowsIdentity]::GetCurrent())
 if(-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)){
  $arguments='-NoProfile -ExecutionPolicy Bypass -File "'+$PSCommandPath+'" -Python "'+$Python+'"'
@@ -27,11 +34,20 @@ if(-not $principal.IsInRole([Security.Principal.WindowsBuiltInRole]::Administrat
  Start-Process -FilePath (Join-Path $env:WINDIR 'System32\WindowsPowerShell\v1.0\powershell.exe') -ArgumentList $arguments -Verb RunAs -WindowStyle Hidden
  exit
 }
+# Daqui em diante a janela e elevada e oculta: sem este registro, a falha some sem deixar rastro.
+trap{
+ try{
+  $diagnostics=Join-Path $logs 'diagnostics'
+  New-Item -ItemType Directory -Path $diagnostics -Force | Out-Null
+  Add-Content -LiteralPath (Join-Path $diagnostics 'iniciar-rig.log') -Value ((Get-Date -Format 'o')+' '+$_.Exception.Message) -Encoding UTF8
+ }catch{}
+ break
+}
 $script=Join-Path $project 'rig.py'
 $miner=(& $Python (Join-Path $project 'miner_update.py') --path).Trim()
 if($LASTEXITCODE -ne 0){throw 'Minerador selecionado nao passou na verificacao; confira a Central de operacao.'}
 if(-not (Test-Path -LiteralPath $script) -or -not (Test-Path -LiteralPath $miner)){throw 'Reinstale o minerador pelo assistente antes de iniciar o rig.'}
-if($Motor -eq 'Rust' -and -not (Test-Path -LiteralPath $rustExe)){throw 'Servico em Rust nao compilado: rode cargo build --release -p hashpilot-cli na pasta rust.'}
+if($Motor -eq 'Rust' -and -not (Test-Path -LiteralPath $rustExe)){throw ('Servico em Rust nao encontrado em '+$rustExe+': rode cargo build --release -p hashpilot-cli na pasta rust, ou inicie com -Motor Python.')}
 New-Item -ItemType Directory -Path $state,$logs -Force | Out-Null
 $registry=Join-Path $state 'rig-manager.json'
 if(Test-Path -LiteralPath $registry){
@@ -74,6 +90,7 @@ if($LegacyUuid){$arguments+=@('--legacy-uuid',$LegacyUuid)}
 if($ReferenciaRTX3070){$arguments+='--reference-rtx3070'}
 [IO.File]::WriteAllText($motorFile,$Motor,[Text.UTF8Encoding]::new($false))
 if($Motor -eq 'Rust'){
+ [IO.File]::WriteAllText($rustExeFile,$rustExe,[Text.UTF8Encoding]::new($false))
  # Mesmos argumentos do rig.py; o Rust ainda inicia gpu_agent.py e contribution.py com este Python.
  $arguments=@('rig')+$arguments[1..($arguments.Count-1)]+@('--project-dir',('"'+$project+'"'))
  $executable=$rustExe

@@ -242,6 +242,35 @@ class ServiceScriptInterpreterTests(unittest.TestCase):
                                         capture_output=True, text=True, timeout=30)
                 self.assertEqual(Path(result.stdout.strip()).name, "python.exe", script)
 
+    def test_installed_copy_without_rust_build_reuses_the_last_service_executable(self):
+        """The packaged install has no rust/target: the panel's start used to abort in a hidden window."""
+        import subprocess
+        text = (Path(__file__).resolve().parent/"mining/windows/Iniciar-Rig.ps1").read_text(encoding="utf-8-sig")
+        lines = text.splitlines()
+        first = next(i for i, item in enumerate(lines) if item.startswith("$rustExe=Join-Path"))
+        last = next(i for i, item in enumerate(lines) if item.startswith("$principal="))
+        block = "\n".join(lines[first:last])
+        self.assertIn("[IO.File]::WriteAllText($rustExeFile,$rustExe", text)
+        self.assertLess(text.index("trap{"), text.index("$miner=(&"))
+        with tempfile.TemporaryDirectory() as temporary:
+            state = Path(temporary)/"state"; project = Path(temporary)/"installed"
+            built = Path(temporary)/"repo/rust/target/release/hashpilot.exe"
+            state.mkdir(); project.mkdir(); built.parent.mkdir(parents=True); built.write_bytes(b"")
+            def resolve(motor):
+                command = f"$state='{state}'; $project='{project}'; $Motor='{motor}'\n{block}\nWrite-Output $rustExe"
+                result = subprocess.run(["powershell.exe", "-NoProfile", "-Command", command],
+                                        capture_output=True, text=True, timeout=30)
+                return Path(result.stdout.strip())
+            missing = project/"rust/target/release/hashpilot.exe"
+            self.assertEqual(resolve("Rust"), missing)
+            (state/"rig-rust-exe.txt").write_text(str(Path(temporary)/"other.exe"), encoding="utf-8")
+            self.assertEqual(resolve("Rust"), missing)
+            (state/"rig-rust-exe.txt").write_text(str(built), encoding="utf-8")
+            self.assertEqual(resolve("Rust"), built)
+            self.assertEqual(resolve("Python"), missing)
+            missing.parent.mkdir(parents=True); missing.write_bytes(b"")
+            self.assertEqual(resolve("Rust"), missing)
+
 
 class CommandLineCacheTests(unittest.TestCase):
 
