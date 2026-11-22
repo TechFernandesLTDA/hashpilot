@@ -1822,7 +1822,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -2071,7 +2071,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -4728,7 +4728,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -7504,7 +7504,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -9379,7 +9379,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -12760,7 +12760,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -16798,7 +16798,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -20185,7 +20185,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -24307,7 +24307,7 @@
      ],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -29069,7 +29069,7 @@
      ],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -33714,7 +33714,7 @@
      ],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -34918,7 +34918,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -37485,7 +37485,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -38625,7 +38625,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -40009,7 +40009,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -43576,7 +43576,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -45534,7 +45534,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -46308,7 +46308,7 @@
      "processed_request_ids": [],
      "reference_uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -47007,7 +47007,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -47446,7 +47446,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -48859,7 +48859,7 @@
      "processed_request_ids": [],
      "reference_uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -49509,7 +49509,7 @@
      "processed_request_ids": [],
      "reference_uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -50716,7 +50716,7 @@
      "processed_request_ids": [],
      "reference_uuid": "GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75",
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -56457,7 +56457,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -59192,7 +59192,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -60202,7 +60202,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -61259,7 +61259,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -62293,7 +62293,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -63185,7 +63185,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -64134,7 +64134,7 @@
      ],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -68315,7 +68315,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -71169,7 +71169,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -72145,7 +72145,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -75836,7 +75836,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -79004,7 +79004,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -81088,7 +81088,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -82984,7 +82984,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -84118,7 +84118,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -85232,7 +85232,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -88634,7 +88634,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
@@ -90290,7 +90290,7 @@
      "processed_request_ids": [],
      "reference_uuid": null,
      "software": {
-      "version": "v0.5.18",
+      "version": "v0.5.19",
       "revision": null,
       "source": "source"
      },
