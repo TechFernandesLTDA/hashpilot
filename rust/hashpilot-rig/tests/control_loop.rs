@@ -1,6 +1,10 @@
 //! Paridade do laço do supervisor (`gpu_agent.control`) contra o golden gerado pelo Python
 //! real com os mesmos roteiros: nvidia-smi falso, relógio virtual, processo do minerador e
 //! leitura do minerador simulados. Nada aqui toca a GPU real.
+//!
+//! Só no Windows: o laço toma a posse da GPU com a trava de arquivo do Win32
+//! (`win32::lock_first_byte`), que fora dele sempre recusa.
+#![cfg(windows)]
 
 use std::path::{Path, PathBuf};
 use std::sync::{Arc, Mutex};

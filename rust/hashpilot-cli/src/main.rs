@@ -517,6 +517,20 @@ fn gpu_agent_command(arguments: &[String]) -> Result<Value, Failure> {
     }
 }
 
+/// Fora do Windows não há `nvml.dll`: o `Library::open` do stub sempre recusa.
+#[cfg(not(windows))]
+fn nvml_command(arguments: &[String]) -> Result<Value, Failure> {
+    let options = Options::parse(arguments, &[], &[])?;
+    let [uuid] = options.positional.as_slice() else {
+        return Err(Failure::Usage("uso: hashpilot nvml <uuid>".into()));
+    };
+    hashpilot_rig::nvml::Library::open(uuid).map_err(Failure::Runtime)?;
+    Err(Failure::Runtime(
+        "NVML do Windows indisponível nesta plataforma".into(),
+    ))
+}
+
+#[cfg(windows)]
 fn nvml_command(arguments: &[String]) -> Result<Value, Failure> {
     use hashpilot_rig::nvml::Nvml;
     let options = Options::parse(arguments, &[], &[])?;
@@ -556,6 +570,7 @@ fn nvml_command(arguments: &[String]) -> Result<Value, Failure> {
     )
 }
 
+#[cfg(windows)]
 fn api_policy(api: &mut hashpilot_rig::nvml::Library, fan: u32) -> Value {
     use hashpilot_rig::nvml::Nvml;
     match api.get_fan_control_policy(fan) {
