@@ -117,7 +117,8 @@ class RigTelemetryTests(unittest.TestCase):
         now=dt.datetime(2026,11,10,22,59,0).timestamp()
         with tempfile.TemporaryDirectory() as temporary:
             path=Path(temporary)/"mining.log"
-            path.write_text(head+body+"\n",encoding="utf-8")
+            # CRLF fixo, como no Windows: o tamanho (e a janela de 200 kB lida) não muda com o sistema.
+            path.write_text(head+body+"\n",encoding="utf-8",newline="\r\n")
             self.assertGreater(path.stat().st_size,200_000)
             miner=read_device_payload(device(0),path,now=now)["miner"]
         self.assertIsNone(miner["started_at"])  # a janela lida não tem mais o início do processo

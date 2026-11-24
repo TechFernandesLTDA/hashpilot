@@ -197,6 +197,7 @@ class CorruptStateTests(unittest.TestCase):
                 (Path(folder)/'rig-manager.json').write_text('   ',encoding='utf-8')
                 result={'version':'3.8.5','current':'3.8.4','newer':True,'installable':False}
                 with patch.object(ui,'STATE_DIR',Path(folder)),patch.object(ui.update,'latest',return_value=result),\
+                     patch.object(ui.update,'base_directory',return_value=Path(folder)),\
                      patch.object(ui.messagebox,'showinfo') as blocked:
                     window=ui.show_miner_update(root)
                     buttons={}

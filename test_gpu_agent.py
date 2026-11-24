@@ -472,7 +472,7 @@ class OllamaAndActuatorTests(unittest.TestCase):
                  patch("gpu_agent.read_sample",side_effect=lambda gpu:sample(time.time(),temp=next(readings,temps[-1]),clock=clock)), \
                  patch("gpu_agent.smi_command",side_effect=commands.append), \
                  patch("gpu_agent.time.sleep"), \
-                 patch("ctypes.WinDLL",return_value=SimpleNamespace(IsUserAnAdmin=lambda:True)):
+                 patch("ctypes.WinDLL",create=True,return_value=SimpleNamespace(IsUserAnAdmin=lambda:True)):
                 code=control(args,temporary,temporary)
                 status=json.loads((Path(temporary)/"gpu-agent-control.json").read_text(encoding="utf-8"))
         return code,commands,status,gpu
