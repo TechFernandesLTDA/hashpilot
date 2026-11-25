@@ -34,7 +34,7 @@ from rig_panel import RigCards, project_selected, totals, show_identity
 from app_update import build_identity
 import monitor_theme as theme
 import ui_kit as ui
-from monitor_theme import ACCENT, ASSET_DIR, BG, BORDER, BRAND_NAVY, CARD, SIDEBAR, SURFACE, TEXT, TEXT_SECONDARY, TEXT_TERTIARY, WARNING  # noqa: F401
+from monitor_theme import ACCENT, ASSET_DIR, BG, BORDER, BRAND_NAVY, CARD, ERROR, SIDEBAR, SURFACE, TEXT, TEXT_SECONDARY, TEXT_TERTIARY, WARNING  # noqa: F401
 from monitor_theme import MUTED, ORANGE, PANEL, TEAL  # noqa: F401  (nomes antigos usados por ferramentas de captura)
 from monitor_format import fmt, safe_number, format_prl, format_brl, payout_for_local_state, thermal_description  # noqa: F401
 from monitor_sensors import NO_WINDOW, selected_gpu_context, run, miner_process_ids, number, read_gpu, tail, parse_log  # noqa: F401
@@ -188,6 +188,27 @@ class Collector:
             except Exception:
                 exception_once(LOG, "collector-work", "Falha no ciclo de coleta do painel")
             self.stop.wait(max(0.2, 2 - (time.monotonic() - started)))
+
+
+def watch_rig_launch(root, since, attempt=0):
+    """Acompanha a partida do serviço por até 2 min e mostra no painel a falha do Iniciar-Rig.ps1.
+
+    O script roda elevado e oculto, então sem isto um clique em Iniciar que falha não diz nada.
+    """
+    after=getattr(root,'after',None)
+    if after is None:return
+    if attempt:
+        if root.rig_service_running():return
+        from onboarding import rig_launch_failure
+        failure=rig_launch_failure(LOG_DIR,since)
+        if failure:
+            root.status.configure(text='● O serviço do rig não iniciou: '+failure,fg=ERROR)
+            from tkinter import messagebox
+            messagebox.showerror('Iniciar rig','O serviço do rig não iniciou.\n\n'+failure
+                +'\n\nRegistro: '+str(LOG_DIR/'diagnostics'/'iniciar-rig.log'),parent=root)
+            return
+        if attempt>=40:return
+    after(3000,watch_rig_launch,root,since,attempt+1)
 
 
 def enable_native_dpi_awareness():
@@ -409,7 +430,7 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
             request_start([identifier],STATE_DIR,LOG_DIR,SETTINGS_PATH)
             if enabled and not self.rig_service_running():
                 from onboarding import launch_rig_service
-                launch_rig_service()
+                launch_rig_service();watch_rig_launch(self,time.time())
             self.status.configure(text='● Preferência salva · aguardando serviço do rig',fg=WARNING)
             if hasattr(self,'collector'):self.collector.rig_reader.detected_at=0
         except (OSError,ValueError,RuntimeError) as error:messagebox.showerror('Configuração da GPU',str(error),parent=self)
@@ -441,7 +462,7 @@ class Monitor(MonitorLayoutMixin, tk.Tk):
             from onboarding import confirm_author_wallet, read_settings
             if not confirm_author_wallet(self,read_settings(SETTINGS_PATH),identifiers): return
             request_start(identifiers,STATE_DIR,LOG_DIR,SETTINGS_PATH)
-            if not self.rig_service_running():launch_rig_service()
+            if not self.rig_service_running():launch_rig_service();watch_rig_launch(self,time.time())
             self.status.configure(text='● Mineração solicitada · aguardando partida das GPUs',fg=WARNING)
         except (OSError,ValueError,RuntimeError) as error:messagebox.showerror('Iniciar rig',str(error),parent=self)
 

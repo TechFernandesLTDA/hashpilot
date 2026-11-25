@@ -868,6 +868,42 @@ fn serve_records_cycle_error_and_keeps_running() {
     assert_eq!(calls, 2);
 }
 
+/// Queda real de 2026-11-24: o rename sobreviveu e o registro voltou com 11 430 bytes NUL.
+#[test]
+fn registry_zeroed_by_power_loss_is_quarantined_and_the_rig_starts_clean() {
+    let run = fresh("registro-zerado");
+    let state = run.root.join("state");
+    std::fs::create_dir_all(&state).unwrap();
+    let registry = state.join("rig-manager.json");
+    std::fs::write(&registry, vec![0u8; 11430]).unwrap();
+    let mut manager = run.manager();
+    assert!(manager.registry_valid);
+    assert!(manager.devices.is_empty());
+    assert!(!registry.exists());
+    let kept: Vec<_> = std::fs::read_dir(state.join("corrompidos"))
+        .unwrap()
+        .map(|entry| std::fs::read(entry.unwrap().path()).unwrap())
+        .collect();
+    assert_eq!(kept, vec![vec![0u8; 11430]]);
+    manager.publish().unwrap();
+    let published: Value =
+        serde_json::from_str(&std::fs::read_to_string(&registry).unwrap()).unwrap();
+    assert_eq!(published["marker"], json!("HashPilotRig-v1"));
+}
+
+#[test]
+fn registry_with_real_but_broken_content_still_blocks_process_actions() {
+    let run = fresh("registro-truncado");
+    let state = run.root.join("state");
+    std::fs::create_dir_all(&state).unwrap();
+    let registry = state.join("rig-manager.json");
+    std::fs::write(&registry, br#"{"schema_version": 1, "devi"#).unwrap();
+    let manager = run.manager();
+    assert!(!manager.registry_valid);
+    assert!(registry.exists());
+    assert!(!state.join("corrompidos").exists());
+}
+
 #[test]
 fn serve_refuses_unconfirmed_reference_before_any_process() {
     use hashpilot_rig::manager::ServeOptions;

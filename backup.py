@@ -127,5 +127,5 @@ def restore_backup(source,state_dir,log_dir):
                 with closing(sqlite3.connect(target)) as db: db.execute('PRAGMA wal_checkpoint(TRUNCATE)')
             prepared.append((stage.joinpath(*PurePosixPath(name).parts),target))
         for src,target in prepared: database_backup(src,target)
-        atomic_json(state_dir/'settings.json',current)
+        atomic_json(state_dir/'settings.json',current,durable=True)
     return {'rollback':str(rollback),'databases':len(prepared)}

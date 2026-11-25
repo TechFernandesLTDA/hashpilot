@@ -346,6 +346,29 @@ class RigManagerTests(unittest.TestCase):
         restarted=self.make_manager()
         self.assertTrue(restarted.registry_valid)
 
+    def test_registry_zeroed_by_power_loss_is_quarantined_and_rig_starts_clean(self):
+        # Queda real de 2026-11-24: o rename sobreviveu, os dados voltaram como 11 430 bytes NUL.
+        self.manager.reconcile()
+        registry=self.manager.registry_path
+        registry.write_bytes(bytes(11430))
+        restarted=self.make_manager()
+        self.assertTrue(restarted.registry_valid)
+        self.assertEqual(restarted.devices,{})
+        self.assertFalse(registry.exists())
+        kept=list((registry.parent/"corrompidos").glob("rig-manager.json.*"))
+        self.assertEqual([path.read_bytes() for path in kept],[bytes(11430)])
+        restarted.publish()
+        self.assertEqual(json.loads(registry.read_text())["marker"],"HashPilotRig-v1")
+
+    def test_registry_with_real_but_broken_content_still_blocks_process_actions(self):
+        self.manager.reconcile()
+        registry=self.manager.registry_path
+        registry.write_text('{"schema_version": 1, "devi',encoding="utf-8")
+        restarted=self.make_manager()
+        self.assertFalse(restarted.registry_valid)
+        self.assertTrue(registry.exists())
+        self.assertFalse((registry.parent/"corrompidos").exists())
+
     def prepare_legacy_migration(self):
         gpu={**detected(1)[0],"uuid":REFERENCE_RTX3070_UUID,"power_default_w":240,"supported_graphics_clocks_mhz":[1500,1560,1740,1755]}
         self.manager.detector=lambda:[gpu]
