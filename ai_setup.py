@@ -43,7 +43,7 @@ def save_ai(path,enabled,provider,model,consent,key=''):
         if provider!='openrouter':raise ValueError('Esta chave é somente para OpenRouter; OpenCode usa seu próprio login')
         credential(provider,key.strip())
     # Secrets are deliberately absent from the settings file.
-    atomic_json(path,settings)
+    atomic_json(path,settings,durable=True)
     return settings
 
 

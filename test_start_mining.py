@@ -90,4 +90,36 @@ class StartMiningTests(unittest.TestCase):
             with self.assertRaises(ValueError):request_start(identifiers,self.state,self.logs,self.settings)
         self.assertEqual(before,self.settings.read_bytes())
 
+    def test_hidden_start_script_failure_reaches_the_panel(self):
+        # Em 2026-11-24 o Iniciar-Rig.ps1 elevado abortou sem aviso; só o diagnóstico registrou.
+        import monitor
+        from onboarding import rig_launch_failure
+        log=self.logs/'diagnostics'/'iniciar-rig.log'
+        log.parent.mkdir(parents=True,exist_ok=True)
+        log.write_text('2026-11-24T23:00:00-03:00 antiga\n',encoding='utf-8')
+        old=time.time()-3600
+        import os;os.utime(log,(old,old))
+        clicked=time.time()
+        self.assertIsNone(rig_launch_failure(self.logs,clicked),'falha anterior ao clique não conta')
+        with log.open('a',encoding='utf-8') as handle:handle.write('2026-11-24T23:53:49-03:00 JSON primitivo inválido: .\n')
+        self.assertEqual(rig_launch_failure(self.logs,clicked),'JSON primitivo inválido: .')
+        scheduled=[]
+        root=SimpleNamespace(after=lambda delay,*args:scheduled.append(args),rig_service_running=lambda:False,status=Mock())
+        with patch.object(monitor,'LOG_DIR',self.logs),patch('tkinter.messagebox.showerror') as shown:
+            monitor.watch_rig_launch(root,clicked)
+            self.assertEqual(len(scheduled),1);shown.assert_not_called()
+            callback,*arguments=scheduled.pop();callback(*arguments)
+        shown.assert_called_once()
+        self.assertIn('JSON primitivo inválido',root.status.configure.call_args.kwargs['text'])
+        self.assertEqual(scheduled,[],'para de acompanhar depois de avisar')
+
+    def test_launch_watch_stops_quietly_once_the_service_is_up(self):
+        import monitor
+        scheduled=[]
+        root=SimpleNamespace(after=lambda delay,*args:scheduled.append(args),rig_service_running=lambda:True,status=Mock())
+        with patch.object(monitor,'LOG_DIR',self.logs),patch('tkinter.messagebox.showerror') as shown:
+            monitor.watch_rig_launch(root,time.time())
+            callback,*arguments=scheduled.pop();callback(*arguments)
+        shown.assert_not_called();root.status.configure.assert_not_called();self.assertEqual(scheduled,[])
+
 if __name__=='__main__':unittest.main()

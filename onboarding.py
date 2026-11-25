@@ -11,6 +11,7 @@ import tkinter as tk
 from tkinter import filedialog, messagebox
 
 from config import DEFAULT_WALLET, SETTINGS_PATH, LOG_DIR
+from fsutil import durable_text
 from monitor_theme import SURFACE, TEXT_TERTIARY
 import ui_kit as ui
 
@@ -41,7 +42,7 @@ def save_settings(wallet: str, log_dir: str, path: Path = SETTINGS_PATH, *, supp
     data.setdefault('pool', 'prl.kryptex.network:7048')
     path.parent.mkdir(parents=True, exist_ok=True)
     temporary = path.with_suffix('.json.tmp')
-    temporary.write_text(json.dumps(data, ensure_ascii=False, indent=2)+'\n', encoding='utf-8')
+    durable_text(temporary, json.dumps(data, ensure_ascii=False, indent=2)+'\n')
     temporary.replace(path)
     return data
 
@@ -64,6 +65,24 @@ def launch_rig_service():
     subprocess.Popen(['powershell.exe','-NoProfile','-ExecutionPolicy','Bypass','-File',
         str(ROOT/'mining/windows/Iniciar-Rig.ps1'),'-Python',sys.executable],cwd=ROOT,
         creationflags=getattr(subprocess,'CREATE_NO_WINDOW',0))
+
+
+def rig_launch_failure(log_dir, since: float) -> str | None:
+    """Última falha que o Iniciar-Rig.ps1 registrou depois de `since`, ou None.
+
+    O script roda elevado e oculto: sem esta leitura, a falha dele não chega ao painel.
+    """
+    path = Path(log_dir) / 'diagnostics' / 'iniciar-rig.log'
+    try:
+        if path.stat().st_mtime < since - 1:
+            return None
+        lines = [line.strip() for line in path.read_text(encoding='utf-8-sig', errors='replace').splitlines() if line.strip()]
+    except OSError:
+        return None
+    if not lines:
+        return None
+    _stamp, _space, message = lines[-1].partition(' ')
+    return (message or lines[-1])[:300]
 
 
 def confirm_author_wallet(parent, settings, identifiers):
@@ -177,7 +196,7 @@ def run_gpu_setup(parent=None,selected_uuid=None,devices=None,path=SETTINGS_PATH
             if not confirm_author_wallet(window,updated,targets): return
             path.parent.mkdir(parents=True,exist_ok=True)
             temporary=path.with_name(path.name+'.gpu-setup.tmp')
-            temporary.write_text(json.dumps(updated,ensure_ascii=False,indent=2)+'\n',encoding='utf-8')
+            durable_text(temporary,json.dumps(updated,ensure_ascii=False,indent=2)+'\n')
             temporary.replace(path)
             from rig import write_request
             write_request(path.parent,'reconcile')

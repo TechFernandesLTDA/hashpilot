@@ -688,7 +688,7 @@ impl Loop<'_> {
             data.insert(key.into(), value);
         }
         data.insert("at".into(), json!(self.now()));
-        let _ = crate::fsutil::atomic_json(&self.memory_path, &Value::Object(data), false, false);
+        let _ = crate::fsutil::atomic_json(&self.memory_path, &Value::Object(data), true, false);
     }
 
     fn start_clock(&self) -> f64 {

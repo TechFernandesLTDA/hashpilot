@@ -19,7 +19,7 @@ def request_start(identifiers,state_dir,log_dir,settings_path,*,now=None):
     settings_path=Path(settings_path)
     settings=json.loads(settings_path.read_text(encoding='utf-8-sig'))
     for identifier in identifiers:settings=update_gpu_settings(settings,identifier,enabled=True)
-    atomic_json(settings_path,settings)
+    atomic_json(settings_path,settings,durable=True)
     for identifier in identifiers:
         atomic_json(status_path(log_dir,identifier),{'state':'start_requested','at':stamp,'gpu_uuid':identifier})
         write_request(state_dir,'start',identifier)

@@ -93,6 +93,8 @@ O serviço do rig precisa ser iniciado explicitamente; abrir a interface não in
 
 `rig-manager.json` e `rig-requests/` ficam no diretório local do aplicativo. Cada UUID possui um diretório em `LOG_DIR/gpus/<UUID>/` com logs, status, `latest.json`, controle exclusivo e `gpu-agent.sqlite3`. Carteiras usam a configuração global ou um override em `gpu_settings`. Veja [caminhos e contratos](multi-gpu.md).
 
+Um `rig-manager.json` vazio ou só com bytes NUL é o rastro de uma queda do Windows: o rename da gravação atômica sobreviveu, mas os dados não chegaram ao disco. Esse registro vale como ausente, porque a queda também levou os processos que ele descrevia. O serviço (`fsutil.quarantine_torn`, nos dois lados) o move para `STATE_DIR/corrompidos/` e parte limpo, e os scripts `.ps1` o ignoram. Conteúdo real, mas ilegível, continua invalidando o registro e bloqueando ações em processos. `settings.json` e `thermal-target.json` são gravados com `fsync` (`durable`).
+
 O novo iniciador parte dos ajustes atuais do driver, sem copiar clocks RTX 3070. O iniciador histórico e `thermal_controller.py` continuam separados como referência; não se executam dois supervisores concorrentes na mesma GPU. Migração de uma sessão antiga é uma ação própria, com verificação de identidade e preservação dos logs; atualizar a interface não autoriza assumir um processo externo.
 
 Consultas financeiras são deduplicadas por carteira efetiva. Se seis GPUs usam o mesmo endereço, o saldo é contado uma vez. Carteiras distintas possuem coletores e períodos próprios; ganhos reais por placa não são inferidos da participação no hashrate.

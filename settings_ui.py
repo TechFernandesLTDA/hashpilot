@@ -452,7 +452,7 @@ class SettingsWindow(tk.Toplevel):
                     data.pop("electricity_price_brl_kwh", None)
                 else:
                     data["electricity_price_brl_kwh"] = round(price_kwh, 4)
-                atomic_json(SETTINGS_PATH, data)
+                atomic_json(SETTINGS_PATH, data, durable=True)
             except (ValueError, OSError) as error:
                 messagebox.showerror("Configurações", str(error), parent=self)
                 return False

@@ -16,7 +16,7 @@ import time
 import uuid
 
 from contribution import ProxyLease,support_configuration
-from fsutil import atomic_json
+from fsutil import atomic_json,quarantine_torn
 from gpu_agent import detect_nvidia_gpus
 from file_cache import cached_load
 
@@ -85,6 +85,15 @@ class RigManager:
         if pending.get('state')=='validating':self.miner_update_pending=pending
 
     def _load_registry(self):
+        # Registro zerado só nasce de uma queda do Windows, que também levou todos os processos
+        # que ele descrevia: não há nada a proteger, então ele sai do caminho e o rig parte limpo.
+        try:
+            torn=quarantine_torn(self.registry_path)
+        except OSError:
+            torn=None;exception_once(LOG,'registry-torn',"Registro do rig danificado não pôde ir para a quarentena")
+        if torn is not None:
+            LOG.warning("Registro do rig zerado por desligamento abrupto; movido para %s",torn)
+            return
         try:
             payload=json.loads(self.registry_path.read_text(encoding="utf-8-sig"))
             if payload.get("schema_version")!=1 or payload.get("marker")!=MARKER or not isinstance(payload.get("devices"),dict) or len(payload["devices"])>MAX_GPUS:
@@ -612,13 +621,13 @@ class RigManager:
                     if gpu_uuid is None: raise ValueError("A ação exige UUID")
                     if action=='start':self.manual_start(gpu_uuid)
                     settings=update_gpu_settings(self.settings(),gpu_uuid,enabled=action=="start")
-                    atomic_json(self.settings_path,settings)
+                    atomic_json(self.settings_path,settings,durable=True)
                     if action=="stop": self.stop_gpu(gpu_uuid,restore=True)
                 elif action=='stop_all':
                     # Persist every disabled choice before stopping the first board.
                     settings=self.settings()
                     for target in self.devices:settings=update_gpu_settings(settings,target,enabled=False)
-                    atomic_json(self.settings_path,settings)
+                    atomic_json(self.settings_path,settings,durable=True)
                     for target in self.devices:
                         self.devices[target]['enabled']=False
                         self.stop_gpu(target,restore=True)
@@ -637,7 +646,7 @@ class RigManager:
                     settings=self.settings()
                     settings=update_gpu_settings(settings,gpu_uuid)
                     settings['gpu_settings'][gpu_uuid]['profile']=chosen
-                    atomic_json(self.settings_path,settings)
+                    atomic_json(self.settings_path,settings,durable=True)
                     entry=self.devices.get(gpu_uuid,{})
                     if entry and not entry.get('external_readonly'):
                         atomic_json(Path(entry['log_dir'])/'gpu-agent-request.json',{'action':'benchmark','gpu_uuid':gpu_uuid,

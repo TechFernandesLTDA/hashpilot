@@ -21,7 +21,7 @@ use hashpilot_history::pyjson::{encode_spaced, py_eq, repr_str, truthy, type_nam
 use serde_json::{Map, Value, json};
 
 use crate::continuity::{ContinuityWindow, IdleSleepGuard, safe_sensor};
-use crate::fsutil::atomic_json;
+use crate::fsutil::{atomic_json, quarantine_torn};
 use crate::health::{OperationalStore, finite};
 use crate::lease::Lease;
 use crate::miner_install::Catalog;
@@ -396,6 +396,21 @@ impl RigManager {
     }
 
     fn load_registry(&mut self) {
+        // Registro zerado só nasce de uma queda do Windows, que também levou todos os processos
+        // que ele descrevia: não há nada a proteger, então ele sai do caminho e o rig parte limpo.
+        match quarantine_torn(&self.registry_path) {
+            Ok(Some(target)) => {
+                eprintln!(
+                    "Registro do rig zerado por desligamento abrupto; movido para {}",
+                    target.display()
+                );
+                return;
+            }
+            Ok(None) => {}
+            Err(error) => {
+                eprintln!("Registro do rig danificado não pôde ir para a quarentena: {error}")
+            }
+        }
         let text = match std::fs::read_to_string(&self.registry_path) {
             Ok(text) => text,
             Err(error) if error.kind() == std::io::ErrorKind::NotFound => return,
@@ -1997,7 +2012,7 @@ impl RigManager {
                     None,
                     false,
                 )?;
-                atomic_json(&self.settings_path, &settings, false, false)?;
+                atomic_json(&self.settings_path, &settings, true, false)?;
                 if action == "stop" {
                     self.stop_gpu(&uuid, true)?;
                 }
@@ -2014,7 +2029,7 @@ impl RigManager {
                         false,
                     )?;
                 }
-                atomic_json(&self.settings_path, &settings, false, false)?;
+                atomic_json(&self.settings_path, &settings, true, false)?;
                 for target in &targets {
                     self.set(target, vec![("enabled", json!(false))]);
                     self.stop_gpu(target, true)?;
@@ -2054,7 +2069,7 @@ impl RigManager {
                 let mut settings =
                     update_gpu_settings(&self.settings()?, &gpu_uuid, None, None, false)?;
                 settings["gpu_settings"][uuid.as_str()]["profile"] = chosen.clone();
-                atomic_json(&self.settings_path, &settings, false, false)?;
+                atomic_json(&self.settings_path, &settings, true, false)?;
                 let entry = self.devices.get(&uuid).cloned().unwrap_or(Value::Null);
                 if truthy(&entry) && !truthy(field(&entry, "external_readonly")) {
                     atomic_json(

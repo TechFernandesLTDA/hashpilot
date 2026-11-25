@@ -28,7 +28,9 @@ if($rustMotor){
 }
 $registry=Join-Path $state 'rig-manager.json'
 $referenceRtx3070=$false
-if(Test-Path -LiteralPath $registry){
+# Registro vazio ou zerado e o rastro de uma queda do Windows (os processos dele morreram junto):
+# vale como ausente, e o servico o move para corrompidos\ ao partir.
+if((Test-Path -LiteralPath $registry) -and ([string](Get-Content -LiteralPath $registry -Raw -Encoding UTF8)) -notmatch '^[\s\x00]*$'){
     $running=Get-Content -LiteralPath $registry -Raw -Encoding UTF8 | ConvertFrom-Json
     $referenceRtx3070=($running.marker -eq 'HashPilotRig-v1' -and $running.reference_uuid -eq 'GPU-bafb0ad5-dd9e-ee1d-a0c0-221c0dfbfc75')
     $now=[DateTimeOffset]::UtcNow.ToUnixTimeMilliseconds()/1000.0

@@ -8,6 +8,39 @@ use std::time::Duration;
 use hashpilot_history::pyjson::{encode, encode_indented};
 use serde_json::Value;
 
+/// `fsutil.torn_file`: vazio ou só NUL/espaços, o rastro de uma queda de energia (no NTFS
+/// o rename sobrevive, mas os dados sem fsync voltam zerados). Nenhum JSON válido é assim.
+pub fn torn_file(data: &[u8]) -> bool {
+    data.iter()
+        .all(|byte| matches!(byte, 0 | b' ' | b'\t' | b'\r' | b'\n'))
+}
+
+/// `fsutil.quarantine_torn`: move o arquivo danificado por queda para `corrompidos/` ao
+/// lado e devolve o destino; `None`, sem mexer em nada, se ele não existe ou tem conteúdo.
+pub fn quarantine_torn(path: &Path) -> std::io::Result<Option<std::path::PathBuf>> {
+    let data = match std::fs::read(path) {
+        Ok(data) => data,
+        Err(error) if error.kind() == std::io::ErrorKind::NotFound => return Ok(None),
+        Err(error) => return Err(error),
+    };
+    if !torn_file(&data) {
+        return Ok(None);
+    }
+    let folder = path
+        .parent()
+        .unwrap_or_else(|| Path::new("."))
+        .join("corrompidos");
+    std::fs::create_dir_all(&folder)?;
+    let name = path
+        .file_name()
+        .map(|name| name.to_string_lossy().into_owned())
+        .unwrap_or_default();
+    let stamp = chrono::Local::now().format("%Y%m%d-%H%M%S");
+    let target = folder.join(format!("{name}.{stamp}.{}", std::process::id()));
+    std::fs::rename(path, &target)?;
+    Ok(Some(target))
+}
+
 /// `atomic_json(path, payload, durable=, compact=)`.
 pub fn atomic_json(
     path: &Path,
@@ -75,6 +108,41 @@ mod tests {
             1,
             "sem temporários"
         );
+        let _ = std::fs::remove_dir_all(folder);
+    }
+
+    #[test]
+    fn quarantines_only_files_torn_by_a_power_loss() {
+        let folder =
+            std::env::temp_dir().join(format!("hashpilot-fsutil-torn-{}", std::process::id()));
+        std::fs::create_dir_all(&folder).unwrap();
+        let path = folder.join("rig-manager.json");
+        assert_eq!(
+            quarantine_torn(&path).unwrap(),
+            None,
+            "ausente fica ausente"
+        );
+        std::fs::write(&path, b"{\"a\": 1}").unwrap();
+        assert_eq!(quarantine_torn(&path).unwrap(), None);
+        std::fs::write(&path, b"{\"a\": ").unwrap();
+        assert_eq!(
+            quarantine_torn(&path).unwrap(),
+            None,
+            "JSON truncado não é queda"
+        );
+        assert!(path.exists());
+        std::fs::write(&path, vec![0u8; 11430]).unwrap();
+        let target = quarantine_torn(&path)
+            .unwrap()
+            .expect("zerado vai para a quarentena");
+        assert!(!path.exists());
+        assert_eq!(target.parent().unwrap(), folder.join("corrompidos"));
+        assert_eq!(
+            std::fs::read(&target).unwrap().len(),
+            11430,
+            "preservado, não apagado"
+        );
+        assert!(torn_file(b"") && torn_file(b" \r\n\0") && !torn_file(b"0"));
         let _ = std::fs::remove_dir_all(folder);
     }
 }

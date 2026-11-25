@@ -1214,7 +1214,7 @@ def control(args,state_dir,monitor_state_dir):
                 return data if isinstance(data,dict) and data.get("gpu_uuid")==gpu["uuid"] else {}
             except (OSError,ValueError):return {}
         def remember(**values):
-            try:atomic_json(memory_path,{**remembered(),"gpu_uuid":gpu["uuid"],**values,"at":time.time()})
+            try:atomic_json(memory_path,{**remembered(),"gpu_uuid":gpu["uuid"],**values,"at":time.time()},durable=True)
             except OSError:pass
         def remember_clock(clock):remember(clock_mhz=clock)
         memory_explorer=None

@@ -50,7 +50,9 @@ if(-not (Test-Path -LiteralPath $script) -or -not (Test-Path -LiteralPath $miner
 if($Motor -eq 'Rust' -and -not (Test-Path -LiteralPath $rustExe)){throw ('Servico em Rust nao encontrado em '+$rustExe+': rode cargo build --release -p hashpilot-cli na pasta rust, ou inicie com -Motor Python.')}
 New-Item -ItemType Directory -Path $state,$logs -Force | Out-Null
 $registry=Join-Path $state 'rig-manager.json'
-if(Test-Path -LiteralPath $registry){
+# Registro vazio ou zerado e o rastro de uma queda do Windows (os processos dele morreram junto):
+# vale como ausente, e o servico o move para corrompidos\ ao partir.
+if((Test-Path -LiteralPath $registry) -and ([string](Get-Content -LiteralPath $registry -Raw -Encoding UTF8)) -notmatch '^[\s\x00]*$'){
  $running=Get-Content -LiteralPath $registry -Raw -Encoding UTF8 | ConvertFrom-Json
  if($running.pid){
   $process=Get-CimInstance Win32_Process -Filter ('ProcessId='+[int]$running.pid) -ErrorAction SilentlyContinue

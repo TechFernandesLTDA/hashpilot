@@ -83,6 +83,10 @@ Uma parada de mineração não prova suspensão. Cruze o horário dos logs com a
 
 Se o controlador registrar `WinError 5` ao substituir um JSON de status, existe uma falha de acesso ao arquivo. Um bloqueio temporário de leitura ou de outro software pode impedir a substituição; o erro sozinho não identifica qual processo o causou. A gravação atômica tenta novamente por até um segundo, mantendo o JSON anterior completo. Um bloqueio persistente continua sendo reportado como erro, sem desativar as proteções do controlador.
 
+## Depois de uma queda de energia, "Iniciar todas" não inicia?
+
+Numa queda, o Windows pode devolver arquivos que estavam sendo gravados com o tamanho certo, mas cheios de bytes zerados. Até a v0.5.19, um `rig-manager.json` zerado fazia o `Iniciar-Rig.ps1` abortar depois do UAC, e a única pista era `LOG_DIR/diagnostics/iniciar-rig.log`. Desde a v0.5.20, um registro vazio ou zerado vale como ausente: os processos que ele descrevia morreram com a queda. O serviço move o arquivo para `corrompidos/`, ao lado dele, sem apagar, e a partida segue. Um registro com conteúdo real, mas ilegível, continua bloqueando as ações em processos existentes. Se a partida falhar por outro motivo, o painel mostra a mensagem do script. As configurações e a memória térmica de cada GPU são gravadas com `fsync`, para sobreviver a uma queda.
+
 O painel ignora `reset.log` ao escolher o log legado de mineração: esse arquivo pertence à restauração da GPU e pode usar uma conexão local propositalmente inválida. Sua mensagem de reconexão não descreve a saúde da conexão real com a pool.
 
 AI providers / Provedores de IA: [OpenRouter Cloud Free, OpenCode Cloud Free e Ollama local](ai-providers.md). A política adaptativa funciona sem IA.

@@ -8,6 +8,7 @@ Canonical repository: https://github.com/TechFernandesLTDA/hashpilot
 
 - [v0.5.18 release notes](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/releases/v0.5.18.md): the header's "Iniciar todas" (start all) button is disabled while every detected GPU is already mining; dashboard-only change.
 - [v0.5.19 release notes](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/releases/v0.5.19.md): with the Rust rig service, starting from the packaged dashboard after a reboot failed silently because the install has no compiled hashpilot.exe; Iniciar-Rig.ps1 now reuses the last service executable and logs start failures.
+- [v0.5.20 release notes](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/releases/v0.5.20.md): after a power loss, a zero-filled `rig-manager.json` blocked every start without a message; an empty or NUL-only registry is now quarantined to `corrompidos/` and treated as absent (Rust service, `rig.py` and the `.ps1` scripts), the dashboard shows hidden start failures, and `settings.json` plus `thermal-target.json` are written with fsync.
 
 - [v0.5.17 release notes](https://raw.githubusercontent.com/TechFernandesLTDA/hashpilot/main/docs/releases/v0.5.17.md): the memory-clock explorer no longer repeats a full round on every controller restart; the time of the last round is stored in `thermal-target.json` (`memory_explored_at`) and a restart inside the 6-hour window resumes the remembered best clock. Fixed in the Rust rig service and in Python.
 
