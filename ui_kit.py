@@ -152,7 +152,7 @@ def _family_exists(family: str) -> bool:
     if family not in _semibold_ok:
         try:
             _semibold_ok[family] = family in set(tkfont.families())
-        except (tk.TclError, RuntimeError):
+        except tk.TclError, RuntimeError:
             return True  # sem Tk ainda: assume a família da escala
     return _semibold_ok[family]
 
@@ -978,7 +978,7 @@ def style_option_menu(widget: tk.Menubutton) -> tk.Menubutton:
     )
     try:
         widget["menu"].configure(bg=CARD, fg=TEXT, activebackground=CARD_HOVER, activeforeground=TEXT, bd=0)
-    except (tk.TclError, KeyError):
+    except tk.TclError, KeyError:
         pass
     return widget
 

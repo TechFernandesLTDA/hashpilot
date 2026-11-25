@@ -3,9 +3,12 @@
 //! Nenhum teste toca no minerador ou na GPU.
 
 use std::path::Path;
+#[cfg(windows)]
 use std::time::Duration;
 
-use hashpilot_rig::{ProcessBackend, normalized_path, windows_argv};
+use hashpilot_rig::windows_argv;
+#[cfg(windows)]
+use hashpilot_rig::{ProcessBackend, normalized_path};
 use serde_json::{Value, json};
 
 fn golden() -> Value {

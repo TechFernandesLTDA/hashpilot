@@ -220,6 +220,8 @@ fn clock_offset_struct_has_the_nvidia_abi_size() {
     assert_eq!(hashpilot_rig::nvml::CLOCK_OFFSET_VERSION, 0x0100_0018);
 }
 
+// Só no Windows: a posse da GPU usa a trava de arquivo do Win32, que fora dele sempre recusa.
+#[cfg(windows)]
 #[test]
 fn restore_defaults_holds_the_lease_until_the_driver_is_closed() {
     use hashpilot_rig::gpu_defaults::restore_defaults;

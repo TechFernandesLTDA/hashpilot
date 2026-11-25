@@ -300,6 +300,17 @@ cargo check --target x86_64-pc-windows-msvc  # compila para Windows sem linker (
 cargo run -p hashpilot-cli -- --help
 ```
 
+Fora do Windows, os quatro primeiros também passam. Alguns testes ficam só no
+Windows (`#[cfg(windows)]`), porque os stubs de fora dele sempre recusam:
+
+- os que dependem da trava de arquivo do Win32: `tests/control_loop.rs` e
+  `restore_defaults_holds_the_lease_until_the_driver_is_closed`;
+- o que depende do estado de processo: `selecao_e_coordenacao`;
+- os de ciclo de vida de processos reais em `tests/process.rs`.
+
+O `cargo check` para Windows a partir de Linux agora exige o `lib.exe` do MSVC, por
+causa do SQLite (C) do `rusqlite`.
+
 A CLI `hashpilot` é **somente leitura**: não inicia nem para mineração, não altera
 clocks, potência ou ventoinhas e não grava nos dados do aplicativo.
 

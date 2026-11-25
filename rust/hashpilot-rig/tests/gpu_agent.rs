@@ -31,6 +31,7 @@ fn opt_f64(value: &Value) -> Option<f64> {
     value.as_f64()
 }
 
+#[cfg(windows)]
 fn opt_i64(value: &Value) -> Option<i64> {
     value.as_i64()
 }
@@ -206,6 +207,9 @@ fn leituras_com_nvidia_smi_falso() {
     let _ = std::fs::remove_dir_all(folder);
 }
 
+// Só no Windows: `external_supervisor_active` consulta o estado do processo pelo Win32,
+// que fora dele responde "unknown" (um PID morto conta como vivo).
+#[cfg(windows)]
 #[test]
 fn selecao_e_coordenacao() {
     let golden = golden();
